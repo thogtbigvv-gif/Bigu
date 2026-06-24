@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Summer Project — Ultimate Anime Status Window</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ===================== PREMIUM DESIGN TOKENS ===================== */
+:root {
+    --bg: #030712;
+    --bg-gradient: radial-gradient(circle at 15% 15%, #111827 0%, #030712 100%);
+    --glass-bg: rgba(17, 24, 39, 0.45);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --card-bg-hover: rgba(255, 255, 255, 0.03);
+    
+    --text-main: #f9fafb;
+    --text-muted: #9ca3af;
+    --border: rgba(255, 255, 255, 0.08);
+    --accent: #10b981;
+    --accent-hover: #059669;
+    --accent-soft: rgba(16, 185, 129, 0.1);
+    --danger: #ef4444;
+    --radius: 16px;
+    
+    /* Tier & Rank Colors */
+    --tier-e: #6b7280;
+    --tier-d: #0ea5e9;
+    --tier-c: #10b981;
+    --tier-b: #8b5cf6;
+    --tier-a: #f97316;
+    --tier-s: #eab308;
+    
+    /* Fonts */
+    --font-display: 'Unbounded', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+}
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0;
+}
+
+body {
+    font-family: var(--font-body);
+    background: var(--bg-gradient);
+    color: var(--text-main);
+    min-height: 100vh;
+    padding-bottom: 60px;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 25%; width: 50%; height: 400px;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* ===================== ХЭДЭР (HEADER) ХЭСЭГ ===================== */
+.web-header {
+    background: rgba(3, 7, 18, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 20px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--glass-border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo-area h1 {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-area span {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--accent-soft);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: uppercase;
+}
+
+.tab-navigation { 
+    display: flex; 
+    gap: 6px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 4px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.tab-btn:hover { color: var(--text-main); }
+.tab-btn.active { 
+    color: #fff; 
+    background: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* ===================== LAYOUT & BENTO SYSTEM ===================== */
+.web-container { 
+    position: relative;
+    z-index: 1;
+    padding: 40px; 
+    max-width: 1400px; 
+    margin: 0 auto; 
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
+
+@keyframes slideUp { 
+    from { opacity: 0; transform: translateY(12px); } 
+    to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Эхлээд Профайл болон Статууд байрлах дээд Bento хэсэг */
+.status-top-layout {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 24px;
+    margin-bottom: 32px;
+}
+
+/* PROFILE CARD */
+.profile-card {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.6), rgba(3, 7, 12, 0.8));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius);
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(16, 185, 129, 0.05);
+}
+
+.profile-card::after {
+    content: "HUNTER STATUS";
+    position: absolute;
+    bottom: 12px; right: 16px;
+    font-family: var(--font-mono);
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.05);
+    letter-spacing: 2px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.avatar-frame {
+    width: 70px; height: 70px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px dashed var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--font-display);
+    font-size: 24px;
+    color: var(--accent);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+    animation: pulseGlow 3s infinite alternate;
+}
+
+@keyframes pulseGlow {
+    from { box-shadow: 0 0 10px rgba(16, 185, 129, 0.2); border-color: var(--accent); }
+    to { box-shadow: 0 0 25px rgba(16, 185, 129, 0.5); border-color: #fff; }
+}
+
+.player-info h2 { font-family: var(--font-display); font-size: 16px; margin-bottom: 4px; letter-spacing: 0.5px; }
+.player-info p { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); text-transform: uppercase; }
+
+.level-badge-zone {
+    margin-top: 24px;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--glass-border);
+}
+
+.level-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;}
+.level-row span { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+.level-row strong { font-family: var(--font-display); font-size: 28px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
+
+/* RPG ATTRIBUTES GRID */
+.attributes-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 26px;
+}
+
+.attributes-card h3 { font-family: var(--font-display); font-size: 13px; color: var(--text-muted); margin-bottom: 18px; letter-spacing: 1px; text-transform: uppercase;}
+
+.attr-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.attr-item {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    padding: 14px 18px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s ease;
+}
+.attr-item:hover { transform: scale(1.02); border-color: rgba(255,255,255,0.1); }
+
+.attr-name { display: flex; flex-direction: column; gap: 2px; }
+.attr-name label { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
+.attr-name span { font-family: var(--font-display); font-size: 13px; font-weight: bold; }
+.attr-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--accent); text-shadow: 0 0 8px var(--accent-soft); }
+
+/* BENTO GRID FOR CATEGORIES */
+.section-title { margin-bottom: 20px; }
+.section-title h2 { font-family: var(--font-display); font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.web-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 20px;
+}
+
+.category-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+    --tier-color: var(--tier-e);
+}
+
+.category-card::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0; width: 140px; height: 140px;
+    background: radial-gradient(circle at top right, var(--tier-color), transparent 70%);
+    opacity: 0.08;
+    pointer-events: none;
+}
+
+.category-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.category-card[data-tier="E"]:hover { border-color: rgba(107, 114, 128, 0.4); }
+.category-card[data-tier="D"]:hover { border-color: rgba(14, 165, 233, 0.4); }
+.category-card[data-tier="C"]:hover { border-color: rgba(16, 185, 129, 0.4); }
+.category-card[data-tier="B"]:hover { border-color: rgba(139, 92, 246, 0.4); }
+.category-card[data-tier="A"]:hover { border-color: rgba(249, 115, 22, 0.4); }
+.category-card[data-tier="S"]:hover { border-color: rgba(234, 179, 8, 0.4); }
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+.card-head h3 { font-size: 15px; font-weight: 600; }
+
+.tier-pill {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--tier-color);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    position: relative;
+    z-index: 1;
+}
+
+.tier-pill::before {
+    content: ""; position: absolute; inset: 0;
+    background: var(--tier-color); opacity: 0.12; border-radius: inherit;
+}
+
+.xp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    margin-bottom: 8px;
+}
+
+.progress-bg {
+    background: rgba(0, 0, 0, 0.3);
+    width: 100%; height: 6px;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.progress-bar {
+    background: var(--tier-color);
+    box-shadow: 0 0 10px var(--tier-color);
+    height: 100%;
+    min-width: 0px;
+    border-radius: 10px;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-bar[data-progress="0"] { box-shadow: none; }
+
+.progress-meta { font-size: 12px; color: var(--text-muted); }
+.progress-meta strong { color: var(--text-main); font-family: var(--font-mono); }
+
+/* ===================== КВЕСТ ХЭСГИЙН БҮТЭЦ ===================== */
+.quest-layout { 
+    display: grid; 
+    grid-template-columns: 380px 1fr; 
+    gap: 32px; 
+    align-items: start; 
+}
+
+.quest-sidebar {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    padding: 28px;
+    border-radius: var(--radius);
+}
+.quest-sidebar h3 { margin-bottom: 6px; font-size: 14px; font-family: var(--font-display); font-weight: 700; text-transform: uppercase;}
+
+.web-form label {
+    display: block;
+    margin: 16px 0 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.web-form input, .web-form select {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    border-radius: 10px;
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: all 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.web-form select option {
+    background: #1f2937;
+    color: var(--text-main);
+}
+
+.web-form input:focus, .web-form select:focus { 
+    border-color: rgba(255,255,255,0.2); 
+    background: rgba(0, 0, 0, 0.3);
+    outline: none; 
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+}
+
+.submit-btn {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    background: var(--text-main);
+    color: var(--bg);
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.submit-btn:hover { 
+    background: #fff;
+    transform: translateY(-1px); 
+    box-shadow: 0 4px 20px rgba(255,255,255,0.1);
+}
+
+.quest-main h3 { font-family: var(--font-display); font-size: 14px; font-weight: 700; margin-bottom: 20px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;}
+.quest-list { display: flex; flex-direction: column; gap: 14px; }
+
+/* Квест Карт */
+.quest-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    padding: 18px 24px;
+    border-radius: var(--radius);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.quest-card:hover { 
+    border-color: rgba(255,255,255,0.15);
+    background: var(--card-bg-hover);
+}
+
+.quest-rank-badge {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 800;
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.05);
+    flex-shrink: 0;
+}
+
+.quest-info { min-width: 0; flex: 1; }
+.quest-info h4 { margin-bottom: 4px; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.quest-info small { color: var(--text-muted); font-family: var(--font-mono); font-size: 11px; }
+
+.complete-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--glass-border);
+    color: var(--text-main);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 12px;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.complete-btn:hover { 
+    background: var(--accent); 
+    color: #000;
+    border-color: var(--accent);
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
+.done-badge { 
+    color: var(--accent); 
+    font-weight: 700; font-size: 12px; 
+    background: var(--accent-soft);
+    padding: 6px 12px; border-radius: 6px;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    white-space: nowrap; flex-shrink: 0;
+    font-family: var(--font-mono);
+}
+
+.quest-card.completed { opacity: 0.35; }
+.quest-card.completed h4 { text-decoration: line-through; }
+
+.delete-btn {
+    position: absolute;
+    top: -6px; right: -6px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 1px solid var(--glass-border);
+    background: #111827;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.quest-card:hover .delete-btn { opacity: 1; }
+.delete-btn:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
+
+.empty-state {
+    border: 1px dashed var(--glass-border);
+    border-radius: var(--radius);
+    padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;
+}
+
+.reset-row { margin-top: 40px; text-align: right; }
+.reset-link {
+    background: none; border: none;
+    color: rgba(239, 68, 68, 0.5);
+    font-size: 11px; font-family: var(--font-mono);
+    cursor: pointer; text-transform: uppercase;
+    transition: color 0.2s ease;
+}
+.reset-link:hover { color: var(--danger); text-decoration: underline; }
+
+/* ===================== TOAST МЭДЭГДЭЛ ===================== */
+#toast-container {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    display: flex; flex-direction: column; gap: 10px;
+    z-index: 1000; max-width: 340px; pointer-events: none;
+}
+
+.toast {
+    background: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--glass-border);
+    border-left: 4px solid var(--accent);
+    border-radius: 10px;
+    padding: 14px 16px; font-size: 13px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    opacity: 0; transform: translateX(30px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: auto;
+}
+
+.toast.show { opacity: 1; transform: translateX(0); }
+.toast.toast-error { border-left-color: var(--danger); }
+
+/* ===================== RESPONSIVE ===================== */
+@media (max-width: 950px) {
+    .web-header { padding: 16px 20px; flex-direction: column; gap: 16px; }
+    .web-container { padding: 20px; }
+    .status-top-layout { grid-template-columns: 1fr; }
+    .quest-layout { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="web-header">
+    <div class="logo-area">
+        <h1>SHIELD HERO // <span>OVERLORD DASHBOARD</span></h1>
+    </div>
+    <nav class="tab-navigation" role="tablist">
+        <button class="tab-btn active" data-tab="status-tab" type="button" role="tab" aria-selected="true">Миний Статус</button>
+        <button class="tab-btn" data-tab="quests-tab" type="button" role="tab" aria-selected="false">Квест Самбар</button>
+    </nav>
+</header>
+
+<main class="web-container">
+
+    <section id="status-tab" class="tab-content active" role="tabpanel">
+        
+        <div class="status-top-layout">
+            <div class="profile-card">
+                <div class="profile-header">
+                    <div class="avatar-frame">Ω</div>
+                    <div class="player-info">
+                        <h2>СҮРТ ХАНТЕР</h2>
+                        <p>Ангилал: Сүүдрийн Эзэн</p>
+                    </div>
+                </div>
+                <div class="level-badge-zone">
+                    <div class="level-row">
+                        <span>CURRENT LEVEL</span>
+                        <strong id="global-level">1</strong>
+                    </div>
+                    <div class="xp-row">
+                        <span>GLOBAL EXP</span>
+                        <span id="global-xp-text">0 / 500</span>
+                    </div>
+                    <div class="progress-bg">
+                        <div id="global-xp-bar" class="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="attributes-card">
+                <h3>Үндсэн үзүүлэлтүүд (Attributes)</h3>
+                <div class="attr-grid">
+                    <div class="attr-item">
+                        <div class="attr-name">
+                            <label>STR</label>
+                            <span>Хүч чадал</span>
+                        </div>
+                        <div class="attr-val" id="attr-str">10</div>
+                    </div>
+                    <div class="attr-item">
+                        <div class="attr-name">
+                            <label>INT</label>
+                            <span>Оюун ухаан</span>
+                        </div>
+                        <div class="attr-val" id="attr-int">10</div>
+                    </div>
+                    <div class="attr-item">
+                        <div class="attr-name">
+                            <label>VIT</label>
+                            <span>Тэвчээр</span>
+                        </div>
+                        <div class="attr-val" id="attr-vit">10</div>
+                    </div>
+                    <div class="attr-item">
+                        <div class="attr-name">
+                            <label>WIS</label>
+                            <span>Мэргэн ухаан</span>
+                        </div>
+                        <div class="attr-val" id="attr-wis">10</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-title">
+            <h2>Амьдралын Үзүүлэлтүүд (Tiers)</h2>
+        </div>
+
+        <div id="categories-container" class="web-grid">
+            <div class="loading-state">Систем уншиж байна...</div>
+        </div>
+
+        <div class="reset-row">
+            <button id="reset-btn" class="reset-link" type="button">// СИСТЕМ ХАУС КЛИНИНГ (RESET)</button>
+        </div>
+    </section>
+
+    <section id="quests-tab" class="tab-content" role="tabpanel">
+        <div class="quest-layout">
+
+            <aside class="quest-sidebar">
+                <h3>+ ШИНЭ ДААЛГАВАР ОЛОХ</h3>
+                <div class="web-form" id="add-quest-form">
+                    <label for="quest-title">Квестийн нэр:</label>
+                    <input type="text" id="quest-title" placeholder="Жнь: 30 минут код бичих" maxlength="80">
+
+                    <label for="quest-category">Үндсэн Ангилал:</label>
+                    <select id="quest-category">
+                        <option value="" disabled selected>Сонгоно уу...</option>
+                        <option value="fitness">Спорт & Фитнес (STR/VIT өснө)</option>
+                        <option value="learning">Хөгжил & Сурлага (INT/WIS өснө)</option>
+                        <option value="habits">Зуршил & Дадал (VIT/WIS өснө)</option>
+                    </select>
+
+                    <label for="quest-rank">Квестийн Зэрэглэл (Rank):</label>
+                    <select id="quest-rank">
+                        <option value="E">E-Rank (Хялбар квест)</option>
+                        <option value="D">D-Rank (Энгийн квест)</option>
+                        <option value="C">C-Rank (Дундаж квест)</option>
+                        <option value="B">B-Rank (Хүндэвтэр квест)</option>
+                        <option value="A">A-Rank (Хэцүү квест)</option>
+                        <option value="S">S-Rank (Домогт квест)</option>
+                    </select>
+
+                    <label for="quest-metric">Нэмэгдэх бодит ахиц (Сонголттой):</label>
+                    <input type="number" id="quest-metric" placeholder="Жнь: 5 (км, цаг, эсвэл өдөр)" min="0" step="any">
+
+                    <button type="button" class="submit-btn" id="submit-quest-btn">Кветийг Идэвхжүүлэх</button>
+                </div>
+            </aside>
+
+            <article class="quest-main">
+                <h3>Идэвхтэй Квестүүд</h3>
+                <div id="quests-container" class="quest-list">
+                    <div class="loading-state">Систем уншиж байна...</div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+// ===================== 1. СИСТЕМИЙН АНХНЫ ДАТА =====================
+const defaultWebData = {
+    player: {
+        level: 1,
+        currentXp: 0,
+        xpToNextLevel: 300
+    },
+    categories: {
+        fitness:  { name: "Спорт & Фитнес",    unit: "км",   currentValue: 0, targetValue: 50,  currentTier: "E", currentXp: 0, xpToNextTier: 100 },
+        learning: { name: "Хөгжил & Сурлага",  unit: "цаг",  currentValue: 0, targetValue: 100, currentTier: "E", currentXp: 0, xpToNextTier: 100 },
+        habits:   { name: "Зуршил & Дадал",    unit: "өдөр", currentValue: 0, targetValue: 30,  currentTier: "E", currentXp: 0, xpToNextTier: 100 }
+    },
+    quests: [
+        { id: 1, title: "Өглөө эрт босох",     category: "habits",   rank: "E", xpReward: 20, metricReward: 1, completed: false },
+        { id: 2, title: "Фитнесст 5км гүйх",   category: "fitness",  rank: "D", xpReward: 40, metricReward: 5, completed: false }
+    ]
+};
+
+const TIERS = ["E", "D", "C", "B", "A", "S"];
+const TIER_COLORS = { E: "var(--tier-e)", D: "var(--tier-d)", C: "var(--tier-c)", B: "var(--tier-b)", A: "var(--tier-a)", S: "var(--tier-s)" };
+const TIER_HEX = { E: "#6b7280", D: "#0ea5e9", C: "#10b981", B: "#8b5cf6", A: "#f97316", S: "#eab308" };
+
+// Зэрэглэлд тохирсон суурь XP шагналууд
+const RANK_XP_MAP = { E: 20, D: 40, C: 80, B: 150, A: 300, S: 600 };
+
+const STORAGE_KEY = "summerProjectWebData_v2";
+let webData = null;
+
+function cloneDefault() { return JSON.parse(JSON.stringify(defaultWebData)); }
+
+// ===================== 2. PERSISTENT STORAGE =====================
+async function loadWebData() {
+    try {
+        if (window.storage && typeof window.storage.get === "function") {
+            let result = await window.storage.get(STORAGE_KEY, false);
+            webData = (result && result.value) ? JSON.parse(result.value) : cloneDefault();
+        } else {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            webData = raw ? JSON.parse(raw) : cloneDefault();
+        }
+        // Хуучин датанд шинэ систем байхгүй бол нөхөх олголт
+        if (!webData.player) webData.player = { level: 1, currentXp: 0, xpToNextLevel: 300 };
+    } catch (err) {
+        webData = cloneDefault();
+    }
+}
+
+async function saveWebData() {
+    try {
+        const serialized = JSON.stringify(webData);
+        if (window.storage && typeof window.storage.set === "function") {
+            await window.storage.set(STORAGE_KEY, serialized, false);
+        } else {
+            localStorage.setItem(STORAGE_KEY, serialized);
+        }
+    } catch (err) {
+        showToast("Дата хадгалахад алдаа гарлаа.", "error");
+    }
+}
+
+function escapeHTML(str) {
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+}
+
+function showToast(message, variant = "info", color) {
+    const container = document.getElementById("toast-container");
+    const toast = document.createElement("div");
+    toast.className = `toast${variant === "error" ? " toast-error" : ""}`;
+    if (color) toast.style.borderLeftColor = color;
+    toast.textContent = message;
+    container.appendChild(toast);
+    requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add("show")));
+    setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+    }, 4000);
+}
+
+// ===================== 3. ТАБ СОЛИХ ХЭСЭГ =====================
+document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", function () {
+        const targetId = this.dataset.tab;
+        if (!targetId) return;
+        document.querySelectorAll(".tab-btn").forEach(b => { b.classList.remove("active"); b.setAttribute("aria-selected", "false"); });
+        document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+        this.classList.add("active");
+        this.setAttribute("aria-selected", "true");
+        const target = document.getElementById(targetId);
+        if (target) target.classList.add("active");
+    });
+});
+
+// ===================== 4. ГЛОБАЛ ЛЕВЕЛ АХИХ ЛОГИК =====================
+function addGlobalXp(amount) {
+    let p = webData.player;
+    p.currentXp += amount;
+    while (p.currentXp >= p.xpToNextLevel) {
+        p.currentXp -= p.xpToNextLevel;
+        p.level += 1;
+        p.xpToNextLevel = Math.floor(p.xpToNextLevel * 1.3);
+        showToast(`⚡ СҮРТЭЙ ЮМ! ТОГЛОГЧИЙН ТҮВШИН АХИЛАА: LEVEL ${p.level} 🎉`, "info", "#fff");
+    }
+}
+
+function checkTierProgression(categoryKey) {
+    const cat = webData.categories[categoryKey];
+    if (!cat) return;
+    while (cat.currentXp >= cat.xpToNextTier) {
+        const currentIndex = TIERS.indexOf(cat.currentTier);
+        if (currentIndex < TIERS.length - 1) {
+            cat.currentXp -= cat.xpToNextTier;
+            cat.currentTier = TIERS[currentIndex + 1];
+            cat.xpToNextTier = Math.floor(cat.xpToNextTier * 1.5);
+            showToast(`${cat.name}: [${cat.currentTier} Tier] рүү ахилаа! 🛡️✨`, "info", TIER_HEX[cat.currentTier]);
+        } else {
+            cat.currentXp = cat.xpToNextTier;
+            break;
+        }
+    }
+}
+
+// ===================== 5. КВЕСТ БИЕЛҮҮЛЭХ БА УСТГАХ =====================
+function completeQuest(questId) {
+    const quest = webData.quests.find(q => q.id === questId);
+    if (!quest || quest.completed) return;
+
+    quest.completed = true;
+    const cat = webData.categories[quest.category];
+
+    if (cat) {
+        cat.currentXp += quest.xpReward;
+        if (quest.metricReward && quest.metricReward > 0) {
+            cat.currentValue = cat.currentValue + quest.metricReward;
+        }
+        checkTierProgression(quest.category);
+    }
+    
+    // Глобал түвшний XP-г бас давхар нэмнэ
+    addGlobalXp(quest.xpReward);
+
+    saveWebData();
+    renderWebUI();
+    showToast(`"${quest.title}" квест биелэв! +${quest.xpReward} EXP авлаа.`);
+}
+
+function deleteQuest(questId) {
+    const quest = webData.quests.find(q => q.id === questId);
+    if (!quest) return;
+    if (!confirm(`"${quest.title}" даалгаврыг устгах уу?`)) return;
+
+    webData.quests = webData.quests.filter(q => q.id !== questId);
+    saveWebData();
+    renderWebUI();
+    showToast("Даалгавар устгагдлаа.");
+}
+
+// ===================== 6. ШИНЭ КВЕСТ СҮҮДРЭЭС ДУУДАХ =====================
+document.getElementById("submit-quest-btn").addEventListener("click", function () {
+    const titleEl    = document.getElementById("quest-title");
+    const categoryEl = document.getElementById("quest-category");
+    const rankEl     = document.getElementById("quest-rank");
+    const metricEl   = document.getElementById("quest-metric");
+
+    const title       = titleEl.value.trim();
+    const category    = categoryEl.value;
+    const rank        = rankEl.value;
+    const metricRaw   = metricEl.value.trim();
+
+    if (!title) { showToast("Квестийн нэрийг оруулна уу.", "error"); titleEl.focus(); return; }
+    if (!category) { showToast("Ангилал сонгоно уу.", "error"); categoryEl.focus(); return; }
+
+    // Сонгосон зэрэглэлээс хамаарч автоматаар XP онооно
+    const xpReward = RANK_XP_MAP[rank] || 20;
+    const metricReward = metricRaw ? (parseFloat(metricRaw) || 0) : 0;
+
+    const newQuest = {
+        id: Date.now() + Math.floor(Math.random() * 999),
+        title,
+        category,
+        rank,
+        xpReward,
+        metricReward,
+        completed: false
+    };
+
+    webData.quests.push(newQuest);
+    saveWebData();
+    renderWebUI();
+
+    titleEl.value = "";
+    categoryEl.value = "";
+    metricEl.value = "";
+    showToast(`Номхон зогс! [${rank}-Rank] квест бүртгэгдлээ.`);
+});
+
+document.getElementById("reset-btn").addEventListener("click", function () {
+    if (!confirm("Бүх зүйлсийг устгаад анхны төлөвт шилжүүлэх үү?")) return;
+    webData = cloneDefault();
+    saveWebData();
+    renderWebUI();
+    showToast("Системийг амжилттай дахин ачааллаа.");
+});
+
+// ===================== 7. RPG СТАТУУДЫГ ТООЦОХ МАТРИЦ =====================
+function calculateAttributes() {
+    // Бодит амьдрал дээрх статуудыг ангиллын утгаас математикаар бодож гаргана
+    const fitness = webData.categories.fitness.currentValue;
+    const learning = webData.categories.learning.currentValue;
+    const habits = webData.categories.habits.currentValue;
+
+    // STR = 10 + (Спорт * 1.5)
+    const str = 10 + Math.floor(fitness * 1.5);
+    // INT = 10 + (Сурлага * 1.2)
+    const int = 10 + Math.floor(learning * 1.2);
+    // VIT = 10 + (Спорт * 0.5) + (Дадал * 2.0)
+    const vit = 10 + Math.floor((fitness * 0.5) + (habits * 2.0));
+    // WIS = 10 + (Сурлага * 0.6) + (Дадал * 1.5)
+    const wis = 10 + Math.floor((learning * 0.6) + (habits * 1.5));
+
+    document.getElementById("attr-str").textContent = str;
+    document.getElementById("attr-int").textContent = int;
+    document.getElementById("attr-vit").textContent = vit;
+    document.getElementById("attr-wis").textContent = wis;
+}
+
+// ===================== 8. UI РЕНДЕР ХЭСЭГ =====================
+function renderWebUI() {
+    // --- Глобал түвшин зурах ---
+    const p = webData.player;
+    document.getElementById("global-level").textContent = p.level;
+    document.getElementById("global-xp-text").textContent = `${p.currentXp} / ${p.xpToNextLevel}`;
+    const globalXpPercent = Math.min((p.currentXp / p.xpToNextLevel) * 100, 100);
+    document.getElementById("global-xp-bar").style.width = `${globalXpPercent}%`;
+
+    // Үндсэн статуудыг бодож шинэчлэх
+    calculateAttributes();
+
+    // --- Ангиллын картуудыг зурах ---
+    const statusContainer = document.getElementById("categories-container");
+    statusContainer.innerHTML = "";
+
+    for (const key in webData.categories) {
+        const cat = webData.categories[key];
+        const progressPercent = cat.xpToNextTier > 0 ? Math.min((cat.currentXp / cat.xpToNextTier) * 100, 100) : 100;
+        const tierColor = TIER_COLORS[cat.currentTier] || "var(--accent)";
+
+        const card = document.createElement("div");
+        card.className = "category-card";
+        card.style.setProperty("--tier-color", tierColor);
+        card.dataset.tier = cat.currentTier;
+
+        card.innerHTML = `
+            <div class="card-head">
+                <h3>${escapeHTML(cat.name)}</h3>
+                <div class="tier-pill" style="color:${TIER_HEX[cat.currentTier]}">${escapeHTML(cat.currentTier)}</div>
+            </div>
+            <div class="xp-row">
+                <span>TIER PROGRESS (XP)</span>
+                <span>${cat.currentXp} / ${cat.xpToNextTier}</span>
+            </div>
+            <div class="progress-bg">
+                <div class="progress-bar" style="width:${progressPercent}%" data-progress="${progressPercent === 0 ? '0' : ''}"></div>
+            </div>
+            <div class="progress-meta">
+                Бодит үзүүлэлт: <strong>${Number(cat.currentValue).toFixed(1)} ${escapeHTML(cat.unit)}</strong>
+            </div>
+        `;
+        statusContainer.appendChild(card);
+    }
+
+    // --- Квестүүдийг зурах ---
+    const questContainer = document.getElementById("quests-container");
+    questContainer.innerHTML = "";
+
+    if (webData.quests.length === 0) {
+        questContainer.innerHTML = `<div class="empty-state">Одоогоор ямар нэг идэвхтэй квест алга байна. Зүүн талаас нэмнэ үү.</div>`;
+        return;
+    }
+
+    webData.quests.slice().reverse().forEach(quest => {
+        const catInfo = webData.categories[quest.category];
+        const catName = catInfo ? catInfo.name : quest.category;
+        const unitStr = catInfo ? catInfo.unit : "";
+
+        const card = document.createElement("div");
+        card.className = `quest-card ${quest.completed ? "completed" : ""}`;
+
+        const metricLabel = (quest.metricReward && quest.metricReward > 0) ? ` &bull; +${quest.metricReward} ${escapeHTML(unitStr)}` : "";
+        const rankColor = TIER_HEX[quest.rank] || "var(--text-main)";
+
+        card.innerHTML = `
+            <button class="delete-btn" type="button" data-id="${quest.id}">×</button>
+            <div class="quest-rank-badge" style="color: ${rankColor}; border-color: ${rankColor}40;">${escapeHTML(quest.rank)}</div>
+            <div class="quest-info">
+                <h4 title="${escapeHTML(quest.title)}">${escapeHTML(quest.title)}</h4>
+                <small>${escapeHTML(catName)} &bull; +${quest.xpReward} XP${metricLabel}</small>
+            </div>
+            ${quest.completed 
+                ? '<span class="done-badge">COMPLETED ✓</span>' 
+                : `<button class="complete-btn" type="button" data-id="${quest.id}">БИЕЛҮҮЛЭХ</button>`
+            }
+        `;
+        questContainer.appendChild(card);
+    });
+
+    questContainer.querySelectorAll(".complete-btn").forEach(btn => {
+        btn.addEventListener("click", () => completeQuest(Number(btn.dataset.id)));
+    });
+    questContainer.querySelectorAll(".delete-btn").forEach(btn => {
+        btn.addEventListener("click", () => deleteQuest(Number(btn.dataset.id)));
+    });
+}
+
+// ===================== 9. СИСТЕМ ЭХЛҮҮЛЭХ =====================
+async function init() {
+    try {
+        await loadWebData();
+    } catch (err) {
+        webData = cloneDefault();
+    }
+    renderWebUI();
+}
+init();
+</script>
+
+</body>
+</html>
