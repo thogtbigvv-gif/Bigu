@@ -224,7 +224,7 @@ body::before {
 .level-row span { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
 .level-row strong { font-family: var(--font-display); font-size: 28px; color: #fff; text-shadow: 0 0 10px rgba(255,255,255,0.2); }
 
-/* RPG ATTRIBUTES GRID */
+/* RPG ATTRIBUTES GRID (For layout support) */
 .attributes-card {
     background: var(--glass-bg);
     backdrop-filter: blur(16px);
@@ -232,31 +232,7 @@ body::before {
     border-radius: var(--radius);
     padding: 26px;
 }
-
 .attributes-card h3 { font-family: var(--font-display); font-size: 13px; color: var(--text-muted); margin-bottom: 18px; letter-spacing: 1px; text-transform: uppercase;}
-
-.attr-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-}
-
-.attr-item {
-    background: rgba(0, 0, 0, 0.2);
-    border: 1px solid var(--glass-border);
-    padding: 14px 18px;
-    border-radius: 12px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: transform 0.2s ease;
-}
-.attr-item:hover { transform: scale(1.02); border-color: rgba(255,255,255,0.1); }
-
-.attr-name { display: flex; flex-direction: column; gap: 2px; }
-.attr-name label { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); }
-.attr-name span { font-family: var(--font-display); font-size: 13px; font-weight: bold; }
-.attr-val { font-family: var(--font-mono); font-size: 20px; font-weight: 700; color: var(--accent); text-shadow: 0 0 8px var(--accent-soft); }
 
 /* BENTO GRID FOR CATEGORIES */
 .section-title { margin-bottom: 20px; }
@@ -459,11 +435,225 @@ body::before {
 .toast.show { opacity: 1; transform: translateX(0); }
 .toast.toast-error { border-left-color: var(--danger); }
 
+/* ===================== TODAY'S MISSION PANEL ===================== */
+.mission-panel {
+    background: linear-gradient(135deg, rgba(17, 24, 39, 0.7), rgba(3, 7, 12, 0.9));
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+    border-top: 2px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 32px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3), inset 0 30px 40px rgba(16, 185, 129, 0.02);
+}
+
+.mission-panel::before {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%; width: 50%; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: scanline 4s linear infinite;
+}
+
+@keyframes scanline {
+    0% { left: -100%; }
+    100% { left: 200%; }
+}
+
+.mission-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 12px;
+}
+
+.mission-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.mission-title h2 {
+    font-family: var(--font-display);
+    font-size: 18px;
+    letter-spacing: 2px;
+    color: #fff;
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.pulse-dot {
+    width: 10px; height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 10px var(--accent);
+    animation: pulse 1.5s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    100% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 20px var(--accent); }
+}
+
+.mission-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+}
+
+.mission-body {
+    display: flex;
+    gap: 32px;
+    align-items: stretch;
+}
+
+.mission-tasks {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.mission-task {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+.mission-task:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(16, 185, 129, 0.2);
+}
+
+.task-box {
+    width: 18px; height: 18px;
+    border: 1px solid var(--text-muted);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+}
+
+.mission-task.completed .task-box {
+    border-color: var(--accent);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.mission-task.completed .task-box::after {
+    content: "■";
+    color: var(--accent);
+    font-size: 12px;
+    text-shadow: 0 0 5px var(--accent);
+}
+
+.mission-task .task-name {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.mission-task.completed .task-name {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.mission-summary {
+    width: 280px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.08);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.summary-block { margin-bottom: 16px; }
+.summary-block:last-child { margin-bottom: 0; }
+
+.summary-block span {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    letter-spacing: 1px;
+}
+
+.summary-block strong {
+    font-family: var(--font-display);
+    font-size: 16px;
+    color: #fff;
+}
+
+.summary-block.reward strong {
+    color: var(--accent);
+    text-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+
+.summary-status {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--tier-d);
+    font-style: italic;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    padding-top: 12px;
+    margin-top: 4px;
+}
+
+/* ===================== RADAR CHART SYSTEM ===================== */
+.radar-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+}
+
+.radar-svg {
+    width: 100%;
+    max-width: 300px;
+    aspect-ratio: 1;
+    overflow: visible;
+    filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.1));
+}
+
+.radar-grid { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 1; }
+.radar-axis { stroke: rgba(255, 255, 255, 0.1); stroke-width: 1; stroke-dasharray: 4 4; }
+.radar-label { font-family: var(--font-mono); font-size: 12px; fill: var(--text-muted); font-weight: 700; text-anchor: middle; dominant-baseline: middle; letter-spacing: 1px; }
+.radar-label.highlight { fill: #fff; filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); }
+
+.radar-polygon {
+    fill: rgba(16, 185, 129, 0.2);
+    stroke: var(--accent);
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 10px var(--accent));
+    transform-origin: center;
+    animation: radarReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes radarReveal {
+    0% { transform: scale(0); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
 /* ===================== RESPONSIVE ===================== */
 @media (max-width: 950px) {
     .web-header { padding: 16px 20px; flex-direction: column; gap: 16px; }
     .web-container { padding: 20px; }
     .status-top-layout, .quest-layout { grid-template-columns: 1fr; }
+    .mission-body { flex-direction: column; }
+    .mission-summary { width: 100%; }
 }
 </style>
 </head>
@@ -483,6 +673,48 @@ body::before {
 <main class="web-container">
 
     <section id="status-tab" class="tab-content active" role="tabpanel">
+        
+        <div class="mission-panel">
+            <div class="mission-header">
+                <div class="mission-title">
+                    <span class="pulse-dot"></span>
+                    <h2>TODAY'S MISSION // BRIEFING</h2>
+                </div>
+                <div class="mission-meta">OBJECTIVE: ACTIVE</div>
+            </div>
+            <div class="mission-body">
+                <div class="mission-tasks">
+                    <div class="mission-task completed">
+                        <div class="task-box"></div>
+                        <div class="task-name">Drink 2L Water</div>
+                    </div>
+                    <div class="mission-task">
+                        <div class="task-box"></div>
+                        <div class="task-name">Japanese Study (30 min)</div>
+                    </div>
+                    <div class="mission-task">
+                        <div class="task-box"></div>
+                        <div class="task-name">Workout (45 min)</div>
+                    </div>
+                </div>
+                <div class="mission-summary">
+                    <div>
+                        <div class="summary-block">
+                            <span>DAILY PROGRESS</span>
+                            <strong>1 / 3 COMPLETE (33%)</strong>
+                        </div>
+                        <div class="summary-block reward">
+                            <span>POTENTIAL REWARD</span>
+                            <strong>+120 EXP</strong>
+                        </div>
+                    </div>
+                    <div class="summary-status">
+                        "Keep moving forward. Consistency is the weapon."
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="status-top-layout">
             <div class="profile-card">
                 <div class="profile-header">
@@ -508,25 +740,9 @@ body::before {
             </div>
 
             <div class="attributes-card">
-                <h3>Үндсэн үзүүлэлтүүд (Attributes)</h3>
-                <div class="attr-grid">
-                    <div class="attr-item">
-                        <div class="attr-name"><label>STR</label><span>Хүч чадал</span></div>
-                        <div class="attr-val" id="attr-str">10</div>
+                <h3>ТАКТИКИЙН ҮЗҮҮЛЭЛТ (TACTICAL ATTRIBUTES)</h3>
+                <div class="radar-container" id="radar-container">
                     </div>
-                    <div class="attr-item">
-                        <div class="attr-name"><label>INT</label><span>Оюун ухаан</span></div>
-                        <div class="attr-val" id="attr-int">10</div>
-                    </div>
-                    <div class="attr-item">
-                        <div class="attr-name"><label>VIT</label><span>Тэвчээр</span></div>
-                        <div class="attr-val" id="attr-vit">10</div>
-                    </div>
-                    <div class="attr-item">
-                        <div class="attr-name"><label>WIS</label><span>Мэргэн ухаан</span></div>
-                        <div class="attr-val" id="attr-wis">10</div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -621,8 +837,7 @@ body::before {
                 <div class="section-title">
                     <h2>Бодит Ур Чадварууд (Acquired Skills)</h2>
                 </div>
-                <div id="skills-container" class="web-grid">
-                    </div>
+                <div id="skills-container" class="web-grid"></div>
             </article>
         </div>
     </section>
@@ -979,8 +1194,76 @@ document.addEventListener("click", async (e) => {
     }
 });
 
+// ===================== 10.5 RADAR CHART ENGINE =====================
+function renderAttributesRadar() {
+    const container = document.getElementById("radar-container");
+    if (!container) return;
+
+    // Tactical RPG Stats
+    const stats = [
+        { name: "PWR", value: 75 },
+        { name: "INT", value: 90 },
+        { name: "STA", value: 65 },
+        { name: "WIS", value: 80 },
+        { name: "CHA", value: 55 }
+    ];
+
+    const size = 300;
+    const center = size / 2;
+    const radius = 100; 
+    
+    let svg = `<svg class="radar-svg" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">`;
+
+    // 1. Draw Background Hex Grids (3 levels)
+    for (let level = 1; level <= 3; level++) {
+        const r = radius * (level / 3);
+        let points = "";
+        for (let i = 0; i < 5; i++) {
+            const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+            points += `${center + r * Math.cos(angle)},${center + r * Math.sin(angle)} `;
+        }
+        svg += `<polygon points="${points.trim()}" class="radar-grid" />`;
+    }
+
+    // 2. Draw Axes, Labels, and compute Data points
+    let dataPoints = "";
+    stats.forEach((stat, i) => {
+        const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+        
+        // Grid Axis Lines
+        const endX = center + radius * Math.cos(angle);
+        const endY = center + radius * Math.sin(angle);
+        svg += `<line x1="${center}" y1="${center}" x2="${endX}" y2="${endY}" class="radar-axis" />`;
+
+        // Text Labels (pushed slightly further out)
+        const labelX = center + (radius + 28) * Math.cos(angle);
+        const labelY = center + (radius + 28) * Math.sin(angle);
+        const isHigh = stat.value >= 80 ? "highlight" : "";
+        svg += `<text x="${labelX}" y="${labelY}" class="radar-label ${isHigh}">${stat.name}</text>`;
+
+        // Calculate Data Polygon Coordinates
+        const valRadius = radius * (stat.value / 100);
+        const valX = center + valRadius * Math.cos(angle);
+        const valY = center + valRadius * Math.sin(angle);
+        dataPoints += `${valX},${valY} `;
+        
+        // Add glowing node dots on the values
+        svg += `<circle cx="${valX}" cy="${valY}" r="4" fill="#fff" filter="drop-shadow(0 0 6px var(--accent))" />`;
+    });
+
+    // 3. Draw The Data Polygon
+    svg += `<polygon points="${dataPoints.trim()}" class="radar-polygon" />`;
+    svg += `</svg>`;
+    
+    container.innerHTML = svg;
+}
+
 // ===================== 11. ЭХЛЭХ =====================
-async function init() { await loadWebData(); renderWebUI(); }
+async function init() { 
+    await loadWebData(); 
+    renderWebUI(); 
+    renderAttributesRadar(); 
+}
 init();
 </script>
 
