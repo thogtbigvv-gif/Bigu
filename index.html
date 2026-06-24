@@ -146,7 +146,7 @@ body::before {
     to { opacity: 1; transform: translateY(0); } 
 }
 
-/* Эхлээд Профайл болон Статууд байрлах дээд Bento хэсэг */
+/* Bento дээд бүтэц */
 .status-top-layout {
     display: grid;
     grid-template-columns: 400px 1fr;
@@ -586,7 +586,6 @@ body::before {
 <main class="web-container">
 
     <section id="status-tab" class="tab-content active" role="tabpanel">
-        
         <div class="status-top-layout">
             <div class="profile-card">
                 <div class="profile-header">
@@ -661,15 +660,14 @@ body::before {
 
     <section id="quests-tab" class="tab-content" role="tabpanel">
         <div class="quest-layout">
-
             <aside class="quest-sidebar">
-                <h3>+ ШИНЭ ДААЛГАВАР ОЛОХ</h3>
-                <div class="web-form" id="add-quest-form">
+                <h3>+ ШИНЭ ДААЛГАВАР НЭМЭХ</h3>
+                <form class="web-form" id="add-quest-form">
                     <label for="quest-title">Квестийн нэр:</label>
-                    <input type="text" id="quest-title" placeholder="Жнь: 30 минут код бичих" maxlength="80">
+                    <input type="text" id="quest-title" placeholder="Жнь: 30 минут код бичих" maxlength="80" required>
 
                     <label for="quest-category">Үндсэн Ангилал:</label>
-                    <select id="quest-category">
+                    <select id="quest-category" required>
                         <option value="" disabled selected>Сонгоно уу...</option>
                         <option value="fitness">Спорт & Фитнес (STR/VIT өснө)</option>
                         <option value="learning">Хөгжил & Сурлага (INT/WIS өснө)</option>
@@ -689,8 +687,8 @@ body::before {
                     <label for="quest-metric">Нэмэгдэх бодит ахиц (Сонголттой):</label>
                     <input type="number" id="quest-metric" placeholder="Жнь: 5 (км, цаг, эсвэл өдөр)" min="0" step="any">
 
-                    <button type="button" class="submit-btn" id="submit-quest-btn">Кветийг Идэвхжүүлэх</button>
-                </div>
+                    <button type="submit" class="submit-btn" id="submit-quest-btn">Квестийг идэвхжүүлэх</button>
+                </form>
             </aside>
 
             <article class="quest-main">
@@ -699,10 +697,8 @@ body::before {
                     <div class="loading-state">Систем уншиж байна...</div>
                 </div>
             </article>
-
         </div>
     </section>
-
 </main>
 
 <div id="toast-container"></div>
@@ -729,8 +725,6 @@ const defaultWebData = {
 const TIERS = ["E", "D", "C", "B", "A", "S"];
 const TIER_COLORS = { E: "var(--tier-e)", D: "var(--tier-d)", C: "var(--tier-c)", B: "var(--tier-b)", A: "var(--tier-a)", S: "var(--tier-s)" };
 const TIER_HEX = { E: "#6b7280", D: "#0ea5e9", C: "#10b981", B: "#8b5cf6", A: "#f97316", S: "#eab308" };
-
-// Зэрэглэлд тохирсон суурь XP шагналууд
 const RANK_XP_MAP = { E: 20, D: 40, C: 80, B: 150, A: 300, S: 600 };
 
 const STORAGE_KEY = "summerProjectWebData_v2";
@@ -748,7 +742,6 @@ async function loadWebData() {
             const raw = localStorage.getItem(STORAGE_KEY);
             webData = raw ? JSON.parse(raw) : cloneDefault();
         }
-        // Хуучин датанд шинэ систем байхгүй бол нөхөх олголт
         if (!webData.player) webData.player = { level: 1, currentXp: 0, xpToNextLevel: 300 };
     } catch (err) {
         webData = cloneDefault();
@@ -832,7 +825,7 @@ function checkTierProgression(categoryKey) {
 }
 
 // ===================== 5. КВЕСТ БИЕЛҮҮЛЭХ БА УСТГАХ =====================
-function completeQuest(questId) {
+async function completeQuest(questId) {
     const quest = webData.quests.find(q => q.id === questId);
     if (!quest || quest.completed) return;
 
@@ -847,27 +840,28 @@ function completeQuest(questId) {
         checkTierProgression(quest.category);
     }
     
-    // Глобал түвшний XP-г бас давхар нэмнэ
     addGlobalXp(quest.xpReward);
 
-    saveWebData();
+    await saveWebData();
     renderWebUI();
     showToast(`"${quest.title}" квест биелэв! +${quest.xpReward} EXP авлаа.`);
 }
 
-function deleteQuest(questId) {
+async function deleteQuest(questId) {
     const quest = webData.quests.find(q => q.id === questId);
     if (!quest) return;
     if (!confirm(`"${quest.title}" даалгаврыг устгах уу?`)) return;
 
     webData.quests = webData.quests.filter(q => q.id !== questId);
-    saveWebData();
+    await saveWebData();
     renderWebUI();
     showToast("Даалгавар устгагдлаа.");
 }
 
-// ===================== 6. ШИНЭ КВЕСТ СҮҮДРЭЭС ДУУДАХ =====================
-document.getElementById("submit-quest-btn").addEventListener("click", function () {
+// ===================== 6. ШИНЭ КВЕСТ НЭМЭХ СҮҮДРЭЭС ДУУДАХ =====================
+document.getElementById("add-quest-form").addEventListener("submit", async function (e) {
+    e.preventDefault(); // Хуудас дахин ачаалагдахаас сэргийлнэ
+
     const titleEl    = document.getElementById("quest-title");
     const categoryEl = document.getElementById("quest-category");
     const rankEl     = document.getElementById("quest-rank");
@@ -881,7 +875,6 @@ document.getElementById("submit-quest-btn").addEventListener("click", function (
     if (!title) { showToast("Квестийн нэрийг оруулна уу.", "error"); titleEl.focus(); return; }
     if (!category) { showToast("Ангилал сонгоно уу.", "error"); categoryEl.focus(); return; }
 
-    // Сонгосон зэрэглэлээс хамаарч автоматаар XP онооно
     const xpReward = RANK_XP_MAP[rank] || 20;
     const metricReward = metricRaw ? (parseFloat(metricRaw) || 0) : 0;
 
@@ -896,37 +889,33 @@ document.getElementById("submit-quest-btn").addEventListener("click", function (
     };
 
     webData.quests.push(newQuest);
-    saveWebData();
+    await saveWebData();
     renderWebUI();
 
+    // Формыг зөв цэвэрлэх
     titleEl.value = "";
-    categoryEl.value = "";
+    categoryEl.selectedIndex = 0;
     metricEl.value = "";
     showToast(`Номхон зогс! [${rank}-Rank] квест бүртгэгдлээ.`);
 });
 
-document.getElementById("reset-btn").addEventListener("click", function () {
+document.getElementById("reset-btn").addEventListener("click", async function () {
     if (!confirm("Бүх зүйлсийг устгаад анхны төлөвт шилжүүлэх үү?")) return;
     webData = cloneDefault();
-    saveWebData();
+    await saveWebData();
     renderWebUI();
-    showToast("Системийг амжилттай дахин ачааллаа.");
+    showToast("Системийн өгөгдлийг амжилттай үйлдвэрийн төлөвт шилжүүллээ.");
 });
 
 // ===================== 7. RPG СТАТУУДЫГ ТООЦОХ МАТРИЦ =====================
 function calculateAttributes() {
-    // Бодит амьдрал дээрх статуудыг ангиллын утгаас математикаар бодож гаргана
     const fitness = webData.categories.fitness.currentValue;
     const learning = webData.categories.learning.currentValue;
     const habits = webData.categories.habits.currentValue;
 
-    // STR = 10 + (Спорт * 1.5)
     const str = 10 + Math.floor(fitness * 1.5);
-    // INT = 10 + (Сурлага * 1.2)
     const int = 10 + Math.floor(learning * 1.2);
-    // VIT = 10 + (Спорт * 0.5) + (Дадал * 2.0)
     const vit = 10 + Math.floor((fitness * 0.5) + (habits * 2.0));
-    // WIS = 10 + (Сурлага * 0.6) + (Дадал * 1.5)
     const wis = 10 + Math.floor((learning * 0.6) + (habits * 1.5));
 
     document.getElementById("attr-str").textContent = str;
@@ -937,14 +926,12 @@ function calculateAttributes() {
 
 // ===================== 8. UI РЕНДЕР ХЭСЭГ =====================
 function renderWebUI() {
-    // --- Глобал түвшин зурах ---
     const p = webData.player;
     document.getElementById("global-level").textContent = p.level;
     document.getElementById("global-xp-text").textContent = `${p.currentXp} / ${p.xpToNextLevel}`;
     const globalXpPercent = Math.min((p.currentXp / p.xpToNextLevel) * 100, 100);
     document.getElementById("global-xp-bar").style.width = `${globalXpPercent}%`;
 
-    // Үндсэн статуудыг бодож шинэчлэх
     calculateAttributes();
 
     // --- Ангиллын картуудыг зурах ---
@@ -1014,16 +1001,25 @@ function renderWebUI() {
         `;
         questContainer.appendChild(card);
     });
-
-    questContainer.querySelectorAll(".complete-btn").forEach(btn => {
-        btn.addEventListener("click", () => completeQuest(Number(btn.dataset.id)));
-    });
-    questContainer.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", () => deleteQuest(Number(btn.dataset.id)));
-    });
 }
 
-// ===================== 9. СИСТЕМ ЭХЛҮҮЛЭХ =====================
+// ===================== 9. EVENT DELEGATION (ҮЙЛ ЯВДАЛ ШИЛЖҮҮЛЭЛТ) =====================
+// Санах ой болон гүйцэтгэлийг сайжруулах зорилгоор гадна талд ганцхан listener үүсгэв.
+document.getElementById("quests-container").addEventListener("click", async (e) => {
+    const completeBtn = e.target.closest(".complete-btn");
+    const deleteBtn = e.target.closest(".delete-btn");
+
+    if (completeBtn) {
+        const id = Number(completeBtn.dataset.id);
+        await completeQuest(id);
+    }
+    if (deleteBtn) {
+        const id = Number(deleteBtn.dataset.id);
+        await deleteQuest(id);
+    }
+});
+
+// ===================== 10. СИСТЕМ ЭХЛҮҮЛЭХ =====================
 async function init() {
     try {
         await loadWebData();
