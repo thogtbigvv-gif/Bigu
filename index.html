@@ -528,6 +528,7 @@ body::before {
     border-radius: 12px;
     border: 1px solid rgba(255, 255, 255, 0.03);
     transition: all 0.2s ease;
+    cursor: pointer;
 }
 
 .mission-task:hover {
@@ -734,7 +735,7 @@ body::before {
                         <span id="global-xp-text">0 / 300</span>
                     </div>
                     <div class="progress-bg">
-                        <div id="global-xp-bar" class="progress-bar" style="width: 0%"></div>
+                        <div id="global-xp-bar" class="progress-bar" style="width: 0%; background: var(--accent); box-shadow: 0 0 10px var(--accent);"></div>
                     </div>
                 </div>
             </div>
@@ -760,7 +761,7 @@ body::before {
         <div class="quest-layout">
             <aside class="quest-sidebar">
                 <h3>+ ШИНЭ ДААЛГАВАР (QUEST) НЭМЭХ</h3>
-                <form class="web-form" id="add-quest-form">
+                <div class="web-form" id="add-quest-form">
                     <label>Даалгаврын нэр (Title):</label>
                     <input type="text" id="quest-title" placeholder="Жнь: 30 минут код бичих" required>
 
@@ -774,7 +775,7 @@ body::before {
 
                     <label>Даалгаврын зэрэглэл (Rank):</label>
                     <select id="quest-rank">
-                        <option value="E">E-Rank (Хялбар даалгавар)</option>
+                        <option value="E" selected>E-Rank (Хялбар даалгавар)</option>
                         <option value="D">D-Rank (Энгийн даалгавар)</option>
                         <option value="C">C-Rank (Дундаж даалгавар)</option>
                         <option value="B">B-Rank (Хүндэвтэр даалгавар)</option>
@@ -785,8 +786,8 @@ body::before {
                     <label>Нэмэгдэх бодит ахиц (Сонголттой):</label>
                     <input type="number" id="quest-metric" placeholder="Жнь: 5" min="0" step="any">
 
-                    <button type="submit" class="submit-btn">Даалгаврыг идэвхжүүлэх</button>
-                </form>
+                    <button type="button" class="submit-btn" id="submit-quest-btn">Даалгаврыг идэвхжүүлэх</button>
+                </div>
             </aside>
 
             <article class="quest-main">
@@ -800,7 +801,7 @@ body::before {
         <div class="quest-layout">
             <aside class="quest-sidebar">
                 <h3>+ ШИНЭ УР ЧАДВАР НЭМЭХ</h3>
-                <form class="web-form" id="add-skill-form">
+                <div class="web-form" id="add-skill-form">
                     <label>Ур чадварын нэр (Skill Name):</label>
                     <input type="text" id="skill-name" placeholder="Жнь: Japanese, Coding" required>
 
@@ -816,11 +817,11 @@ body::before {
                     <label>Эхлэх Түвшин (Start Level):</label>
                     <input type="number" id="skill-level" value="1" min="1" max="100" required>
 
-                    <button type="submit" class="submit-btn secondary" style="margin-bottom: 40px;">Ур чадвар үүсгэх</button>
-                </form>
+                    <button type="button" class="submit-btn secondary" style="margin-bottom: 40px;" id="submit-skill-btn">Ур чадвар үүсгэх</button>
+                </div>
 
                 <h3>▲ ТРЕЙНИНГ (ADD EXP)</h3>
-                <form class="web-form" id="add-skill-exp-form">
+                <div class="web-form" id="add-skill-exp-form">
                     <label>Хөгжүүлэх ур чадвар:</label>
                     <select id="train-skill-select" required>
                         <option value="" disabled selected>Ур чадвар сонгох...</option>
@@ -829,8 +830,8 @@ body::before {
                     <label>Олсон туршлага (EXP):</label>
                     <input type="number" id="train-exp-amount" placeholder="Жнь: 20" min="1" required>
 
-                    <button type="submit" class="submit-btn">Туршлага нэмэх</button>
-                </form>
+                    <button type="button" class="submit-btn" id="submit-skill-exp-btn">Туршлага нэмэх</button>
+                </div>
             </aside>
 
             <article class="quest-main">
@@ -917,6 +918,12 @@ const SKILL_CAT_COLORS = {
 const SKILL_CAT_NAMES = {
     language: "Хэлний мэдлэг", physical: "Бие бялдар", mental: "Оюуны чадвар", technology: "Технологи"
 };
+const SKILL_CAT_HEX = {
+    language: "#0ea5e9",
+    physical: "#ef4444",
+    mental: "#8b5cf6",
+    technology: "#10b981"
+};
 
 const STORAGE_KEY = "summerProjectWebData_v3";
 let webData = null;
@@ -945,16 +952,37 @@ function getSkillMasteryRank(level) {
 // ===================== 3. PERSISTENT STORAGE =====================
 async function loadWebData() {
     try {
-        const raw = localStorage.getItem(STORAGE_KEY);
+        let raw = null;
+        if (window.storage && typeof window.storage.get === "function") {
+            try {
+                const result = await window.storage.get(STORAGE_KEY, false);
+                raw = result && result.value ? result.value : null;
+            } catch (_) {}
+        }
+        if (raw === null) raw = localStorage.getItem(STORAGE_KEY);
         webData = raw ? JSON.parse(raw) : cloneDefault();
         if (!webData.player) webData.player = { level: 1, currentXp: 0, xpToNextLevel: 300 };
-        if (!webData.skills) webData.skills = cloneDefault().skills; // Ensure skills exist
-    } catch (err) { webData = cloneDefault(); }
+        if (!webData.skills) webData.skills = cloneDefault().skills;
+        if (!webData.quests) webData.quests = cloneDefault().quests;
+        if (!webData.categories) webData.categories = cloneDefault().categories;
+    } catch (err) {
+        console.error("loadWebData error:", err);
+        webData = cloneDefault();
+    }
 }
 
 async function saveWebData() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(webData)); } 
-    catch (err) { showToast("Дата хадгалахад алдаа гарлаа.", "error"); }
+    const serialized = JSON.stringify(webData);
+    try {
+        if (window.storage && typeof window.storage.set === "function") {
+            await window.storage.set(STORAGE_KEY, serialized, false);
+        } else {
+            localStorage.setItem(STORAGE_KEY, serialized);
+        }
+    } catch (err) {
+        console.error("saveWebData error:", err);
+        showToast("Дата хадгалахад алдаа гарлаа.", "error");
+    }
 }
 
 function escapeHTML(str) {
@@ -999,13 +1027,12 @@ async function addSkillXp(skillId, amount) {
     
     skill.currentXp += amount;
     skill.totalXp = (skill.totalXp || 0) + amount;
-    skill.streak = (skill.streak || 0) + 1; // Basic streak increment
+    skill.streak = (skill.streak || 0) + 1; 
     
     let leveledUp = false;
     while (skill.currentXp >= skill.xpToNextLevel) {
         skill.currentXp -= skill.xpToNextLevel;
         skill.level += 1;
-        // Formula for next level XP
         skill.xpToNextLevel = Math.floor(100 * Math.pow(1.2, skill.level - 1));
         leveledUp = true;
     }
@@ -1014,12 +1041,11 @@ async function addSkillXp(skillId, amount) {
     renderWebUI();
 
     if (leveledUp) {
-        showToast(`[${skill.name}] Level Up! Одоо Lv.${skill.level} хүрлээ. ✨`, "info", SKILL_CAT_COLORS[skill.category]);
-        // Trigger Animation
+        showToast(`[${skill.name}] Level Up! Одоо Lv.${skill.level} хүрлээ. ✨`, "info", SKILL_CAT_HEX[skill.category]);
         const card = document.querySelector(`.skill-card[data-id="${skill.id}"]`);
         if (card) {
             card.classList.remove("level-up-anim");
-            void card.offsetWidth; // trigger reflow
+            void card.offsetWidth; 
             card.classList.add("level-up-anim");
         }
     } else {
@@ -1035,8 +1061,8 @@ async function completeQuest(questId) {
     const cat = webData.categories[quest.category];
     if (cat) {
         cat.currentXp += quest.xpReward;
-        if (quest.metricReward > 0) cat.currentValue += quest.metricReward;
-        // Tier progression logic here (omitted for brevity, assume similar to global)
+        const metric = Number(quest.metricReward);
+        if (metric > 0) cat.currentValue = Math.min(cat.currentValue + metric, cat.targetValue * 12);
     }
     addGlobalXp(quest.xpReward);
     await saveWebData(); renderWebUI();
@@ -1056,35 +1082,64 @@ async function deleteSkill(skillId) {
 }
 
 // ===================== 7. ФОРМУУД (ADD QUEST & SKILL) =====================
-document.getElementById("add-quest-form").addEventListener("submit", async (e) => {
-    e.preventDefault(); 
-    const title = document.getElementById("quest-title").value.trim();
-    const rank = document.getElementById("quest-rank").value;
+document.getElementById("submit-quest-btn").addEventListener("click", async () => {
+    const titleEl = document.getElementById("quest-title");
+    const categoryEl = document.getElementById("quest-category");
+    const rankEl = document.getElementById("quest-rank");
+    const metricEl = document.getElementById("quest-metric");
+
+    const title = titleEl.value.trim();
+    const category = categoryEl.value;
+    const rank = rankEl.value;
+
+    if (!title) { showToast("Даалгаврын нэрийг оруулна уу.", "error"); titleEl.focus(); return; }
+    if (!category) { showToast("Ангилал сонгоно уу.", "error"); categoryEl.focus(); return; }
+
     const newQuest = {
-        id: Date.now(), title, category: document.getElementById("quest-category").value,
-        rank, xpReward: RANK_XP_MAP[rank] || 20, metricReward: parseFloat(document.getElementById("quest-metric").value) || 0, completed: false
+        id: Date.now() + Math.floor(Math.random() * 9999),
+        title, category, rank,
+        xpReward: RANK_XP_MAP[rank] || 20,
+        metricReward: parseFloat(metricEl.value) || 0,
+        completed: false
     };
-    webData.quests.push(newQuest); await saveWebData(); renderWebUI(); e.target.reset(); showToast(`Даалгавар бүртгэгдлээ.`);
+    webData.quests.push(newQuest);
+    await saveWebData(); renderWebUI();
+    titleEl.value = ""; categoryEl.value = ""; metricEl.value = "";
+    showToast(`Даалгавар бүртгэгдлээ.`);
 });
 
-document.getElementById("add-skill-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const name = document.getElementById("skill-name").value.trim();
-    const category = document.getElementById("skill-category").value;
-    const level = parseInt(document.getElementById("skill-level").value) || 1;
+document.getElementById("submit-skill-btn").addEventListener("click", async () => {
+    const nameEl = document.getElementById("skill-name");
+    const categoryEl = document.getElementById("skill-category");
+    const levelEl = document.getElementById("skill-level");
+
+    const name = nameEl.value.trim();
+    const category = categoryEl.value;
+    const level = parseInt(levelEl.value) || 1;
+
+    if (!name) { showToast("Ур чадварын нэрийг оруулна уу.", "error"); nameEl.focus(); return; }
+    if (!category) { showToast("Ангилал сонгоно уу.", "error"); categoryEl.focus(); return; }
+
     const xpToNextLevel = Math.floor(100 * Math.pow(1.2, level - 1));
-
-    const newSkill = { id: Date.now(), name, category, level, currentXp: 0, xpToNextLevel, totalXp: 0, streak: 0 };
-    webData.skills.push(newSkill); await saveWebData(); renderWebUI(); e.target.reset(); showToast(`[${name}] ур чадвар нэмэгдлээ.`);
+    const newSkill = {
+        id: Date.now() + Math.floor(Math.random() * 9999),
+        name, category, level, currentXp: 0, xpToNextLevel, totalXp: 0, streak: 0
+    };
+    webData.skills.push(newSkill);
+    await saveWebData(); renderWebUI();
+    nameEl.value = ""; categoryEl.value = ""; levelEl.value = "1";
+    showToast(`[${name}] ур чадвар нэмэгдлээ.`);
 });
 
-document.getElementById("add-skill-exp-form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const skillId = parseInt(document.getElementById("train-skill-select").value);
-    const amount = parseInt(document.getElementById("train-exp-amount").value);
-    if (!skillId || isNaN(amount)) return;
+document.getElementById("submit-skill-exp-btn").addEventListener("click", async () => {
+    const selectEl = document.getElementById("train-skill-select");
+    const amountEl = document.getElementById("train-exp-amount");
+    const skillId = parseInt(selectEl.value);
+    const amount = parseInt(amountEl.value);
+    if (!skillId || isNaN(skillId)) { showToast("Ур чадвар сонгоно уу.", "error"); selectEl.focus(); return; }
+    if (!amount || isNaN(amount) || amount < 1) { showToast("EXP дүн 1-ээс их байх ёстой.", "error"); amountEl.focus(); return; }
     await addSkillXp(skillId, amount);
-    e.target.reset();
+    amountEl.value = "";
 });
 
 document.getElementById("reset-btn").addEventListener("click", async () => {
@@ -1098,7 +1153,33 @@ function renderWebUI() {
     document.getElementById("player-rank").textContent = `Цол: ${getMilitaryRank(p.level)}`;
     document.getElementById("global-level").textContent = p.level;
     document.getElementById("global-xp-text").textContent = `${p.currentXp} / ${p.xpToNextLevel}`;
-    document.getElementById("global-xp-bar").style.width = `${Math.min((p.currentXp / p.xpToNextLevel) * 100, 100)}%`;
+    const globalPct = p.xpToNextLevel > 0 ? Math.min((p.currentXp / p.xpToNextLevel) * 100, 100) : 0;
+    document.getElementById("global-xp-bar").style.width = `${globalPct}%`;
+
+    const catContainer = document.getElementById("categories-container");
+    if (catContainer) {
+        catContainer.innerHTML = "";
+        for (const key in webData.categories) {
+            const cat = webData.categories[key];
+            const tierColor = TIER_COLORS[cat.currentTier] || "var(--tier-e)";
+            const tierHex = TIER_HEX[cat.currentTier] || "#6b7280";
+            const progressPct = cat.xpToNextTier > 0 ? Math.min((cat.currentXp / cat.xpToNextTier) * 100, 100) : 0;
+            const card = document.createElement("div");
+            card.className = "category-card";
+            card.style.setProperty("--tier-color", tierColor);
+            card.dataset.tier = cat.currentTier;
+            card.innerHTML = `
+                <div class="card-head">
+                    <h3>${escapeHTML(cat.name)}</h3>
+                    <div class="tier-pill" style="color:${tierHex}">${escapeHTML(cat.currentTier)}</div>
+                </div>
+                <div class="xp-row"><span>TIER XP</span><span>${cat.currentXp} / ${cat.xpToNextTier}</span></div>
+                <div class="progress-bg"><div class="progress-bar" style="width:${progressPct}%"></div></div>
+                <div class="progress-meta">Бодит ахиц: <strong>${Number(cat.currentValue).toFixed(1)} ${escapeHTML(cat.unit)}</strong> / ${cat.targetValue} ${escapeHTML(cat.unit)}</div>
+            `;
+            catContainer.appendChild(card);
+        }
+    }
 
     // Quests Render
     const qContainer = document.getElementById("quests-container"); qContainer.innerHTML = "";
@@ -1107,8 +1188,8 @@ function renderWebUI() {
         const div = document.createElement("div"); div.className = `quest-card ${q.completed ? "completed" : ""}`;
         div.innerHTML = `
             <button class="delete-btn" data-id="${q.id}">×</button>
-            <div class="quest-rank-badge" style="color:${TIER_HEX[q.rank]}">${q.rank}</div>
-            <div class="quest-info"><h4>${escapeHTML(q.title)}</h4><small>+${q.xpReward} XP</small></div>
+            <div class="quest-rank-badge" style="color:${TIER_HEX[q.rank] || '#6b7280'}">${escapeHTML(q.rank)}</div>
+            <div class="quest-info"><h4 title="${escapeHTML(q.title)}">${escapeHTML(q.title)}</h4><small>+${q.xpReward} XP • ${escapeHTML(q.category)}</small></div>
             ${q.completed ? '<span class="done-badge">COMPLETED ✓</span>' : `<button class="complete-btn" data-id="${q.id}">БИЕЛҮҮЛЭХ</button>`}
         `;
         qContainer.appendChild(div);
@@ -1120,10 +1201,11 @@ function renderWebUI() {
     
     if (webData.skills.length === 0) sContainer.innerHTML = `<div class="empty-state">Ур чадвар алга. Шинээр нэмнэ үү.</div>`;
     else webData.skills.forEach(s => {
-        // Dropdown populate
-        sSelect.innerHTML += `<option value="${s.id}">[Lv.${s.level}] ${escapeHTML(s.name)}</option>`;
+        const opt = document.createElement("option");
+        opt.value = s.id;
+        opt.textContent = `[Lv.${s.level}] ${s.name}`;
+        sSelect.appendChild(opt);
 
-        // Card Render
         const progress = Math.min((s.currentXp / s.xpToNextLevel) * 100, 100);
         const color = SKILL_CAT_COLORS[s.category] || "var(--accent)";
         const catName = SKILL_CAT_NAMES[s.category] || s.category;
@@ -1142,7 +1224,7 @@ function renderWebUI() {
             <div class="progress-bg"><div class="progress-bar" style="width:${progress}%"></div></div>
             ${s.streak > 0 ? `<div class="skill-streak">${s.streak} 🔥</div>` : ''}
         `;
-        div.addEventListener('click', (e) => { if(!e.target.classList.contains('delete-btn')) openSkillModal(s.id); });
+        div.addEventListener('click', (e) => { if(!e.target.closest('.delete-btn')) openSkillModal(s.id); });
         sContainer.appendChild(div);
     });
 }
@@ -1181,7 +1263,7 @@ document.getElementById("skill-modal").addEventListener("click", (e) => {
     if(e.target === document.getElementById("skill-modal")) document.getElementById("skill-modal").classList.remove("active");
 });
 
-// ===================== 10. EVENT DELEGATION =====================
+// ===================== 10. EVENT DELEGATION & TASK CLICK =====================
 document.addEventListener("click", async (e) => {
     const completeBtn = e.target.closest(".complete-btn");
     const deleteBtn = e.target.closest(".delete-btn");
@@ -1194,12 +1276,22 @@ document.addEventListener("click", async (e) => {
     }
 });
 
-// ===================== 10.5 RADAR CHART ENGINE =====================
+// Today's Mission Task дарж чагталдаг болгох
+document.querySelectorAll('.mission-task').forEach(task => {
+    task.addEventListener('click', function() {
+        this.classList.toggle('completed');
+        if(this.classList.contains('completed')) {
+            showToast("Даалгаврыг амжилттай хийлээ!", "info", "var(--accent)");
+        }
+    });
+});
+
+// ===================== 10.5 RADAR CHART ENGINE (ЗАССАН) =====================
 function renderAttributesRadar() {
     const container = document.getElementById("radar-container");
     if (!container) return;
 
-    // Tactical RPG Stats
+    // Tactical RPG Stats (Яг 5 байх ёстой)
     const stats = [
         { name: "PWR", value: 75 },
         { name: "INT", value: 90 },
@@ -1241,8 +1333,10 @@ function renderAttributesRadar() {
         const isHigh = stat.value >= 80 ? "highlight" : "";
         svg += `<text x="${labelX}" y="${labelY}" class="radar-label ${isHigh}">${stat.name}</text>`;
 
-        // Calculate Data Polygon Coordinates
-        const valRadius = radius * (stat.value / 100);
+        // ХАМГААЛАЛТ: Утгыг 0-ээс 100-ийн хооронд хязгаарлах (савнаас халихгүй)
+        const safeValue = Math.max(0, Math.min(100, stat.value));
+        const valRadius = radius * (safeValue / 100);
+        
         const valX = center + valRadius * Math.cos(angle);
         const valY = center + valRadius * Math.sin(angle);
         dataPoints += `${valX},${valY} `;
@@ -1259,10 +1353,15 @@ function renderAttributesRadar() {
 }
 
 // ===================== 11. ЭХЛЭХ =====================
-async function init() { 
-    await loadWebData(); 
-    renderWebUI(); 
-    renderAttributesRadar(); 
+async function init() {
+    try {
+        await loadWebData();
+    } catch (err) {
+        console.error("init() алдаа:", err);
+        webData = cloneDefault();
+    }
+    renderWebUI();
+    renderAttributesRadar();
 }
 init();
 </script>
