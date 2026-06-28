@@ -525,9 +525,8 @@ section {
   <div id="music-pulse"></div>
 </button>
 
-<audio id="bg-music" loop preload="none"></audio>
+<audio id="bg-music" src="Tchaikovsky - Swan Lake (Swan Theme).mp3" loop preload="none"></audio>
 
-<!-- ══════════ HERO ══════════ -->
 <section id="hero">
   <div class="candle-wrap">
     <div class="candle">
@@ -552,7 +551,6 @@ section {
   </div>
 </section>
 
-<!-- ══════════ MESSAGE ══════════ -->
 <section id="message">
   <p class="section-tag reveal">Зөвхөн чамд зориулав</p>
   <h2 class="section-title reveal">Миний үнэт Номин,</h2>
@@ -576,13 +574,11 @@ section {
   </div>
 </section>
 
-<!-- ══════════ GALLERY ══════════ -->
 <section id="gallery">
   <p class="section-tag reveal">Бидний дурсамж</p>
   <h2 class="section-title reveal">Хамтдаа өнгөрүүлсэн мөчүүд</h2>
 
   <div class="gallery-grid">
-    <!-- Replace src="..." with your own photos! -->
     <figure class="gallery-item reveal">
       <div class="gallery-img-wrapper">
         <img src="https://images.unsplash.com/photo-1522851493635-c3f91572c5a0?q=80&w=600&auto=format&fit=crop" alt="First glance" loading="lazy" />
@@ -613,7 +609,6 @@ section {
   </div>
 </section>
 
-<!-- ══════════ CLOSING ══════════ -->
 <section id="closing">
   <span class="closing-heart reveal">🤍</span>
 
@@ -621,7 +616,7 @@ section {
     Here's to nineteen years<br/>of you being wonderful.
   </h2>
 
-  <p class="closing-sub reveal">Happy Birthday, My princess 🌸</p>
+  <p class="closing-sub reveal">Happy birthday, My princess 🌸</p>
 
   <div class="stars-row reveal">
     <div class="star-dot"></div>
@@ -757,65 +752,22 @@ section {
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 })();
 
-/* ═══════════ MUSIC — WEB AUDIO AMBIENCE ═══════════ */
+/* ═══════════ MUSIC — MP3 AUDIO CONTROLLER ═══════════ */
 (function () {
   const btn  = document.getElementById('music-btn');
   const note = btn.querySelector('.note');
-  let actx, gainNode, playing = false;
+  const audio = document.getElementById('bg-music');
+  let playing = false;
 
-  /* A major pentatonic drone — bright, warm, angelic */
-  function build(ac) {
-    gainNode = ac.createGain();
-    gainNode.gain.setValueAtTime(0, ac.currentTime);
-    gainNode.connect(ac.destination);
-
-    /* Reverb simulation via convolver-free delay network */
-    const delay1 = ac.createDelay(2); delay1.delayTime.value = 0.38;
-    const delay2 = ac.createDelay(2); delay2.delayTime.value = 0.61;
-    const delayGain = ac.createGain(); delayGain.gain.value = 0.18;
-    delay1.connect(delayGain); delay2.connect(delayGain);
-    delayGain.connect(gainNode);
-
-    /* Pentatonic: A3 C#4 E4 A4 C#5 */
-    [220, 277.18, 329.63, 440, 554.37].forEach((f, i) => {
-      const osc = ac.createOscillator();
-      const g   = ac.createGain();
-      osc.type = 'sine';
-      osc.frequency.value = f;
-      g.gain.value = [0.07, 0.045, 0.04, 0.035, 0.025][i];
-      osc.connect(g); g.connect(gainNode); g.connect(delay1);
-      osc.start();
-
-      /* Slow tremolo */
-      const lfo = ac.createOscillator();
-      const lg  = ac.createGain();
-      lfo.frequency.value = 0.18 + i * 0.055;
-      lg.gain.value = 0.008;
-      lfo.connect(lg); lg.connect(g.gain);
-      lfo.start();
-    });
-  }
-
-  btn.addEventListener('click', async () => {
-    /* Try real audio file first */
-    const audio = document.getElementById('bg-music');
-    if (audio.getAttribute('src')) {
-      playing = !playing;
-      playing ? audio.play() : audio.pause();
-      btn.classList.toggle('playing', playing);
-      note.textContent = playing ? '♫' : '♪';
-      return;
-    }
-    /* Web Audio fallback */
-    if (!actx) {
-      actx = new (window.AudioContext || window.webkitAudioContext)();
-      build(actx);
-    }
-    if (actx.state === 'suspended') await actx.resume();
+  btn.addEventListener('click', () => {
     playing = !playing;
-    gainNode.gain.cancelScheduledValues(actx.currentTime);
-    gainNode.gain.setValueAtTime(gainNode.gain.value, actx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(playing ? 0.38 : 0, actx.currentTime + 1.4);
+    
+    if (playing) {
+      audio.play().catch(err => console.error("Audio playback failed:", err));
+    } else {
+      audio.pause();
+    }
+    
     btn.classList.toggle('playing', playing);
     note.textContent = playing ? '♫' : '♪';
   });
