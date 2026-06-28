@@ -48,6 +48,7 @@ body {
   inset: 0;
   z-index: 0;
   pointer-events: none;
+  will-change: contents;
 }
 
 /* ─── MUSIC BUTTON ─── */
@@ -368,9 +369,10 @@ section {
   opacity: 0; transform: translateY(36px);
   transition: opacity 0.85s ease, transform 0.85s ease, box-shadow 0.4s ease;
   cursor: default;
+  will-change: transform, opacity;
 }
 .gallery-item.visible { opacity: 1; transform: translateY(0); }
-.gallery-item:nth-child(even).visible { transform: translateY(28px); }
+.gallery-item:nth-child(even).visible { transform: translateY(0); }
 .gallery-item:nth-child(1) { transition-delay: 0s; }
 .gallery-item:nth-child(2) { transition-delay: 0.1s; }
 .gallery-item:nth-child(3) { transition-delay: 0.2s; }
@@ -422,14 +424,14 @@ section {
 .closing-heart {
   font-size: 4rem;
   display: inline-block;
-  opacity: 0; transform: scale(0.75);
-  transition: opacity 1s ease, transform 1s cubic-bezier(0.34,1.56,0.64,1);
+  opacity: 0;
+  transition: opacity 1s ease;
   margin-bottom: 28px;
   animation: soft-float 4.5s ease-in-out infinite;
   animation-play-state: paused;
 }
 .closing-heart.visible {
-  opacity: 1; transform: scale(1);
+  opacity: 1;
   animation-play-state: running;
 }
 @keyframes soft-float {
@@ -504,7 +506,13 @@ section {
 
 /* ─── REDUCED MOTION ─── */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
+  .reveal, .message-card, .closing-heart, .closing-title, .closing-sub, .stars-row {
+    opacity: 1 !important; transform: none !important; transition: none !important;
+  }
+  .hero-eyebrow, .hero-title, .hero-date, .candle-wrap, .hero-scroll {
+    opacity: 1 !important; animation: none !important;
+  }
 }
 </style>
 </head>
@@ -564,7 +572,7 @@ section {
       Орчлон ертөнцөд орших хамгийн нандин, зөөлөн бүхэн зөвхөн чамд минь зориулагдаасай. Чиний сайхан сэтгэлд багтах тэр их баяр баясгалан, хайр дурлалыг би чамдаа хүсэж байна. Өнөөдөр ч, бас маргааш ч чамайг хэчнээн их, хязгааргүй гүн гүнзгий хайрладаг болохыг минь мэдрээсэй гэж хүснэ.
     </p>
 
-    <span class="message-sig">— Always yours ✦</span>
+    <span class="message-sig">— Үүрд чинийх ✦</span>
   </div>
 </section>
 
@@ -647,7 +655,7 @@ section {
     canvas.height = window.innerHeight * dpr;
     canvas.style.width  = window.innerWidth  + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    ctx.scale(dpr, dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
 
   class Petal {
@@ -702,7 +710,7 @@ section {
   }
 
   (function loop() {
-    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.clearRect(0, 0, canvas.width / dpr, canvas.height / dpr);
     for (let i = ps.length - 1; i >= 0; i--) {
       ps[i].step();
       ps[i].draw();
@@ -711,7 +719,7 @@ section {
     requestAnimationFrame(loop);
   })();
 
-  window.addEventListener('resize', () => { resize(); });
+  window.addEventListener('resize', resize);
   resize();
 
   /* Touch / click burst */
@@ -791,7 +799,7 @@ section {
   btn.addEventListener('click', async () => {
     /* Try real audio file first */
     const audio = document.getElementById('bg-music');
-    if (audio.src && audio.src !== location.href) {
+    if (audio.getAttribute('src')) {
       playing = !playing;
       playing ? audio.play() : audio.pause();
       btn.classList.toggle('playing', playing);
@@ -807,7 +815,7 @@ section {
     playing = !playing;
     gainNode.gain.cancelScheduledValues(actx.currentTime);
     gainNode.gain.setValueAtTime(gainNode.gain.value, actx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(playing ? 1 : 0, actx.currentTime + 1.4);
+    gainNode.gain.linearRampToValueAtTime(playing ? 0.38 : 0, actx.currentTime + 1.4);
     btn.classList.toggle('playing', playing);
     note.textContent = playing ? '♫' : '♪';
   });
