@@ -342,77 +342,122 @@ section {
   display: block;
 }
 
-/* ══════════════ GALLERY ══════════════ */
+/* ══════════════ GALLERY — single video ══════════════ */
 #gallery {
   text-align: center;
   background-image: radial-gradient(ellipse 60% 50% at 80% 50%, rgba(234,216,200,0.35) 0%, transparent 65%);
+  padding: 80px 24px;
 }
 
-/* Replace placeholder images with illustrated memory cards */
-.gallery-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  max-width: 480px;
+.single-video-wrap {
   width: 100%;
-  margin-top: 36px;
-}
-
-/* Even cards offset downward for staggered masonry feel */
-.gallery-item:nth-child(even) { margin-top: 28px; }
-
-.gallery-item {
-  border-radius: 22px;
+  max-width: 340px;
+  margin: 0 auto;
+  border-radius: 28px;
   overflow: hidden;
-  background: var(--white);
-  box-shadow: 0 12px 32px var(--glow-rose), 0 2px 8px rgba(0,0,0,0.04);
-  opacity: 0; transform: translateY(36px);
-  transition: opacity 0.85s ease, transform 0.85s ease, box-shadow 0.4s ease;
-  cursor: default;
-  will-change: transform, opacity;
-}
-.gallery-item.visible { opacity: 1; transform: translateY(0); }
-.gallery-item:nth-child(even).visible { transform: translateY(0); }
-.gallery-item:nth-child(1) { transition-delay: 0s; }
-.gallery-item:nth-child(2) { transition-delay: 0.1s; }
-.gallery-item:nth-child(3) { transition-delay: 0.2s; }
-.gallery-item:nth-child(4) { transition-delay: 0.3s; }
-
-/* Touch/hover lift — only apply after visible */
-.gallery-item.visible:active { transform: scale(0.97); }
-
-.gallery-img-wrapper {
-  width: 100%;
-  aspect-ratio: 3/4;
+  box-shadow:
+    0 24px 60px var(--glow-rose),
+    0 8px 24px rgba(217,131,158,0.12),
+    inset 0 0 0 1px rgba(255,255,255,0.5);
+  background: var(--bg-cream);
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 1.1s ease 0.15s, transform 1.1s ease 0.15s;
   position: relative;
-  overflow: hidden;
 }
-.gallery-img-wrapper img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 1.6s cubic-bezier(0.25,0.46,0.45,0.94);
+.single-video-wrap.visible {
+  opacity: 1;
+  transform: translateY(0);
 }
-.gallery-item:hover .gallery-img-wrapper img,
-.gallery-item:focus-within .gallery-img-wrapper img { transform: scale(1.07); }
 
-/* Soft gradient overlay on image */
-.gallery-img-wrapper::after {
+.single-video-wrap video {
+  width: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* Soft gradient overlay */
+.single-video-wrap::after {
   content: '';
   position: absolute; inset: 0;
-  background: linear-gradient(to top, rgba(253,251,247,0.55) 0%, transparent 45%);
+  background: linear-gradient(to top, rgba(253,251,247,0.45) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: 28px;
+}
+
+/* Play / pause overlay button */
+.video-play-btn {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.25s ease;
+}
+
+.video-play-btn .play-icon {
+  width: 54px; height: 54px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.82);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1.5px solid rgba(217,131,158,0.3);
+  box-shadow: 0 6px 20px rgba(217,131,158,0.22), inset 0 0 0 1px rgba(255,255,255,0.7);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  color: var(--rose);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.25s ease;
   pointer-events: none;
 }
 
-.gallery-caption {
-  font-family: 'Playfair Display', serif;
-  font-style: italic;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  padding: 12px 14px 14px;
-  letter-spacing: 0.03em;
-  line-height: 1.4;
+.single-video-wrap.is-playing .video-play-btn .play-icon {
+  opacity: 0;
+  transform: scale(0.82);
 }
+.single-video-wrap.is-playing:hover .video-play-btn .play-icon,
+.single-video-wrap.is-playing:focus-within .video-play-btn .play-icon {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Soft rose ring pulse while playing */
+.video-play-btn .play-pulse {
+  position: absolute;
+  inset: -8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--rose-light);
+  opacity: 0;
+  pointer-events: none;
+}
+.single-video-wrap.is-playing .video-play-btn .play-pulse {
+  animation: pulse-ring 2.2s ease-out infinite;
+}
+
+/* Muted badge */
+.video-muted-badge {
+  position: absolute;
+  bottom: 14px; right: 14px;
+  z-index: 3;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(217,131,158,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  pointer-events: all;
+}
+.video-muted-badge:hover { opacity: 0.8; }
 
 /* ══════════════ CLOSING ══════════════ */
 #closing {
@@ -525,7 +570,7 @@ section {
   <div id="music-pulse"></div>
 </button>
 
-<audio id="bg-music" src="Tchaikovsky%20-%20Swan%20Lake%20(Swan%20Theme).mp3" loop preload="none"></audio>
+<audio id="bg-music" src="music_mp3.mov" loop preload="none"></audio>
 
 <section id="hero">
   <div class="candle-wrap">
@@ -575,37 +620,20 @@ section {
 </section>
 
 <section id="gallery">
-  <p class="section-tag reveal">Бидний дурсамж</p>
-  <h2 class="section-title reveal">Хамтдаа өнгөрүүлсэн мөчүүд</h2>
-
-  <div class="gallery-grid">
-    <figure class="gallery-item reveal">
-      <div class="gallery-img-wrapper">
-        <img src="https://images.unsplash.com/photo-1522851493635-c3f91572c5a0?q=80&w=600&auto=format&fit=crop" alt="First glance" loading="lazy" decoding="async" />
-      </div>
-      <figcaption class="gallery-caption">Анхны харц</figcaption>
-    </figure>
-
-    <figure class="gallery-item reveal">
-      <div class="gallery-img-wrapper">
-        <img src="https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f?q=80&w=600&auto=format&fit=crop" alt="Precious smile" loading="lazy" decoding="async" />
-      </div>
-      <figcaption class="gallery-caption">Хамгийн нандин инээмсэглэл</figcaption>
-    </figure>
-
-    <figure class="gallery-item reveal">
-      <div class="gallery-img-wrapper">
-        <img src="https://images.unsplash.com/photo-1518002054494-3a6f94352e9d?q=80&w=600&auto=format&fit=crop" alt="My peace" loading="lazy" decoding="async" />
-      </div>
-      <figcaption class="gallery-caption">Миний амар амгалан</figcaption>
-    </figure>
-
-    <figure class="gallery-item reveal">
-      <div class="gallery-img-wrapper">
-        <img src="https://images.unsplash.com/photo-1606822294154-18deeb930517?q=80&w=600&auto=format&fit=crop" alt="Together forever" loading="lazy" decoding="async" />
-      </div>
-      <figcaption class="gallery-caption">Үүрд хамтдаа</figcaption>
-    </figure>
+  <div class="single-video-wrap reveal">
+    <video
+      src="video_mp4.MP4"
+      preload="auto"
+      playsinline
+      muted
+      loop
+      aria-label="Бидний дурсамж"
+    ></video>
+    <button class="video-play-btn" aria-label="Play / pause">
+      <span class="play-icon">▶</span>
+      <span class="play-pulse"></span>
+    </button>
+    <span class="video-muted-badge" title="Toggle sound" aria-label="Toggle sound">🔇</span>
   </div>
 </section>
 
@@ -763,6 +791,53 @@ section {
     });
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+})();
+
+/* ═══════════ SINGLE VIDEO ═══════════ */
+(function () {
+  const wrap    = document.querySelector('#gallery .single-video-wrap');
+  if (!wrap) return;
+  const video   = wrap.querySelector('video');
+  const playBtn = wrap.querySelector('.video-play-btn');
+  const muteBtn = wrap.querySelector('.video-muted-badge');
+
+  function togglePlay(e) {
+    e.stopPropagation();
+    if (wrap.classList.contains('is-playing')) {
+      video.pause();
+      wrap.classList.remove('is-playing');
+      playBtn.querySelector('.play-icon').textContent = '▶';
+    } else {
+      video.play().catch(err => { console.error("Video playback failed:", err); });
+      wrap.classList.add('is-playing');
+      playBtn.querySelector('.play-icon').textContent = '⏸';
+    }
+  }
+
+  playBtn.addEventListener('click', togglePlay);
+
+  function toggleMute(e) {
+    e.stopPropagation();
+    video.muted = !video.muted;
+    muteBtn.textContent = video.muted ? '🔇' : '🔊';
+  }
+  muteBtn.addEventListener('click', toggleMute);
+
+  video.addEventListener('ended', () => {
+    wrap.classList.remove('is-playing');
+    playBtn.querySelector('.play-icon').textContent = '▶';
+  });
+
+  /* Pause when scrolled out of view */
+  new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting && wrap.classList.contains('is-playing')) {
+        video.pause();
+        wrap.classList.remove('is-playing');
+        playBtn.querySelector('.play-icon').textContent = '▶';
+      }
+    });
+  }, { threshold: 0.1 }).observe(wrap);
 })();
 
 /* ═══════════ MUSIC — WEB AUDIO API WRAPPER ═══════════ */
