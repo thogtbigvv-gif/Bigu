@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>[Нэр] — миний ертөнц</title>
+<meta name="description" content="Дижитал орон зай — CV биш, блог биш, зүгээр л би.">
+
+<!--
+  ЗААВАР (устгаад болно):
+  - Доорх бүх [ХАЙЛТ] тэмдэгтэй хэсгүүд болон "жишээ бичвэр" гэсэн текстүүдийг
+    өөрийн бодит агуулгаараа сольж бич.
+  - Өнгө / фонт / animation-ийн систем :root доторх CSS variable-үүд дээр суурилдаг тул
+    нэг л газар өөрчилбөл бүх хуудсанд тархина.
+  - 8 бүлэг (Эхлэл → Хэн бэ → Бодол → Дуртай зүйл → Бүтээл → Итгэл үнэмшил → Зорилго → Төгсгөл)
+    scroll-snap-аар холбогдсон тул шинэ бүлэг нэмэхдээ spine nav-д мөн нэмнэ.
+-->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,900;1,400;1,500;1,600&family=Golos+Text:wght@400;500;600;700;800&family=PT+Mono&display=swap" rel="stylesheet">
+
+<style>
+  /* ============ TOKENS ============ */
+  :root{
+    --bg:#0b0e14;
+    --bg-soft:#12172a;
+    --panel:#161b2e;
+    --ink:#edeef2;
+    --ink-muted:#8b90a8;
+    --gold:#e8b564;
+    --gold-soft:rgba(232,181,100,.16);
+    --blue:#7c93ff;
+    --blue-soft:rgba(124,147,255,.18);
+    --line:rgba(255,255,255,.09);
+    --radius:20px;
+    --ease:cubic-bezier(.16,.84,.44,1);
+    --mood: var(--blue-soft);
+
+    --font-display:'Playfair Display', Georgia, 'PT Serif', serif;
+    --font-body:'Golos Text', 'Segoe UI', sans-serif;
+    --font-mono:'PT Mono', ui-monospace, 'Courier New', monospace;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--font-body);
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  html.has-cursor, html.has-cursor *{cursor:none !important;}
+  ::selection{background:var(--gold); color:#151206;}
+
+  a{color:inherit; text-decoration:none;}
+  :focus-visible{outline:2px solid var(--gold); outline-offset:4px; border-radius:4px;}
+
+  /* thin gold scrollbar for the main scroller */
+  #scroller::-webkit-scrollbar{width:6px;}
+  #scroller::-webkit-scrollbar-track{background:transparent;}
+  #scroller::-webkit-scrollbar-thumb{background:var(--gold); opacity:.5; border-radius:99px;}
+
+  /* ============ AMBIENT LAYERS ============ */
+  .grain{
+    position:fixed; inset:0; z-index:1; pointer-events:none;
+    opacity:.045; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .mood-wash{
+    position:fixed; inset:-10%; z-index:0; pointer-events:none;
+    background:radial-gradient(ellipse 60% 45% at 50% 18%, var(--mood), transparent 70%);
+    transition:background 1.4s var(--ease);
+  }
+  #dust{position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.55;}
+
+  .cursor-dot,.cursor-ring{
+    position:fixed; top:0; left:0; z-index:999; pointer-events:none;
+    border-radius:50%; transform:translate(-50%,-50%);
+  }
+  .cursor-dot{width:6px; height:6px; background:var(--gold);}
+  .cursor-ring{
+    width:34px; height:34px; border:1px solid var(--gold); opacity:.6;
+    transition:width .25s var(--ease), height .25s var(--ease), opacity .25s var(--ease);
+  }
+  html.cursor-hover .cursor-ring{width:56px; height:56px; opacity:1; background:var(--gold-soft);}
+  @media (pointer:coarse){ .cursor-dot,.cursor-ring{display:none;} }
+
+  /* ============ SPINE NAV ============ */
+  .spine{
+    position:fixed; left:28px; top:50%; transform:translateY(-50%);
+    z-index:50; display:flex; flex-direction:column; gap:22px;
+  }
+  .spine-thread{
+    position:absolute; left:2.5px; top:5px; bottom:5px; width:1px;
+    background:var(--line); z-index:-1;
+  }
+  .spine-thread-fill{
+    position:absolute; left:0; top:0; width:100%; height:0%;
+    background:var(--gold); transition:height .5s var(--ease);
+  }
+  .spine li{
+    list-style:none; display:flex; align-items:center; gap:10px;
+    cursor:pointer;
+  }
+  .spine-dot{
+    width:6px; height:6px; border-radius:50%;
+    border:1px solid var(--ink-muted); background:transparent;
+    transition:all .35s var(--ease); flex:none;
+  }
+  .spine-label{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--ink-muted);
+    opacity:0; transform:translateX(-6px);
+    transition:all .35s var(--ease); white-space:nowrap;
+  }
+  .spine li:hover .spine-label{opacity:.8; transform:translateX(0);}
+  .spine li.active .spine-dot{background:var(--gold); border-color:var(--gold); box-shadow:0 0 10px var(--gold);}
+  .spine li.active .spine-label{opacity:1; color:var(--ink); transform:translateX(0);}
+  @media (max-width:860px){ .spine{display:none;} }
+
+  /* ============ SCROLLER / CHAPTERS ============ */
+  #scroller{
+    position:relative; z-index:1;
+    height:100vh; overflow-y:scroll; scroll-snap-type:y proximity; scroll-behavior:smooth;
+  }
+  .chapter{
+    min-height:100vh; scroll-snap-align:start;
+    display:flex; align-items:center;
+    padding:clamp(28px,7vw,120px);
+    position:relative;
+  }
+  .chapter-inner{max-width:760px;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.14em;
+    color:var(--ink-muted); text-transform:uppercase; margin-bottom:22px;
+  }
+  .eyebrow .num{
+    padding:3px 9px; border:1px solid var(--line); border-radius:999px;
+    color:var(--gold);
+  }
+  h2.title{
+    font-family:var(--font-display); font-weight:600; font-style:italic;
+    font-size:clamp(30px,4.6vw,52px); line-height:1.15; margin:0 0 22px;
+  }
+  p.lead{
+    font-size:clamp(16px,1.6vw,19px); line-height:1.75; color:var(--ink);
+    max-width:56ch; margin:0;
+  }
+  p.lead + p.lead{margin-top:16px;}
+
+  .reveal{opacity:0; transform:translateY(28px); transition:opacity .9s var(--ease), transform .9s var(--ease);}
+  .reveal.in-view{opacity:1; transform:translateY(0);}
+
+  /* ---- HERO ---- */
+  .hero{align-items:center; justify-content:flex-start;}
+  .hero-inner{max-width:820px;}
+  .hero .eyebrow{color:var(--gold);}
+  h1.hero-title{
+    font-family:var(--font-display); font-weight:700; font-style:italic;
+    font-size:clamp(40px,8vw,84px); line-height:1.05; margin:0 0 26px;
+  }
+  p.hero-sub{
+    font-size:clamp(16px,1.8vw,20px); color:var(--ink-muted); max-width:52ch; line-height:1.7;
+  }
+  p.hero-sub em{color:var(--gold); font-style:italic;}
+  .horizon-wrap{position:absolute; left:0; right:0; bottom:64px; padding:0 clamp(28px,7vw,120px);}
+  .horizon-wrap svg{width:100%; height:60px; display:block; overflow:visible;}
+  #horizonPath{
+    fill:none; stroke:var(--gold); stroke-width:1.2; stroke-linecap:round;
+    stroke-dasharray:900; stroke-dashoffset:900;
+    animation:drawLine 2.6s var(--ease) .4s forwards;
+  }
+  html.reduced #horizonPath{stroke-dashoffset:0; animation:none;}
+  .scroll-cue{
+    position:absolute; left:clamp(28px,7vw,120px); bottom:16px;
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.1em;
+    color:var(--ink-muted); display:flex; align-items:center; gap:8px; cursor:pointer;
+  }
+  .scroll-cue span{animation:bounce 2.2s ease-in-out infinite;}
+  html.reduced .scroll-cue span{animation:none;}
+
+  @keyframes drawLine{to{stroke-dashoffset:0;}}
+  @keyframes bounce{0%,100%{transform:translateY(0); opacity:.5;} 50%{transform:translateY(6px); opacity:1;}}
+
+  /* ---- WHO / THINK shared text chapters ---- */
+  #who .chapter-inner, #believe .chapter-inner{margin-left:auto;}
+
+  .think-lines{display:flex; flex-direction:column; gap:20px; margin-top:8px;}
+  .think-lines p{
+    font-family:var(--font-display); font-style:italic; font-weight:500;
+    font-size:clamp(20px,3vw,30px); margin:0; color:var(--ink);
+  }
+  .think-lines p:nth-child(2){color:var(--gold);}
+
+  /* ---- LOVE grid ---- */
+  .love-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-top:12px; max-width:640px;
+  }
+  @media (max-width:640px){ .love-grid{grid-template-columns:1fr;} }
+  .love-card{
+    background:rgba(22,27,46,.55); backdrop-filter:blur(14px);
+    border:1px solid var(--line); border-radius:var(--radius);
+    padding:24px; transition:transform .4s var(--ease), border-color .4s var(--ease);
+  }
+  .love-card:hover{transform:translateY(-6px); border-color:var(--gold);}
+  .love-card .k{
+    font-family:var(--font-mono); font-size:11px; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--gold); display:block; margin-bottom:10px;
+  }
+  .love-card .v{font-size:15px; line-height:1.6; color:var(--ink-muted);}
+
+  /* ---- BUILD list ---- */
+  .build-list{margin-top:14px; max-width:660px;}
+  .build-item{
+    display:flex; gap:22px; padding:22px 0; border-top:1px solid var(--line);
+  }
+  .build-item:last-child{border-bottom:1px solid var(--line);}
+  .build-item .idx{
+    font-family:var(--font-mono); color:var(--ink-muted); font-size:13px; padding-top:3px; flex:none; width:28px;
+  }
+  .build-item h3{
+    font-family:var(--font-body); font-weight:700; font-size:18px; margin:0 0 6px; color:var(--ink);
+  }
+  .build-item p{margin:0; font-size:14.5px; line-height:1.65; color:var(--ink-muted); max-width:48ch;}
+  .build-item:hover .idx{color:var(--gold);}
+
+  /* ---- BELIEVE ---- */
+  .believe-lines{display:flex; flex-direction:column; gap:26px; margin-top:10px;}
+  .believe-lines p{
+    font-family:var(--font-display); font-style:italic; font-weight:600;
+    font-size:clamp(22px,3.4vw,34px); margin:0;
+  }
+  .believe-lines p:nth-child(1){align-self:flex-end; text-align:right;}
+  .believe-lines p:nth-child(3){color:var(--gold);}
+
+  /* ---- GOING timeline ---- */
+  .timeline{margin-top:16px; max-width:600px; position:relative; padding-left:26px;}
+  .timeline::before{
+    content:''; position:absolute; left:4px; top:6px; bottom:6px; width:1px; background:var(--line);
+  }
+  .timeline-item{position:relative; padding-bottom:34px;}
+  .timeline-item:last-child{padding-bottom:0;}
+  .timeline-item::before{
+    content:''; position:absolute; left:-26px; top:5px; width:9px; height:9px; border-radius:50%;
+    background:var(--bg); border:1px solid var(--gold);
+  }
+  .timeline-item .when{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.08em; color:var(--gold); display:block; margin-bottom:6px;
+  }
+  .timeline-item p{margin:0; font-size:15px; line-height:1.65; color:var(--ink-muted); max-width:46ch;}
+
+  /* ---- END ---- */
+  .end .chapter-inner{max-width:640px; text-align:left;}
+  .end-actions{display:flex; gap:14px; margin-top:32px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-mono); font-size:13px; letter-spacing:.06em;
+    padding:13px 22px; border-radius:999px; border:1px solid var(--line);
+    color:var(--ink); transition:all .3s var(--ease); display:inline-flex; align-items:center; gap:8px;
+  }
+  .btn:hover{border-color:var(--gold); color:var(--gold);}
+  .btn.primary{background:var(--gold); color:#151206; border-color:var(--gold);}
+  .btn.primary:hover{background:transparent; color:var(--gold);}
+  .end-foot{
+    margin-top:70px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink-muted); opacity:.6;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{transition:none !important; opacity:1 !important; transform:none !important;}
+    .scroll-cue span{animation:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="mood-wash" id="moodWash"></div>
+<canvas id="dust"></canvas>
+<div class="cursor-dot" id="cursorDot"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<nav class="spine" id="spine">
+  <div class="spine-thread"><div class="spine-thread-fill" id="threadFill"></div></div>
+  <ul>
+    <li data-target="start" class="active"><span class="spine-dot"></span><span class="spine-label">Эхлэл</span></li>
+    <li data-target="who"><span class="spine-dot"></span><span class="spine-label">Хэн бэ</span></li>
+    <li data-target="think"><span class="spine-dot"></span><span class="spine-label">Бодол</span></li>
+    <li data-target="love"><span class="spine-dot"></span><span class="spine-label">Дуртай зүйл</span></li>
+    <li data-target="build"><span class="spine-dot"></span><span class="spine-label">Бүтээл</span></li>
+    <li data-target="believe"><span class="spine-dot"></span><span class="spine-label">Итгэл</span></li>
+    <li data-target="going"><span class="spine-dot"></span><span class="spine-label">Зорилго</span></li>
+    <li data-target="end"><span class="spine-dot"></span><span class="spine-label">Төгсгөл</span></li>
+  </ul>
+</nav>
+
+<main id="scroller">
+
+  <!-- I. START -->
+  <section id="start" class="chapter hero" data-mood="blue">
+    <div class="hero-inner">
+      <div class="eyebrow"><span class="num">I</span> digital identity space</div>
+      <h1 class="hero-title">Энэ бол<br>миний ертөнц.</h1>
+      <p class="hero-sub">CV биш. Блог биш. Instagram ч биш.<br>Зүгээр л — <em>би</em>, цаг хугацаатай хамт өөрчлөгдөж буй.</p>
+    </div>
+    <div class="horizon-wrap">
+      <svg viewBox="0 0 1000 60" preserveAspectRatio="none">
+        <path id="horizonPath" d="M0,40 C120,10 200,55 320,30 C440,5 520,50 640,25 C760,0 840,45 1000,20"></path>
+      </svg>
+    </div>
+    <div class="scroll-cue" id="scrollCue"><span>↓</span> доош гүйлгэнэ үү</div>
+  </section>
+
+  <!-- II. WHO AM I -->
+  <section id="who" class="chapter" data-mood="gold">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">II</span> who am i</div>
+      <h2 class="title reveal" data-delay="80">Нэрийг чинь мэдэхээс өмнө...</h2>
+      <p class="lead reveal" data-delay="160">
+        <!-- жишээ бичвэр — өөрийн тухай бодит агуулгаараа сольж бич -->
+        Би бол шөнийн цагаар код бичиж, өдрийн цагаар шинэ зүйл сурдаг хүн.
+        Асуулт тавихаа больдоггүй — хариулт олдоогүй ч гэсэн эрэл хайгуулаа үргэлжлүүлдэг.
+      </p>
+      <p class="lead reveal" data-delay="240">
+        Хэл сурах, зохион байгуулах, бүтээх — эдгээр бүгд миний хувьд нэг л зүйл рүү очдог:
+        ертөнцийг арай илүү ойлгох гэсэн тасралтгүй оролдлого.
+      </p>
+    </div>
+  </section>
+
+  <!-- III. HOW I THINK -->
+  <section id="think" class="chapter" data-mood="blue">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">III</span> how i think</div>
+      <h2 class="title reveal" data-delay="80">Тэгвэл яаж бодох вэ?</h2>
+      <div class="think-lines">
+        <p class="reveal" data-delay="160">Асуулт — хариултаас чухал.</p>
+        <p class="reveal" data-delay="260">Төгс байдлаас илүү, цаг тухайд нь дуусгасан нь дээр.</p>
+        <p class="reveal" data-delay="360">Сурах гэдэг насан туршийн төсөл.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- IV. WHAT I LOVE -->
+  <section id="love" class="chapter" data-mood="gold">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">IV</span> what i love</div>
+      <h2 class="title reveal" data-delay="80">Юунд дурладаг вэ?</h2>
+      <div class="love-grid">
+        <div class="love-card reveal" data-delay="140">
+          <span class="k">хөгжим</span>
+          <span class="v"><!-- яг одоо сонсож байгаа дуу --> одоо сонсож буй дуугаа энд бич</span>
+        </div>
+        <div class="love-card reveal" data-delay="200">
+          <span class="k">ном</span>
+          <span class="v"><!-- дуртай ном --> унших дуртай номоо энд бич</span>
+        </div>
+        <div class="love-card reveal" data-delay="260">
+          <span class="k">кино / anime</span>
+          <span class="v"><!-- сүүлд үзсэн бүтээл --> санаанд үлдсэн бүтээлээ энд бич</span>
+        </div>
+        <div class="love-card reveal" data-delay="320">
+          <span class="k">эшлэл</span>
+          <span class="v"><!-- таалагдсан нэг мөр --> дуртай нэг мөр эшлэлээ энд бич</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- V. WHAT I BUILD -->
+  <section id="build" class="chapter" data-mood="blue">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">V</span> what i build</div>
+      <h2 class="title reveal" data-delay="80">Юу бүтээдэг вэ?</h2>
+      <div class="build-list">
+        <div class="build-item reveal" data-delay="140">
+          <span class="idx">01</span>
+          <div>
+            <h3>Чөлөөт Парламент</h3>
+            <p>Хууль зүйн боловсрол дэмжсэн иргэний оролцооны платформ — хуулийн төсөл унших, байр сууриа илэрхийлэх, эх сурвалжтай хэлэлцүүлэг өрнүүлэх орон зай.</p>
+          </div>
+        </div>
+        <div class="build-item reveal" data-delay="200">
+          <span class="idx">02</span>
+          <div>
+            <h3>Хувийн хөгжлийн quest-хэрэгсэл</h3>
+            <p>Ур чадвар, зорилтуудыг RPG маягаар түвшин ахиулж, өдөр тутмын оролдлогыг тоглоом шиг харуулдаг хувийн dashboard.</p>
+          </div>
+        </div>
+        <div class="build-item reveal" data-delay="260">
+          <span class="idx">03</span>
+          <div>
+            <h3>Жижиг вэб-туршилтууд</h3>
+            <p>Animation, дуу чимээ, харилцан үйлчлэлээр дүүрэн жижигхэн дижитал бэлгүүд — нэг л хүнд зориулж бүтээсэн орон зай.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VI. WHAT I BELIEVE -->
+  <section id="believe" class="chapter" data-mood="gold">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">VI</span> what i believe</div>
+      <h2 class="title reveal" data-delay="80">Хэдэн зүйлд итгэдэг.</h2>
+      <div class="believe-lines">
+        <p class="reveal" data-delay="140">Мэдлэг хуваалцахад л утга учиртай.</p>
+        <p class="reveal" data-delay="220">Жижиг алхам ч урагшлал мөн.</p>
+        <p class="reveal" data-delay="300">Хүн бүр өөрийн түүхийг бичих эрхтэй.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- VII. WHERE I'M GOING -->
+  <section id="going" class="chapter" data-mood="blue">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">VII</span> where i'm going</div>
+      <h2 class="title reveal" data-delay="80">Хаашаа явж байна вэ?</h2>
+      <div class="timeline">
+        <div class="timeline-item reveal" data-delay="140">
+          <span class="when">2026</span>
+          <p>Эхэлсэн жижиг төслүүдээ дуусгаж, олон нийтэд хүргэх.</p>
+        </div>
+        <div class="timeline-item reveal" data-delay="220">
+          <span class="when">удахгүй</span>
+          <p>Хэл сурах аяллаа үргэлжлүүлж, шинэ түвшинд гарах.</p>
+        </div>
+        <div class="timeline-item reveal" data-delay="300">
+          <span class="when">урт хугацаанд</span>
+          <p>Өөрийн санаа бодлоо чөлөөтэй, айдасгүй илэрхийлдэг болох.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- VIII. END -->
+  <section id="end" class="chapter end" data-mood="gold">
+    <div class="chapter-inner">
+      <div class="eyebrow reveal"><span class="num">VIII</span> end</div>
+      <h2 class="title reveal" data-delay="80">Төгсгөл биш, зогсоол.</h2>
+      <p class="lead reveal" data-delay="160">
+        Хэрвээ энд хүрч ирсэн бол — баярлалаа.
+        Энэ орон зай надтай хамт өөрчлөгдсөөр байх болно. Дараа дахин ирээрэй.
+      </p>
+      <div class="end-actions reveal" data-delay="240">
+        <a href="mailto:example@email.com" class="btn primary">холбоо барих</a>
+        <button class="btn" id="backTop">дээш буцах ↑</button>
+      </div>
+      <div class="end-foot">© <span id="year"></span> — цаг хугацаатай хамт хөгжиж буй орон зай</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function(){
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduced) document.documentElement.classList.add('reduced');
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  /* ---------- custom cursor ---------- */
+  var finePointer = window.matchMedia('(pointer:fine)').matches;
+  if(finePointer && !reduced){
+    document.documentElement.classList.add('has-cursor');
+    var dot = document.getElementById('cursorDot');
+    var ring = document.getElementById('cursorRing');
+    var mx=0,my=0,rx=0,ry=0;
+    window.addEventListener('mousemove', function(e){
+      mx = e.clientX; my = e.clientY;
+      dot.style.left = mx+'px'; dot.style.top = my+'px';
+    });
+    (function loop(){
+      rx += (mx-rx)*0.16; ry += (my-ry)*0.16;
+      ring.style.left = rx+'px'; ring.style.top = ry+'px';
+      requestAnimationFrame(loop);
+    })();
+    document.querySelectorAll('a, button, .spine li, .love-card').forEach(function(el){
+      el.addEventListener('mouseenter', function(){document.documentElement.classList.add('cursor-hover');});
+      el.addEventListener('mouseleave', function(){document.documentElement.classList.remove('cursor-hover');});
+    });
+  }
+
+  /* ---------- ambient dust particles ---------- */
+  if(!reduced){
+    var canvas = document.getElementById('dust');
+    var ctx = canvas.getContext('2d');
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W,H,particles=[];
+    var COUNT = 46;
+
+    function resize(){
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W*dpr; canvas.height = H*dpr;
+      canvas.style.width = W+'px'; canvas.style.height = H+'px';
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    function makeParticle(){
+      return {
+        x: Math.random()*W, y: Math.random()*H,
+        r: Math.random()*1.4+0.4,
+        vx: (Math.random()-0.5)*0.06,
+        vy: -(Math.random()*0.09+0.02),
+        a: Math.random()*0.5+0.1,
+        tw: Math.random()*Math.PI*2
+      };
+    }
+    resize();
+    for(var i=0;i<COUNT;i++) particles.push(makeParticle());
+
+    var resizeTimer;
+    window.addEventListener('resize', function(){
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(resize, 200);
+    });
+
+    function tick(){
+      ctx.clearRect(0,0,W,H);
+      ctx.fillStyle = '#e8b564';
+      for(var i=0;i<particles.length;i++){
+        var p = particles[i];
+        p.x += p.vx; p.y += p.vy; p.tw += 0.02;
+        if(p.y < -10){ p.y = H+10; p.x = Math.random()*W; }
+        if(p.x < -10) p.x = W+10;
+        if(p.x > W+10) p.x = -10;
+        var alpha = p.a * (0.5 + 0.5*Math.sin(p.tw));
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* ---------- scroll reveal ---------- */
+  var revealEls = document.querySelectorAll('.reveal');
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        var delay = entry.target.getAttribute('data-delay') || 0;
+        entry.target.style.transitionDelay = delay+'ms';
+        entry.target.classList.add('in-view');
+        io.unobserve(entry.target);
+      }
+    });
+  }, {root: document.getElementById('scroller'), threshold:0.2});
+  revealEls.forEach(function(el){ io.observe(el); });
+
+  /* ---------- active chapter / mood / spine ---------- */
+  var moodMap = {blue:'var(--blue-soft)', gold:'var(--gold-soft)'};
+  var chapters = document.querySelectorAll('.chapter');
+  var spineItems = document.querySelectorAll('.spine li');
+  var order = ['start','who','think','love','build','believe','going','end'];
+  var moodWash = document.getElementById('moodWash');
+  var threadFill = document.getElementById('threadFill');
+
+  var chapterObserver = new IntersectionObserver(function(entries){
+    entries.forEach(function(entry){
+      if(entry.isIntersecting){
+        var id = entry.target.id;
+        var mood = entry.target.getAttribute('data-mood');
+        moodWash.style.background = 'radial-gradient(ellipse 60% 45% at 50% 18%, '+moodMap[mood]+', transparent 70%)';
+        spineItems.forEach(function(li){
+          li.classList.toggle('active', li.getAttribute('data-target') === id);
+        });
+        var idx = order.indexOf(id);
+        threadFill.style.height = ((idx/(order.length-1))*100)+'%';
+      }
+    });
+  }, {root: document.getElementById('scroller'), threshold:0.55});
+  chapters.forEach(function(ch){ chapterObserver.observe(ch); });
+
+  /* ---------- nav interactions ---------- */
+  spineItems.forEach(function(li){
+    li.addEventListener('click', function(){
+      var target = document.getElementById(li.getAttribute('data-target'));
+      if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
+  document.getElementById('scrollCue').addEventListener('click', function(){
+    document.getElementById('who').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  document.getElementById('backTop').addEventListener('click', function(){
+    document.getElementById('start').scrollIntoView({behavior:'smooth', block:'start'});
+  });
+})();
+</script>
+</body>
+</html>
