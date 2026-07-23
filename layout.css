@@ -1,0 +1,84 @@
+/* ==========================================================================
+   layout.css
+   Structural regions: header, main, footer, and the brand/view wrappers
+   inside them. Whitespace comes from the spacing scale in variables.css;
+   no font or color decisions are made here beyond what's functionally
+   required for structure (dividers, sticky-header background).
+   ========================================================================== */
+
+/* -- Page frame ---------------------------------------------------------------
+   body becomes a column flex container so the footer sits at the bottom
+   of short views and is pushed down naturally by tall ones (relies on
+   html/body height:100% already set in reset.css).
+   ------------------------------------------------------------------------------- */
+body {
+  display: flex;
+  flex-direction: column;
+}
+
+/* -- Shared container treatment -------------------------------------------------
+   Every structural region shares the same max-width and horizontal
+   padding, so content lines up consistently without repeating the
+   same three declarations in each block below.
+   ------------------------------------------------------------------------------- */
+.site-header,
+.app-main,
+.site-footer {
+  width: 100%;
+  max-width: var(--container-max);
+  margin-inline: auto;
+  padding-inline: var(--space-lg);
+}
+
+/* -- Header ---------------------------------------------------------------------
+   Sticky so the study room's navigation is always one glance away.
+   A hairline border marks the edge instead of a shadow — a line, not
+   a spotlight.
+   ------------------------------------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  padding-block: var(--space-md);
+  background-color: var(--color-washi);
+  border-bottom: var(--border-width) solid var(--color-stone);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.brand__mark {
+  width: 2rem;
+  height: 2rem;
+  flex-shrink: 0;
+}
+
+/* -- Main ------------------------------------------------------------------------
+   Grows to fill remaining height (sticky-footer partner to body's flex
+   column) and gives each view generous breathing room above and below.
+   ------------------------------------------------------------------------------- */
+.app-main {
+  flex: 1;
+  padding-block: var(--space-2xl);
+}
+
+.view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+/* -- Footer ------------------------------------------------------------------------ */
+.site-footer {
+  padding-block: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
+  text-align: center;
+}
