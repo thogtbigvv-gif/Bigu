@@ -1,0 +1,106 @@
+/* ==========================================================================
+   reset.css
+   Modern reset — normalizes browser default behavior.
+   Behavior only: no color, font, or spacing decisions live here.
+   Those come from variables.css (tokens) and typography.css / layout.css
+   (applied rules).
+   ========================================================================== */
+
+/* Box sizing everywhere, so widths/paddings behave predictably */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Remove default margin/padding across all elements */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* Prevent iOS text auto-resizing on rotation, without disabling user zoom */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  height: 100%;
+}
+
+/* Full-height body, smoother glyph rendering (matters for dense kanji) */
+body {
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Media elements never overflow their container */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* Form elements inherit page typography instead of browser/OS defaults */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* List semantics stay; bullets/numbers are opt-in via a class where wanted */
+ul,
+ol {
+  list-style: none;
+}
+
+/* Links carry no browser defaults — color/underline are applied deliberately
+   in typography.css */
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+/* Avoid long unbroken strings (readings, URLs) overflowing their container */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+/* Respect reduced-motion preferences globally */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* The hidden attribute (used for view switching in index.html) always wins,
+   even against display utilities added later */
+[hidden] {
+  display: none !important;
+}
