@@ -1,0 +1,75 @@
+/* ==========================================================================
+   navigation.css
+   Primary navigation: minimal tab bar and skip link. Quiet by default —
+   an underline marks state, not a filled background or shadow.
+   ========================================================================== */
+
+/* -- Skip link (revealed only on keyboard focus) --------------------------------- */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: var(--space-sm);
+  z-index: 100;
+  padding: var(--space-2xs) var(--space-sm);
+  background-color: var(--color-ink);
+  color: var(--color-washi);
+  border-radius: var(--radius-sm);
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-sm);
+}
+
+/* -- Nav list ---------------------------------------------------------------------- */
+.site-nav__list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+/* -- Tabs -----------------------------------------------------------------------------
+   Rest state stays quiet (ink-soft, no border) so the row doesn't compete
+   with the content below it. Hover and the active state are the only signal.
+   [aria-current="page"] is set by app.js when a view becomes active.
+   --------------------------------------------------------------------------------------- */
+.site-nav__list a {
+  display: inline-block;
+  padding-block: var(--space-2xs);
+  border-bottom: 2px solid transparent;
+  color: var(--color-ink-soft);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.site-nav__list a:hover {
+  color: var(--color-indigo);
+}
+
+.site-nav__list a[aria-current="page"] {
+  color: var(--color-indigo);
+  font-weight: var(--weight-medium);
+  border-bottom-color: var(--color-indigo);
+}
+
+/* -- Small screens ----------------------------------------------------------------------
+   Scroll the tab bar horizontally instead of wrapping or collapsing into
+   a hamburger — one calm interaction instead of a second menu system.
+   -------------------------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .site-nav {
+    width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .site-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .site-nav__list {
+    width: max-content;
+    gap: var(--space-md);
+  }
+}
