@@ -1,0 +1,138 @@
+/* ==========================================================================
+   typography.css
+   Applied type rules: font stacks, scale, and line-height for legible
+   bilingual (Japanese + English) reading, including furigana support.
+   Reads tokens from variables.css; introduces no new color or spacing values.
+   ========================================================================== */
+
+/* -- Font stacks -------------------------------------------------------------
+   Native OS fonts render Japanese glyphs faster and closer to how the
+   reader already reads on their own device, so they come first. The
+   web-loaded --font-jp (Noto Sans JP) is the fallback for platforms
+   without Hiragino Sans / Yu Gothic installed (Linux, older Android, etc.).
+   ----------------------------------------------------------------------------- */
+:root {
+  --font-jp-stack:
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN",
+    "Yu Gothic Medium", "Yu Gothic",
+    var(--font-jp), Meiryo, sans-serif;
+
+  --font-body-stack:
+    -apple-system, BlinkMacSystemFont,
+    var(--font-body), "Segoe UI", Roboto, sans-serif;
+}
+
+/* -- Document defaults --------------------------------------------------------- */
+html {
+  font-size: 100%; /* respect the reader's browser zoom/text-size settings */
+}
+
+body {
+  font-family: var(--font-body-stack);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-weight: var(--weight-regular);
+  color: var(--color-ink);
+}
+
+/* -- Japanese text --------------------------------------------------------------
+   Applies wherever Japanese content is marked with lang="ja" — vocabulary,
+   kanji, example sentences. Looser leading gives dense kanji room to
+   breathe; font-feature-settings "palt" tightens proportional spacing
+   between kana/kanji, a standard Japanese typesetting refinement.
+   ------------------------------------------------------------------------------- */
+:lang(ja) {
+  font-family: var(--font-jp-stack);
+  line-height: var(--leading-loose);
+  font-feature-settings: "palt" 1;
+}
+
+/* -- Headings --------------------------------------------------------------------- */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-display);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+h1 { font-size: var(--text-2xl); }
+h2 { font-size: var(--text-xl); }
+h3 { font-size: var(--text-lg); }
+h4 { font-size: var(--text-md); }
+h5,
+h6 {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+}
+
+/* Japanese headings keep the display face but fall back through the
+   Japanese stack for glyphs Shippori Mincho doesn't cover */
+h1:lang(ja),
+h2:lang(ja),
+h3:lang(ja) {
+  font-family: var(--font-display), var(--font-jp-stack);
+  line-height: var(--leading-tight);
+}
+
+/* -- Body copy ------------------------------------------------------------------- */
+p {
+  max-width: 68ch; /* comfortable measure for mixed JP/EN reading */
+  margin-block-end: var(--space-sm);
+}
+
+small,
+.meta {
+  font-size: var(--text-sm);
+  color: var(--color-ash);
+}
+
+/* -- Furigana (ruby annotations for kanji readings) -------------------------------- */
+ruby {
+  ruby-position: over;
+}
+
+rt {
+  font-family: var(--font-jp-stack);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-regular);
+  color: var(--color-ink-soft);
+  user-select: none;
+}
+
+/* -- Readings, romaji, and level tags ----------------------------------------------- */
+.romaji,
+.reading,
+.jlpt-tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+}
+
+/* -- Links ------------------------------------------------------------------------- */
+a {
+  color: var(--color-indigo);
+  text-underline-offset: 0.15em;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--color-indigo-deep);
+  text-decoration: underline;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* -- Selection --------------------------------------------------------------------- */
+::selection {
+  background-color: var(--color-bengara);
+  color: var(--color-washi);
+}
