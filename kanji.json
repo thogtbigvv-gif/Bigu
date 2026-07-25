@@ -1,0 +1,102 @@
+{
+  "level": "N2",
+  "updatedAt": "2026-07-25",
+  "kanji": [
+    {
+      "id": "kj-001",
+      "character": "却",
+      "meaning": "reject; retreat",
+      "onyomi": "キャク",
+      "kunyomi": "",
+      "example": { "word": "却下", "reading": "きゃっか", "meaning": "rejection, dismissal" }
+    },
+    {
+      "id": "kj-002",
+      "character": "状",
+      "meaning": "state, condition",
+      "onyomi": "ジョウ",
+      "kunyomi": "",
+      "example": { "word": "状況", "reading": "じょうきょう", "meaning": "situation, circumstances" }
+    },
+    {
+      "id": "kj-003",
+      "character": "態",
+      "meaning": "condition, form, appearance",
+      "onyomi": "タイ",
+      "kunyomi": "",
+      "example": { "word": "態度", "reading": "たいど", "meaning": "attitude" }
+    },
+    {
+      "id": "kj-004",
+      "character": "域",
+      "meaning": "region, boundary, zone",
+      "onyomi": "イキ",
+      "kunyomi": "",
+      "example": { "word": "地域", "reading": "ちいき", "meaning": "region, area" }
+    },
+    {
+      "id": "kj-005",
+      "character": "傾",
+      "meaning": "lean, incline, tendency",
+      "onyomi": "ケイ",
+      "kunyomi": "かたむ.く、かたむ.ける",
+      "example": { "word": "傾向", "reading": "けいこう", "meaning": "tendency, trend" }
+    },
+    {
+      "id": "kj-006",
+      "character": "疑",
+      "meaning": "doubt, suspect",
+      "onyomi": "ギ",
+      "kunyomi": "うたが.う",
+      "example": { "word": "疑問", "reading": "ぎもん", "meaning": "question, doubt" }
+    },
+    {
+      "id": "kj-007",
+      "character": "減",
+      "meaning": "decrease, reduce",
+      "onyomi": "ゲン",
+      "kunyomi": "へ.る、へ.らす",
+      "example": { "word": "減少", "reading": "げんしょう", "meaning": "decrease, decline" }
+    },
+    {
+      "id": "kj-008",
+      "character": "増",
+      "meaning": "increase",
+      "onyomi": "ゾウ",
+      "kunyomi": "ま.す、ふ.える、ふ.やす",
+      "example": { "word": "増加", "reading": "ぞうか", "meaning": "increase, growth" }
+    },
+    {
+      "id": "kj-009",
+      "character": "率",
+      "meaning": "rate, ratio; lead",
+      "onyomi": "リツ",
+      "kunyomi": "ひき.いる",
+      "example": { "word": "比率", "reading": "ひりつ", "meaning": "ratio, proportion" }
+    },
+    {
+      "id": "kj-010",
+      "character": "純",
+      "meaning": "pure, genuine",
+      "onyomi": "ジュン",
+      "kunyomi": "",
+      "example": { "word": "純粋", "reading": "じゅんすい", "meaning": "pure, genuine" }
+    },
+    {
+      "id": "kj-011",
+      "character": "従",
+      "meaning": "follow, obey, accompany",
+      "onyomi": "ジュウ",
+      "kunyomi": "したが.う、したが.える",
+      "example": { "word": "従来", "reading": "じゅうらい", "meaning": "conventional, up to now" }
+    },
+    {
+      "id": "kj-012",
+      "character": "律",
+      "meaning": "law, rule, regulate",
+      "onyomi": "リツ",
+      "kunyomi": "",
+      "example": { "word": "法律", "reading": "ほうりつ", "meaning": "law, statute" }
+    }
+  ]
+}
