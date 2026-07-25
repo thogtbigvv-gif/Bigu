@@ -1,0 +1,95 @@
+/* ==========================================================================
+   grammar.css
+   Styles for the #grammar view built by grammar.js. Grammar cards carry
+   more text than a vocab card (structure line, notes), so unlike
+   vocabulary.css's grid these stack in a single readable column instead
+   of competing for width. .jlpt-tag is defined once in vocabulary.css and
+   reused here unchanged.
+   ========================================================================== */
+
+.grammar-meta {
+  margin: 0;
+}
+
+.grammar-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 46rem;
+}
+
+.grammar-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.grammar-card__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.grammar-card__pattern {
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-lg);
+  color: var(--color-bengara);
+  margin-inline-end: auto;
+}
+
+.grammar-card__meaning {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.grammar-card__structure {
+  margin: 0;
+  font-family: var(--font-mono);
+}
+
+.grammar-card__example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding: var(--space-sm);
+  background-color: var(--color-washi);
+  border-radius: var(--radius-md);
+}
+
+.grammar-card__example p {
+  margin: 0;
+  max-width: none;
+}
+
+.grammar-card__notes {
+  margin: 0;
+  font-style: italic;
+}
+
+.grammar-card__progress {
+  align-self: flex-start;
+  padding: var(--space-3xs) var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.grammar-card__progress:hover {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.grammar-card__progress[aria-pressed="true"] {
+  background-color: var(--color-moss);
+  border-color: var(--color-moss);
+  color: var(--color-washi);
+}
