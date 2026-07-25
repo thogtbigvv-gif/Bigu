@@ -1,0 +1,73 @@
+/* ==========================================================================
+   forms.css
+   Shared surface for text inputs, textareas, and selects — the same
+   calm treatment journal.css already uses for its writing area (washi-
+   raised background, soft focus ring), generalized here for any form
+   control in the app.
+   ========================================================================== */
+
+.field {
+  display: block;
+  width: 100%;
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  background-color: var(--color-washi-raised);
+  color: var(--color-ink);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+}
+
+.field::placeholder {
+  color: var(--color-ash);
+}
+
+.field:hover {
+  border-color: var(--color-ash);
+}
+
+.field:focus-visible {
+  outline: none;
+  border-color: var(--color-indigo);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
+
+.field:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* -- Textarea ------------------------------------------------------------------- */
+
+textarea.field {
+  min-height: 8rem;
+  padding: var(--space-sm);
+  resize: vertical;
+}
+
+/* -- Select -----------------------------------------------------------------------
+   The browser's own dropdown arrow is replaced with a quieter one so it
+   doesn't clash with the rest of the field. Its color is a literal hex,
+   not a token — data-URIs can't reference CSS custom properties — and it
+   currently matches --color-ash (#6E6A5E); update both together if that
+   token ever changes.
+   ------------------------------------------------------------------------------------ */
+
+select.field {
+  appearance: none;
+  padding-inline-end: var(--space-xl);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236E6A5E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-sm) center;
+  background-size: 1rem;
+}
+
+/* -- Labels ------------------------------------------------------------------------- */
+
+.field-label {
+  display: block;
+  margin-block-end: var(--space-2xs);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+}
