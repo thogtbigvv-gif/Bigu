@@ -1,0 +1,93 @@
+/* ==========================================================================
+   kanji.css
+   Styles for the #kanji view built by kanji.js. A grid of compact,
+   character-first cards — the opposite density of grammar.css's list,
+   since a single kanji carries far less text than a grammar point.
+   ========================================================================== */
+
+.kanji-meta {
+  margin: 0;
+}
+
+.kanji-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-md);
+}
+
+.kanji-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+  padding: var(--space-lg);
+  text-align: center;
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.kanji-card__head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.kanji-card__character {
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.kanji-card__meaning {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.kanji-card__readings {
+  margin: 0;
+}
+
+.kanji-card__example {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3xs);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--color-washi);
+  border-radius: var(--radius-md);
+}
+
+.kanji-card__example ruby {
+  font-size: var(--text-md);
+}
+
+.kanji-card__example p {
+  margin: 0;
+  max-width: none;
+}
+
+.kanji-card__progress {
+  padding: var(--space-3xs) var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.kanji-card__progress:hover {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.kanji-card__progress[aria-pressed="true"] {
+  background-color: var(--color-moss);
+  border-color: var(--color-moss);
+  color: var(--color-washi);
+}
