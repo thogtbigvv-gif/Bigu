@@ -1,0 +1,101 @@
+/* ==========================================================================
+   practice.css
+   The flashcard quiz built by practice.js: an intro screen, one card at a
+   time, and a summary screen. Narrower than the app's main container,
+   like journal.css, so a single card reads like a focused study surface
+   rather than stretching across the whole page.
+   ========================================================================== */
+
+.practice {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 34rem;
+}
+
+/* -- Intro & summary -----------------------------------------------------------------
+   Same quiet centered treatment for both "before" and "after" states.
+   ------------------------------------------------------------------------------------------ */
+.practice__intro,
+.practice__summary {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+}
+
+.practice__intro-text,
+.practice__summary-text {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+
+/* -- Session --------------------------------------------------------------------------- */
+.practice__session {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.practice__status {
+  margin: 0;
+}
+
+.practice-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.practice-card__headword {
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-2xl);
+  color: var(--color-ink);
+}
+
+.practice-card__pos {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.practice-card__answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  width: 100%;
+  margin-block-start: var(--space-sm);
+  padding-block-start: var(--space-lg);
+  border-top: var(--border-width) solid var(--color-stone);
+}
+
+.practice-card__answer p {
+  margin: 0;
+  max-width: none;
+}
+
+.practice-card__meaning {
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.practice__reveal {
+  align-self: center;
+}
+
+.practice__grade {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
