@@ -170,4 +170,4 @@ async function initVocabulary() {
   }
 }
 
-export { initVocabulary };
+export { initVocabulary, loadVocabulary };
