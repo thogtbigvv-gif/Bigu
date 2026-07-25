@@ -145,10 +145,11 @@ function createListStore(name) {
 const settings = createMapStore('settings');
 const progress = createMapStore('progress');
 const journal = createListStore('journal');
+const practice = createListStore('practice');
 
 function clearAll() {
-  const results = [settings.clear(), progress.clear(), journal.clear()];
+  const results = [settings.clear(), progress.clear(), journal.clear(), practice.clear()];
   return results.every(Boolean);
 }
 
-export { isAvailable, settings, progress, journal, clearAll };
+export { isAvailable, settings, progress, journal, practice, clearAll };
