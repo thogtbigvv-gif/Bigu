@@ -1,0 +1,232 @@
+/* ==========================================================================
+   journal.css
+   The daily journal: a distraction-free writing surface plus a quiet list
+   of past entries for review. Structure and color for journal.js's markup
+   live here; type scale and Japanese text treatment are left to
+   typography.css's `:lang(ja)` rule, which already applies once journal.js
+   sets lang="ja" on the relevant elements — nothing is duplicated here.
+   ========================================================================== */
+
+/* -- Wrapper ------------------------------------------------------------------------
+   Capped narrower than the app's main container — a full 72rem measure
+   would make the writing line too long to be comfortable. 42rem keeps the
+   composer and the entry list at a calm, book-like width.
+   ------------------------------------------------------------------------------------ */
+.journal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+  max-width: 42rem;
+}
+
+/* -- Composer -------------------------------------------------------------------------
+   A single lifted "paper" surface. The textarea inside carries no border or
+   background of its own — the card itself is the writing surface — so
+   nothing but a hairline rule beneath the text marks where you're typing.
+   ---------------------------------------------------------------------------------------- */
+.journal__composer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding: var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.journal__composer-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3xs) var(--space-sm);
+}
+
+.journal__date {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  letter-spacing: var(--tracking-wide);
+}
+
+.journal__back {
+  font-size: var(--text-sm);
+  color: var(--color-indigo);
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+  text-decoration-color: transparent;
+  transition: text-decoration-color var(--transition-fast);
+}
+
+.journal__back:hover {
+  text-decoration-color: currentColor;
+}
+
+.journal__hint {
+  margin: 0;
+}
+
+/* Font family, line-height, and letter spacing for the Japanese text inside
+   come from typography.css's :lang(ja) rule (journal.js sets lang="ja" on
+   this element) — only the writing-surface chrome is defined here. */
+.journal__textarea {
+  display: block;
+  width: 100%;
+  min-height: clamp(12rem, 40vh, 22rem);
+  font-size: var(--text-md);
+  background: transparent;
+  border: none;
+  border-block-end: var(--border-width) solid var(--color-stone);
+  padding-block-end: var(--space-sm);
+  resize: vertical;
+  transition: border-color var(--transition-fast);
+}
+
+.journal__textarea::placeholder {
+  color: var(--color-ash);
+}
+
+.journal__textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-indigo);
+}
+
+.journal__composer-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.journal__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.journal__save {
+  padding: var(--space-2xs) var(--space-md);
+  background-color: var(--color-indigo);
+  color: var(--color-washi);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.journal__save:hover:not(:disabled) {
+  background-color: var(--color-indigo-deep);
+}
+
+.journal__save:disabled {
+  background-color: var(--color-stone);
+  color: var(--color-ash);
+  cursor: not-allowed;
+}
+
+/* -- History ----------------------------------------------------------------------------
+   Deliberately quieter than the composer — this is the review pane, not
+   the main event. A smaller heading and a plain hairline-divided list keep
+   it from competing with the writing surface above.
+   -------------------------------------------------------------------------------------------- */
+.journal__history-heading {
+  font-size: var(--text-lg);
+  margin-block-end: var(--space-sm);
+}
+
+.journal__empty {
+  margin: 0;
+}
+
+.journal__entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.journal__entry {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  border-bottom: var(--border-width) solid var(--color-stone);
+}
+
+.journal__entry:last-child {
+  border-bottom: none;
+}
+
+.journal__entry-row {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  flex: 1;
+  min-width: 0;
+  padding: var(--space-2xs);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  transition: background-color var(--transition-fast);
+}
+
+.journal__entry-row:hover {
+  background-color: var(--color-washi-raised);
+}
+
+.journal__entry--active .journal__entry-row {
+  background-color: var(--color-washi-raised);
+}
+
+.journal__entry-date {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  white-space: nowrap;
+}
+
+.journal__entry-preview {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-ink);
+}
+
+.journal__entry-meta {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.journal__entry-delete {
+  flex-shrink: 0;
+  min-width: 4.5rem;
+  padding: var(--space-3xs) var(--space-2xs);
+  font-size: var(--text-xs);
+  color: var(--color-ash);
+  text-align: center;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), background-color var(--transition-fast);
+}
+
+.journal__entry-delete:hover {
+  color: var(--color-error);
+  background-color: rgba(161, 59, 46, 0.08);
+}
+
+.journal__entry-delete[data-confirming="true"] {
+  color: var(--color-washi);
+  background-color: var(--color-error);
+}
+
+/* -- Small screens ------------------------------------------------------------------------ */
+@media (max-width: 480px) {
+  .journal__entry-row {
+    flex-wrap: wrap;
+  }
+
+  .journal__entry-date {
+    width: 100%;
+  }
+}
