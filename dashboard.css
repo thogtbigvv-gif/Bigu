@@ -1,0 +1,73 @@
+/* ==========================================================================
+   dashboard.css
+   Styles for the #dashboard view built by dashboard.js. Card chrome itself
+   comes from cards.css's .card — only the content inside each card (streak
+   number, progress bars, CTA spacing) is defined here.
+   ========================================================================== */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--space-md);
+  align-items: stretch;
+}
+
+.dashboard-grid .card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* -- Streak & practice score -------------------------------------------------------------- */
+.dashboard-streak__count {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-bengara);
+  line-height: var(--leading-tight);
+}
+
+.dashboard-card__status {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-moss);
+  font-weight: var(--weight-medium);
+}
+
+.dashboard-card__cta {
+  margin-block-start: auto;
+  padding-block-start: var(--space-sm);
+  align-self: flex-start;
+}
+
+/* -- Progress bars ---------------------------------------------------------------------------- */
+.dashboard-stat {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  margin-block-start: var(--space-sm);
+}
+
+.dashboard-stat:first-of-type {
+  margin-block-start: 0;
+}
+
+.dashboard-stat__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: var(--text-sm);
+}
+
+.dashboard-stat__track {
+  height: 0.5rem;
+  background-color: var(--color-stone);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.dashboard-stat__fill {
+  height: 100%;
+  background-color: var(--color-moss);
+  border-radius: var(--radius-sm);
+  transition: width var(--transition-base);
+}
