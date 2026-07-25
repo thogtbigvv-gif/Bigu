@@ -1,0 +1,49 @@
+/* ==========================================================================
+   cards.css
+   A generic surface for study items — vocabulary words, kanji, grammar
+   points, anything shown as a discrete, reviewable unit. Header/footer
+   classes below are optional hooks; plain content between them already
+   gets its rhythm from typography.css.
+   ========================================================================== */
+
+.card {
+  padding: var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Only for cards that are themselves a click target — most study cards
+   hold their own buttons instead, so this stays opt-in */
+.card--interactive {
+  transition: box-shadow var(--transition-base);
+}
+
+.card--interactive:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-sm);
+}
+
+.card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-ink);
+}
+
+.card__footer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-block-start: var(--space-md);
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
+}
