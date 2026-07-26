@@ -1,6 +1,6 @@
 {
   "level": "N2",
-  "updatedAt": "2026-07-25",
+  "updatedAt": "2026-07-27",
   "kanji": [
     {
       "id": "kj-001",
@@ -97,6 +97,14 @@
       "onyomi": "リツ",
       "kunyomi": "",
       "example": { "word": "法律", "reading": "ほうりつ", "meaning": "law, statute" }
+    },
+    {
+      "id": "kj-013",
+      "character": "限",
+      "meaning": "limit, restrict",
+      "onyomi": "ゲン",
+      "kunyomi": "かぎ.る",
+      "example": { "word": "制限", "reading": "せいげん", "meaning": "restriction, limitation" }
     }
   ]
 }
