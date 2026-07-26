@@ -104,3 +104,18 @@ h6 {
 [hidden] {
   display: none !important;
 }
+
+/* Visually hidden but still announced by assistive tech — for icon-only
+   controls (e.g. the theme toggle) that need a text label no sighted user
+   has to see. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
