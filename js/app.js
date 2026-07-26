@@ -8,7 +8,7 @@
    ========================================================================== */
 
 import { isAvailable as isStorageAvailable } from './storage.js';
-import { initTheme } from './theme.js';
+import { initTheme, bindToggleButton } from './theme.js';
 import { initRouter } from './router.js';
 import { initDashboard } from './dashboard.js';
 import { initVocabulary } from './vocabulary.js';
@@ -42,6 +42,7 @@ function initFooterYear() {
    ------------------------------------------------------------------------------------ */
 function init() {
   initTheme();
+  bindToggleButton(document.getElementById('theme-toggle'));
   checkStorage();
   initFooterYear();
 
