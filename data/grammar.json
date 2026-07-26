@@ -1,153 +1,162 @@
 {
-  "level": "N2",
-  "updatedAt": "2026-07-25",
-  "points": [
+  "level": "N3",
+  "updatedAt": "2026-07-27",
+  "words": [
     {
-      "id": "gr-001",
-      "pattern": "わけにはいかない",
-      "meaning": "can't just (do) / can't afford not to",
-      "structure": "Verb (dictionary form) + わけにはいかない",
+      "id": "n3-001",
+      "kanji": "経験",
+      "kana": "けいけん",
+      "partOfSpeech": "noun",
+      "meaning": "experience",
       "example": {
-        "jp": "明日は大事な会議があるので、休むわけにはいかない。",
-        "reading": "あしたはだいじなかいぎがあるので、やすむわけにはいかない。",
-        "en": "I have an important meeting tomorrow, so I can't just take the day off."
-      },
-      "notes": "Expresses that social obligation or circumstance rules an action out, not personal preference."
+        "jp": "日本で働いた経験があります。",
+        "reading": "にほんではたらいたけいけんがあります。",
+        "en": "I have experience working in Japan."
+      }
     },
     {
-      "id": "gr-002",
-      "pattern": "てはいられない",
-      "meaning": "can't afford to keep (doing) / can't just stay (in that state)",
-      "structure": "Verb (て form) + はいられない",
+      "id": "n3-002",
+      "kanji": "環境",
+      "kana": "かんきょう",
+      "partOfSpeech": "noun",
+      "meaning": "environment",
       "example": {
-        "jp": "こんなに忙しいと、ゆっくりしてはいられない。",
-        "reading": "こんなにいそがしいと、ゆっくりしてはいられない。",
-        "en": "When it's this busy, I can't afford to take it easy."
-      },
-      "notes": "Different from 〜ずにはいられない (can't help but do) — this one is about not being able to remain in a passive state."
+        "jp": "この会社は環境がいいです。",
+        "reading": "このかいしゃはかんきょうがいいです。",
+        "en": "This company has a good environment."
+      }
     },
     {
-      "id": "gr-003",
-      "pattern": "にほかならない",
-      "meaning": "is nothing other than / precisely because of",
-      "structure": "Noun + にほかならない",
+      "id": "n3-003",
+      "kanji": "準備",
+      "kana": "じゅんび",
+      "partOfSpeech": "noun",
+      "meaning": "preparation",
       "example": {
-        "jp": "彼の成功は努力の結果にほかならない。",
-        "reading": "かれのせいこうはどりょくのけっかにほかならない。",
-        "en": "His success is nothing other than the result of hard work."
-      },
-      "notes": "Formal — asserts that one explanation is the only true one, ruling out alternatives."
+        "jp": "明日の準備をしています。",
+        "reading": "あしたのじゅんびをしています。",
+        "en": "I'm preparing for tomorrow."
+      }
     },
     {
-      "id": "gr-004",
-      "pattern": "末に",
-      "patternKana": "すえに",
-      "meaning": "after (a long process of) / at the end of",
-      "structure": "Verb (た form) / Noun + の + 末に",
+      "id": "n3-004",
+      "kanji": "説明",
+      "kana": "せつめい",
+      "partOfSpeech": "noun",
+      "meaning": "explanation",
       "example": {
-        "jp": "何度も悩んだ末に、会社を辞めることにした。",
-        "reading": "なんども なやんだすえに、かいしゃをやめることにした。",
-        "en": "After agonizing over it many times, I decided to quit the company."
-      },
-      "notes": "Emphasizes a lengthy or difficult process before reaching the final result."
+        "jp": "先生が使い方を説明してくれました。",
+        "reading": "せんせいがつかいかたをせつめいしてくれました。",
+        "en": "The teacher explained how to use it."
+      }
     },
     {
-      "id": "gr-005",
-      "pattern": "つつ",
-      "meaning": "while (doing) / even though (contradictory)",
-      "structure": "Verb (ます stem) + つつ(も)",
+      "id": "n3-005",
+      "kanji": "相談",
+      "kana": "そうだん",
+      "partOfSpeech": "noun",
+      "meaning": "consultation",
       "example": {
-        "jp": "体に悪いと知りつつ、つい甘いものを食べてしまう。",
-        "reading": "からだにわるいとしりつつ、つい あまいものをたべてしまう。",
-        "en": "Even though I know it's bad for me, I end up eating sweets anyway."
-      },
-      "notes": "Adding も strengthens the sense of contradiction between the two clauses."
+        "jp": "友達に相談してから決めます。",
+        "reading": "ともだちにそうだんしてからきめます。",
+        "en": "I'll decide after consulting with my friend."
+      }
     },
     {
-      "id": "gr-006",
-      "pattern": "からといって",
-      "meaning": "just because ~ (doesn't mean)",
-      "structure": "Plain form + からといって",
+      "id": "n3-006",
+      "kanji": "到着",
+      "kana": "とうちゃく",
+      "partOfSpeech": "noun",
+      "meaning": "arrival",
       "example": {
-        "jp": "日本人だからといって、みんな漢字が得意なわけではない。",
-        "reading": "にほんじんだからといって、みんなかんじがとくいなわけではない。",
-        "en": "Just because someone is Japanese doesn't mean everyone is good at kanji."
-      },
-      "notes": "Almost always paired with a negative like わけではない or とは限らない later in the sentence."
+        "jp": "電車は九時に到着します。",
+        "reading": "でんしゃはくじにとうちゃくします。",
+        "en": "The train arrives at nine o'clock."
+      }
     },
     {
-      "id": "gr-007",
-      "pattern": "にしたがって",
-      "meaning": "as / in accordance with (gradual change)",
-      "structure": "Verb (dictionary form) / Noun + にしたがって",
+      "id": "n3-007",
+      "kanji": "増える",
+      "kana": "ふえる",
+      "partOfSpeech": "verb",
+      "meaning": "to increase",
       "example": {
-        "jp": "時間が経つにしたがって、痛みが和らいでいった。",
-        "reading": "じかんがたつにしたがって、いたみがやわらいでいった。",
-        "en": "As time passed, the pain gradually eased."
-      },
-      "notes": "Also used literally for 'in accordance with a rule/instruction'."
+        "jp": "最近、雨の日が増えました。",
+        "reading": "さいきん、あめのひがふえました。",
+        "en": "Lately, rainy days have increased."
+      }
     },
     {
-      "id": "gr-008",
-      "pattern": "ものの",
-      "meaning": "although / even though (unexpected result)",
-      "structure": "Plain form + ものの",
+      "id": "n3-008",
+      "kanji": "慣れる",
+      "kana": "なれる",
+      "partOfSpeech": "verb",
+      "meaning": "to get used to",
       "example": {
-        "jp": "薬を飲んだものの、熱はなかなか下がらなかった。",
-        "reading": "くすりをのんだものの、ねつはなかなかさがらなかった。",
-        "en": "Although I took medicine, my fever wouldn't go down easily."
-      },
-      "notes": "More formal/written than でも or けど; the second clause runs counter to what the first implies."
+        "jp": "新しい仕事にまだ慣れていません。",
+        "reading": "あたらしいしごとにまだなれていません。",
+        "en": "I'm not used to the new job yet."
+      }
     },
     {
-      "id": "gr-009",
-      "pattern": "にわたって",
-      "meaning": "over / spanning (a period or scope)",
-      "structure": "Noun + にわたって",
+      "id": "n3-009",
+      "kanji": "逃げる",
+      "kana": "にげる",
+      "partOfSpeech": "verb",
+      "meaning": "to escape, to run away",
       "example": {
-        "jp": "工事は三年にわたって続いた。",
-        "reading": "こうじはさんねんにわたってつづいた。",
-        "en": "The construction work continued for three years."
-      },
-      "notes": "Marks a wide range in time, distance, or scope that something covers."
+        "jp": "猫が部屋から逃げました。",
+        "reading": "ねこがへやからにげました。",
+        "en": "The cat ran away from the room."
+      }
     },
     {
-      "id": "gr-010",
-      "pattern": "恐れがある",
-      "patternKana": "おそれがある",
-      "meaning": "there is a risk/fear that ~",
-      "structure": "Verb (dictionary form) / Noun + の + 恐れがある",
+      "id": "n3-010",
+      "kanji": "便利",
+      "kana": "べんり",
+      "partOfSpeech": "na-adjective",
+      "meaning": "convenient",
       "example": {
-        "jp": "台風の影響で、明日は大雨になる恐れがある。",
-        "reading": "たいふうのえいきょうで、あしたはおおあめになるおそれがある。",
-        "en": "Due to the typhoon, there's a risk of heavy rain tomorrow."
-      },
-      "notes": "Formal register — common in news reports and official warnings, always about undesirable outcomes."
+        "jp": "このアプリはとても便利です。",
+        "reading": "このアプリはとてもべんりです。",
+        "en": "This app is very convenient."
+      }
     },
     {
-      "id": "gr-011",
-      "pattern": "に限らず",
-      "patternKana": "にかぎらず",
-      "meaning": "not limited to ~ (but also)",
-      "structure": "Noun + に限らず",
+      "id": "n3-011",
+      "kanji": "十分",
+      "kana": "じゅうぶん",
+      "partOfSpeech": "na-adjective",
+      "meaning": "enough, sufficient",
       "example": {
-        "jp": "この問題は日本に限らず、世界中で起きている。",
-        "reading": "このもんだいはにほんにかぎらず、せかいじゅうでおきている。",
-        "en": "This problem isn't limited to Japan — it's happening worldwide."
-      },
-      "notes": "Broadens a statement beyond the first example given."
+        "jp": "時間は十分にあります。",
+        "reading": "じかんはじゅうぶんにあります。",
+        "en": "There is enough time."
+      }
     },
     {
-      "id": "gr-012",
-      "pattern": "さえ〜ば",
-      "meaning": "if only ~ / as long as ~",
-      "structure": "Noun + さえ + Verb (ば form) / Verb (stem) + さえすれば",
+      "id": "n3-012",
+      "kanji": "",
+      "kana": "なるべく",
+      "partOfSpeech": "adverb",
+      "meaning": "as much as possible",
       "example": {
-        "jp": "時間さえあれば、旅行に行きたい。",
-        "reading": "じかんさえあれば、りょこうにいきたい。",
-        "en": "If only I had time, I'd like to travel."
-      },
-      "notes": "Singles out one condition as sufficient on its own for the result to hold."
+        "jp": "なるべく早く来てください。",
+        "reading": "なるべくはやくきてください。",
+        "en": "Please come as soon as possible."
+      }
+    },
+    {
+      "id": "n3-013",
+      "kanji": "確認",
+      "kana": "かくにん",
+      "partOfSpeech": "noun",
+      "meaning": "confirmation",
+      "example": {
+        "jp": "予約の前に日にちを確認してください。",
+        "reading": "よやくのまえにひにちをかくにんしてください。",
+        "en": "Please confirm the date before making a reservation."
+      }
     }
   ]
 }
