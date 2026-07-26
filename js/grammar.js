@@ -231,7 +231,7 @@ async function initGrammar() {
     const data = await loadGrammar();
     renderList(content, data);
   } catch (error) {
-    console.error('[Nagi]', error);
+    console.error('[Bigu]', error);
     renderError(content, 'Grammar points could not be loaded right now.');
   }
 }
