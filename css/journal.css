@@ -126,6 +126,107 @@
   cursor: not-allowed;
 }
 
+/* -- Calendar (heat-map) ----------------------------------------------------------------
+   A quiet monthly overview: filled cells mark days with a saved entry, at
+   three intensity levels standing in for entry length so a longer day of
+   writing reads as a slightly bolder mark. Purely a navigation aid — days
+   without an entry render as plain, non-interactive cells, since new entries
+   always start from the composer's "today", never from an empty cell.
+   -------------------------------------------------------------------------------------------- */
+.journal__calendar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.journal__calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.journal__calendar-label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  letter-spacing: var(--tracking-wide);
+}
+
+.journal__calendar-nav {
+  width: 1.75rem;
+  height: 1.75rem;
+  font-size: var(--text-md);
+  line-height: 1;
+  color: var(--color-ash);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.journal__calendar-nav:hover {
+  color: var(--color-ink);
+  background-color: var(--color-washi-raised);
+}
+
+.journal__calendar-weekdays,
+.journal__calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-3xs);
+}
+
+.journal__calendar-weekdays span {
+  font-size: var(--text-xs);
+  text-align: center;
+  color: var(--color-ash);
+}
+
+.journal__calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xs);
+  color: var(--color-ash);
+  border-radius: var(--radius-sm);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.journal__calendar-day--blank {
+  visibility: hidden;
+}
+
+.journal__calendar-day--empty {
+  cursor: default;
+}
+
+.journal__calendar-day[data-intensity="1"] {
+  background-color: color-mix(in srgb, var(--color-moss) 25%, transparent);
+  color: var(--color-ink);
+}
+
+.journal__calendar-day[data-intensity="2"] {
+  background-color: color-mix(in srgb, var(--color-moss) 50%, transparent);
+  color: var(--color-ink);
+}
+
+.journal__calendar-day[data-intensity="3"] {
+  background-color: var(--color-moss);
+  color: var(--color-washi);
+}
+
+button.journal__calendar-day:hover {
+  background-color: var(--color-indigo-deep);
+  color: var(--color-washi);
+}
+
+.journal__calendar-day--today {
+  box-shadow: inset 0 0 0 var(--border-width) var(--color-indigo);
+}
+
+.journal__calendar-day--active {
+  box-shadow: inset 0 0 0 2px var(--color-bengara);
+}
+
 /* -- History ----------------------------------------------------------------------------
    Deliberately quieter than the composer — this is the review pane, not
    the main event. A smaller heading and a plain hairline-divided list keep
@@ -229,4 +330,4 @@
   .journal__entry-date {
     width: 100%;
   }
-}
+   }
