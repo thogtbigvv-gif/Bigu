@@ -110,6 +110,82 @@ function entriesNewestFirst() {
   return journal.getAll().slice().sort((a, b) => b.date.localeCompare(a.date));
 }
 
+/* -- Calendar / heat-map computation -----------------------------------------------
+   Pure date math for the journal calendar — no rendering yet, that lands in a
+   follow-up pass. Builds a full month grid (padded to whole weeks) with each
+   in-month day's saved entry (if any) attached, so a heat-map view can just
+   read `hasEntry` / `stats` per cell without touching storage itself.
+   ------------------------------------------------------------------------------ */
+
+const WEEK_LENGTH = 7;
+
+const monthLabelFormatter = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' });
+
+function daysInMonth(year, month) {
+  return new Date(year, month + 1, 0).getDate();
+}
+
+function entriesByDateInMonth(year, month) {
+  const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
+  const map = new Map();
+  for (const entry of journal.getAll()) {
+    if (entry.date.startsWith(prefix)) map.set(entry.date, entry);
+  }
+  return map;
+}
+
+function emptyCell() {
+  return { dateKey: null, day: null, inMonth: false, hasEntry: false, entry: null, stats: null, isToday: false };
+}
+
+/**
+ * Builds one month's calendar as full weeks (Sun–Sat), padded with empty
+ * cells before day 1 and after the last day so every row has exactly 7 cells.
+ * `month` is 0-indexed, matching Date's convention.
+ */
+function buildMonthCalendar(year, month) {
+  const entryMap = entriesByDateInMonth(year, month);
+  const total = daysInMonth(year, month);
+  const firstWeekday = new Date(year, month, 1).getDay();
+  const todayStr = todayKey();
+
+  const days = [];
+  for (let i = 0; i < firstWeekday; i += 1) days.push(emptyCell());
+
+  for (let day = 1; day <= total; day += 1) {
+    const dateKey = toDateKey(new Date(year, month, day));
+    const entry = entryMap.get(dateKey) ?? null;
+    days.push({
+      dateKey,
+      day,
+      inMonth: true,
+      hasEntry: Boolean(entry),
+      entry,
+      stats: entry ? computeStats(entry.text) : null,
+      isToday: dateKey === todayStr,
+    });
+  }
+
+  while (days.length % WEEK_LENGTH !== 0) days.push(emptyCell());
+
+  const weeks = [];
+  for (let i = 0; i < days.length; i += WEEK_LENGTH) weeks.push(days.slice(i, i + WEEK_LENGTH));
+
+  return {
+    year,
+    month,
+    label: monthLabelFormatter.format(new Date(year, month, 1)),
+    weeks,
+    entryCount: entryMap.size,
+  };
+}
+
+/** Returns the {year, month} that is `delta` months away from (year, month). */
+function shiftMonth(year, month, delta) {
+  const shifted = new Date(year, month + delta, 1);
+  return { year: shifted.getFullYear(), month: shifted.getMonth() };
+}
+
 /* -- DOM builders --------------------------------------------------------------------
    Structure built with createElement/append (no innerHTML) so journal text —
    which is free-form user input — is always inserted as text, never markup.
@@ -365,4 +441,4 @@ function initJournal() {
   initJournalView(view);
 }
 
-export { initJournal };
+export { initJournal, buildMonthCalendar, shiftMonth };
