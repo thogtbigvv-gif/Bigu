@@ -1,4 +1,4 @@
-/* ==========================================================================
+   /* ==========================================================================
    dashboard.js
    Renders the #dashboard view: a journal writing streak, learned/total
    progress across vocabulary/grammar/kanji, and the most recent practice
@@ -255,7 +255,7 @@ async function initDashboard() {
 
       content.replaceChildren(grid);
     } catch (error) {
-      console.error('[Nagi]', error);
+      console.error('[Bigu]', error);
       renderError(content, 'Dashboard data could not be loaded right now.');
     }
   }
@@ -271,4 +271,4 @@ async function initDashboard() {
   });
 }
 
-export { initDashboard };
+export { initDashboard };   
