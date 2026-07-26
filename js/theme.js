@@ -57,4 +57,26 @@ function initTheme() {
   });
 }
 
-export { initTheme, setTheme, toggleTheme, currentTheme };
+/* -- UI binding ----------------------------------------------------------------------
+   Wires the header's icon button to toggleTheme() and keeps its
+   aria-pressed state (which the CSS reads to swap the sun/moon icon)
+   in sync — both on click and whenever the system preference changes
+   the theme out from under it.
+   -------------------------------------------------------------------------------------- */
+function bindToggleButton(button) {
+  if (!button) return;
+
+  const sync = () => {
+    button.setAttribute('aria-pressed', String(currentTheme() === 'dark'));
+  };
+
+  button.addEventListener('click', () => {
+    toggleTheme();
+    sync();
+  });
+
+  window.matchMedia(DARK_QUERY).addEventListener('change', sync);
+  sync();
+}
+
+export { initTheme, setTheme, toggleTheme, currentTheme, bindToggleButton };
