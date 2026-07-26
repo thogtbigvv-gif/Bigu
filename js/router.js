@@ -6,7 +6,7 @@
    ========================================================================== */
 
 const DEFAULT_VIEW = 'dashboard';
-const APP_NAME = 'Nagi';
+const APP_NAME = 'Bigu';
 
 function getViews() {
   return Array.from(document.querySelectorAll('#main-content > .view'));
