@@ -33,6 +33,7 @@ body {
   line-height: var(--leading-normal);
   font-weight: var(--weight-regular);
   color: var(--color-ink);
+  background-color: var(--color-washi);
 }
 
 /* -- Japanese text --------------------------------------------------------------
