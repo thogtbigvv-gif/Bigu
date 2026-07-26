@@ -7,11 +7,11 @@
       "kanji": "経験",
       "kana": "けいけん",
       "partOfSpeech": "noun",
-      "meaning": "experience",
+      "meaning": "туршлага",
       "example": {
         "jp": "日本で働いた経験があります。",
         "reading": "にほんではたらいたけいけんがあります。",
-        "en": "I have experience working in Japan."
+        "mn": "Би Японд ажиллаж байсан туршлагатай."
       }
     },
     {
@@ -19,11 +19,11 @@
       "kanji": "環境",
       "kana": "かんきょう",
       "partOfSpeech": "noun",
-      "meaning": "environment",
+      "meaning": "орчин",
       "example": {
         "jp": "この会社は環境がいいです。",
         "reading": "このかいしゃはかんきょうがいいです。",
-        "en": "This company has a good environment."
+        "mn": "Энэ компани сайн орчинтой."
       }
     },
     {
@@ -31,11 +31,11 @@
       "kanji": "準備",
       "kana": "じゅんび",
       "partOfSpeech": "noun",
-      "meaning": "preparation",
+      "meaning": "бэлтгэл",
       "example": {
         "jp": "明日の準備をしています。",
         "reading": "あしたのじゅんびをしています。",
-        "en": "I'm preparing for tomorrow."
+        "mn": "Би маргаашийнхаа бэлтгэлийг хийж байна."
       }
     },
     {
@@ -43,11 +43,11 @@
       "kanji": "説明",
       "kana": "せつめい",
       "partOfSpeech": "noun",
-      "meaning": "explanation",
+      "meaning": "тайлбар",
       "example": {
         "jp": "先生が使い方を説明してくれました。",
         "reading": "せんせいがつかいかたをせつめいしてくれました。",
-        "en": "The teacher explained how to use it."
+        "mn": "Багш хэрхэн ашиглахыг тайлбарлаж өгсөн."
       }
     },
     {
@@ -55,11 +55,11 @@
       "kanji": "相談",
       "kana": "そうだん",
       "partOfSpeech": "noun",
-      "meaning": "consultation",
+      "meaning": "зөвлөлдөх, зөвлөгөө",
       "example": {
         "jp": "友達に相談してから決めます。",
         "reading": "ともだちにそうだんしてからきめます。",
-        "en": "I'll decide after consulting with my friend."
+        "mn": "Би найзтайгаа зөвлөлдсөний дараа шийднэ."
       }
     },
     {
@@ -67,11 +67,11 @@
       "kanji": "到着",
       "kana": "とうちゃく",
       "partOfSpeech": "noun",
-      "meaning": "arrival",
+      "meaning": "хүрэлцэн ирэх, очих",
       "example": {
         "jp": "電車は九時に到着します。",
         "reading": "でんしゃはくじにとうちゃくします。",
-        "en": "The train arrives at nine o'clock."
+        "mn": "Галт тэрэг есөн цагт ирнэ."
       }
     },
     {
@@ -79,11 +79,11 @@
       "kanji": "増える",
       "kana": "ふえる",
       "partOfSpeech": "verb",
-      "meaning": "to increase",
+      "meaning": "нэмэгдэх, өсөх",
       "example": {
         "jp": "最近、雨の日が増えました。",
         "reading": "さいきん、あめのひがふえました。",
-        "en": "Lately, rainy days have increased."
+        "mn": "Сүүлийн үед бороотой өдөр нэмэгдсэн."
       }
     },
     {
@@ -91,11 +91,11 @@
       "kanji": "慣れる",
       "kana": "なれる",
       "partOfSpeech": "verb",
-      "meaning": "to get used to",
+      "meaning": "дасах",
       "example": {
         "jp": "新しい仕事にまだ慣れていません。",
         "reading": "あたらしいしごとにまだなれていません。",
-        "en": "I'm not used to the new job yet."
+        "mn": "Би шинэ ажилдаа хараахан дасаагүй байна."
       }
     },
     {
@@ -103,11 +103,11 @@
       "kanji": "逃げる",
       "kana": "にげる",
       "partOfSpeech": "verb",
-      "meaning": "to escape, to run away",
+      "meaning": "зугтах",
       "example": {
         "jp": "猫が部屋から逃げました。",
         "reading": "ねこがへやからにげました。",
-        "en": "The cat ran away from the room."
+        "mn": "Муур өрөөнөөс зугтсан."
       }
     },
     {
@@ -115,11 +115,11 @@
       "kanji": "便利",
       "kana": "べんり",
       "partOfSpeech": "na-adjective",
-      "meaning": "convenient",
+      "meaning": "тохиромжтой, хялбар",
       "example": {
         "jp": "このアプリはとても便利です。",
         "reading": "このアプリはとてもべんりです。",
-        "en": "This app is very convenient."
+        "mn": "Энэ аппликейшн маш хэрэглэхэд хялбар (тохиромжтой)."
       }
     },
     {
@@ -127,11 +127,11 @@
       "kanji": "十分",
       "kana": "じゅうぶん",
       "partOfSpeech": "na-adjective",
-      "meaning": "enough, sufficient",
+      "meaning": "хангалттай",
       "example": {
         "jp": "時間は十分にあります。",
         "reading": "じかんはじゅうぶんにあります。",
-        "en": "There is enough time."
+        "mn": "Хангалттай хугацаа байна."
       }
     },
     {
@@ -139,11 +139,11 @@
       "kanji": "",
       "kana": "なるべく",
       "partOfSpeech": "adverb",
-      "meaning": "as much as possible",
+      "meaning": "аль болох",
       "example": {
         "jp": "なるべく早く来てください。",
         "reading": "なるべくはやくきてください。",
-        "en": "Please come as soon as possible."
+        "mn": "Аль болох хурдан ирээрэй."
       }
     },
     {
@@ -151,11 +151,11 @@
       "kanji": "確認",
       "kana": "かくにん",
       "partOfSpeech": "noun",
-      "meaning": "confirmation",
+      "meaning": "баталгаажуулах, шалгах",
       "example": {
         "jp": "予約の前に日にちを確認してください。",
         "reading": "よやくのまえにひにちをかくにんしてください。",
-        "en": "Please confirm the date before making a reservation."
+        "mn": "Захиалга өгөхөөсөө өмнө өдрөө баталгаажуулаарай (шалгаарай)."
       }
     }
   ]
