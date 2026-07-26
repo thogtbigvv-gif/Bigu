@@ -9,6 +9,15 @@
   margin: 0;
 }
 
+/* -- Search ---------------------------------------------------------------------------- */
+.kanji-search {
+  max-width: 24rem;
+}
+
+.kanji-empty {
+  margin: 0;
+}
+
 .kanji-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
