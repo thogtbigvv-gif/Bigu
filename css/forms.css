@@ -62,6 +62,13 @@ select.field {
   background-size: 1rem;
 }
 
+/* The arrow's stroke is a literal hex baked into the data URI (custom
+   properties can't be referenced inside one), so the dark theme's
+   --color-ash value (#8F9484) needs its own copy here to match. */
+[data-theme="dark"] select.field {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238F9484' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+}
+
 /* -- Labels ------------------------------------------------------------------------- */
 
 .field-label {
