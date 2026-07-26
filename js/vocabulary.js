@@ -221,7 +221,7 @@ async function initVocabulary() {
     const data = await loadVocabulary();
     renderList(content, data);
   } catch (error) {
-    console.error('[Nagi]', error);
+    console.error('[Bigu]', error);
     renderError(content, 'Vocabulary could not be loaded right now.');
   }
 }
