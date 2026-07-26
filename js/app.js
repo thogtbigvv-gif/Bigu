@@ -1,4 +1,4 @@
- /* ==========================================================================
+/* ==========================================================================
    app.js
    Application entry point. Boots the pieces every view depends on — theme,
    storage availability, footer housekeeping — then initializes each view
@@ -23,7 +23,7 @@ import { initJournal } from './journal.js';
    ---------------------------------------------------------------------------- */
 function checkStorage() {
   if (!isStorageAvailable()) {
-    console.warn('[Nagi] localStorage is unavailable — progress and preferences will not persist this session.');
+    console.warn('[Bigu] localStorage is unavailable — progress and preferences will not persist this session.');
   }
 }
 
