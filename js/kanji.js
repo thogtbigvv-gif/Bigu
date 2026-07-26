@@ -117,6 +117,37 @@ function createCard(entry, level) {
   return item;
 }
 
+/* -- Search/filter -------------------------------------------------------------------
+   Same substring-match-and-hide approach as vocabulary.js/grammar.js —
+   matches against the character, meaning, and both readings.
+   -------------------------------------------------------------------------------------- */
+
+function matchesQuery(entry, query) {
+  if (!query) return true;
+  const haystack = `${entry.character} ${entry.meaning} ${entry.onyomi ?? ''} ${entry.kunyomi ?? ''}`.toLowerCase();
+  return haystack.includes(query);
+}
+
+function createSearchField() {
+  const wrap = document.createElement('div');
+  wrap.className = 'kanji-search';
+
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  label.htmlFor = 'kanji-search';
+  label.textContent = 'Search kanji';
+
+  const input = document.createElement('input');
+  input.type = 'search';
+  input.id = 'kanji-search';
+  input.className = 'field';
+  input.placeholder = 'Search by character, reading, or meaning';
+  input.autocomplete = 'off';
+
+  wrap.append(label, input);
+  return { wrap, input };
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -130,15 +161,39 @@ function getContentContainer(view) {
 }
 
 function renderGrid(container, data) {
+  const { wrap: searchWrap, input: searchInput } = createSearchField();
+
   const summary = document.createElement('p');
   summary.className = 'kanji-meta meta';
-  summary.textContent = `${data.level} · ${data.kanji.length} kanji`;
 
   const grid = document.createElement('ul');
   grid.className = 'kanji-grid';
-  grid.append(...data.kanji.map((entry) => createCard(entry, data.level)));
+  const rows = data.kanji.map((entry) => ({ entry, item: createCard(entry, data.level) }));
+  grid.append(...rows.map((row) => row.item));
 
-  container.replaceChildren(summary, grid);
+  const empty = document.createElement('p');
+  empty.className = 'meta kanji-empty';
+  empty.textContent = 'No kanji match your search.';
+  empty.hidden = true;
+
+  function applyFilter() {
+    const query = searchInput.value.trim().toLowerCase();
+    let visible = 0;
+    for (const row of rows) {
+      const matches = matchesQuery(row.entry, query);
+      row.item.hidden = !matches;
+      if (matches) visible += 1;
+    }
+    summary.textContent = query
+      ? `${data.level} · ${visible} / ${data.kanji.length} kanji`
+      : `${data.level} · ${data.kanji.length} kanji`;
+    empty.hidden = visible > 0;
+  }
+
+  searchInput.addEventListener('input', applyFilter);
+  applyFilter();
+
+  container.replaceChildren(searchWrap, summary, grid, empty);
 }
 
 function renderError(container, message) {
