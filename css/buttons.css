@@ -57,3 +57,48 @@
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
+
+/* -- Theme toggle -----------------------------------------------------------------
+   Icon-only, quiet like a secondary button. It reacts to its own
+   aria-pressed state (true = dark mode active) rather than a class list,
+   since theme.js already treats that state as the single source of truth.
+   --------------------------------------------------------------------------------------- */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  color: var(--color-ink-soft);
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-toggle:hover {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.theme-toggle__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.theme-toggle__icon--moon {
+  display: none;
+}
+
+.theme-toggle[aria-pressed="true"] .theme-toggle__icon--sun {
+  display: none;
+}
+
+.theme-toggle[aria-pressed="true"] .theme-toggle__icon--moon {
+  display: block;
+}
