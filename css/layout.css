@@ -61,6 +61,17 @@ body {
   flex-shrink: 0;
 }
 
+/* -- Header, end group ------------------------------------------------------------
+   Groups the nav and the theme toggle as one flex item, so .site-header's
+   space-between still just splits two things (brand vs. everything else)
+   instead of redistributing around a third top-level child.
+   ------------------------------------------------------------------------------------- */
+.site-header__end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
 /* -- Main ------------------------------------------------------------------------
    Grows to fill remaining height (sticky-footer partner to body's flex
    column) and gives each view generous breathing room above and below.
