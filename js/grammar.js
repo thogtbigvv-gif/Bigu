@@ -133,6 +133,37 @@ function createCard(point, level) {
   return item;
 }
 
+/* -- Search/filter -------------------------------------------------------------------
+   Same substring-match-and-hide approach as vocabulary.js — matches
+   against the pattern (kanji + kana reading) and the meaning.
+   -------------------------------------------------------------------------------------- */
+
+function matchesQuery(point, query) {
+  if (!query) return true;
+  const haystack = `${point.pattern} ${point.patternKana ?? ''} ${point.meaning}`.toLowerCase();
+  return haystack.includes(query);
+}
+
+function createSearchField() {
+  const wrap = document.createElement('div');
+  wrap.className = 'grammar-search';
+
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  label.htmlFor = 'grammar-search';
+  label.textContent = 'Search grammar';
+
+  const input = document.createElement('input');
+  input.type = 'search';
+  input.id = 'grammar-search';
+  input.className = 'field';
+  input.placeholder = 'Search by pattern or meaning';
+  input.autocomplete = 'off';
+
+  wrap.append(label, input);
+  return { wrap, input };
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -146,15 +177,39 @@ function getContentContainer(view) {
 }
 
 function renderList(container, data) {
+  const { wrap: searchWrap, input: searchInput } = createSearchField();
+
   const summary = document.createElement('p');
   summary.className = 'grammar-meta meta';
-  summary.textContent = `${data.level} · ${data.points.length} grammar points`;
 
   const list = document.createElement('ul');
   list.className = 'grammar-list';
-  list.append(...data.points.map((point) => createCard(point, data.level)));
+  const rows = data.points.map((point) => ({ point, item: createCard(point, data.level) }));
+  list.append(...rows.map((row) => row.item));
 
-  container.replaceChildren(summary, list);
+  const empty = document.createElement('p');
+  empty.className = 'meta grammar-empty';
+  empty.textContent = 'No grammar points match your search.';
+  empty.hidden = true;
+
+  function applyFilter() {
+    const query = searchInput.value.trim().toLowerCase();
+    let visible = 0;
+    for (const row of rows) {
+      const matches = matchesQuery(row.point, query);
+      row.item.hidden = !matches;
+      if (matches) visible += 1;
+    }
+    summary.textContent = query
+      ? `${data.level} · ${visible} / ${data.points.length} grammar points`
+      : `${data.level} · ${data.points.length} grammar points`;
+    empty.hidden = visible > 0;
+  }
+
+  searchInput.addEventListener('input', applyFilter);
+  applyFilter();
+
+  container.replaceChildren(searchWrap, summary, list, empty);
 }
 
 function renderError(container, message) {
