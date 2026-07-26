@@ -247,6 +247,90 @@ function createComposer() {
   return { composer, date, backToToday, textarea, stats, status, saveButton };
 }
 
+/** 1 (light) – 3 (heaviest) based on entry length; 0 means no entry at all. */
+function intensityLevel(stats) {
+  if (!stats) return 0;
+  if (stats.length >= 150) return 3;
+  if (stats.length >= 50) return 2;
+  return 1;
+}
+
+function createCalendar() {
+  const calendar = document.createElement('div');
+  calendar.className = 'journal__calendar';
+
+  const head = document.createElement('div');
+  head.className = 'journal__calendar-head';
+
+  const prevButton = document.createElement('button');
+  prevButton.type = 'button';
+  prevButton.className = 'journal__calendar-nav';
+  prevButton.textContent = '‹';
+  prevButton.setAttribute('aria-label', 'Previous month');
+
+  const label = document.createElement('p');
+  label.className = 'journal__calendar-label';
+
+  const nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.className = 'journal__calendar-nav';
+  nextButton.textContent = '›';
+  nextButton.setAttribute('aria-label', 'Next month');
+
+  head.append(prevButton, label, nextButton);
+
+  const weekdays = document.createElement('div');
+  weekdays.className = 'journal__calendar-weekdays';
+  for (const initial of ['S', 'M', 'T', 'W', 'T', 'F', 'S']) {
+    const weekday = document.createElement('span');
+    weekday.textContent = initial;
+    weekdays.append(weekday);
+  }
+
+  const grid = document.createElement('div');
+  grid.className = 'journal__calendar-grid';
+  grid.setAttribute('role', 'grid');
+
+  calendar.append(head, weekdays, grid);
+
+  return { calendar, label, grid, prevButton, nextButton };
+}
+
+/**
+ * One calendar cell. Days with a saved entry render as a button (opens that
+ * entry); days without one render as a plain, non-interactive span — the
+ * calendar is a navigation aid for past entries, not a way to start a new
+ * one for an arbitrary past date.
+ */
+function createCalendarDay(cell, { isActive, onOpen }) {
+  if (!cell.inMonth) {
+    const blank = document.createElement('span');
+    blank.className = 'journal__calendar-day journal__calendar-day--blank';
+    blank.setAttribute('aria-hidden', 'true');
+    return blank;
+  }
+
+  const day = document.createElement(cell.hasEntry ? 'button' : 'span');
+  day.className = 'journal__calendar-day';
+  day.dataset.intensity = String(intensityLevel(cell.stats));
+  day.textContent = String(cell.day);
+  if (cell.isToday) day.classList.add('journal__calendar-day--today');
+  if (isActive) day.classList.add('journal__calendar-day--active');
+
+  if (cell.hasEntry) {
+    day.type = 'button';
+    const tooltip = `${formatDateLabel(cell.dateKey)} · ${summarizeStats(cell.stats)}`;
+    day.title = tooltip;
+    day.setAttribute('aria-label', tooltip);
+    day.addEventListener('click', () => onOpen(cell.entry));
+  } else {
+    day.classList.add('journal__calendar-day--empty');
+    day.title = formatDateLabel(cell.dateKey);
+  }
+
+  return day;
+}
+
 function createHistory() {
   const history = document.createElement('div');
   history.className = 'journal__history';
@@ -325,14 +409,23 @@ function createEntryItem(entry, { isActive, onSelect, onDelete }) {
 
 function initJournalView(view) {
   const { composer, date, backToToday, textarea, stats, status, saveButton } = createComposer();
+  const {
+    calendar,
+    label: calendarLabel,
+    grid: calendarGrid,
+    prevButton: calendarPrev,
+    nextButton: calendarNext,
+  } = createCalendar();
   const { history, empty, list } = createHistory();
 
   const wrapper = document.createElement('div');
   wrapper.className = 'journal';
-  wrapper.append(composer, history);
+  wrapper.append(composer, calendar, history);
   view.append(wrapper);
 
   const state = { date: todayKey(), entryId: null, savedText: '' };
+  const today = new Date();
+  const calendarState = { year: today.getFullYear(), month: today.getMonth() };
 
   function refreshStats() {
     stats.textContent = describeStats(computeStats(textarea.value));
@@ -363,6 +456,26 @@ function initJournalView(view) {
     );
   }
 
+  function renderCalendar() {
+    const monthData = buildMonthCalendar(calendarState.year, calendarState.month);
+    calendarLabel.textContent = monthData.label;
+    calendarGrid.replaceChildren(
+      ...monthData.weeks.flat().map((cell) =>
+        createCalendarDay(cell, {
+          isActive: cell.dateKey === state.date,
+          onOpen: openEntry,
+        }),
+      ),
+    );
+  }
+
+  /** Jumps the calendar to whichever month `dateKey` falls in. */
+  function syncCalendarToDate(dateKey) {
+    const [year, month] = dateKey.split('-').map(Number);
+    calendarState.year = year;
+    calendarState.month = month - 1;
+  }
+
   function loadInto(entry) {
     state.date = entry ? entry.date : todayKey();
     state.entryId = entry ? entry.id : null;
@@ -376,13 +489,17 @@ function initJournalView(view) {
 
   function openEntry(entry) {
     loadInto(entry);
+    syncCalendarToDate(state.date);
     renderHistory();
+    renderCalendar();
     textarea.focus();
   }
 
   function goToToday() {
     loadInto(findEntryByDate(todayKey()));
+    syncCalendarToDate(state.date);
     renderHistory();
+    renderCalendar();
     textarea.focus();
   }
 
@@ -393,6 +510,7 @@ function initJournalView(view) {
       loadInto(findEntryByDate(todayKey()));
     }
     renderHistory();
+    renderCalendar();
   }
 
   function saveEntry() {
@@ -413,6 +531,7 @@ function initJournalView(view) {
     status.textContent = `Saved · ${formatTimeLabel(record.updatedAt ?? record.createdAt)}`;
     syncSaveButton();
     renderHistory();
+    renderCalendar();
   }
 
   textarea.addEventListener('input', () => {
@@ -431,8 +550,23 @@ function initJournalView(view) {
   saveButton.addEventListener('click', saveEntry);
   backToToday.addEventListener('click', goToToday);
 
+  calendarPrev.addEventListener('click', () => {
+    const shifted = shiftMonth(calendarState.year, calendarState.month, -1);
+    calendarState.year = shifted.year;
+    calendarState.month = shifted.month;
+    renderCalendar();
+  });
+
+  calendarNext.addEventListener('click', () => {
+    const shifted = shiftMonth(calendarState.year, calendarState.month, 1);
+    calendarState.year = shifted.year;
+    calendarState.month = shifted.month;
+    renderCalendar();
+  });
+
   loadInto(findEntryByDate(state.date));
   renderHistory();
+  renderCalendar();
 }
 
 function initJournal() {
