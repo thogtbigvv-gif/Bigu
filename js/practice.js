@@ -7,7 +7,9 @@
    mark → next. Marking a card writes to the same progress store every
    list view uses (so a card graded "I knew it" here shows as
    learned/mastered there too), and each finished session is logged to the
-   practice store, tagged with its mode, for dashboard.js.
+   practice store, tagged with its mode, for dashboard.js. A small history
+   block reads that same store back to list the most recent rounds (mode,
+   score, when), refreshed after every finished session.
    ========================================================================== */
 
 import { progress, practice, settings } from './storage.js';
@@ -18,6 +20,7 @@ import { loadKanji } from './kanji.js';
 const VIEW_ID = 'practice';
 const SESSION_SIZE = 10;
 const MODE_SETTING_KEY = 'practiceMode';
+const HISTORY_LIMIT = 5;
 
 /* -- Deck adapters ---------------------------------------------------------------------
    Each deck knows how to: fill the big headword slot, describe the
@@ -257,7 +260,24 @@ function buildView(view) {
 
   summary.append(summaryText, againButton);
 
-  wrapper.append(modeGroup, intro, session, summary);
+  /* History */
+  const history = document.createElement('div');
+  history.className = 'practice__history';
+
+  const historyHeading = document.createElement('h2');
+  historyHeading.className = 'practice__history-heading';
+  historyHeading.textContent = 'Recent sessions';
+
+  const historyList = document.createElement('ul');
+  historyList.className = 'practice__history-list';
+
+  const historyEmpty = document.createElement('p');
+  historyEmpty.className = 'practice__history-empty meta';
+  historyEmpty.textContent = 'No sessions yet — finish a round to see it here.';
+
+  history.append(historyHeading, historyList, historyEmpty);
+
+  wrapper.append(modeGroup, intro, session, summary, history);
   view.append(wrapper);
 
   return {
@@ -266,6 +286,7 @@ function buildView(view) {
     session, status, headword, pos, answer, meaning, exampleJp, exampleReading, exampleEn,
     revealButton, grade, stillLearningButton, knewItButton,
     summary, summaryText, againButton,
+    history, historyList, historyEmpty,
   };
 }
 
@@ -320,6 +341,7 @@ function initController(elements, decks) {
     elements.intro.hidden = phase !== 'intro';
     elements.session.hidden = phase !== 'session';
     elements.summary.hidden = phase !== 'summary';
+    elements.history.hidden = phase === 'session';
   }
 
   function renderCard() {
@@ -336,10 +358,45 @@ function initController(elements, decks) {
     elements.revealButton.hidden = false;
   }
 
+  function formatSessionDate(timestamp) {
+    return new Date(timestamp).toLocaleString(undefined, {
+      month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
+    });
+  }
+
+  function renderHistory() {
+    const recent = practice.getAll().slice(-HISTORY_LIMIT).reverse();
+    elements.historyList.replaceChildren();
+
+    elements.historyEmpty.hidden = recent.length > 0;
+    elements.historyList.hidden = recent.length === 0;
+
+    for (const entry of recent) {
+      const item = document.createElement('li');
+      item.className = 'practice__history-item';
+
+      const mode = document.createElement('span');
+      mode.className = 'practice__history-mode';
+      mode.textContent = decks[entry.mode]?.label ?? entry.mode;
+
+      const score = document.createElement('span');
+      score.className = 'practice__history-score';
+      score.textContent = `${entry.correct} / ${entry.total}`;
+
+      const date = document.createElement('time');
+      date.className = 'practice__history-date meta';
+      date.textContent = formatSessionDate(entry.createdAt);
+
+      item.append(mode, score, date);
+      elements.historyList.append(item);
+    }
+  }
+
   function finishSession() {
     practice.add({ total: state.queue.length, correct: state.correct, mode: state.mode });
     elements.summaryText.textContent =
       `${state.correct} / ${state.queue.length} marked "I knew it" this round.`;
+    renderHistory();
     showPhase('summary');
   }
 
@@ -393,6 +450,7 @@ function initController(elements, decks) {
 
   syncModeButtons();
   updateIntroText();
+  renderHistory();
   showPhase('intro');
 }
 
