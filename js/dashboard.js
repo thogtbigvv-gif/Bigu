@@ -165,6 +165,13 @@ function createProgressCard({ vocabulary, grammar, kanji }) {
   return card;
 }
 
+/* -- Practice session labels ----------------------------------------------------------
+   practice.js tags each saved session with the deck it was drawn from
+   (vocabulary/grammar/kanji); older sessions saved before that existed
+   simply have no `mode` field, so the label is omitted for those.
+   -------------------------------------------------------------------------------------- */
+const PRACTICE_MODE_LABELS = { vocabulary: 'Vocabulary', grammar: 'Grammar', kanji: 'Kanji' };
+
 function createPracticeCard(sessions) {
   const card = createCard('Last practice');
   const latest = sessions.slice().sort((a, b) => b.createdAt - a.createdAt)[0] ?? null;
@@ -179,9 +186,12 @@ function createPracticeCard(sessions) {
     score.className = 'dashboard-streak__count';
     score.textContent = `${latest.correct} / ${latest.total}`;
 
+    const modeLabel = PRACTICE_MODE_LABELS[latest.mode];
     const label = document.createElement('p');
     label.className = 'meta';
-    label.textContent = `marked "I knew it" · ${formatSessionDate(latest.createdAt)}`;
+    label.textContent = modeLabel
+      ? `marked "I knew it" · ${modeLabel} · ${formatSessionDate(latest.createdAt)}`
+      : `marked "I knew it" · ${formatSessionDate(latest.createdAt)}`;
 
     card.append(score, label);
   }
@@ -222,31 +232,43 @@ async function initDashboard() {
 
   const content = getContentContainer(view);
 
-  try {
-    const [vocabData, grammarData, kanjiData] = await Promise.all([
-      loadVocabulary(),
-      loadGrammar(),
-      loadKanji(),
-    ]);
+  async function render() {
+    try {
+      const [vocabData, grammarData, kanjiData] = await Promise.all([
+        loadVocabulary(),
+        loadGrammar(),
+        loadKanji(),
+      ]);
 
-    const grid = document.createElement('div');
-    grid.className = 'dashboard-grid';
+      const grid = document.createElement('div');
+      grid.className = 'dashboard-grid';
 
-    grid.append(
-      createStreakCard(journal.getAll()),
-      createProgressCard({
-        vocabulary: countLearned(vocabData.words),
-        grammar: countLearned(grammarData.points),
-        kanji: countLearned(kanjiData.kanji),
-      }),
-      createPracticeCard(practice.getAll()),
-    );
+      grid.append(
+        createStreakCard(journal.getAll()),
+        createProgressCard({
+          vocabulary: countLearned(vocabData.words),
+          grammar: countLearned(grammarData.points),
+          kanji: countLearned(kanjiData.kanji),
+        }),
+        createPracticeCard(practice.getAll()),
+      );
 
-    content.replaceChildren(grid);
-  } catch (error) {
-    console.error('[Nagi]', error);
-    renderError(content, 'Dashboard data could not be loaded right now.');
+      content.replaceChildren(grid);
+    } catch (error) {
+      console.error('[Nagi]', error);
+      renderError(content, 'Dashboard data could not be loaded right now.');
+    }
   }
+
+  await render();
+
+  // Progress, streak, and practice history can all change while looking at
+  // a different view (marking a word learned, finishing a practice round),
+  // so re-render with fresh data every time the reader navigates back here
+  // instead of showing whatever was true the one time this ran at boot.
+  window.addEventListener('hashchange', () => {
+    if (location.hash.slice(1) === VIEW_ID) render();
+  });
 }
 
 export { initDashboard };
