@@ -1,22 +1,119 @@
 /* ==========================================================================
    practice.js
-   Self-graded flashcard quiz for the #practice view, drawn from the same
-   vocabulary data vocabulary.js renders as a study list. Reveal → self-mark
-   → next. Marking a card writes to the same progress store vocabulary.js
-   uses (so a card graded "I knew it" here shows as learned there too), and
-   each finished session is logged to the practice store for dashboard.js.
+   Self-graded flashcard quiz for the #practice view. A mode selector lets
+   the reader choose which deck to drill — vocabulary, grammar, or kanji —
+   each described by a small adapter in DECKS below (how to fill the card
+   front, the secondary line, and the reveal-answer fields). Reveal → self-
+   mark → next. Marking a card writes to the same progress store every
+   list view uses (so a card graded "I knew it" here shows as
+   learned/mastered there too), and each finished session is logged to the
+   practice store, tagged with its mode, for dashboard.js.
    ========================================================================== */
 
-import { progress, practice } from './storage.js';
+import { progress, practice, settings } from './storage.js';
 import { loadVocabulary } from './vocabulary.js';
+import { loadGrammar } from './grammar.js';
+import { loadKanji } from './kanji.js';
 
 const VIEW_ID = 'practice';
 const SESSION_SIZE = 10;
+const MODE_SETTING_KEY = 'practiceMode';
+
+/* -- Deck adapters ---------------------------------------------------------------------
+   Each deck knows how to: fill the big headword slot, describe the
+   secondary line beneath it (part of speech / structure / readings, with
+   whichever class and lang it needs), and fill the four reveal-answer
+   fields from that item's own field names.
+   -------------------------------------------------------------------------------------- */
+const DECKS = {
+  vocabulary: {
+    label: 'Vocabulary',
+    fillFront(container, word) {
+      container.replaceChildren();
+      if (!word.kanji) {
+        const span = document.createElement('span');
+        span.lang = 'ja';
+        span.textContent = word.kana;
+        container.append(span);
+        return;
+      }
+      const ruby = document.createElement('ruby');
+      ruby.lang = 'ja';
+      const rt = document.createElement('rt');
+      rt.textContent = word.kana;
+      ruby.append(word.kanji, rt);
+      container.append(ruby);
+    },
+    secondary(word) {
+      return { text: word.partOfSpeech, className: 'practice-card__pos--capitalize', lang: null };
+    },
+    fillAnswer(elements, word) {
+      elements.meaning.textContent = word.meaning;
+      elements.exampleJp.textContent = word.example.jp;
+      elements.exampleReading.textContent = word.example.reading;
+      elements.exampleEn.textContent = word.example.en;
+    },
+  },
+
+  grammar: {
+    label: 'Grammar',
+    fillFront(container, point) {
+      container.replaceChildren();
+      if (point.patternKana) {
+        const ruby = document.createElement('ruby');
+        ruby.lang = 'ja';
+        const rt = document.createElement('rt');
+        rt.textContent = point.patternKana;
+        ruby.append(point.pattern, rt);
+        container.append('〜', ruby);
+      } else {
+        const span = document.createElement('span');
+        span.lang = 'ja';
+        span.textContent = `〜${point.pattern}`;
+        container.append(span);
+      }
+    },
+    secondary(point) {
+      return { text: point.structure, className: 'reading', lang: null };
+    },
+    fillAnswer(elements, point) {
+      elements.meaning.textContent = point.meaning;
+      elements.exampleJp.textContent = point.example.jp;
+      elements.exampleReading.textContent = point.example.reading;
+      elements.exampleEn.textContent = point.example.en;
+    },
+  },
+
+  kanji: {
+    label: 'Kanji',
+    fillFront(container, entry) {
+      container.replaceChildren();
+      const span = document.createElement('span');
+      span.lang = 'ja';
+      span.textContent = entry.character;
+      container.append(span);
+    },
+    secondary(entry) {
+      const parts = [];
+      if (entry.onyomi) parts.push(entry.onyomi);
+      if (entry.kunyomi) parts.push(entry.kunyomi);
+      return { text: parts.join(' ・ '), className: 'reading', lang: 'ja' };
+    },
+    fillAnswer(elements, entry) {
+      elements.meaning.textContent = entry.meaning;
+      elements.exampleJp.textContent = entry.example.word;
+      elements.exampleReading.textContent = entry.example.reading;
+      elements.exampleEn.textContent = entry.example.meaning;
+    },
+  },
+};
+
+const DECK_KEYS = Object.keys(DECKS);
 
 /* -- Session selection ------------------------------------------------------------------
-   Unlearned words are prioritized so practice time goes where it's useful;
+   Unlearned items are prioritized so practice time goes where it's useful;
    once everything is learned (or there simply aren't SESSION_SIZE unlearned
-   words left) the pool tops up from the full set instead of running short.
+   items left) the pool tops up from the full set instead of running short.
    -------------------------------------------------------------------------------------------- */
 
 function shuffled(items) {
@@ -28,47 +125,48 @@ function shuffled(items) {
   return copy;
 }
 
-function isLearned(wordId) {
-  return Boolean(progress.get(wordId)?.learned);
+function isLearned(itemId) {
+  return Boolean(progress.get(itemId)?.learned);
 }
 
-function buildSession(words) {
-  const unlearned = shuffled(words.filter((word) => !isLearned(word.id)));
+function buildSession(items) {
+  const unlearned = shuffled(items.filter((item) => !isLearned(item.id)));
   if (unlearned.length >= SESSION_SIZE) return unlearned.slice(0, SESSION_SIZE);
 
-  const learned = shuffled(words.filter((word) => isLearned(word.id)));
-  return [...unlearned, ...learned].slice(0, Math.min(SESSION_SIZE, words.length));
-}
-
-/* -- Card content ------------------------------------------------------------------------- */
-
-function fillHeadword(container, word) {
-  container.replaceChildren();
-  if (!word.kanji) {
-    const span = document.createElement('span');
-    span.lang = 'ja';
-    span.textContent = word.kana;
-    container.append(span);
-    return;
-  }
-
-  const ruby = document.createElement('ruby');
-  ruby.lang = 'ja';
-  const rt = document.createElement('rt');
-  rt.textContent = word.kana;
-  ruby.append(word.kanji, rt);
-  container.append(ruby);
+  const learned = shuffled(items.filter((item) => isLearned(item.id)));
+  return [...unlearned, ...learned].slice(0, Math.min(SESSION_SIZE, items.length));
 }
 
 /* -- View controller ------------------------------------------------------------------------
    Three phases live in the same markup, toggled with `hidden`: an intro
-   screen to start a session, the card itself, and a summary once the
-   queue is empty. `state` tracks position in the queue and running score.
+   screen (mode selector + start button) to start a session, the card
+   itself, and a summary once the queue is empty. The mode selector is a
+   sibling of all three phases so it also stays visible on the summary
+   screen — the reader can switch decks before starting the next round
+   without it being available mid-session, where switching would be
+   confusing. `state` tracks the chosen mode plus position and score.
    ---------------------------------------------------------------------------------------------- */
 
 function buildView(view) {
   const wrapper = document.createElement('div');
   wrapper.className = 'practice';
+
+  /* Mode selector */
+  const modeGroup = document.createElement('div');
+  modeGroup.className = 'practice__mode-group';
+  modeGroup.setAttribute('role', 'group');
+  modeGroup.setAttribute('aria-label', 'Choose what to practice');
+
+  const modeButtons = {};
+  for (const key of DECK_KEYS) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'practice__mode-button';
+    button.textContent = DECKS[key].label;
+    button.dataset.mode = key;
+    modeButtons[key] = button;
+    modeGroup.append(button);
+  }
 
   /* Intro */
   const intro = document.createElement('div');
@@ -100,7 +198,7 @@ function buildView(view) {
   headword.className = 'practice-card__headword';
 
   const pos = document.createElement('p');
-  pos.className = 'practice-card__pos meta';
+  pos.className = 'practice-card__pos';
 
   const answer = document.createElement('div');
   answer.className = 'practice-card__answer';
@@ -159,10 +257,11 @@ function buildView(view) {
 
   summary.append(summaryText, againButton);
 
-  wrapper.append(intro, session, summary);
+  wrapper.append(modeGroup, intro, session, summary);
   view.append(wrapper);
 
   return {
+    modeGroup, modeButtons,
     intro, introText, startButton,
     session, status, headword, pos, answer, meaning, exampleJp, exampleReading, exampleEn,
     revealButton, grade, stillLearningButton, knewItButton,
@@ -170,25 +269,67 @@ function buildView(view) {
   };
 }
 
-function initController(elements, words) {
-  const state = { queue: [], index: 0, correct: 0 };
+function applySecondary(elements, deck, item) {
+  const { text, className, lang } = deck.secondary(item);
+  elements.pos.className = 'practice-card__pos';
+  if (className) elements.pos.classList.add(className);
+  if (lang) {
+    elements.pos.lang = lang;
+  } else {
+    elements.pos.removeAttribute('lang');
+  }
+  elements.pos.textContent = text;
+}
+
+function initController(elements, decks) {
+  const initialMode = DECK_KEYS.includes(settings.get(MODE_SETTING_KEY)) ? settings.get(MODE_SETTING_KEY) : 'vocabulary';
+  const state = { mode: initialMode, queue: [], index: 0, correct: 0 };
+
+  function currentDeck() {
+    return decks[state.mode];
+  }
+
+  function syncModeButtons() {
+    for (const key of DECK_KEYS) {
+      elements.modeButtons[key].setAttribute('aria-pressed', String(key === state.mode));
+    }
+  }
+
+  function updateIntroText() {
+    const deck = currentDeck();
+    if (deck.items.length === 0) {
+      elements.introText.textContent = `No ${deck.label.toLowerCase()} available to practice with yet.`;
+      elements.startButton.hidden = true;
+      return;
+    }
+    elements.startButton.hidden = false;
+    elements.introText.textContent =
+      `${deck.items.length} ${deck.label.toLowerCase()} items in the deck. A round covers up to ${SESSION_SIZE}, unlearned items first.`;
+  }
+
+  function selectMode(mode) {
+    if (mode === state.mode) return;
+    state.mode = mode;
+    settings.set(MODE_SETTING_KEY, mode);
+    syncModeButtons();
+    updateIntroText();
+  }
 
   function showPhase(phase) {
+    elements.modeGroup.hidden = phase === 'session';
     elements.intro.hidden = phase !== 'intro';
     elements.session.hidden = phase !== 'session';
     elements.summary.hidden = phase !== 'summary';
   }
 
   function renderCard() {
-    const word = state.queue[state.index];
+    const deck = currentDeck();
+    const item = state.queue[state.index];
     elements.status.textContent = `Card ${state.index + 1} / ${state.queue.length} · ${state.correct} known so far`;
 
-    fillHeadword(elements.headword, word);
-    elements.pos.textContent = word.partOfSpeech;
-    elements.meaning.textContent = word.meaning;
-    elements.exampleJp.textContent = word.example.jp;
-    elements.exampleReading.textContent = word.example.reading;
-    elements.exampleEn.textContent = word.example.en;
+    deck.fillFront(elements.headword, item);
+    applySecondary(elements, deck, item);
+    deck.fillAnswer(elements, item);
 
     elements.answer.hidden = true;
     elements.grade.hidden = true;
@@ -196,7 +337,7 @@ function initController(elements, words) {
   }
 
   function finishSession() {
-    practice.add({ total: state.queue.length, correct: state.correct });
+    practice.add({ total: state.queue.length, correct: state.correct, mode: state.mode });
     elements.summaryText.textContent =
       `${state.correct} / ${state.queue.length} marked "I knew it" this round.`;
     showPhase('summary');
@@ -212,20 +353,20 @@ function initController(elements, words) {
   }
 
   function grade(learned) {
-    const word = state.queue[state.index];
-    progress.set(word.id, { ...progress.get(word.id), learned });
+    const item = state.queue[state.index];
+    progress.set(item.id, { ...progress.get(item.id), learned });
     if (learned) state.correct += 1;
     advance();
   }
 
   function startSession() {
-    state.queue = buildSession(words);
+    const deck = currentDeck();
+    state.queue = buildSession(deck.items);
     state.index = 0;
     state.correct = 0;
 
     if (state.queue.length === 0) {
-      elements.introText.textContent = 'No vocabulary is available to practice with yet.';
-      elements.startButton.hidden = true;
+      updateIntroText();
       showPhase('intro');
       return;
     }
@@ -234,8 +375,9 @@ function initController(elements, words) {
     renderCard();
   }
 
-  elements.introText.textContent =
-    `${words.length} words in the deck. A round covers up to ${SESSION_SIZE}, unlearned words first.`;
+  for (const key of DECK_KEYS) {
+    elements.modeButtons[key].addEventListener('click', () => selectMode(key));
+  }
 
   elements.startButton.addEventListener('click', startSession);
   elements.againButton.addEventListener('click', startSession);
@@ -249,6 +391,8 @@ function initController(elements, words) {
   elements.stillLearningButton.addEventListener('click', () => grade(false));
   elements.knewItButton.addEventListener('click', () => grade(true));
 
+  syncModeButtons();
+  updateIntroText();
   showPhase('intro');
 }
 
@@ -261,11 +405,23 @@ async function initPractice() {
   const elements = buildView(view);
 
   try {
-    const data = await loadVocabulary();
-    initController(elements, data.words);
+    const [vocabData, grammarData, kanjiData] = await Promise.all([
+      loadVocabulary(),
+      loadGrammar(),
+      loadKanji(),
+    ]);
+
+    const decks = {
+      vocabulary: { ...DECKS.vocabulary, items: vocabData.words },
+      grammar: { ...DECKS.grammar, items: grammarData.points },
+      kanji: { ...DECKS.kanji, items: kanjiData.kanji },
+    };
+
+    initController(elements, decks);
   } catch (error) {
     console.error('[Nagi]', error);
-    elements.introText.textContent = 'Practice vocabulary could not be loaded right now.';
+    elements.modeGroup.hidden = true;
+    elements.introText.textContent = 'Practice decks could not be loaded right now.';
     elements.startButton.hidden = true;
   }
 }
