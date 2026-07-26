@@ -1,6 +1,6 @@
 {
   "level": "N3",
-  "updatedAt": "2026-07-24",
+  "updatedAt": "2026-07-27",
   "words": [
     {
       "id": "n3-001",
@@ -144,6 +144,18 @@
         "jp": "なるべく早く来てください。",
         "reading": "なるべくはやくきてください。",
         "en": "Please come as soon as possible."
+      }
+    },
+    {
+      "id": "n3-013",
+      "kanji": "確認",
+      "kana": "かくにん",
+      "partOfSpeech": "noun",
+      "meaning": "confirmation",
+      "example": {
+        "jp": "予約の前に日にちを確認してください。",
+        "reading": "よやくのまえにひにちをかくにんしてください。",
+        "en": "Please confirm the date before making a reservation."
       }
     }
   ]
