@@ -477,7 +477,7 @@ async function initPractice() {
 
     initController(elements, decks);
   } catch (error) {
-    console.error('[Nagi]', error);
+    console.error('[Bigu]', error);
     elements.modeGroup.hidden = true;
     elements.introText.textContent = 'Practice decks could not be loaded right now.';
     elements.startButton.hidden = true;
