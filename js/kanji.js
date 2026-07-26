@@ -215,7 +215,7 @@ async function initKanji() {
     const data = await loadKanji();
     renderGrid(content, data);
   } catch (error) {
-    console.error('[Nagi]', error);
+    console.error('[Bigu]', error);
     renderError(content, 'Kanji could not be loaded right now.');
   }
 }
