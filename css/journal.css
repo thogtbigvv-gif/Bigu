@@ -212,7 +212,7 @@
 
 .journal__entry-delete:hover {
   color: var(--color-error);
-  background-color: rgba(161, 59, 46, 0.08);
+  background-color: color-mix(in srgb, var(--color-error) 8%, transparent);
 }
 
 .journal__entry-delete[data-confirming="true"] {
