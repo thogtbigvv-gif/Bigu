@@ -82,3 +82,35 @@
   --container-max: 72rem;  /* 1152px */
   --border-width: 1px;
 }
+
+/* -- Dark theme overrides ---------------------------------------------------------
+   Applied when theme.js sets [data-theme="dark"] on <html>. Same token names,
+   inverted ground and brightened accents so text/interactive colors stay
+   legible against a dark surface — no new tokens, no selectors outside :root
+   are touched anywhere else.
+   ------------------------------------------------------------------------------------ */
+[data-theme="dark"] {
+  /* -- Color: ground (ink & paper, inverted) --------------------------------- */
+  --color-washi: #1A1D1A;         /* page background — night ground */
+  --color-washi-raised: #242823;  /* panel/card surface, lighter than ground */
+  --color-ink: #E8E6DC;           /* primary text — warm off-white */
+  --color-ink-soft: #B6B8AC;      /* softened text — secondary */
+  --color-ash: #8F9484;           /* muted — tertiary text, meta */
+  --color-stone: #3A3F38;         /* borders, dividers, hairlines */
+
+  /* -- Color: accent (brightened for contrast on a dark ground) -------------- */
+  --color-indigo: #6FA4BE;
+  --color-indigo-deep: #8FC0D6;   /* lighter on hover — darkening a light
+                                       accent on a dark ground would hurt
+                                       contrast instead of helping it */
+  --color-bengara: #D08670;
+  --color-moss: #94AD7E;
+  --color-gold: #D2AD70;
+
+  /* -- Color: feedback -------------------------------------------------------- */
+  --color-error: #E08170;
+
+  /* -- Elevation (deeper, since a dark ground swallows a light shadow) ------- */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
