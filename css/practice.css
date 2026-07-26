@@ -135,3 +135,59 @@
   gap: var(--space-sm);
 }
 
+/* -- History -----------------------------------------------------------------------------
+   Small log of recent rounds so a return visit shows recent standing at
+   a glance rather than only the deck picker. Hidden during an active
+   session, like the mode group, so a mid-round card isn't crowded.
+   ------------------------------------------------------------------------------------------- */
+.practice__history {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.practice__history-heading {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.practice__history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.practice__history-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-sm);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+}
+
+.practice__history-mode {
+  flex: 1;
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.practice__history-score {
+  color: var(--color-ink-soft);
+}
+
+.practice__history-date {
+  white-space: nowrap;
+}
+
+.practice__history-empty {
+  margin: 0;
+}
