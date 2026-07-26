@@ -58,8 +58,15 @@
    a hamburger — one calm interaction instead of a second menu system.
    -------------------------------------------------------------------------------------------- */
 @media (max-width: 640px) {
-  .site-nav {
+  .site-header__end {
     width: 100%;
+  }
+
+  /* flex + min-width: 0 lets the nav shrink and scroll within the row
+     instead of pushing the theme toggle off the edge */
+  .site-nav {
+    flex: 1;
+    min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
   }
