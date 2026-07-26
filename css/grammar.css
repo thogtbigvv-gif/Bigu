@@ -11,6 +11,15 @@
   margin: 0;
 }
 
+/* -- Search ---------------------------------------------------------------------------- */
+.grammar-search {
+  max-width: 24rem;
+}
+
+.grammar-empty {
+  margin: 0;
+}
+
 .grammar-list {
   display: flex;
   flex-direction: column;
