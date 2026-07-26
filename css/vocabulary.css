@@ -10,6 +10,15 @@
   margin: 0;
 }
 
+/* -- Search ---------------------------------------------------------------------------- */
+.vocab-search {
+  max-width: 24rem;
+}
+
+.vocab-empty {
+  margin: 0;
+}
+
 .vocab-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
