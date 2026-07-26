@@ -13,6 +13,38 @@
   max-width: 34rem;
 }
 
+/* -- Mode selector -----------------------------------------------------------------------
+   Which deck the next session (once started) will draw from. Hidden
+   during an active session — see practice.js's showPhase — so switching
+   never happens mid-round.
+   ------------------------------------------------------------------------------------------- */
+.practice__mode-group {
+  display: flex;
+  gap: var(--space-2xs);
+  flex-wrap: wrap;
+}
+
+.practice__mode-button {
+  padding: var(--space-2xs) var(--space-md);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.practice__mode-button:hover {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.practice__mode-button[aria-pressed="true"] {
+  background-color: var(--color-indigo);
+  border-color: var(--color-indigo);
+  color: var(--color-washi);
+}
+
 /* -- Intro & summary -----------------------------------------------------------------
    Same quiet centered treatment for both "before" and "after" states.
    ------------------------------------------------------------------------------------------ */
@@ -66,6 +98,9 @@
 
 .practice-card__pos {
   margin: 0;
+}
+
+.practice-card__pos--capitalize {
   text-transform: capitalize;
 }
 
@@ -99,3 +134,4 @@
   justify-content: center;
   gap: var(--space-sm);
 }
+
