@@ -122,6 +122,38 @@ function createCard(word, level) {
   return item;
 }
 
+/* -- Search/filter -------------------------------------------------------------------
+   Client-side substring match over kanji, kana, and meaning — the dataset
+   is small enough that filtering by hiding/showing existing <li> elements
+   on every keystroke is simpler (and cheaper) than rebuilding the list.
+   -------------------------------------------------------------------------------------- */
+
+function matchesQuery(word, query) {
+  if (!query) return true;
+  const haystack = `${word.kanji ?? ''} ${word.kana} ${word.meaning}`.toLowerCase();
+  return haystack.includes(query);
+}
+
+function createSearchField() {
+  const wrap = document.createElement('div');
+  wrap.className = 'vocab-search';
+
+  const label = document.createElement('label');
+  label.className = 'field-label';
+  label.htmlFor = 'vocabulary-search';
+  label.textContent = 'Search vocabulary';
+
+  const input = document.createElement('input');
+  input.type = 'search';
+  input.id = 'vocabulary-search';
+  input.className = 'field';
+  input.placeholder = 'Search by kanji, kana, or meaning';
+  input.autocomplete = 'off';
+
+  wrap.append(label, input);
+  return { wrap, input };
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -135,15 +167,39 @@ function getContentContainer(view) {
 }
 
 function renderList(container, data) {
+  const { wrap: searchWrap, input: searchInput } = createSearchField();
+
   const summary = document.createElement('p');
   summary.className = 'vocab-meta meta';
-  summary.textContent = `${data.level} · ${data.words.length} words`;
 
   const list = document.createElement('ul');
   list.className = 'vocab-list';
-  list.append(...data.words.map((word) => createCard(word, data.level)));
+  const rows = data.words.map((word) => ({ word, item: createCard(word, data.level) }));
+  list.append(...rows.map((row) => row.item));
 
-  container.replaceChildren(summary, list);
+  const empty = document.createElement('p');
+  empty.className = 'meta vocab-empty';
+  empty.textContent = 'No words match your search.';
+  empty.hidden = true;
+
+  function applyFilter() {
+    const query = searchInput.value.trim().toLowerCase();
+    let visible = 0;
+    for (const row of rows) {
+      const matches = matchesQuery(row.word, query);
+      row.item.hidden = !matches;
+      if (matches) visible += 1;
+    }
+    summary.textContent = query
+      ? `${data.level} · ${visible} / ${data.words.length} words`
+      : `${data.level} · ${data.words.length} words`;
+    empty.hidden = visible > 0;
+  }
+
+  searchInput.addEventListener('input', applyFilter);
+  applyFilter();
+
+  container.replaceChildren(searchWrap, summary, list, empty);
 }
 
 function renderError(container, message) {
