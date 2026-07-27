@@ -135,6 +135,11 @@
   gap: var(--space-sm);
 }
 
+.practice__shortcut-hint {
+  margin: 0;
+  text-align: center;
+}
+
 /* -- History -----------------------------------------------------------------------------
    Small log of recent rounds so a return visit shows recent standing at
    a glance rather than only the deck picker. Hidden during an active
