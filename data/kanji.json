@@ -105,6 +105,14 @@
       "onyomi": "ゲン",
       "kunyomi": "かぎ.る",
       "example": { "word": "制限", "reading": "せいげん", "mn": "хязгаарлалт" }
+    },
+    {
+      "id": "kj-014",
+      "character": "誤",
+      "meaning": "алдаа, буруу",
+      "onyomi": "ゴ",
+      "kunyomi": "あやま.る",
+      "example": { "word": "誤解", "reading": "ごかい", "mn": "буруу ойлголт, төөрөгдөл" }
     }
   ]
 }
