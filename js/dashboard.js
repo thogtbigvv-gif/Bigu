@@ -1,4 +1,4 @@
-   /* ==========================================================================
+/* ==========================================================================
    dashboard.js
    Renders the #dashboard view: a journal writing streak, learned/total
    progress across vocabulary/grammar/kanji, and the most recent practice
@@ -60,6 +60,27 @@ function computeStreak(entries) {
   return streak;
 }
 
+/**
+ * Longest unbroken run of consecutive-day entries anywhere in the journal's
+ * history, not just the one ending today — a personal best that survives a
+ * broken streak, shown next to the current one so a lapse doesn't erase it.
+ */
+function computeLongestStreak(entries) {
+  const days = [...new Set(entries.map((entry) => entry.date))].sort();
+  if (days.length === 0) return 0;
+
+  let longest = 1;
+  let current = 1;
+
+  for (let i = 1; i < days.length; i += 1) {
+    const diffDays = Math.round((new Date(days[i]) - new Date(days[i - 1])) / 86400000);
+    current = diffDays === 1 ? current + 1 : 1;
+    longest = Math.max(longest, current);
+  }
+
+  return longest;
+}
+
 /* -- Progress ---------------------------------------------------------------------------- */
 
 function countLearned(items) {
@@ -94,6 +115,7 @@ function createCard(titleText) {
 function createStreakCard(entries) {
   const card = createCard('Streak');
   const streak = computeStreak(entries);
+  const longest = computeLongestStreak(entries);
   const wroteToday = entries.some((entry) => entry.date === todayKey());
 
   const count = document.createElement('p');
@@ -108,7 +130,11 @@ function createStreakCard(entries) {
   total.className = 'meta';
   total.textContent = `${entries.length} journal ${entries.length === 1 ? 'entry' : 'entries'} total`;
 
-  card.append(count, label, total);
+  const best = document.createElement('p');
+  best.className = 'meta';
+  best.textContent = `Best streak: ${longest} ${longest === 1 ? 'day' : 'days'}`;
+
+  card.append(count, label, total, best);
 
   if (!wroteToday) {
     const cta = document.createElement('a');
@@ -271,4 +297,4 @@ async function initDashboard() {
   });
 }
 
-export { initDashboard };   
+export { initDashboard };
