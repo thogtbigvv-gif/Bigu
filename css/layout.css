@@ -93,3 +93,25 @@ body {
   border-top: var(--border-width) solid var(--color-stone);
   text-align: center;
 }
+
+/* -- Small screens -----------------------------------------------------------------
+   Same 640px line navigation.css already scrolls its tab bar at. The
+   64px/32px rhythm that gives a 1152px page room to breathe just eats
+   phone width instead — gutters and the main-region padding scale down
+   a step on the existing spacing scale; no new tokens.
+   ------------------------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .site-header,
+  .app-main,
+  .site-footer {
+    padding-inline: var(--space-sm);
+  }
+
+  .app-main {
+    padding-block: var(--space-xl);
+  }
+
+  .view {
+    gap: var(--space-md);
+  }
+}
