@@ -2,7 +2,7 @@
    buttons.css
    Two treatments: a solid primary for the one action a screen wants you
    to take, and a quiet outlined secondary for everything else. Both
-   restrained — no motion beyond a color shift.
+   restrained — no motion beyond a color shift and a light press feedback.
    ========================================================================== */
 
 .button {
@@ -19,7 +19,8 @@
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
-    color var(--transition-fast);
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .button:disabled {
@@ -30,6 +31,13 @@
 .button:focus-visible {
   outline: none;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
+
+/* Pressed feedback, independent of :hover so touch input (mobile-first)
+   gets the same cue a mouse gets from :hover — a single-pixel settle,
+   nothing bouncy. */
+.button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 /* -- Primary ------------------------------------------------------------------ */
@@ -45,6 +53,11 @@
   border-color: var(--color-indigo-deep);
 }
 
+.button--primary:active:not(:disabled) {
+  background-color: var(--color-indigo-deep);
+  border-color: var(--color-indigo-deep);
+}
+
 /* -- Secondary ------------------------------------------------------------------ */
 
 .button--secondary {
@@ -54,6 +67,12 @@
 }
 
 .button--secondary:hover:not(:disabled) {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.button--secondary:active:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-indigo) 8%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
@@ -73,12 +92,26 @@
   border: var(--border-width) solid var(--color-stone);
   border-radius: var(--radius-md);
   color: var(--color-ink-soft);
-  transition: border-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .theme-toggle:hover {
   border-color: var(--color-indigo);
   color: var(--color-indigo);
+}
+
+.theme-toggle:active {
+  transform: translateY(1px);
+}
+
+/* Aligned to the same box-shadow ring as .button so the two button
+   treatments that share the header row read as one consistent family. */
+.theme-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
 .theme-toggle__icon {
