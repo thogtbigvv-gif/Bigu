@@ -5,16 +5,38 @@
    number, progress bars, CTA spacing) is defined here.
    ========================================================================== */
 
+/* -- Hero / section spacing ---------------------------------------------------------------
+   The dashboard is the app's landing view, so its heading gets a touch
+   more air and a hairline rule beneath it — the same "thin line, not a
+   spotlight" divider language already used by the site header and footer.
+   ------------------------------------------------------------------------------------------ */
+#dashboard {
+  gap: var(--space-xl);
+}
+
+#dashboard-heading {
+  padding-block-end: var(--space-sm);
+  border-bottom: var(--border-width) solid var(--color-stone);
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: var(--space-md);
+  gap: var(--space-lg);
   align-items: stretch;
 }
 
 .dashboard-grid .card {
   display: flex;
   flex-direction: column;
+}
+
+/* The streak card renders first and is the one habit-tracking number the
+   dashboard exists to surface, so it reads as the hero summary among the
+   four — the signature hanko accent plus a slightly deeper shadow. */
+.dashboard-grid .card:first-child {
+  border-color: var(--color-bengara);
+  box-shadow: var(--shadow-md);
 }
 
 /* -- Streak & practice score -------------------------------------------------------------- */
@@ -24,10 +46,14 @@
   font-weight: var(--weight-bold);
   color: var(--color-bengara);
   line-height: var(--leading-tight);
+  margin-block-end: var(--space-3xs);
 }
 
 .dashboard-card__status {
-  margin: 0;
+  margin-block-start: auto;
+  margin-block-end: 0;
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
   font-size: var(--text-sm);
   color: var(--color-moss);
   font-weight: var(--weight-medium);
@@ -35,8 +61,8 @@
 
 .dashboard-card__cta {
   margin-block-start: auto;
-  padding-block-start: var(--space-sm);
-  align-self: flex-start;
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
 }
 
 /* -- Progress bars ---------------------------------------------------------------------------- */
@@ -59,7 +85,7 @@
 }
 
 .dashboard-stat__track {
-  height: 0.5rem;
+  height: var(--space-2xs);
   background-color: var(--color-stone);
   border-radius: var(--radius-sm);
   overflow: hidden;
@@ -79,7 +105,8 @@
   align-items: flex-start;
   gap: var(--space-xs);
   margin-block-start: auto;
-  padding-block-start: var(--space-sm);
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
 }
 
 .dashboard-backup__status {
