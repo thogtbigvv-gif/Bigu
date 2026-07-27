@@ -2,8 +2,9 @@
    dashboard.js
    Renders the #dashboard view: a journal writing streak (current + best),
    learned/total progress across vocabulary/grammar/kanji, the most recent
-   practice session, and a one-click JSON backup download of everything in
-   localStorage. Pulls its data by importing each feature module's own loader
+   practice session, and a two-way JSON backup (download + restore) of
+   everything in localStorage. Pulls its data by importing each feature
+   module's own loader
    (loadVocabulary, loadGrammar, loadKanji) rather than re-fetching with
    duplicated logic — the browser cache makes the repeat fetch free, and
    this is the one view whose whole job is summarizing the others.
@@ -234,9 +235,8 @@ function createPracticeCard(sessions) {
 
 /* -- Backup export ----------------------------------------------------------------------
    Everything this app knows lives only in this browser's localStorage, so
-   there's no server copy to fall back on if a cache gets cleared. This just
-   bundles all four stores into one downloadable JSON file — restoring from
-   it is a separate, later feature; for now this is a one-way safety copy.
+   there's no server copy to fall back on if a cache gets cleared. This
+   bundles all four stores into one downloadable JSON file.
    ------------------------------------------------------------------------------------------ */
 
 function buildBackupPayload() {
@@ -266,6 +266,79 @@ function downloadBackup() {
   URL.revokeObjectURL(url);
 }
 
+/* -- Backup restore ---------------------------------------------------------------------
+   The reverse of the export above: read a previously-downloaded JSON file,
+   confirm it's actually a Bigu backup with all four stores present, then
+   overwrite everything in localStorage in one go. This is destructive, so
+   it always asks for confirmation before touching a single key, and the
+   page reloads afterward so every view (not just this one) picks up the
+   restored data instead of running with whatever it already had in memory.
+   ------------------------------------------------------------------------------------------ */
+
+function isValidBackupPayload(payload) {
+  if (!payload || typeof payload !== 'object') return false;
+  if (payload.app !== 'Bigu') return false;
+  const data = payload.data;
+  if (!data || typeof data !== 'object') return false;
+  return ['settings', 'progress', 'journal', 'practice'].every((storeKey) => storeKey in data);
+}
+
+function restoreBackup(payload) {
+  const { data } = payload;
+  settings.replaceAll(data.settings);
+  progress.replaceAll(data.progress);
+  journal.replaceAll(data.journal);
+  practice.replaceAll(data.practice);
+}
+
+function setRestoreStatus(statusEl, message, isError) {
+  statusEl.textContent = message;
+  statusEl.hidden = false;
+  statusEl.classList.toggle('dashboard-backup__status--error', Boolean(isError));
+}
+
+function handleRestoreFile(file, statusEl, fileInput) {
+  const reader = new FileReader();
+
+  reader.onload = () => {
+    let payload;
+    try {
+      payload = JSON.parse(String(reader.result));
+    } catch {
+      setRestoreStatus(statusEl, 'That file isn\u2019t valid JSON.', true);
+      fileInput.value = '';
+      return;
+    }
+
+    if (!isValidBackupPayload(payload)) {
+      setRestoreStatus(statusEl, 'That doesn\u2019t look like a Bigu backup file.', true);
+      fileInput.value = '';
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Restoring will overwrite all current progress, journal entries, and practice history in this browser. This can\u2019t be undone. Continue?',
+    );
+    if (!confirmed) {
+      setRestoreStatus(statusEl, 'Restore cancelled.', false);
+      fileInput.value = '';
+      return;
+    }
+
+    restoreBackup(payload);
+    setRestoreStatus(statusEl, 'Backup restored. Reloading\u2026', false);
+    fileInput.value = '';
+    window.setTimeout(() => location.reload(), 700);
+  };
+
+  reader.onerror = () => {
+    setRestoreStatus(statusEl, 'Could not read that file.', true);
+    fileInput.value = '';
+  };
+
+  reader.readAsText(file);
+}
+
 function createBackupCard() {
   const card = createCard('Backup');
 
@@ -274,13 +347,38 @@ function createBackupCard() {
   description.textContent =
     'Your progress lives only in this browser. Download a copy so clearing your cache or switching devices doesn\u2019t lose it.';
 
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'button button--secondary dashboard-card__cta';
-  button.textContent = 'Download backup (.json)';
-  button.addEventListener('click', downloadBackup);
+  const downloadButton = document.createElement('button');
+  downloadButton.type = 'button';
+  downloadButton.className = 'button button--secondary';
+  downloadButton.textContent = 'Download backup (.json)';
+  downloadButton.addEventListener('click', downloadBackup);
 
-  card.append(description, button);
+  const restoreButton = document.createElement('button');
+  restoreButton.type = 'button';
+  restoreButton.className = 'button button--secondary';
+  restoreButton.textContent = 'Restore from backup\u2026';
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'application/json,.json';
+  fileInput.hidden = true;
+
+  const status = document.createElement('p');
+  status.className = 'meta dashboard-backup__status';
+  status.setAttribute('aria-live', 'polite');
+  status.hidden = true;
+
+  restoreButton.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) handleRestoreFile(file, status, fileInput);
+  });
+
+  const actions = document.createElement('div');
+  actions.className = 'dashboard-backup__actions';
+  actions.append(downloadButton, restoreButton, fileInput, status);
+
+  card.append(description, actions);
   return card;
 }
 
