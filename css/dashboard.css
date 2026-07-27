@@ -71,3 +71,21 @@
   border-radius: var(--radius-sm);
   transition: width var(--transition-base);
 }
+
+/* -- Backup / restore actions ------------------------------------------------------------ */
+.dashboard-backup__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  margin-block-start: auto;
+  padding-block-start: var(--space-sm);
+}
+
+.dashboard-backup__status {
+  margin: 0;
+}
+
+.dashboard-backup__status--error {
+  color: var(--color-error);
+}
