@@ -102,6 +102,12 @@ function createMapStore(name) {
     clear() {
       return removeRaw(key);
     },
+    // Bulk overwrite for backup restore — replaces the whole object in one
+    // write instead of merging key by key. A non-object input falls back to
+    // an empty map rather than corrupting the store with garbage.
+    replaceAll(newAll) {
+      return writeJSON(key, newAll && typeof newAll === 'object' && !Array.isArray(newAll) ? newAll : {});
+    },
   };
 }
 
@@ -136,6 +142,12 @@ function createListStore(name) {
     },
     clear() {
       return removeRaw(key);
+    },
+    // Bulk overwrite for backup restore — replaces the whole array in one
+    // write. A non-array input falls back to an empty list rather than
+    // corrupting the store with garbage.
+    replaceAll(newEntries) {
+      return writeJSON(key, Array.isArray(newEntries) ? newEntries : []);
     },
   };
 }
