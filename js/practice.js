@@ -54,7 +54,7 @@ const DECKS = {
       elements.meaning.textContent = word.meaning;
       elements.exampleJp.textContent = word.example.jp;
       elements.exampleReading.textContent = word.example.reading;
-      elements.exampleEn.textContent = word.example.en;
+      elements.exampleEn.textContent = word.example.mn;
     },
   },
 
@@ -83,7 +83,7 @@ const DECKS = {
       elements.meaning.textContent = point.meaning;
       elements.exampleJp.textContent = point.example.jp;
       elements.exampleReading.textContent = point.example.reading;
-      elements.exampleEn.textContent = point.example.en;
+      elements.exampleEn.textContent = point.example.mn;
     },
   },
 
@@ -106,10 +106,36 @@ const DECKS = {
       elements.meaning.textContent = entry.meaning;
       elements.exampleJp.textContent = entry.example.word;
       elements.exampleReading.textContent = entry.example.reading;
-      elements.exampleEn.textContent = entry.example.meaning;
+      elements.exampleEn.textContent = entry.example.mn;
+    },
+  },
+
+  /* "Review mistakes" isn't a content deck of its own — it's a live pool of
+     whatever's currently marked "Still learning" across vocabulary, grammar,
+     and kanji together. Each item still needs its real deck's card layout,
+     so every method here just looks up which deck the item's id belongs to
+     (the "n3-"/"gr-"/"kj-" prefix already used throughout the data) and
+     delegates to that deck's own fillFront/secondary/fillAnswer. */
+  mistakes: {
+    label: 'Review mistakes',
+    fillFront(container, item) {
+      DECKS[deckKeyForItemId(item.id)].fillFront(container, item);
+    },
+    secondary(item) {
+      return DECKS[deckKeyForItemId(item.id)].secondary(item);
+    },
+    fillAnswer(elements, item) {
+      DECKS[deckKeyForItemId(item.id)].fillAnswer(elements, item);
     },
   },
 };
+
+function deckKeyForItemId(id) {
+  if (id.startsWith('n3-')) return 'vocabulary';
+  if (id.startsWith('gr-')) return 'grammar';
+  if (id.startsWith('kj-')) return 'kanji';
+  return null;
+}
 
 const DECK_KEYS = Object.keys(DECKS);
 
@@ -323,14 +349,29 @@ function initController(elements, decks) {
 
   function updateIntroText() {
     const deck = currentDeck();
-    if (deck.items.length === 0) {
+    const count = deck.items.length;
+
+    if (state.mode === 'mistakes') {
+      if (count === 0) {
+        elements.introText.textContent =
+          'No mistakes to review right now \u2014 everything you\u2019ve seen so far is marked "I knew it".';
+        elements.startButton.hidden = true;
+        return;
+      }
+      elements.startButton.hidden = false;
+      elements.introText.textContent =
+        `${count} item${count === 1 ? '' : 's'} marked "Still learning", pulled from every deck. A round covers up to ${SESSION_SIZE}.`;
+      return;
+    }
+
+    if (count === 0) {
       elements.introText.textContent = `No ${deck.label.toLowerCase()} available to practice with yet.`;
       elements.startButton.hidden = true;
       return;
     }
     elements.startButton.hidden = false;
     elements.introText.textContent =
-      `${deck.items.length} ${deck.label.toLowerCase()} items in the deck. A round covers up to ${SESSION_SIZE}, unlearned items first.`;
+      `${count} ${deck.label.toLowerCase()} items in the deck. A round covers up to ${SESSION_SIZE}, unlearned items first.`;
   }
 
   function selectMode(mode) {
@@ -509,6 +550,17 @@ async function initPractice() {
       vocabulary: { ...DECKS.vocabulary, items: vocabData.words },
       grammar: { ...DECKS.grammar, items: grammarData.points },
       kanji: { ...DECKS.kanji, items: kanjiData.kanji },
+    };
+    // A getter, not a static array: what counts as "still learning" changes
+    // as the reader grades cards elsewhere, so this has to be read fresh
+    // every time rather than computed once at load.
+    decks.mistakes = {
+      ...DECKS.mistakes,
+      get items() {
+        return [...vocabData.words, ...grammarData.points, ...kanjiData.kanji].filter(
+          (item) => progress.get(item.id)?.learned === false,
+        );
+      },
     };
 
     initController(elements, decks);
