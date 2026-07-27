@@ -162,9 +162,14 @@
   transition: background-color var(--transition-fast), color var(--transition-fast);
 }
 
-.journal__calendar-nav:hover {
+.journal__calendar-nav:hover:not(:disabled) {
   color: var(--color-ink);
   background-color: var(--color-washi-raised);
+}
+
+.journal__calendar-nav:disabled {
+  color: var(--color-stone);
+  cursor: not-allowed;
 }
 
 .journal__calendar-weekdays,
