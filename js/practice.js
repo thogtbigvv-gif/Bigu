@@ -243,7 +243,12 @@ function buildView(view) {
   knewItButton.textContent = 'I knew it';
 
   grade.append(stillLearningButton, knewItButton);
-  session.append(status, card, revealButton, grade);
+
+  const shortcutHint = document.createElement('p');
+  shortcutHint.className = 'practice__shortcut-hint meta';
+  shortcutHint.textContent = 'Space to reveal · 1 still learning · 2 knew it';
+
+  session.append(status, card, revealButton, grade, shortcutHint);
 
   /* Summary */
   const summary = document.createElement('div');
@@ -447,6 +452,37 @@ function initController(elements, decks) {
 
   elements.stillLearningButton.addEventListener('click', () => grade(false));
   elements.knewItButton.addEventListener('click', () => grade(true));
+
+  /* Keyboard shortcuts: Space/Enter reveals, 1/2 grade — only while the
+     practice view is the active hash and a card is actually on screen, so
+     these keys don't hijack typing elsewhere in the app (e.g. the journal
+     composer). `event.repeat` is ignored so holding a key can't rapid-fire
+     through several cards at once. */
+  function handleKeydown(event) {
+    if (event.repeat) return;
+    if (location.hash.slice(1) !== VIEW_ID) return;
+    if (elements.session.hidden) return;
+
+    const revealed = !elements.answer.hidden;
+
+    if (!revealed) {
+      if (event.code === 'Space' || event.key === 'Enter') {
+        event.preventDefault();
+        elements.revealButton.click();
+      }
+      return;
+    }
+
+    if (event.key === '1') {
+      event.preventDefault();
+      elements.stillLearningButton.click();
+    } else if (event.key === '2') {
+      event.preventDefault();
+      elements.knewItButton.click();
+    }
+  }
+
+  document.addEventListener('keydown', handleKeydown);
 
   syncModeButtons();
   updateIntroText();
