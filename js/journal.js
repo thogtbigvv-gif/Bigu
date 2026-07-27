@@ -467,6 +467,11 @@ function initJournalView(view) {
         }),
       ),
     );
+    // The calendar is a log of what's already been written, not a planner —
+    // once it's showing the current month there's nothing ahead to see, so
+    // "next" is disabled rather than silently landing on an empty future one.
+    calendarNext.disabled =
+      calendarState.year === today.getFullYear() && calendarState.month === today.getMonth();
   }
 
   /** Jumps the calendar to whichever month `dateKey` falls in. */
