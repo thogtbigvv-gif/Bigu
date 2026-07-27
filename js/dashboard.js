@@ -1,14 +1,15 @@
 /* ==========================================================================
    dashboard.js
-   Renders the #dashboard view: a journal writing streak, learned/total
-   progress across vocabulary/grammar/kanji, and the most recent practice
-   session. Pulls its data by importing each feature module's own loader
+   Renders the #dashboard view: a journal writing streak (current + best),
+   learned/total progress across vocabulary/grammar/kanji, the most recent
+   practice session, and a one-click JSON backup download of everything in
+   localStorage. Pulls its data by importing each feature module's own loader
    (loadVocabulary, loadGrammar, loadKanji) rather than re-fetching with
    duplicated logic — the browser cache makes the repeat fetch free, and
    this is the one view whose whole job is summarizing the others.
    ========================================================================== */
 
-import { progress, journal, practice } from './storage.js';
+import { progress, journal, practice, settings } from './storage.js';
 import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
@@ -231,6 +232,58 @@ function createPracticeCard(sessions) {
   return card;
 }
 
+/* -- Backup export ----------------------------------------------------------------------
+   Everything this app knows lives only in this browser's localStorage, so
+   there's no server copy to fall back on if a cache gets cleared. This just
+   bundles all four stores into one downloadable JSON file — restoring from
+   it is a separate, later feature; for now this is a one-way safety copy.
+   ------------------------------------------------------------------------------------------ */
+
+function buildBackupPayload() {
+  return {
+    app: 'Bigu',
+    exportedAt: new Date().toISOString(),
+    data: {
+      settings: settings.getAll(),
+      progress: progress.getAll(),
+      journal: journal.getAll(),
+      practice: practice.getAll(),
+    },
+  };
+}
+
+function downloadBackup() {
+  const payload = buildBackupPayload();
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `bigu-backup-${todayKey()}.json`;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function createBackupCard() {
+  const card = createCard('Backup');
+
+  const description = document.createElement('p');
+  description.className = 'meta';
+  description.textContent =
+    'Your progress lives only in this browser. Download a copy so clearing your cache or switching devices doesn\u2019t lose it.';
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'button button--secondary dashboard-card__cta';
+  button.textContent = 'Download backup (.json)';
+  button.addEventListener('click', downloadBackup);
+
+  card.append(description, button);
+  return card;
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -277,6 +330,7 @@ async function initDashboard() {
           kanji: countLearned(kanjiData.kanji),
         }),
         createPracticeCard(practice.getAll()),
+        createBackupCard(),
       );
 
       content.replaceChildren(grid);
