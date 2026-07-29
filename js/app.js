@@ -16,6 +16,7 @@ import { initGrammar } from './grammar.js';
 import { initKanji } from './kanji.js';
 import { initPractice } from './practice.js';
 import { initJournal } from './journal.js';
+import { initLessons } from './lessons.js';
 
 /* -- Storage ------------------------------------------------------------------
    Confirms localStorage actually works (Safari private mode and locked-down
@@ -52,6 +53,7 @@ function init() {
   initKanji();
   initPractice();
   initJournal();
+  initLessons();
 
   initRouter();
 }
