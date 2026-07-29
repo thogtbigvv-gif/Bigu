@@ -1,0 +1,124 @@
+/* ==========================================================================
+   lessons.css
+   Styles for the #lessons view built by lessons.js: a stack of collapsible
+   lesson groups, each opening onto a plain two-line word list. Self-
+   contained, like vocabulary.css and journal.css — nothing here depends
+   on another feature module's classes.
+   ========================================================================== */
+
+.lessons-meta {
+  margin: 0 0 var(--space-md) 0;
+}
+
+.lessons-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lesson-group {
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.lesson-group__heading {
+  margin: 0;
+}
+
+.lesson-group__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-md) var(--space-lg);
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
+  font-family: inherit;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.lesson-group__header:hover {
+  background-color: var(--color-washi);
+}
+
+.lesson-group__header:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
+
+.lesson-group__title {
+  flex: 1;
+}
+
+.lesson-group__count {
+  flex-shrink: 0;
+}
+
+.lesson-group__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: var(--color-ink-soft);
+  transition: transform var(--transition-fast);
+}
+
+.lesson-group__header[aria-expanded="true"] .lesson-group__icon {
+  transform: rotate(180deg);
+}
+
+.lesson-group__body {
+  border-top: var(--border-width) solid var(--color-stone);
+}
+
+.lesson-word-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: var(--space-sm) var(--space-lg);
+  padding: var(--space-md) var(--space-lg) var(--space-lg);
+  margin: 0;
+  list-style: none;
+}
+
+.lesson-word {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.lesson-word__head {
+  font-family: var(--font-display), var(--font-jp);
+  font-size: var(--text-base);
+  color: var(--color-ink);
+}
+
+.lesson-word__meaning {
+  margin: 0;
+}
+
+/* -- Mobile spacing ---------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .lesson-group__header {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .lesson-word-list {
+    grid-template-columns: 1fr;
+    padding: var(--space-sm) var(--space-md) var(--space-md);
+  }
+}
