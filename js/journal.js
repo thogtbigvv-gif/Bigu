@@ -237,7 +237,7 @@ function createComposer() {
 
   const saveButton = document.createElement('button');
   saveButton.type = 'button';
-  saveButton.className = 'journal__save';
+  saveButton.className = 'button button--primary journal__save';
   saveButton.textContent = 'Save entry';
 
   actions.append(status, saveButton);
@@ -340,7 +340,7 @@ function createHistory() {
   heading.textContent = 'Past entries';
 
   const empty = document.createElement('p');
-  empty.className = 'journal__empty meta';
+  empty.className = 'empty-state';
   empty.textContent = 'Entries you save will appear here.';
 
   const list = document.createElement('ul');
