@@ -303,7 +303,7 @@ function buildView(view) {
   historyList.className = 'practice__history-list';
 
   const historyEmpty = document.createElement('p');
-  historyEmpty.className = 'practice__history-empty meta';
+  historyEmpty.className = 'empty-state';
   historyEmpty.textContent = 'No sessions yet — finish a round to see it here.';
 
   history.append(historyHeading, historyList, historyEmpty);
