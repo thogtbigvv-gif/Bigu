@@ -105,27 +105,6 @@
   gap: var(--space-sm);
 }
 
-.journal__save {
-  padding: var(--space-2xs) var(--space-md);
-  background-color: var(--color-indigo);
-  color: var(--color-washi);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  letter-spacing: var(--tracking-wide);
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast), opacity var(--transition-fast);
-}
-
-.journal__save:hover:not(:disabled) {
-  background-color: var(--color-indigo-deep);
-}
-
-.journal__save:disabled {
-  background-color: var(--color-stone);
-  color: var(--color-ash);
-  cursor: not-allowed;
-}
-
 /* -- Calendar (heat-map) ----------------------------------------------------------------
    A quiet monthly overview: filled cells mark days with a saved entry, at
    three intensity levels standing in for entry length so a longer day of
@@ -242,10 +221,6 @@ button.journal__calendar-day:hover {
   margin-block-end: var(--space-sm);
 }
 
-.journal__empty {
-  margin: 0;
-}
-
 .journal__entry-list {
   display: flex;
   flex-direction: column;
@@ -335,4 +310,4 @@ button.journal__calendar-day:hover {
   .journal__entry-date {
     width: 100%;
   }
-   }
+}
