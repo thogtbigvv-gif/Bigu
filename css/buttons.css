@@ -135,3 +135,44 @@
 .theme-toggle[aria-pressed="true"] .theme-toggle__icon--moon {
   display: block;
 }
+
+/* -- Toggle chip -----------------------------------------------------------------
+   Shared "mark as known/mastered" control used by vocabulary, grammar, and
+   kanji cards — the same quiet outline that fills solid on press, now
+   defined once instead of three near-identical copies. Also brings the
+   same focus ring and press feedback every other interactive element in
+   the app already gets, which the three original copies were missing.
+   ------------------------------------------------------------------------------------- */
+.toggle-chip {
+  padding: var(--space-3xs) var(--space-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.toggle-chip:hover {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.toggle-chip:active {
+  transform: translateY(1px);
+}
+
+.toggle-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
+
+.toggle-chip[aria-pressed="true"] {
+  background-color: var(--color-moss);
+  border-color: var(--color-moss);
+  color: var(--color-washi);
+}
