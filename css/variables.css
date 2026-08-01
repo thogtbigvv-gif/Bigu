@@ -81,6 +81,11 @@
   /* -- Layout ------------------------------------------------------------------ */
   --container-max: 72rem;  /* 1152px */
   --border-width: 1px;
+
+  /* Not a token — a native-UI hint so browser-drawn controls (checkboxes,
+     scrollbars, date pickers) pick a light or dark rendering to match the
+     surrounding page instead of always defaulting to light. */
+  color-scheme: light;
 }
 
 /* -- Dark theme overrides ---------------------------------------------------------
@@ -113,4 +118,6 @@
   /* -- Elevation (deeper, since a dark ground swallows a light shadow) ------- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
   --shadow-md: 0 2px 10px rgba(0, 0, 0, 0.45);
+
+  color-scheme: dark;
 }
