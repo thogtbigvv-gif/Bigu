@@ -81,7 +81,7 @@ function createExample(example) {
 function createMasteryButton(point) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'grammar-card__progress';
+  button.className = 'toggle-chip grammar-card__progress';
 
   const sync = () => {
     const mastered = isMastered(point.id);
@@ -146,7 +146,7 @@ function matchesQuery(point, query) {
 
 function createSearchField() {
   const wrap = document.createElement('div');
-  wrap.className = 'grammar-search';
+  wrap.className = 'search-field';
 
   const label = document.createElement('label');
   label.className = 'field-label';
@@ -188,7 +188,7 @@ function renderList(container, data) {
   list.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
-  empty.className = 'meta grammar-empty';
+  empty.className = 'empty-state';
   empty.textContent = 'No grammar points match your search.';
   empty.hidden = true;
 
