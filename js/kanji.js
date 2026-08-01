@@ -73,7 +73,7 @@ function createExample(example) {
 function createMasteryButton(entry) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'kanji-card__progress';
+  button.className = 'toggle-chip';
 
   const sync = () => {
     const mastered = isMastered(entry.id);
@@ -130,7 +130,7 @@ function matchesQuery(entry, query) {
 
 function createSearchField() {
   const wrap = document.createElement('div');
-  wrap.className = 'kanji-search';
+  wrap.className = 'search-field';
 
   const label = document.createElement('label');
   label.className = 'field-label';
@@ -172,7 +172,7 @@ function renderGrid(container, data) {
   grid.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
-  empty.className = 'meta kanji-empty';
+  empty.className = 'empty-state';
   empty.textContent = 'No kanji match your search.';
   empty.hidden = true;
 
