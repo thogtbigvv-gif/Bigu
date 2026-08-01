@@ -47,3 +47,21 @@
   padding-block-start: var(--space-md);
   border-top: var(--border-width) solid var(--color-stone);
 }
+
+/* -- Empty state -------------------------------------------------------------------
+   Shared "nothing to show" treatment — an empty search result, an empty
+   practice history, a journal with no entries yet. A dashed line instead
+   of the solid card border keeps it reading as a placeholder rather than
+   a surface with content on it. Replaces five near-identical `margin: 0`
+   rules that gave each empty message no visual presence of its own.
+   ------------------------------------------------------------------------------------- */
+.empty-state {
+  margin: 0;
+  padding: var(--space-lg);
+  text-align: center;
+  color: var(--color-ash);
+  font-size: var(--text-sm);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) dashed var(--color-stone);
+  border-radius: var(--radius-lg);
+}
