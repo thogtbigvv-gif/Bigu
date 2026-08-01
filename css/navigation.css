@@ -36,6 +36,7 @@
 .site-nav__list a {
   display: inline-block;
   padding-block: var(--space-2xs);
+  padding-inline: var(--space-3xs);
   border-bottom: 2px solid transparent;
   color: var(--color-ink-soft);
   font-size: var(--text-sm);
