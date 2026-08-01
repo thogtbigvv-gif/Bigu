@@ -64,7 +64,7 @@ function createExample(example) {
 
   const meaning = document.createElement('p');
   meaning.className = 'meta';
-  meaning.textContent = example.meaning;
+  meaning.textContent = example.mn;
 
   wrap.append(wordEl, meaning);
   return wrap;
