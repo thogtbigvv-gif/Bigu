@@ -79,7 +79,7 @@ function createExample(example) {
 function createProgressButton(word) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'vocab-card__progress';
+  button.className = 'toggle-chip vocab-card__progress';
 
   const sync = () => {
     const learned = isLearned(word.id);
@@ -136,7 +136,7 @@ function matchesQuery(word, query) {
 
 function createSearchField() {
   const wrap = document.createElement('div');
-  wrap.className = 'vocab-search';
+  wrap.className = 'search-field';
 
   const label = document.createElement('label');
   label.className = 'field-label';
@@ -178,7 +178,7 @@ function renderList(container, data) {
   list.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
-  empty.className = 'meta vocab-empty';
+  empty.className = 'empty-state';
   empty.textContent = 'No words match your search.';
   empty.hidden = true;
 
