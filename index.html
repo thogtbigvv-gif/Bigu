@@ -6,6 +6,23 @@
   <title>ビグ Bigu — JLPT N2 Study</title>
   <meta name="description" content="A calm, minimal companion for JLPT N2 study." />
 
+  <!-- Applies the reader's theme before any CSS or the module scripts run,
+       so the page never flashes light before switching to dark. Mirrors
+       theme.js's own storedTheme()/systemTheme() logic — duplicated here,
+       not imported, because this has to run synchronously pre-paint. -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('nagi:settings');
+        var theme = raw ? JSON.parse(raw).theme : null;
+        if (theme !== 'light' && theme !== 'dark') {
+          theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+        document.documentElement.dataset.theme = theme;
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
