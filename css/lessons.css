@@ -1,9 +1,11 @@
 /* ==========================================================================
    lessons.css
    Styles for the #lessons view built by lessons.js: a stack of collapsible
-   lesson groups, each opening onto a plain two-line word list. Self-
-   contained, like vocabulary.css and journal.css — nothing here depends
-   on another feature module's classes.
+   lesson groups, each opening onto a plain two-line word list, plus a
+   per-lesson quiz panel that swaps in over the list. Self-contained, like
+   vocabulary.css and journal.css — nothing here depends on another
+   feature module's classes (the quiz card borrows the generic `.card`
+   surface and `.button` treatments, both already global).
    ========================================================================== */
 
 .lessons-meta {
@@ -27,14 +29,19 @@
 }
 
 .lesson-group__heading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
   margin: 0;
+  padding-inline-end: var(--space-lg);
 }
 
 .lesson-group__header {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: var(--space-md) var(--space-lg);
   background-color: transparent;
   border: none;
@@ -82,6 +89,14 @@
   transform: rotate(180deg);
 }
 
+/* Sibling of the disclosure button, not nested inside it, so it stays
+   its own focusable/clickable control. */
+.lesson-group__quiz-button {
+  flex-shrink: 0;
+  padding: var(--space-3xs) var(--space-sm);
+  font-size: var(--text-xs);
+}
+
 .lesson-group__body {
   border-top: var(--border-width) solid var(--color-stone);
 }
@@ -111,8 +126,110 @@
   margin: 0;
 }
 
+/* -- Quiz ----------------------------------------------------------------------------
+   Swapped in over .lessons-meta/.lessons-list (both hidden by lessons.js
+   while a round is active). One card at a time, centered, narrower than
+   the full content column since it only ever holds a headword and a
+   short meaning line.
+   -------------------------------------------------------------------------------------- */
+
+.lessons-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 32rem;
+  margin-inline: auto;
+}
+
+.lessons-quiz__exit {
+  align-self: flex-start;
+}
+
+.lessons-quiz__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: var(--weight-bold);
+  color: var(--color-ink);
+  text-align: center;
+}
+
+.lessons-quiz__session {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.lessons-quiz__status {
+  margin: 0;
+}
+
+.lessons-quiz-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  padding: var(--space-2xl) var(--space-lg);
+  text-align: center;
+}
+
+.lessons-quiz-card__headword {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp);
+  font-size: var(--text-2xl);
+  color: var(--color-ink);
+}
+
+.lessons-quiz-card__answer {
+  width: 100%;
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
+}
+
+.lessons-quiz-card__meaning {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-ink-soft);
+}
+
+.lessons-quiz__grade {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.lessons-quiz__shortcut-hint {
+  margin: 0;
+}
+
+.lessons-quiz__summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding-block: var(--space-xl);
+  text-align: center;
+}
+
+.lessons-quiz__summary-text {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-ink);
+}
+
+.lessons-quiz__summary-actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
 /* -- Mobile spacing ---------------------------------------------------------------- */
 @media (max-width: 480px) {
+  .lesson-group__heading {
+    padding-inline-end: var(--space-md);
+  }
+
   .lesson-group__header {
     padding: var(--space-sm) var(--space-md);
   }
@@ -120,5 +237,20 @@
   .lesson-word-list {
     grid-template-columns: 1fr;
     padding: var(--space-sm) var(--space-md) var(--space-md);
+  }
+
+  .lessons-quiz-card {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .lessons-quiz__grade,
+  .lessons-quiz__summary-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .lessons-quiz__grade .button,
+  .lessons-quiz__summary-actions .button {
+    width: 100%;
   }
 }
