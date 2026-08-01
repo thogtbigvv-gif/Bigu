@@ -9,15 +9,6 @@
   margin: 0;
 }
 
-/* -- Search ---------------------------------------------------------------------------- */
-.kanji-search {
-  max-width: 24rem;
-}
-
-.kanji-empty {
-  margin: 0;
-}
-
 .kanji-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
@@ -78,25 +69,4 @@
 .kanji-card__example p {
   margin: 0;
   max-width: none;
-}
-
-.kanji-card__progress {
-  padding: var(--space-3xs) var(--space-sm);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-}
-
-.kanji-card__progress:hover {
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
-}
-
-.kanji-card__progress[aria-pressed="true"] {
-  background-color: var(--color-moss);
-  border-color: var(--color-moss);
-  color: var(--color-washi);
 }
