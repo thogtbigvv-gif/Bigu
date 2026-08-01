@@ -1,16 +1,22 @@
 /* ==========================================================================
    lessons.js
    Loads data/lessons.json and renders it as a browsable reference inside
-   the #lessons view: one disclosure per lesson, opening onto a plain word
-   list. Sits alongside vocabulary/grammar/kanji as reference material, not
-   part of the practice deck — no ties into practice.js or storage.js.
+   the #lessons view: one disclosure per lesson, opening onto a word list.
+   Sits alongside vocabulary/grammar/kanji as reference material, not part
+   of the practice deck.
 
-   Each lesson group also has its own "Quiz" button: a self-graded
+   Each word has its own "Mark as learned" toggle, same shape and store
+   as vocabulary/grammar/kanji's mastery buttons (storage.js's `progress`
+   map, keyed by each word's `id`), so a lesson's progress survives a
+   reload. Each lesson group also has its own "Quiz" button: a self-graded
    flashcard round scoped to that lesson's word list (reveal → self-mark →
    next, same interaction language as practice.js's deck quizzes), shown
-   in place of the lesson list. Purely in-memory for the session — nothing
-   here is persisted, unlike practice.js's progress/practice stores.
+   in place of the lesson list — purely in-memory for the session, doesn't
+   touch the progress store, kept as a separate quick-recall tool rather
+   than another way to mark words learned.
    ========================================================================== */
+
+import { progress } from './storage.js';
 
 const DATA_URL = 'data/lessons.json';
 const VIEW_ID = 'lessons';
@@ -29,6 +35,25 @@ async function loadLessons() {
 
   cachedData = await response.json();
   return cachedData;
+}
+
+/* -- Progress ------------------------------------------------------------------------
+   Same shape as vocabulary.js's isLearned/setLearned: one shared
+   `progress` map store, keyed by id, `{ learned: boolean }`. Lesson word
+   ids (l1-01, l1-02…) live in their own namespace, so they never collide
+   with vocabulary/grammar/kanji's n3-/gr-/kj- ids in the same store.
+   -------------------------------------------------------------------------------------- */
+
+function isLearned(wordId) {
+  return Boolean(progress.get(wordId)?.learned);
+}
+
+function setLearned(wordId, learned) {
+  progress.set(wordId, { ...progress.get(wordId), learned });
+}
+
+function countLearned(words) {
+  return words.filter((entry) => isLearned(entry.id)).length;
 }
 
 /* -- Word rendering --------------------------------------------------------------------
@@ -55,7 +80,28 @@ function createHeadword(entry) {
   return ruby;
 }
 
-function createWordRow(entry) {
+function createProgressButton(entry, onChange) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'toggle-chip lesson-word__progress';
+
+  const sync = () => {
+    const learned = isLearned(entry.id);
+    button.setAttribute('aria-pressed', String(learned));
+    button.textContent = learned ? 'Learned \u2713' : 'Mark as learned';
+  };
+
+  button.addEventListener('click', () => {
+    setLearned(entry.id, !isLearned(entry.id));
+    sync();
+    onChange();
+  });
+
+  sync();
+  return button;
+}
+
+function createWordRow(entry, onProgressChange) {
   const item = document.createElement('li');
   item.className = 'lesson-word';
 
@@ -67,7 +113,7 @@ function createWordRow(entry) {
   meaning.className = 'lesson-word__meaning meta';
   meaning.textContent = entry.english;
 
-  item.append(head, meaning);
+  item.append(head, meaning, createProgressButton(entry, onProgressChange));
   return item;
 }
 
@@ -103,7 +149,12 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   const count = document.createElement('span');
   count.className = 'lesson-group__count meta';
-  count.textContent = `${lesson.words.length} words`;
+
+  const updateCount = () => {
+    const learned = countLearned(lesson.words);
+    count.textContent = `${lesson.words.length} words \u00b7 ${learned} learned`;
+  };
+  updateCount();
 
   const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   icon.setAttribute('class', 'lesson-group__icon');
@@ -134,7 +185,7 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   const list = document.createElement('ul');
   list.className = 'lesson-word-list';
-  list.append(...lesson.words.map(createWordRow));
+  list.append(...lesson.words.map((entry) => createWordRow(entry, updateCount)));
   body.append(list);
 
   button.addEventListener('click', () => {
