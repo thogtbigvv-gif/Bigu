@@ -11,15 +11,6 @@
   margin: 0;
 }
 
-/* -- Search ---------------------------------------------------------------------------- */
-.grammar-search {
-  max-width: 24rem;
-}
-
-.grammar-empty {
-  margin: 0;
-}
-
 .grammar-list {
   display: flex;
   flex-direction: column;
@@ -81,24 +72,8 @@
   font-style: italic;
 }
 
+/* Layout only — visual treatment now lives in the shared .toggle-chip
+   class in buttons.css. */
 .grammar-card__progress {
   align-self: flex-start;
-  padding: var(--space-3xs) var(--space-sm);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-}
-
-.grammar-card__progress:hover {
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
-}
-
-.grammar-card__progress[aria-pressed="true"] {
-  background-color: var(--color-moss);
-  border-color: var(--color-moss);
-  color: var(--color-washi);
 }
