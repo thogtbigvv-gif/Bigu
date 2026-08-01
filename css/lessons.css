@@ -1,11 +1,12 @@
 /* ==========================================================================
    lessons.css
    Styles for the #lessons view built by lessons.js: a stack of collapsible
-   lesson groups, each opening onto a plain two-line word list, plus a
-   per-lesson quiz panel that swaps in over the list. Self-contained, like
-   vocabulary.css and journal.css — nothing here depends on another
-   feature module's classes (the quiz card borrows the generic `.card`
-   surface and `.button` treatments, both already global).
+   lesson groups, each opening onto a word list (headword, meaning, and a
+   mark-as-learned toggle per row), plus a per-lesson quiz panel that
+   swaps in over the list. Self-contained, like vocabulary.css and
+   journal.css — nothing here depends on another feature module's classes
+   (the quiz card and progress toggle borrow the generic `.card`,
+   `.button`, and `.toggle-chip` treatments, all already global).
    ========================================================================== */
 
 .lessons-meta {
@@ -124,6 +125,15 @@
 
 .lesson-word__meaning {
   margin: 0;
+}
+
+/* Layout only — visual treatment (color, border, hover, pressed state)
+   lives in the shared .toggle-chip class in buttons.css. auto margin
+   pushes it to the bottom of the row when a neighboring word's meaning
+   wraps to two lines, so the buttons stay aligned across a row. */
+.lesson-word__progress {
+  align-self: flex-start;
+  margin-block-start: auto;
 }
 
 /* -- Quiz ----------------------------------------------------------------------------
