@@ -126,7 +126,7 @@ function createStreakCard(entries) {
 
   const label = document.createElement('p');
   label.className = 'meta';
-  label.textContent = streak === 1 ? 'day streak' : 'day streak';
+  label.textContent = streak === 1 ? 'day streak' : 'days streak';
 
   const total = document.createElement('p');
   total.className = 'meta';
