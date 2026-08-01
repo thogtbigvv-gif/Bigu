@@ -70,7 +70,7 @@ function createExample(example) {
 
   const translation = document.createElement('p');
   translation.className = 'meta';
-  translation.textContent = example.en;
+  translation.textContent = example.mn;
 
   wrap.append(jp, reading, translation);
   return wrap;
