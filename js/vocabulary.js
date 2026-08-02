@@ -76,7 +76,7 @@ function createExample(example) {
   return wrap;
 }
 
-function createProgressButton(word) {
+function createProgressButton(word, onChange) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'toggle-chip vocab-card__progress';
@@ -90,13 +90,14 @@ function createProgressButton(word) {
   button.addEventListener('click', () => {
     setLearned(word.id, !isLearned(word.id));
     sync();
+    onChange();
   });
 
   sync();
   return button;
 }
 
-function createCard(word, level) {
+function createCard(word, level, onProgressChange) {
   const item = document.createElement('li');
   item.className = 'vocab-card';
   item.dataset.wordId = word.id;
@@ -118,7 +119,7 @@ function createCard(word, level) {
   meaning.className = 'vocab-card__meaning';
   meaning.textContent = word.meaning;
 
-  item.append(head, meaning, createExample(word.example), createProgressButton(word));
+  item.append(head, meaning, createExample(word.example), createProgressButton(word, onProgressChange));
   return item;
 }
 
@@ -154,6 +155,18 @@ function createSearchField() {
   return { wrap, input };
 }
 
+/* Reuses the same .toggle-chip look as the per-card "Mark as learned"
+   button — a filled chip here means "learned words are hidden", same
+   pressed/unpressed language as everywhere else the class is used. */
+function createLearnedToggle() {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'toggle-chip vocab-filters__learned-toggle';
+  button.setAttribute('aria-pressed', 'false');
+  button.textContent = 'Hide learned';
+  return button;
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -168,13 +181,18 @@ function getContentContainer(view) {
 
 function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField();
+  const learnedToggle = createLearnedToggle();
+
+  const filters = document.createElement('div');
+  filters.className = 'vocab-filters';
+  filters.append(searchWrap, learnedToggle);
 
   const summary = document.createElement('p');
   summary.className = 'vocab-meta meta';
 
   const list = document.createElement('ul');
   list.className = 'vocab-list';
-  const rows = data.words.map((word) => ({ word, item: createCard(word, data.level) }));
+  const rows = data.words.map((word) => ({ word, item: createCard(word, data.level, applyFilter) }));
   list.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
@@ -184,22 +202,28 @@ function renderList(container, data) {
 
   function applyFilter() {
     const query = searchInput.value.trim().toLowerCase();
+    const hideLearned = learnedToggle.getAttribute('aria-pressed') === 'true';
     let visible = 0;
     for (const row of rows) {
-      const matches = matchesQuery(row.word, query);
+      const matches = matchesQuery(row.word, query) && !(hideLearned && isLearned(row.word.id));
       row.item.hidden = !matches;
       if (matches) visible += 1;
     }
-    summary.textContent = query
+    summary.textContent = query || hideLearned
       ? `${data.level} · ${visible} / ${data.words.length} words`
       : `${data.level} · ${data.words.length} words`;
     empty.hidden = visible > 0;
   }
 
   searchInput.addEventListener('input', applyFilter);
+  learnedToggle.addEventListener('click', () => {
+    const pressed = learnedToggle.getAttribute('aria-pressed') === 'true';
+    learnedToggle.setAttribute('aria-pressed', String(!pressed));
+    applyFilter();
+  });
   applyFilter();
 
-  container.replaceChildren(searchWrap, summary, list, empty);
+  container.replaceChildren(filters, summary, list, empty);
 }
 
 function renderError(container, message) {
