@@ -6,6 +6,23 @@
    another feature module's classes.
    ========================================================================== */
 
+/* -- Filters ------------------------------------------------------------------------
+   Pairs the search field with the "hide learned" toggle chip above the
+   list. The search field's own margin-block-end is zeroed here so the
+   row's gap is the only spacing between the two controls. */
+.vocab-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-lg);
+}
+
+.vocab-filters .search-field {
+  flex: 1 1 16rem;
+  margin-block-end: 0;
+}
+
 .vocab-meta {
   margin: 0 0 var(--space-md) 0;
 }
