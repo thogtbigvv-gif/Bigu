@@ -1,7 +1,12 @@
 /* ==========================================================================
    navigation.css
-   Primary navigation: minimal tab bar and skip link. Quiet by default —
-   an underline marks state, not a filled background or shadow.
+   Primary navigation: a sticky sidebar on desktop that becomes an
+   off-canvas drawer on mobile, plus the skip link. Quiet by default —
+   a line marks state, not a filled background or shadow, same as the
+   rest of the app. "Study" is a disclosure toggle with its own
+   collapsible submenu; [aria-current="page"] is set by js/router.js
+   on whichever view is active, [aria-expanded]/.is-open are set by
+   js/navigation.js.
    ========================================================================== */
 
 /* -- Skip link (revealed only on keyboard focus) --------------------------------- */
@@ -21,63 +26,224 @@
   top: var(--space-sm);
 }
 
-/* -- Nav list ---------------------------------------------------------------------- */
-.site-nav__list {
-  display: flex;
-  align-items: center;
-  gap: var(--space-lg);
+/* -- Sidebar shell ----------------------------------------------------------------- */
+.site-nav {
+  flex-shrink: 0;
+  width: 16rem;
+  border-right: var(--border-width) solid var(--color-stone);
+  background-color: var(--color-washi);
 }
 
-/* -- Tabs -----------------------------------------------------------------------------
-   Rest state stays quiet (ink-soft, no border) so the row doesn't compete
-   with the content below it. Hover and the active state are the only signal.
-   [aria-current="page"] is set by app.js when a view becomes active.
-   --------------------------------------------------------------------------------------- */
-.site-nav__list a {
-  display: inline-block;
-  padding-block: var(--space-2xs);
-  padding-inline: var(--space-3xs);
-  border-bottom: 2px solid transparent;
+.site-nav__panel {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  padding: var(--space-md) var(--space-sm);
+}
+
+/* -- List / items ------------------------------------------------------------------- */
+.site-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+/* -- Links & the Study toggle button ------------------------------------------------
+   Both are the same visual element (icon-less text row); the toggle is a
+   <button> instead of an <a> since it never navigates, it only expands
+   and collapses. A left border carries the active/rest state, echoing
+   the old top-nav's border-bottom underline, just rotated for a vertical
+   list instead of a filled background.
+   -------------------------------------------------------------------------------------- */
+.site-nav__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+  width: 100%;
+  border: none;
+  border-left: 2px solid transparent;
+  background: none;
+  padding: var(--space-2xs) var(--space-xs);
   color: var(--color-ink-soft);
+  font: inherit;
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
-.site-nav__list a:hover {
+.site-nav__link:hover {
   color: var(--color-indigo);
 }
 
-.site-nav__list a[aria-current="page"] {
+.site-nav__link[aria-current="page"] {
   color: var(--color-indigo);
   font-weight: var(--weight-medium);
-  border-bottom-color: var(--color-indigo);
+  border-left-color: var(--color-indigo);
 }
 
-/* -- Small screens ----------------------------------------------------------------------
-   Scroll the tab bar horizontally instead of wrapping or collapsing into
-   a hamburger — one calm interaction instead of a second menu system.
-   -------------------------------------------------------------------------------------------- */
-@media (max-width: 640px) {
-  .site-header__end {
-    width: 100%;
-  }
+.site-nav__link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
 
-  /* flex + min-width: 0 lets the nav shrink and scroll within the row
-     instead of pushing the theme toggle off the edge */
+/* -- Study submenu -------------------------------------------------------------------
+   The chevron rotates to show state; the wrapper animates from 0fr to 1fr
+   so it opens to the submenu's natural height instead of a guessed max-height.
+   -------------------------------------------------------------------------------------- */
+.site-nav__chevron {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  margin-left: auto;
+  transition: transform var(--transition-fast);
+}
+
+.site-nav__toggle[aria-expanded="true"] .site-nav__chevron {
+  transform: rotate(180deg);
+}
+
+.site-nav__item--parent.has-active-child > .site-nav__toggle {
+  color: var(--color-indigo);
+}
+
+.site-nav__submenu-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--transition-base);
+}
+
+.site-nav__item--parent.is-open .site-nav__submenu-wrapper {
+  grid-template-rows: 1fr;
+}
+
+.site-nav__submenu {
+  overflow: hidden;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.site-nav__sublink {
+  padding-left: calc(var(--space-xs) + var(--space-md));
+  font-size: var(--text-xs);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav__submenu-wrapper,
+  .site-nav__chevron,
+  .site-nav__link,
+  .site-nav__hamburger span,
   .site-nav {
-    flex: 1;
-    min-width: 0;
-    overflow-x: auto;
-    scrollbar-width: none;
+    transition: none;
+  }
+}
+
+/* -- Mobile nav toggle --------------------------------------------------------------
+   Same recipe as .theme-toggle in buttons.css (dimensions, border, hover,
+   focus ring) so the two icon buttons in the header read as one family.
+   Hidden by default — the sidebar is always visible above the 640px line.
+   -------------------------------------------------------------------------------------- */
+.site-nav__mobile-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  background: none;
+  color: var(--color-ink-soft);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast);
+}
+
+.site-nav__mobile-toggle:hover {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
+}
+
+.site-nav__mobile-toggle:active {
+  transform: translateY(1px);
+}
+
+.site-nav__mobile-toggle:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
+
+.site-nav__hamburger {
+  position: relative;
+  width: 1.125rem;
+  height: 0.875rem;
+  display: block;
+}
+
+.site-nav__hamburger span {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+.site-nav__hamburger span:nth-child(1) { top: 0; }
+.site-nav__hamburger span:nth-child(2) { top: 6px; }
+.site-nav__hamburger span:nth-child(3) { top: 12px; }
+
+.site-nav__mobile-toggle[aria-expanded="true"] .site-nav__hamburger span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.site-nav__mobile-toggle[aria-expanded="true"] .site-nav__hamburger span:nth-child(2) {
+  opacity: 0;
+}
+.site-nav__mobile-toggle[aria-expanded="true"] .site-nav__hamburger span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* -- Backdrop -------------------------------------------------------------------------
+   Hidden via the native [hidden] attribute (toggled in js/navigation.js);
+   only ever shown below the 640px line, when the drawer is open.
+   -------------------------------------------------------------------------------------- */
+.site-nav__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* -- Small screens: sidebar -> off-canvas drawer --------------------------------------- */
+@media (max-width: 640px) {
+  .site-nav__mobile-toggle {
+    display: inline-flex;
   }
 
-  .site-nav::-webkit-scrollbar {
-    display: none;
+  .site-nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 50;
+    width: min(17rem, 80vw);
+    height: 100vh;
+    transform: translateX(-100%);
+    box-shadow: var(--shadow-md);
+    transition: transform var(--transition-base);
   }
 
-  .site-nav__list {
-    width: max-content;
-    gap: var(--space-md);
+  .site-nav.is-open {
+    transform: translateX(0);
   }
 }
