@@ -13,7 +13,7 @@ function getViews() {
 }
 
 function getNavLink(viewId) {
-  return document.querySelector(`.site-nav__list a[data-view="${viewId}"]`);
+  return document.querySelector(`.site-nav__link[data-view="${viewId}"]`);
 }
 
 function getHeading(viewId) {
