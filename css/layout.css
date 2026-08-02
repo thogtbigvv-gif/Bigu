@@ -6,12 +6,23 @@
    required for structure (dividers, sticky-header background).
    ========================================================================== */
 
-/* -- Page frame ---------------------------------------------------------------
-   body becomes a column flex container so the footer sits at the bottom
-   of short views and is pushed down naturally by tall ones (relies on
-   html/body height:100% already set in reset.css).
+/* -- Page frame -------------------------------------------------------------------
+   .app-shell splits the page into the sidebar nav and everything else,
+   side by side. .app-shell__content takes over the column-flex role body
+   used to have on its own, so the footer still sits at the bottom of
+   short views and is pushed down naturally by tall ones (relies on
+   html/body height:100% already set in reset.css). min-width: 0 keeps
+   wide view content (tables, kanji grids) from forcing the column past
+   its share of the row instead of scrolling within it.
    ------------------------------------------------------------------------------- */
-body {
+.app-shell {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-shell__content {
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -69,12 +80,12 @@ body {
 .site-header__end {
   display: flex;
   align-items: center;
-  gap: var(--space-lg);
+  gap: var(--space-2xs);
 }
 
 /* -- Main ------------------------------------------------------------------------
-   Grows to fill remaining height (sticky-footer partner to body's flex
-   column) and gives each view generous breathing room above and below.
+   Grows to fill remaining height (sticky-footer partner to .app-shell__content's
+   flex column) and gives each view generous breathing room above and below.
    ------------------------------------------------------------------------------- */
 .app-main {
   flex: 1;
@@ -95,10 +106,10 @@ body {
 }
 
 /* -- Small screens -----------------------------------------------------------------
-   Same 640px line navigation.css already scrolls its tab bar at. The
-   64px/32px rhythm that gives a 1152px page room to breathe just eats
-   phone width instead — gutters and the main-region padding scale down
-   a step on the existing spacing scale; no new tokens.
+   Same 640px line navigation.css switches the sidebar to an off-canvas
+   drawer at. The 64px/32px rhythm that gives a 1152px page room to
+   breathe just eats phone width instead — gutters and the main-region
+   padding scale down a step on the existing spacing scale; no new tokens.
    ------------------------------------------------------------------------------------- */
 @media (max-width: 640px) {
   .site-header,
