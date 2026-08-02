@@ -198,7 +198,7 @@ function createProgressCard({ vocabulary, grammar, kanji }) {
    (vocabulary/grammar/kanji); older sessions saved before that existed
    simply have no `mode` field, so the label is omitted for those.
    -------------------------------------------------------------------------------------- */
-const PRACTICE_MODE_LABELS = { vocabulary: 'Vocabulary', grammar: 'Grammar', kanji: 'Kanji' };
+const PRACTICE_MODE_LABELS = { vocabulary: 'Vocabulary', grammar: 'Grammar', kanji: 'Kanji', mistakes: 'Review mistakes' };
 
 function createPracticeCard(sessions) {
   const card = createCard('Last practice');
