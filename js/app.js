@@ -10,6 +10,7 @@
 import { isAvailable as isStorageAvailable } from './storage.js';
 import { initTheme, bindToggleButton } from './theme.js';
 import { initRouter } from './router.js';
+import { initNav } from './navigation.js';
 import { initDashboard } from './dashboard.js';
 import { initVocabulary } from './vocabulary.js';
 import { initGrammar } from './grammar.js';
@@ -58,6 +59,7 @@ function init() {
   initReading();
 
   initRouter();
+  initNav();
 }
 
 if (document.readyState === 'loading') {
