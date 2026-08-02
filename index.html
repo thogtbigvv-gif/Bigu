@@ -37,89 +37,193 @@
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
-  <header class="site-header">
-    <div class="brand">
-      <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-        <rect x="2" y="2" width="44" height="44" rx="4" />
-        <text x="24" y="25" dy="0.35em" text-anchor="middle" lang="ja">ビグ</text>
-      </svg>
-      <p class="brand__title">
-        <span lang="ja">ビグ</span> <span class="brand__title-en">Bigu</span>
-      </p>
-    </div>
+  <div class="app-shell">
+    <!-- Primary nav: a sticky sidebar on desktop, an off-canvas drawer on
+         mobile (toggled by #site-nav-mobile-toggle in the header below).
+         "Study" is a disclosure toggle, not a link — it only expands and
+         collapses its own submenu. Behavior lives in js/navigation.js;
+         active-link highlighting (aria-current) is set by js/router.js. -->
+    <nav class="site-nav" id="site-nav" aria-label="Primary">
+      <div class="site-nav__backdrop" id="site-nav-backdrop" hidden></div>
 
-    <div class="site-header__end">
-      <nav class="site-nav" aria-label="Primary">
+      <div class="site-nav__panel" id="site-nav-panel">
         <ul class="site-nav__list">
-          <li><a href="#dashboard" data-view="dashboard">Dashboard</a></li>
-          <li><a href="#vocabulary" data-view="vocabulary">Vocabulary</a></li>
-          <li><a href="#grammar" data-view="grammar">Grammar</a></li>
-          <li><a href="#kanji" data-view="kanji">Kanji</a></li>
-          <li><a href="#practice" data-view="practice">Practice</a></li>
-          <li><a href="#journal" data-view="journal">Journal</a></li>
-          <li><a href="#lessons" data-view="lessons">Lessons</a></li>
-          <li><a href="#reading" data-view="reading">Reading</a></li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#dashboard" data-view="dashboard">Dashboard</a>
+          </li>
+
+          <li class="site-nav__item site-nav__item--parent" id="site-nav-study">
+            <button
+              type="button"
+              class="site-nav__link site-nav__toggle"
+              id="site-nav-study-toggle"
+              aria-expanded="false"
+              aria-controls="site-nav-study-submenu"
+            >
+              <span>Study</span>
+              <svg class="site-nav__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+
+            <div class="site-nav__submenu-wrapper" id="site-nav-study-submenu">
+              <ul class="site-nav__submenu" role="group">
+                <li><a class="site-nav__link site-nav__sublink" href="#vocabulary" data-view="vocabulary">Vocabulary</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#grammar" data-view="grammar">Grammar</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#reading" data-view="reading">Reading</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#listening" data-view="listening">Listening</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#kanji" data-view="kanji">Kanji</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#conversation" data-view="conversation">Conversation</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#shadowing" data-view="shadowing">Shadowing</a></li>
+              </ul>
+            </div>
+          </li>
+
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#practice" data-view="practice">Review</a>
+          </li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#search" data-view="search">Search</a>
+          </li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#profile" data-view="profile">Profile</a>
+          </li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#settings" data-view="settings">Settings</a>
+          </li>
+
+          <!-- Kept as extra items outside the core 6 — Journal and Lessons
+               are existing, fully-built features that predate this nav. -->
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#journal" data-view="journal">Journal</a>
+          </li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#lessons" data-view="lessons">Lessons</a>
+          </li>
         </ul>
-      </nav>
+      </div>
+    </nav>
 
-      <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false">
-        <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <circle cx="12" cy="12" r="4" />
-          <line x1="12" y1="2" x2="12" y2="5" />
-          <line x1="12" y1="19" x2="12" y2="22" />
-          <line x1="2" y1="12" x2="5" y2="12" />
-          <line x1="19" y1="12" x2="22" y2="12" />
-          <line x1="4.9" y1="4.9" x2="7" y2="7" />
-          <line x1="17" y1="17" x2="19.1" y2="19.1" />
-          <line x1="4.9" y1="19.1" x2="7" y2="17" />
-          <line x1="17" y1="7" x2="19.1" y2="4.9" />
-        </svg>
-        <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-          <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
-        </svg>
-        <span class="sr-only">Toggle dark mode</span>
-      </button>
+    <div class="app-shell__content">
+      <header class="site-header">
+        <div class="brand">
+          <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+            <rect x="2" y="2" width="44" height="44" rx="4" />
+            <text x="24" y="25" dy="0.35em" text-anchor="middle" lang="ja">ビグ</text>
+          </svg>
+          <p class="brand__title">
+            <span lang="ja">ビグ</span> <span class="brand__title-en">Bigu</span>
+          </p>
+        </div>
+
+        <div class="site-header__end">
+          <button
+            type="button"
+            id="site-nav-mobile-toggle"
+            class="site-nav__mobile-toggle"
+            aria-expanded="false"
+            aria-controls="site-nav-panel"
+            aria-label="Toggle navigation menu"
+          >
+            <span class="site-nav__hamburger"><span></span><span></span><span></span></span>
+          </button>
+
+          <button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false">
+            <svg class="theme-toggle__icon theme-toggle__icon--sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <circle cx="12" cy="12" r="4" />
+              <line x1="12" y1="2" x2="12" y2="5" />
+              <line x1="12" y1="19" x2="12" y2="22" />
+              <line x1="2" y1="12" x2="5" y2="12" />
+              <line x1="19" y1="12" x2="22" y2="12" />
+              <line x1="4.9" y1="4.9" x2="7" y2="7" />
+              <line x1="17" y1="17" x2="19.1" y2="19.1" />
+              <line x1="4.9" y1="19.1" x2="7" y2="17" />
+              <line x1="17" y1="7" x2="19.1" y2="4.9" />
+            </svg>
+            <svg class="theme-toggle__icon theme-toggle__icon--moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" />
+            </svg>
+            <span class="sr-only">Toggle dark mode</span>
+          </button>
+        </div>
+      </header>
+
+      <main id="main-content" class="app-main">
+        <!-- One <section> per view. JS toggles the `hidden` attribute to switch between them. -->
+        <section id="dashboard" class="view" aria-labelledby="dashboard-heading">
+          <h1 id="dashboard-heading">Dashboard</h1>
+        </section>
+
+        <section id="vocabulary" class="view" hidden aria-labelledby="vocabulary-heading">
+          <h1 id="vocabulary-heading">Vocabulary</h1>
+        </section>
+
+        <section id="grammar" class="view" hidden aria-labelledby="grammar-heading">
+          <h1 id="grammar-heading">Grammar</h1>
+        </section>
+
+        <section id="kanji" class="view" hidden aria-labelledby="kanji-heading">
+          <h1 id="kanji-heading">Kanji</h1>
+        </section>
+
+        <!-- id/heading-id stay "practice" (practice.js, dashboard.js, and
+             every saved practice/progress record key off this exact id) —
+             only the visible label changes to "Review". -->
+        <section id="practice" class="view" hidden aria-labelledby="practice-heading">
+          <h1 id="practice-heading">Review</h1>
+        </section>
+
+        <section id="journal" class="view" hidden aria-labelledby="journal-heading">
+          <h1 id="journal-heading">Journal</h1>
+        </section>
+
+        <section id="lessons" class="view" hidden aria-labelledby="lessons-heading">
+          <h1 id="lessons-heading">Lessons</h1>
+        </section>
+
+        <section id="reading" class="view" hidden aria-labelledby="reading-heading">
+          <h1 id="reading-heading">Reading</h1>
+        </section>
+
+        <!-- New nav destinations added by the sidebar restructure. Bare
+             shells for now, matching how every other view started out —
+             each is a future initX() task away from real content. -->
+        <section id="listening" class="view" hidden aria-labelledby="listening-heading">
+          <h1 id="listening-heading">Listening</h1>
+          <p class="empty-state">Listening practice is coming soon.</p>
+        </section>
+
+        <section id="conversation" class="view" hidden aria-labelledby="conversation-heading">
+          <h1 id="conversation-heading">Conversation</h1>
+          <p class="empty-state">Conversation practice is coming soon.</p>
+        </section>
+
+        <section id="shadowing" class="view" hidden aria-labelledby="shadowing-heading">
+          <h1 id="shadowing-heading">Shadowing</h1>
+          <p class="empty-state">Shadowing practice is coming soon.</p>
+        </section>
+
+        <section id="search" class="view" hidden aria-labelledby="search-heading">
+          <h1 id="search-heading">Search</h1>
+          <p class="empty-state">A combined search across vocabulary, grammar, and kanji is coming soon.</p>
+        </section>
+
+        <section id="profile" class="view" hidden aria-labelledby="profile-heading">
+          <h1 id="profile-heading">Profile</h1>
+          <p class="empty-state">Profile stats are coming soon.</p>
+        </section>
+
+        <section id="settings" class="view" hidden aria-labelledby="settings-heading">
+          <h1 id="settings-heading">Settings</h1>
+          <p class="empty-state">Standalone settings are coming soon — theme and backup are on the Dashboard for now.</p>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>&copy; <span id="year"></span> Bigu — a personal JLPT N2 study companion.</p>
+      </footer>
     </div>
-  </header>
-
-  <main id="main-content" class="app-main">
-    <!-- One <section> per view. JS toggles the `hidden` attribute to switch between them. -->
-    <section id="dashboard" class="view" aria-labelledby="dashboard-heading">
-      <h1 id="dashboard-heading">Dashboard</h1>
-    </section>
-
-    <section id="vocabulary" class="view" hidden aria-labelledby="vocabulary-heading">
-      <h1 id="vocabulary-heading">Vocabulary</h1>
-    </section>
-
-    <section id="grammar" class="view" hidden aria-labelledby="grammar-heading">
-      <h1 id="grammar-heading">Grammar</h1>
-    </section>
-
-    <section id="kanji" class="view" hidden aria-labelledby="kanji-heading">
-      <h1 id="kanji-heading">Kanji</h1>
-    </section>
-
-    <section id="practice" class="view" hidden aria-labelledby="practice-heading">
-      <h1 id="practice-heading">Practice</h1>
-    </section>
-
-    <section id="journal" class="view" hidden aria-labelledby="journal-heading">
-      <h1 id="journal-heading">Journal</h1>
-    </section>
-
-    <section id="lessons" class="view" hidden aria-labelledby="lessons-heading">
-      <h1 id="lessons-heading">Lessons</h1>
-    </section>
-
-    <section id="reading" class="view" hidden aria-labelledby="reading-heading">
-      <h1 id="reading-heading">Reading</h1>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <p>&copy; <span id="year"></span> Bigu — a personal JLPT N2 study companion.</p>
-  </footer>
+  </div>
 
   <script type="module" src="js/app.js"></script>
 </body>
