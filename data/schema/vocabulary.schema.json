@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bigu.app/schema/vocabulary.schema.json",
+  "title": "Bigu vocabulary content",
+  "description": "Shape of a data/vocabulary.json file, as loaded by vocabulary.js.",
+  "type": "object",
+  "required": ["level", "updatedAt", "words"],
+  "properties": {
+    "level": {
+      "type": "string",
+      "description": "JLPT level this file covers, e.g. \"N2\"."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date",
+      "description": "Last edit date, YYYY-MM-DD."
+    },
+    "words": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/word" }
+    }
+  },
+  "$defs": {
+    "word": {
+      "type": "object",
+      "required": ["id", "kanji", "kana", "partOfSpeech", "meaning", "example"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique id, e.g. \"n3-001\". Used as the progress-store key."
+        },
+        "kanji": {
+          "type": "string",
+          "description": "Kanji spelling. Empty string for kana-only words (e.g. なるべく) — vocabulary.js treats an empty/absent value as \"no kanji\" and falls back to `kana` as the headword."
+        },
+        "kana": {
+          "type": "string",
+          "description": "Kana reading, always present."
+        },
+        "partOfSpeech": {
+          "type": "string",
+          "description": "e.g. \"noun\", \"verb\", \"adverb\"."
+        },
+        "meaning": {
+          "type": "string",
+          "description": "Mongolian meaning."
+        },
+        "example": { "$ref": "#/$defs/example" }
+      }
+    },
+    "example": {
+      "type": "object",
+      "required": ["jp", "reading", "mn"],
+      "properties": {
+        "jp": { "type": "string", "description": "Example sentence in Japanese script." },
+        "reading": { "type": "string", "description": "Full sentence reading in hiragana." },
+        "mn": { "type": "string", "description": "Mongolian translation." }
+      }
+    }
+  },
+  "examples": [
+    {
+      "level": "N2",
+      "updatedAt": "2026-08-02",
+      "words": [
+        {
+          "id": "n2-000",
+          "kanji": "見本",
+          "kana": "みほん",
+          "partOfSpeech": "noun",
+          "meaning": "жишээ",
+          "example": {
+            "jp": "これは見本です。",
+            "reading": "これはみほんです。",
+            "mn": "Энэ бол жишээ юм."
+          }
+        }
+      ]
+    }
+  ]
+}
