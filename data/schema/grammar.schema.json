@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bigu.app/schema/grammar.schema.json",
+  "title": "Bigu grammar content",
+  "description": "Shape of a data/grammar.json file, as loaded by grammar.js.",
+  "type": "object",
+  "required": ["level", "updatedAt", "points"],
+  "properties": {
+    "level": {
+      "type": "string",
+      "description": "JLPT level this file covers, e.g. \"N2\"."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date",
+      "description": "Last edit date, YYYY-MM-DD."
+    },
+    "points": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/point" }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "object",
+      "required": ["id", "pattern", "meaning", "structure", "example"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique id, e.g. \"gr-001\". Used as the progress-store key."
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Grammar pattern text; grammar.js renders it after a 〜."
+        },
+        "patternKana": {
+          "type": "string",
+          "description": "Optional furigana reading for `pattern`, shown only when `pattern` contains kanji. Omit for kana-only patterns."
+        },
+        "meaning": {
+          "type": "string",
+          "description": "Mongolian meaning."
+        },
+        "structure": {
+          "type": "string",
+          "description": "Formation rule, e.g. \"Verb (dictionary form) + わけにはいかない\"."
+        },
+        "example": { "$ref": "#/$defs/example" },
+        "notes": {
+          "type": "string",
+          "description": "Optional usage note in Mongolian; grammar.js only renders this row when present."
+        }
+      }
+    },
+    "example": {
+      "type": "object",
+      "required": ["jp", "reading", "mn"],
+      "properties": {
+        "jp": { "type": "string", "description": "Example sentence in Japanese script." },
+        "reading": { "type": "string", "description": "Full sentence reading in hiragana." },
+        "mn": { "type": "string", "description": "Mongolian translation." }
+      }
+    }
+  },
+  "examples": [
+    {
+      "level": "N2",
+      "updatedAt": "2026-08-02",
+      "points": [
+        {
+          "id": "gr-000",
+          "pattern": "ざるを得ない",
+          "patternKana": "ざるをえない",
+          "meaning": "...хийхээс өөр аргагүй",
+          "structure": "Verb (nai-form, minus ない) + ざるを得ない",
+          "example": {
+            "jp": "体調が悪いので、休まざるを得ない。",
+            "reading": "たいちょうがわるいので、やすまざるをえない。",
+            "mn": "Бие эрүүл мэнд муу тул амрахаас өөр аргагүй."
+          },
+          "notes": "Албан ёсны бичгийн хэлэнд түлхүү хэрэглэгддэг."
+        }
+      ]
+    }
+  ]
+}
