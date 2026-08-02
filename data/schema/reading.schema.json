@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bigu.app/schema/reading.schema.json",
+  "title": "Bigu reading content",
+  "description": "Shape of a data/reading.json file, as loaded by reading.js.",
+  "type": "object",
+  "required": ["level", "updatedAt", "passages"],
+  "properties": {
+    "level": {
+      "type": "string",
+      "description": "JLPT level this file covers, e.g. \"N2\"."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date",
+      "description": "Last edit date, YYYY-MM-DD."
+    },
+    "passages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/passage" }
+    }
+  },
+  "$defs": {
+    "passage": {
+      "type": "object",
+      "required": ["id", "title", "titleMn", "sentences"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique id, e.g. \"read-001\"."
+        },
+        "title": {
+          "type": "string",
+          "description": "Passage title in Japanese."
+        },
+        "titleMn": {
+          "type": "string",
+          "description": "Mongolian translation of the title."
+        },
+        "sentences": {
+          "type": "array",
+          "description": "The passage body, one sentence per entry. Keep passages short — a handful of sentences, not full articles.",
+          "items": { "$ref": "#/$defs/sentence" }
+        }
+      }
+    },
+    "sentence": {
+      "type": "object",
+      "required": ["jp", "reading", "mn"],
+      "properties": {
+        "jp": { "type": "string", "description": "Sentence in Japanese script." },
+        "reading": { "type": "string", "description": "Full sentence reading in hiragana." },
+        "mn": { "type": "string", "description": "Mongolian translation." }
+      }
+    }
+  },
+  "examples": [
+    {
+      "level": "N2",
+      "updatedAt": "2026-08-02",
+      "passages": [
+        {
+          "id": "read-000",
+          "title": "今日の天気",
+          "titleMn": "Өнөөдрийн цаг агаар",
+          "sentences": [
+            {
+              "jp": "今日は朝から雨が降っている。",
+              "reading": "きょうはあさからあめがふっている。",
+              "mn": "Өнөөдөр өглөөнөөс бороо орж байна."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
