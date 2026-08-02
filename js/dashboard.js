@@ -201,13 +201,13 @@ function createProgressCard({ vocabulary, grammar, kanji }) {
 const PRACTICE_MODE_LABELS = { vocabulary: 'Vocabulary', grammar: 'Grammar', kanji: 'Kanji', mistakes: 'Review mistakes' };
 
 function createPracticeCard(sessions) {
-  const card = createCard('Last practice');
+  const card = createCard('Last review');
   const latest = sessions.slice().sort((a, b) => b.createdAt - a.createdAt)[0] ?? null;
 
   if (!latest) {
     const empty = document.createElement('p');
     empty.className = 'meta';
-    empty.textContent = 'You haven\u2019t practiced yet.';
+    empty.textContent = 'You haven\u2019t reviewed yet.';
     card.append(empty);
   } else {
     const score = document.createElement('p');
@@ -227,7 +227,7 @@ function createPracticeCard(sessions) {
   const cta = document.createElement('a');
   cta.href = '#practice';
   cta.className = 'button button--secondary dashboard-card__cta';
-  cta.textContent = latest ? 'Practice again' : 'Start practice';
+  cta.textContent = latest ? 'Review again' : 'Start review';
   card.append(cta);
 
   return card;
