@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bigu.app/schema/kanji.schema.json",
+  "title": "Bigu kanji content",
+  "description": "Shape of a data/kanji.json file, as loaded by kanji.js.",
+  "type": "object",
+  "required": ["level", "updatedAt", "kanji"],
+  "properties": {
+    "level": {
+      "type": "string",
+      "description": "JLPT level this file covers, e.g. \"N2\"."
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date",
+      "description": "Last edit date, YYYY-MM-DD."
+    },
+    "kanji": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/entry" }
+    }
+  },
+  "$defs": {
+    "entry": {
+      "type": "object",
+      "required": ["id", "character", "meaning", "onyomi", "kunyomi", "example"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique id, e.g. \"kj-001\". Used as the progress-store key."
+        },
+        "character": {
+          "type": "string",
+          "description": "The single kanji character."
+        },
+        "meaning": {
+          "type": "string",
+          "description": "Mongolian meaning."
+        },
+        "onyomi": {
+          "type": "string",
+          "description": "On'yomi reading in katakana. Empty string if none — kanji.js only renders whichever of onyomi/kunyomi is non-empty."
+        },
+        "kunyomi": {
+          "type": "string",
+          "description": "Kun'yomi reading in hiragana. Empty string if none."
+        },
+        "example": { "$ref": "#/$defs/example" }
+      }
+    },
+    "example": {
+      "type": "object",
+      "required": ["word", "reading", "mn"],
+      "properties": {
+        "word": { "type": "string", "description": "A word using this kanji." },
+        "reading": { "type": "string", "description": "Reading of `word`." },
+        "mn": { "type": "string", "description": "Mongolian meaning of `word`." }
+      }
+    }
+  },
+  "examples": [
+    {
+      "level": "N2",
+      "updatedAt": "2026-08-02",
+      "kanji": [
+        {
+          "id": "kj-000",
+          "character": "例",
+          "meaning": "жишээ",
+          "onyomi": "レイ",
+          "kunyomi": "たと(える)",
+          "example": {
+            "word": "例文",
+            "reading": "れいぶん",
+            "mn": "жишээ өгүүлбэр"
+          }
+        }
+      ]
+    }
+  ]
+}
