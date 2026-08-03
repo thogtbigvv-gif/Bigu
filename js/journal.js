@@ -102,12 +102,19 @@ function previewText(text, maxLength = 60) {
 
 /* -- Entry lookup ------------------------------------------------------------------- */
 
+// Guards against older/corrupted records (e.g. a missing or non-string
+// `date`, left over from a schema change) so one bad entry can't throw and
+// take the whole view — and everything the router boots after it — down.
+function getValidEntries() {
+  return journal.getAll().filter((entry) => entry && typeof entry.date === 'string');
+}
+
 function findEntryByDate(dateKey) {
-  return journal.getAll().find((entry) => entry.date === dateKey) ?? null;
+  return getValidEntries().find((entry) => entry.date === dateKey) ?? null;
 }
 
 function entriesNewestFirst() {
-  return journal.getAll().slice().sort((a, b) => b.date.localeCompare(a.date));
+  return getValidEntries().sort((a, b) => b.date.localeCompare(a.date));
 }
 
 /* -- Calendar / heat-map computation -----------------------------------------------
@@ -128,7 +135,7 @@ function daysInMonth(year, month) {
 function entriesByDateInMonth(year, month) {
   const prefix = `${year}-${String(month + 1).padStart(2, '0')}`;
   const map = new Map();
-  for (const entry of journal.getAll()) {
+  for (const entry of getValidEntries()) {
     if (entry.date.startsWith(prefix)) map.set(entry.date, entry);
   }
   return map;
@@ -577,7 +584,20 @@ function initJournalView(view) {
 function initJournal() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
-  initJournalView(view);
+  // initJournalView is synchronous (unlike every other view's initX, which
+  // is async and so can't stall app.js's boot sequence by throwing). Any
+  // unexpected throw here — e.g. a corrupted stored entry slipping past
+  // getValidEntries — must not escape, or it takes initLessons, initReading,
+  // initRouter, and initNav down with it, breaking navigation app-wide.
+  try {
+    initJournalView(view);
+  } catch (error) {
+    console.error('[Bigu] journal view failed to initialize', error);
+    const message = document.createElement('p');
+    message.className = 'empty-state';
+    message.textContent = 'Journal could not be loaded right now.';
+    view.replaceChildren(message);
+  }
 }
 
 export { initJournal, buildMonthCalendar, shiftMonth };
