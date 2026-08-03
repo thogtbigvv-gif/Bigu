@@ -129,6 +129,19 @@ function createCard(word, level, onProgressChange) {
    on every keystroke is simpler (and cheaper) than rebuilding the list.
    -------------------------------------------------------------------------------------- */
 
+/* JLPT level + topic facets shown as a chip row above the list. A word's
+   tags come from an optional `tags` array on the word itself; words that
+   don't have one yet (all of today's data) fall back to the dataset's own
+   `level`, so existing untagged words keep showing up under their JLPT
+   chip with no data migration needed. Topic tags (Business, Daily, etc.)
+   are additive — future data entries can add `"tags": ["N2", "business"]`
+   without touching this list. */
+const CATEGORY_TAGS = ['N5', 'N4', 'N3', 'N2', 'Business', 'Daily', 'Travel', 'Anime', 'News'];
+
+function getWordTags(word, data) {
+  return word.tags && word.tags.length ? word.tags : [data.level];
+}
+
 function matchesQuery(word, query) {
   if (!query) return true;
   const haystack = `${word.kanji ?? ''} ${word.kana} ${word.meaning}`.toLowerCase();
@@ -167,6 +180,28 @@ function createLearnedToggle() {
   return button;
 }
 
+/* One chip per JLPT level / topic tag, multi-select. Reuses the same
+   .toggle-chip look and pressed/unpressed language as the learned toggle
+   and per-card progress button above, just applied as a group instead of
+   a single switch. */
+function createCategoryFilters() {
+  const wrap = document.createElement('div');
+  wrap.className = 'vocab-filters__categories';
+
+  const buttons = CATEGORY_TAGS.map((tag) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toggle-chip';
+    button.dataset.tag = tag;
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = tag;
+    wrap.append(button);
+    return button;
+  });
+
+  return { wrap, buttons };
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -182,6 +217,7 @@ function getContentContainer(view) {
 function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField();
   const learnedToggle = createLearnedToggle();
+  const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters();
 
   const filters = document.createElement('div');
   filters.className = 'vocab-filters';
@@ -192,7 +228,11 @@ function renderList(container, data) {
 
   const list = document.createElement('ul');
   list.className = 'vocab-list';
-  const rows = data.words.map((word) => ({ word, item: createCard(word, data.level, applyFilter) }));
+  const rows = data.words.map((word) => ({
+    word,
+    tags: getWordTags(word, data),
+    item: createCard(word, data.level, applyFilter),
+  }));
   list.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
@@ -200,16 +240,19 @@ function renderList(container, data) {
   empty.textContent = 'No words match your search.';
   empty.hidden = true;
 
+  const selectedTags = new Set();
+
   function applyFilter() {
     const query = searchInput.value.trim().toLowerCase();
     const hideLearned = learnedToggle.getAttribute('aria-pressed') === 'true';
     let visible = 0;
     for (const row of rows) {
-      const matches = matchesQuery(row.word, query) && !(hideLearned && isLearned(row.word.id));
+      const inSelectedTags = selectedTags.size === 0 || row.tags.some((tag) => selectedTags.has(tag));
+      const matches = inSelectedTags && matchesQuery(row.word, query) && !(hideLearned && isLearned(row.word.id));
       row.item.hidden = !matches;
       if (matches) visible += 1;
     }
-    summary.textContent = query || hideLearned
+    summary.textContent = query || hideLearned || selectedTags.size > 0
       ? `${data.level} · ${visible} / ${data.words.length} words`
       : `${data.level} · ${data.words.length} words`;
     empty.hidden = visible > 0;
@@ -221,9 +264,19 @@ function renderList(container, data) {
     learnedToggle.setAttribute('aria-pressed', String(!pressed));
     applyFilter();
   });
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const tag = button.dataset.tag;
+      const pressed = button.getAttribute('aria-pressed') === 'true';
+      button.setAttribute('aria-pressed', String(!pressed));
+      if (pressed) selectedTags.delete(tag);
+      else selectedTags.add(tag);
+      applyFilter();
+    });
+  });
   applyFilter();
 
-  container.replaceChildren(filters, summary, list, empty);
+  container.replaceChildren(filters, categoryWrap, summary, list, empty);
 }
 
 function renderError(container, message) {
