@@ -23,6 +23,17 @@
   margin-block-end: 0;
 }
 
+/* -- Category chips -----------------------------------------------------------------
+   JLPT level + topic facets, one row beneath the search/learned-toggle row.
+   Reuses .toggle-chip (buttons.css) for the pressed/unpressed treatment, so
+   this rule only carries the row layout, not the chip's own look. */
+.vocab-filters__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-end: var(--space-lg);
+}
+
 .vocab-meta {
   margin: 0 0 var(--space-md) 0;
 }
