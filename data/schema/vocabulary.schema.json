@@ -45,7 +45,15 @@
           "type": "string",
           "description": "Mongolian meaning."
         },
-        "example": { "$ref": "#/$defs/example" }
+        "example": { "$ref": "#/$defs/example" },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["N5", "N4", "N3", "N2", "Business", "Daily", "Travel", "Anime", "News"]
+          },
+          "description": "Optional facet tags for the vocabulary view's category chips. A word can carry both a JLPT level and topic tags, e.g. [\"N2\", \"Business\"]. If omitted, vocabulary.js falls back to the file's own `level` as the word's only tag."
+        }
       }
     },
     "example": {
