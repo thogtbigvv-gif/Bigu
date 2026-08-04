@@ -49,6 +49,14 @@
         "notes": {
           "type": "string",
           "description": "Optional usage note in Mongolian; grammar.js only renders this row when present."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["N5", "N4", "N3", "N2"]
+          },
+          "description": "Optional JLPT-level facet tags for the grammar view's category chips. If omitted, grammar.js falls back to the file's own `level` as the point's only tag."
         }
       }
     },
