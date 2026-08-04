@@ -1,341 +1,137 @@
-# Bigu (ビグ)
+# Bigu 🇯🇵
 
-A calm, minimal, data-driven JLPT learning platform built with Vanilla HTML, CSS, and JavaScript.
+> A modern Japanese learning platform built around clarity, consistency, and real progress.
 
-Bigu is designed to help learners master Japanese through structured lessons, vocabulary, grammar, kanji, reading practice, listening, and spaced repetition while keeping everything lightweight and completely offline.
+## Why Bigu?
 
-No frameworks.
-No build tools.
-No backend required.
+Learning Japanese is difficult enough.
+
+Many learning platforms try to solve that by adding more content, more features, more statistics, and more distractions. Over time, studying becomes less about understanding the language and more about navigating the platform.
+
+Bigu was created with a different philosophy.
+
+Every feature should have a clear purpose.
+Every page should reduce friction.
+Every improvement should help learners spend more time learning and less time searching.
+
+The goal isn't to build the biggest Japanese learning platform.
+
+The goal is to build one that simply feels better to use.
 
 ---
 
-# Features
+## Philosophy
 
-## Dashboard
+Instead of asking:
 
-- Daily study overview
-- Study streak
-- XP & progress
-- Daily goals
-- Continue learning
-- Weak points
+> "What else can we add?"
+
+Bigu asks:
+
+> "What can we remove to make learning easier?"
+
+That philosophy influences every design and development decision.
+
+- Clean interface
+- Fast navigation
+- Focused study experience
+- No unnecessary complexity
+- Built for long-term learning
+
+---
+
+## Features
+
+### 📖 Vocabulary
+
+- JLPT-organized vocabulary
+- Word meanings
+- Readings
+- Example sentences
+- Search and filtering
+- Favorites
+
+### 📝 Grammar
+
+- JLPT grammar lessons
+- Clear explanations
+- Usage examples
+- Common mistakes
+- Practice exercises
+
+### 漢字 Kanji
+
+- Stroke order
+- Onyomi & Kunyomi
+- Meanings
+- Example vocabulary
+- JLPT organization
+
+### 📚 Reading
+
+- Reading passages
+- Vocabulary support
+- Grammar references
+- Progressive difficulty
+
+### 🎯 Practice
+
+- Interactive quizzes
+- Review sessions
+- Progress tracking
+- Weak-point analysis
+
+### 📊 Dashboard
+
+- Learning statistics
+- Daily progress
+- Study streaks
 - Recent activity
 
 ---
 
-## Study
+## Tech Stack
 
-### Vocabulary
+- HTML5
+- CSS3
+- JavaScript
+- JSON
+- Responsive Design
 
-- JLPT N5 → N1
-- Business
-- Daily Life
-- Travel
-- News
-- Anime
+No frameworks.
 
-Each vocabulary entry contains:
-
-- Reading
-- Meaning
-- English
-- Example sentence
-- Translation
-- Audio
-- Related words
-- Tags
-- Difficulty
-- Bookmark
+Keeping the project lightweight makes it easier to understand, maintain, and improve.
 
 ---
 
-### Grammar
+## Project Status
 
-Each grammar point includes:
+🚧 Active Development
 
-- Meaning
-- Structure
-- Usage
-- Common situations
-- Difference from similar grammar
-- Example sentences
-- Common mistakes
-- Quiz
+Bigu is continuously evolving.
+
+New lessons, learning tools, interface improvements, and study systems are added over time as the project grows.
 
 ---
 
-### Kanji
+## Vision
 
-Each kanji includes:
+This project isn't trying to replace every Japanese learning platform.
 
-- Meaning
-- Onyomi
-- Kunyomi
-- Stroke order
-- Example vocabulary
-- Related kanji
-- JLPT level
+Instead, it aims to become a place where studying feels simple, focused, and enjoyable.
+
+A platform that learners actually want to come back to every day.
 
 ---
 
-### Reading
+## Contributing
 
-Each lesson contains:
+Suggestions, ideas, bug reports, and feedback are always welcome.
 
-- Reading passage
-- Vocabulary list
-- Grammar used
-- Translation
-- Questions
-- Shadowing audio
+Every contribution helps make Bigu better.
 
 ---
 
-### Listening (Planned)
+## License
 
-- Native audio
-- Adjustable speed
-- Transcript
-- Translation
-- Listening quiz
-
----
-
-## Practice
-
-Multiple practice modes:
-
-- Multiple Choice
-- Fill in the Blank
-- Typing
-- Matching
-- Sentence Ordering
-- Listening Quiz
-- Flashcards
-
----
-
-## Review
-
-Spaced repetition inspired by Anki.
-
-Cards are scheduled based on learning history.
-
-Buttons:
-
-- Again
-- Hard
-- Good
-- Easy
-
----
-
-## Journal
-
-Personal study journal stored locally.
-
-Supports:
-
-- Daily notes
-- Goals
-- Reflection
-- Progress log
-
----
-
-## Statistics
-
-Track learning progress:
-
-- Words learned
-- Grammar completed
-- Kanji learned
-- Accuracy
-- Study time
-- Streak
-- Monthly calendar
-
----
-
-# Project Structure
-
-```
-index.html
-
-css/
-    main.css
-    variables.css
-    dashboard.css
-    vocabulary.css
-    grammar.css
-    kanji.css
-    reading.css
-    lessons.css
-    practice.css
-    journal.css
-
-js/
-    app.js
-    router.js
-    storage.js
-    dashboard.js
-    vocabulary.js
-    grammar.js
-    kanji.js
-    reading.js
-    listening.js
-    lessons.js
-    practice.js
-    review.js
-    journal.js
-    search.js
-    statistics.js
-    achievements.js
-    theme.js
-
-data/
-    vocabulary/
-    grammar/
-    kanji/
-    reading/
-    listening/
-    quizzes/
-    lessons/
-```
-
----
-
-# Content Architecture
-
-Bigu follows a **data-driven architecture**.
-
-The application logic never depends on a specific textbook.
-
-Instead, every textbook is converted into structured JSON files.
-
-```
-Textbook (PDF)
-
-        ↓
-
-Content Extraction
-
-        ↓
-
-JSON
-
-        ↓
-
-data/
-
-        ├── vocabulary
-        ├── grammar
-        ├── kanji
-        ├── reading
-        ├── listening
-        └── quizzes
-
-        ↓
-
-Application UI
-```
-
-Adding a new textbook only requires adding new JSON files.
-
-No application code should need modification.
-
----
-
-# Local Storage
-
-Everything is stored locally.
-
-```
-nagi:
-
-progress
-
-review
-
-journal
-
-bookmarks
-
-settings
-
-statistics
-
-achievements
-```
-
-No user data leaves the device.
-
----
-
-# Design Principles
-
-- Calm UI
-- Minimal design
-- Fast loading
-- Offline-first
-- Mobile-first
-- Accessible
-- Modular
-- Easily expandable
-
----
-
-# Future Roadmap
-
-## Phase 1
-
-- Dashboard
-- Vocabulary
-- Grammar
-- Search
-
-## Phase 2
-
-- Reading
-- Kanji improvements
-- Practice modes
-
-## Phase 3
-
-- Spaced repetition
-- Statistics
-- Achievements
-
-## Phase 4
-
-- Listening
-- Shadowing
-- AI explanations
-- Offline content packages
-
----
-
-# Running locally
-
-Because the app loads JSON using fetch(), it must be served over HTTP.
-
-```bash
-python -m http.server 8000
-
-# or
-
-npx serve
-```
-
-Open:
-
-http://localhost:8000
-
----
-
-# Philosophy
-
-Bigu is not just another JLPT word list.
-
-It is designed to become a complete Japanese learning companion that combines structured lessons, spaced repetition, reference materials, and personal study tracking in one lightweight offline application.
+MIT License
