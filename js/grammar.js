@@ -138,6 +138,18 @@ function createCard(point, level) {
    against the pattern (kanji + kana reading) and the meaning.
    -------------------------------------------------------------------------------------- */
 
+/* JLPT level facet shown as a chip row above the list, same pattern as
+   vocabulary.js's category chips (just levels here, no topic tags). A
+   point's tags come from an optional `tags` array on the point itself;
+   points that don't have one yet (all of today's data) fall back to the
+   dataset's own `level`, so nothing needs to change in grammar.json for
+   the existing N2 points to keep showing up under their chip. */
+const CATEGORY_TAGS = ['N5', 'N4', 'N3', 'N2'];
+
+function getPointTags(point, data) {
+  return point.tags && point.tags.length ? point.tags : [data.level];
+}
+
 function matchesQuery(point, query) {
   if (!query) return true;
   const haystack = `${point.pattern} ${point.patternKana ?? ''} ${point.meaning}`.toLowerCase();
@@ -164,6 +176,26 @@ function createSearchField() {
   return { wrap, input };
 }
 
+/* One chip per JLPT level, multi-select. Reuses the same .toggle-chip
+   look and pressed/unpressed language as the per-card mastery button. */
+function createCategoryFilters() {
+  const wrap = document.createElement('div');
+  wrap.className = 'grammar-filters__categories';
+
+  const buttons = CATEGORY_TAGS.map((tag) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toggle-chip';
+    button.dataset.tag = tag;
+    button.setAttribute('aria-pressed', 'false');
+    button.textContent = tag;
+    wrap.append(button);
+    return button;
+  });
+
+  return { wrap, buttons };
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -178,13 +210,18 @@ function getContentContainer(view) {
 
 function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField();
+  const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters();
 
   const summary = document.createElement('p');
   summary.className = 'grammar-meta meta';
 
   const list = document.createElement('ul');
   list.className = 'grammar-list';
-  const rows = data.points.map((point) => ({ point, item: createCard(point, data.level) }));
+  const rows = data.points.map((point) => ({
+    point,
+    tags: getPointTags(point, data),
+    item: createCard(point, data.level),
+  }));
   list.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
@@ -192,24 +229,37 @@ function renderList(container, data) {
   empty.textContent = 'No grammar points match your search.';
   empty.hidden = true;
 
+  const selectedTags = new Set();
+
   function applyFilter() {
     const query = searchInput.value.trim().toLowerCase();
     let visible = 0;
     for (const row of rows) {
-      const matches = matchesQuery(row.point, query);
+      const inSelectedTags = selectedTags.size === 0 || row.tags.some((tag) => selectedTags.has(tag));
+      const matches = inSelectedTags && matchesQuery(row.point, query);
       row.item.hidden = !matches;
       if (matches) visible += 1;
     }
-    summary.textContent = query
+    summary.textContent = query || selectedTags.size > 0
       ? `${data.level} · ${visible} / ${data.points.length} grammar points`
       : `${data.level} · ${data.points.length} grammar points`;
     empty.hidden = visible > 0;
   }
 
   searchInput.addEventListener('input', applyFilter);
+  categoryButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      const tag = button.dataset.tag;
+      const pressed = button.getAttribute('aria-pressed') === 'true';
+      button.setAttribute('aria-pressed', String(!pressed));
+      if (pressed) selectedTags.delete(tag);
+      else selectedTags.add(tag);
+      applyFilter();
+    });
+  });
   applyFilter();
 
-  container.replaceChildren(searchWrap, summary, list, empty);
+  container.replaceChildren(searchWrap, categoryWrap, summary, list, empty);
 }
 
 function renderError(container, message) {
