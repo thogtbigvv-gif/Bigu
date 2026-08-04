@@ -66,10 +66,44 @@
   gap: var(--space-xs);
 }
 
+/* SVG shapes default to fill:black with no stroke, so the mark's <rect> and
+   <text> need explicit paint here or the logo renders as a solid black square
+   with its (also black) characters invisible inside it. An outlined square
+   with ink-colored characters matches the app's "a line, not a spotlight"
+   language, and both follow the theme because they inherit currentColor. */
 .brand__mark {
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
+  color: var(--color-ink);
+}
+
+.brand__mark rect {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.brand__mark text {
+  fill: currentColor;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: 19px;
+  font-weight: var(--weight-medium);
+}
+
+/* The title is a <p>, so typography.css's paragraph margin would push it off
+   the flex row's optical centre. */
+.brand__title {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.brand__title-en {
+  font-family: var(--font-display);
+  color: var(--color-ink-soft);
 }
 
 /* -- Header, end group ------------------------------------------------------------

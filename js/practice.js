@@ -119,13 +119,13 @@ const DECKS = {
   mistakes: {
     label: 'Review mistakes',
     fillFront(container, item) {
-      DECKS[deckKeyForItemId(item.id)].fillFront(container, item);
+      deckForItem(item)?.fillFront(container, item);
     },
     secondary(item) {
-      return DECKS[deckKeyForItemId(item.id)].secondary(item);
+      return deckForItem(item)?.secondary(item) ?? { text: '', className: null, lang: null };
     },
     fillAnswer(elements, item) {
-      DECKS[deckKeyForItemId(item.id)].fillAnswer(elements, item);
+      deckForItem(item)?.fillAnswer(elements, item);
     },
   },
 };
@@ -135,6 +135,16 @@ function deckKeyForItemId(id) {
   if (id.startsWith('gr-')) return 'grammar';
   if (id.startsWith('kj-')) return 'kanji';
   return null;
+}
+
+/* The mistakes pool already filters to items whose id maps to a real deck, so
+   this only ever returns null if an unrecognized id slips through (a renamed
+   prefix, a hand-edited progress store). Returning null instead of indexing
+   DECKS with it keeps that a blank card rather than a TypeError that takes
+   the whole round down. */
+function deckForItem(item) {
+  const key = deckKeyForItemId(item.id);
+  return key ? DECKS[key] : null;
 }
 
 const DECK_KEYS = Object.keys(DECKS);
@@ -525,6 +535,18 @@ function initController(elements, decks) {
 
   document.addEventListener('keydown', handleKeydown);
 
+  // The deck counts this screen reports go stale while the reader is on
+  // another view: marking a word "Still learning" in Vocabulary changes what
+  // the mistakes pool holds, and finishing a round changes the history. Both
+  // are re-read on the way back in — but never mid-round, where replacing the
+  // intro under an active session would be the only visible effect.
+  window.addEventListener('hashchange', () => {
+    if (location.hash.slice(1) !== VIEW_ID) return;
+    if (!elements.session.hidden) return;
+    updateIntroText();
+    renderHistory();
+  });
+
   syncModeButtons();
   updateIntroText();
   renderHistory();
@@ -558,7 +580,7 @@ async function initPractice() {
       ...DECKS.mistakes,
       get items() {
         return [...vocabData.words, ...grammarData.points, ...kanjiData.kanji].filter(
-          (item) => progress.get(item.id)?.learned === false,
+          (item) => progress.get(item.id)?.learned === false && deckKeyForItemId(item.id) !== null,
         );
       },
     };

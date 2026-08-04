@@ -124,14 +124,26 @@
   grid-template-rows: 1fr;
 }
 
+/* overflow:hidden clips the collapsed submenu out of sight, but clipped links
+   are still focusable — Tab would walk through all seven of them while the
+   disclosure reads aria-expanded="false". visibility:hidden takes them out of
+   the tab order too, and because visibility transitions discretely at the end
+   of its duration, the content stays on screen for the whole close animation
+   instead of vanishing the moment the row starts shrinking. */
 .site-nav__submenu {
   overflow: hidden;
+  visibility: hidden;
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
+  transition: visibility var(--transition-base);
+}
+
+.site-nav__item--parent.is-open .site-nav__submenu {
+  visibility: visible;
 }
 
 .site-nav__sublink {
@@ -141,6 +153,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .site-nav__submenu-wrapper,
+  .site-nav__submenu,
   .site-nav__chevron,
   .site-nav__link,
   .site-nav__hamburger span,
@@ -229,6 +242,13 @@
 @media (max-width: 640px) {
   .site-nav__mobile-toggle {
     display: inline-flex;
+  }
+
+  /* Above the backdrop, below the drawer. The toggle turns into an X while
+     the drawer is open, so it has to stay tappable — at the header's normal
+     z-index the backdrop would swallow the tap and the X would do nothing. */
+  .site-header {
+    z-index: 45;
   }
 
   .site-nav {

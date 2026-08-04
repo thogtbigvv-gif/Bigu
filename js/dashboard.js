@@ -263,7 +263,10 @@ function downloadBackup() {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  // The click starts the download asynchronously, so revoking in the same tick
+  // can pull the blob out from under it before it's read. Freeing it on the
+  // next turn of the event loop keeps the file intact.
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 /* -- Backup restore ---------------------------------------------------------------------
