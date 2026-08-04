@@ -286,17 +286,25 @@ function createCalendar() {
 
   head.append(prevButton, label, nextButton);
 
+  // Decorative: each day cell carries its own full date in aria-label, so
+  // reading out a bare "S M T W T F S" strip would only add noise.
   const weekdays = document.createElement('div');
   weekdays.className = 'journal__calendar-weekdays';
+  weekdays.setAttribute('aria-hidden', 'true');
   for (const initial of ['S', 'M', 'T', 'W', 'T', 'F', 'S']) {
     const weekday = document.createElement('span');
     weekday.textContent = initial;
     weekdays.append(weekday);
   }
 
+  // No role="grid" here: that role requires row/gridcell descendants, and the
+  // cells are rendered as one flat run laid out by CSS columns. Claiming it
+  // without that structure reads worse to assistive tech than the plain group
+  // of labeled buttons this actually is.
   const grid = document.createElement('div');
   grid.className = 'journal__calendar-grid';
-  grid.setAttribute('role', 'grid');
+  grid.setAttribute('role', 'group');
+  grid.setAttribute('aria-label', 'Days with a journal entry');
 
   calendar.append(head, weekdays, grid);
 
@@ -540,7 +548,13 @@ function initJournalView(view) {
 
     state.entryId = record.id;
     state.savedText = record.text;
+    // What's stored is the trimmed text, so the composer has to match it or
+    // every later comparison against state.savedText sees a difference that
+    // isn't there — leaving Save enabled on an already-saved entry, and
+    // flipping the status to "Unsaved changes" on the next keystroke.
+    textarea.value = record.text;
     status.textContent = `Saved · ${formatTimeLabel(record.updatedAt ?? record.createdAt)}`;
+    refreshStats();
     syncSaveButton();
     renderHistory();
     renderCalendar();
@@ -596,7 +610,11 @@ function initJournal() {
     const message = document.createElement('p');
     message.className = 'empty-state';
     message.textContent = 'Journal could not be loaded right now.';
-    view.replaceChildren(message);
+    // Everything except the view's own <h1>: router.js reads that heading for
+    // the document title and focuses it on navigation, so replacing the whole
+    // section would break routing into this view on top of the failure here.
+    const heading = document.getElementById(`${VIEW_ID}-heading`);
+    view.replaceChildren(...(heading ? [heading, message] : [message]));
   }
 }
 

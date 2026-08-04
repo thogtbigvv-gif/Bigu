@@ -38,14 +38,19 @@
   <a class="skip-link" href="#main-content">Skip to main content</a>
 
   <div class="app-shell">
+    <!-- Drawer backdrop. A sibling of the nav, not a child of it: below the
+         640px line .site-nav is transformed (translateX), and a transformed
+         ancestor becomes the containing block for position:fixed descendants —
+         nested inside, the backdrop would be clipped to the drawer instead of
+         covering the page, and would paint over the drawer's own links. -->
+    <div class="site-nav__backdrop" id="site-nav-backdrop" hidden></div>
+
     <!-- Primary nav: a sticky sidebar on desktop, an off-canvas drawer on
          mobile (toggled by #site-nav-mobile-toggle in the header below).
          "Study" is a disclosure toggle, not a link — it only expands and
          collapses its own submenu. Behavior lives in js/navigation.js;
          active-link highlighting (aria-current) is set by js/router.js. -->
     <nav class="site-nav" id="site-nav" aria-label="Primary">
-      <div class="site-nav__backdrop" id="site-nav-backdrop" hidden></div>
-
       <div class="site-nav__panel" id="site-nav-panel">
         <ul class="site-nav__list">
           <li class="site-nav__item">

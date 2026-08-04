@@ -11,6 +11,14 @@
   margin: 0;
 }
 
+/* The chip row below sits directly under the search field, so the field's own
+   full-size bottom margin would stack with that row's into a double gutter
+   between two controls meant to read as one filter block. (Kanji's search
+   field has no chip row beneath it and keeps the standard spacing.) */
+.grammar-content .search-field {
+  margin-block-end: var(--space-sm);
+}
+
 /* -- Category chips -----------------------------------------------------------------
    JLPT level facet, one row beneath the search field. Reuses .toggle-chip
    (buttons.css) for the pressed/unpressed treatment, so this rule only
