@@ -23,6 +23,23 @@
     })();
   </script>
 
+  <!-- Decides whether the first-visit intro plays, synchronously and before
+       first paint. It has to be inline for the same reason the theme above
+       does: js/intro/ is a deferred module, and by the time it runs the
+       reader would already have seen a frame of the dashboard the overlay is
+       supposed to be covering. css/intro.css keys entirely off the attribute
+       set here, so if this never runs — scripting disabled, an exception —
+       the overlay stays hidden and the app renders normally. -->
+  <script>
+    (function () {
+      try {
+        if (sessionStorage.getItem('biguIntroPlayed') === null) {
+          document.documentElement.dataset.intro = 'playing';
+        }
+      } catch (e) {}
+    })();
+  </script>
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -36,6 +53,32 @@
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
+
+  <!-- First-visit intro. Static markup rather than JS-built so it is painted
+       with the very first frame; js/intro/ takes it from here and removes it
+       entirely when the sequence ends. The app behind it is made inert for the
+       duration, so Skip is deliberately the only thing here a screen reader
+       can reach — note that aria-hidden is set on the video alone and not on
+       this container, since a descendant cannot opt back out of a hidden
+       ancestor and that would take Skip with it. -->
+  <div class="intro" id="intro">
+    <!-- The dark ground is its own element so it can fade on its own. Fading
+         the container instead would take the video down with it — opacity
+         applies to the whole subtree — and the logo would dissolve long
+         before it reached the header. -->
+    <div class="intro__backdrop" id="intro-backdrop"></div>
+    <video
+      class="intro__video"
+      id="intro-video"
+      src="assets/intro/bigu-intro.webm"
+      muted
+      playsinline
+      preload="auto"
+      disablepictureinpicture
+      aria-hidden="true"
+    ></video>
+    <button type="button" class="intro__skip" id="intro-skip">Skip intro</button>
+  </div>
 
   <div class="app-shell">
     <!-- Drawer backdrop. A sibling of the nav, not a child of it: below the
