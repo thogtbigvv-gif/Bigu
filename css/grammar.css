@@ -11,6 +11,17 @@
   margin: 0;
 }
 
+/* -- Category chips -----------------------------------------------------------------
+   JLPT level facet, one row beneath the search field. Reuses .toggle-chip
+   (buttons.css) for the pressed/unpressed treatment, so this rule only
+   carries the row layout, not the chip's own look. */
+.grammar-filters__categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-end: var(--space-lg);
+}
+
 .grammar-list {
   display: flex;
   flex-direction: column;
