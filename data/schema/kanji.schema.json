@@ -45,7 +45,17 @@
           "type": "string",
           "description": "Kun'yomi reading in hiragana. Empty string if none."
         },
-        "example": { "$ref": "#/$defs/example" }
+        "example": { "$ref": "#/$defs/example" },
+        "examples": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/example" },
+          "description": "Optional list of example words for the kanji detail view's Examples section. If omitted, kanji.js falls back to a single-item list built from `example`."
+        },
+        "related": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional list of related kanji characters for the detail view's Related Kanji section. Each renders as a jump-to-entry chip when the character exists elsewhere in this same file, plain text otherwise."
+        }
       }
     },
     "example": {
