@@ -36,7 +36,7 @@
 }
 
 .kanji-card__character {
-  font-family: var(--font-display), var(--font-jp-stack);
+  font-family: var(--font-display), var(--font-jp);
   font-size: var(--text-2xl);
   line-height: var(--leading-tight);
   color: var(--color-ink);
@@ -69,4 +69,91 @@
 .kanji-card__example p {
   margin: 0;
   max-width: none;
+}
+
+.kanji-card__detail-button {
+  margin-block-start: var(--space-3xs);
+}
+
+/* -- Detail panel -----------------------------------------------------------------
+   Opens in place of the grid (same list-hidden/detail-shown swap
+   reading.js uses for its passage flow). Sections stack rather than tab —
+   see kanji.js's header comment for why. Card and panel chrome
+   intentionally match .kanji-card / reading.css's .reading-stage__panel,
+   since this is what a card's content grows into once opened.
+   ------------------------------------------------------------------------------------------- */
+
+.kanji-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.kanji-detail__exit {
+  align-self: flex-start;
+}
+
+.kanji-detail__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.kanji-detail__character {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.kanji-detail__sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.kanji-detail__section {
+  padding: var(--space-md) var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.kanji-detail__section-title {
+  margin: 0 0 var(--space-2xs) 0;
+  font-family: var(--font-display), var(--font-jp);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+}
+
+.kanji-detail__text {
+  margin: 0;
+}
+
+.kanji-detail__examples {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.kanji-detail__related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.kanji-detail__related [aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* -- Mobile spacing ---------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .kanji-detail__section {
+    padding: var(--space-sm) var(--space-md);
+  }
 }
