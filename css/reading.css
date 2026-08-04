@@ -1,11 +1,14 @@
 /* ==========================================================================
    reading.css
-   Foundation styles for the #reading view built by reading.js: a list of
-   short passage cards (title, then each sentence as Japanese text with a
-   reading line and a translation) — the same jp/.reading/.meta stacking
-   vocabulary.css and grammar.css already define via typography.css, no
-   new text treatment invented here. Self-contained, like those modules.
+   Styles for the #reading view built by reading.js: a passage list
+   (title, then a "Read" button opening the passage) and the per-passage
+   stage flow it opens onto — a tab row (Article/Vocabulary/Grammar/
+   Questions/Translation/Shadowing) over one swapped panel. Card and panel
+   chrome intentionally match (same padding/background/border/shadow),
+   since the panel is just what a card's content grows into once opened.
    ========================================================================== */
+
+/* -- Passage list ---------------------------------------------------------------- */
 
 .reading-meta {
   margin: 0 0 var(--space-md) 0;
@@ -47,19 +50,84 @@
   margin: 0 0 var(--space-sm) 0;
 }
 
-.reading-card__body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-sm);
+.reading-card__meta {
+  margin: 0 0 var(--space-md) 0;
 }
 
-.reading-card__sentence p {
+/* -- Stage flow -----------------------------------------------------------------
+   Opens in place of the list (same list-hidden/detail-shown swap
+   lessons.js uses for its quiz). The tab row reuses .toggle-chip for its
+   base look; [aria-selected="true"] here mirrors .toggle-chip's own
+   [aria-pressed="true"] treatment so a selected tab and a pressed toggle
+   read as the same kind of "active" state everywhere in the app.
+   ------------------------------------------------------------------------------------ */
+
+.reading-stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.reading-stage__exit {
+  align-self: flex-start;
+}
+
+.reading-stage__head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+.reading-stage__title {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp);
+  font-size: var(--text-lg);
+  color: var(--color-ink);
+}
+
+.reading-stage__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.reading-stage__tab[aria-selected="true"] {
+  background-color: var(--color-moss);
+  border-color: var(--color-moss);
+  color: var(--color-washi);
+}
+
+.reading-stage__panel {
+  padding: var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.reading-stage__panel:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+}
+
+.reading-stage__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.reading-stage__sentence p {
   margin: 0;
 }
 
 /* -- Mobile spacing ---------------------------------------------------------------- */
 @media (max-width: 480px) {
   .reading-card {
+    padding: var(--space-md);
+  }
+
+  .reading-stage__panel {
     padding: var(--space-md);
   }
 }
