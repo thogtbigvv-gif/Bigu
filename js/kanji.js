@@ -4,6 +4,24 @@
    Same fetch-once/cache and progress-store mastery pattern as vocabulary.js
    and grammar.js; laid out as a grid instead of a list since a single
    character card carries far less content than a vocab or grammar card.
+
+   Each card also has a "View details" button opening a full-character
+   detail panel — Meaning, On, Kun, Stroke Order, Animation, Examples,
+   Related Kanji — in place of the grid, same list-hidden/detail-shown
+   swap reading.js uses for its passage flow. Unlike reading.js's stage
+   tabs, these sections are NOT tabbed: for one kanji, meaning/readings/
+   examples/related characters are usually wanted together at a glance
+   (a dictionary entry, not alternate views of the same content), so the
+   detail panel just stacks them and lets the page scroll.
+
+   Stroke Order and Animation need real per-character stroke-path data
+   (something like the KanjiVG dataset) that doesn't exist in kanji.json
+   yet, so both render a "coming soon" note for every entry today — same
+   empty-state language used elsewhere for not-yet-built stages. Examples
+   and Related Kanji are wired to real (optional) data fields now:
+   `examples` (falls back to the existing single `example`) and `related`
+   (an array of characters; each renders as a jump-to-that-kanji chip when
+   the character is found in this same dataset, plain text otherwise).
    ========================================================================== */
 
 import { progress } from './storage.js';
@@ -37,7 +55,15 @@ function setMastered(kanjiId, learned) {
   progress.set(kanjiId, { ...progress.get(kanjiId), learned });
 }
 
-/* -- Card building --------------------------------------------------------------------- */
+/* -- Shared fields -------------------------------------------------------------------
+   `examples` is optional; entries that don't have one yet (all of today's
+   data) fall back to a single-item list built from the existing required
+   `example`, so nothing needs to change in kanji.json for old entries.
+   -------------------------------------------------------------------------------------- */
+
+function getExamples(entry) {
+  return entry.examples && entry.examples.length ? entry.examples : [entry.example];
+}
 
 function createReadings(entry) {
   const wrap = document.createElement('p');
@@ -90,7 +116,14 @@ function createMasteryButton(entry) {
   return button;
 }
 
-function createCard(entry, level) {
+/* -- Grid card -------------------------------------------------------------------------
+   The compact overview: character, meaning, readings, one example
+   preview, mastery toggle, and now a "View details" button opening the
+   full entry below. The card itself stays exactly as small as before —
+   detail content only exists once the button is pressed.
+   ------------------------------------------------------------------------------------------ */
+
+function createCard(entry, level, onOpenDetail) {
   const item = document.createElement('li');
   item.className = 'kanji-card';
   item.dataset.kanjiId = entry.id;
@@ -113,8 +146,145 @@ function createCard(entry, level) {
   meaning.className = 'kanji-card__meaning';
   meaning.textContent = entry.meaning;
 
-  item.append(head, meaning, createReadings(entry), createExample(entry.example), createMasteryButton(entry));
+  const detailButton = document.createElement('button');
+  detailButton.type = 'button';
+  detailButton.className = 'button button--secondary kanji-card__detail-button';
+  detailButton.textContent = 'View details';
+  detailButton.addEventListener('click', () => onOpenDetail(entry));
+
+  item.append(
+    head,
+    meaning,
+    createReadings(entry),
+    createExample(entry.example),
+    createMasteryButton(entry),
+    detailButton,
+  );
   return item;
+}
+
+/* -- Detail panel ------------------------------------------------------------------------
+   Opens in place of the grid (same swap reading.js uses for its passage
+   flow). Sections render in the order the feature was specced in:
+   Meaning, On, Kun, Stroke Order, Animation, Examples, Related Kanji.
+   ------------------------------------------------------------------------------------------ */
+
+function createDetailSection(title, content) {
+  const section = document.createElement('div');
+  section.className = 'kanji-detail__section';
+
+  const heading = document.createElement('h3');
+  heading.className = 'kanji-detail__section-title';
+  heading.textContent = title;
+
+  section.append(heading, content);
+  return section;
+}
+
+function createTextBlock(text, { lang } = {}) {
+  const p = document.createElement('p');
+  p.className = 'kanji-detail__text';
+  if (lang) p.lang = lang;
+  p.textContent = text;
+  return p;
+}
+
+function createComingSoonBlock(message) {
+  const p = document.createElement('p');
+  p.className = 'empty-state';
+  p.textContent = message;
+  return p;
+}
+
+function createExamplesBlock(entry) {
+  const list = document.createElement('div');
+  list.className = 'kanji-detail__examples';
+  list.append(...getExamples(entry).map((example) => createExample(example)));
+  return list;
+}
+
+/* Each related character becomes a jump-to-entry chip when it exists in
+   this same dataset; otherwise it's just shown as plain text, since there's
+   nowhere for it to link to. */
+function createRelatedBlock(entry, allEntries, onJump) {
+  const related = entry.related ?? [];
+
+  if (related.length === 0) {
+    return createComingSoonBlock('Related kanji are coming soon.');
+  }
+
+  const wrap = document.createElement('div');
+  wrap.className = 'kanji-detail__related';
+
+  for (const character of related) {
+    const match = allEntries.find((candidate) => candidate.character === character);
+
+    if (match) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'toggle-chip';
+      button.lang = 'ja';
+      button.textContent = character;
+      button.addEventListener('click', () => onJump(match));
+      wrap.append(button);
+    } else {
+      const span = document.createElement('span');
+      span.className = 'toggle-chip';
+      span.lang = 'ja';
+      span.setAttribute('aria-disabled', 'true');
+      span.textContent = character;
+      wrap.append(span);
+    }
+  }
+
+  return wrap;
+}
+
+function buildDetailPanel() {
+  const wrap = document.createElement('div');
+  wrap.className = 'kanji-detail';
+  wrap.hidden = true;
+
+  const exit = document.createElement('button');
+  exit.type = 'button';
+  exit.className = 'button button--secondary kanji-detail__exit';
+  exit.textContent = '← Back to kanji';
+
+  const head = document.createElement('div');
+  head.className = 'kanji-detail__head';
+
+  const character = document.createElement('p');
+  character.className = 'kanji-detail__character';
+  character.lang = 'ja';
+
+  const tag = document.createElement('span');
+  tag.className = 'jlpt-tag';
+
+  head.append(character, tag);
+
+  const sections = document.createElement('div');
+  sections.className = 'kanji-detail__sections';
+
+  wrap.append(exit, head, sections);
+
+  return { wrap, exit, character, tag, sections };
+}
+
+function renderDetail(elements, entry, level, allEntries, onJump) {
+  elements.character.textContent = entry.character;
+  elements.tag.textContent = level;
+
+  elements.sections.replaceChildren(
+    createDetailSection('Meaning', createTextBlock(entry.meaning)),
+    createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
+    createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
+    createDetailSection('Stroke Order', createComingSoonBlock('Stroke order diagrams are coming soon.')),
+    createDetailSection('Animation', createComingSoonBlock('Stroke order animation is coming soon.')),
+    createDetailSection('Examples', createExamplesBlock(entry)),
+    createDetailSection('Related Kanji', createRelatedBlock(entry, allEntries, onJump)),
+  );
+
+  elements.wrap.scrollTo?.(0, 0);
 }
 
 /* -- Search/filter -------------------------------------------------------------------
@@ -168,7 +338,25 @@ function renderGrid(container, data) {
 
   const grid = document.createElement('ul');
   grid.className = 'kanji-grid';
-  const rows = data.kanji.map((entry) => ({ entry, item: createCard(entry, data.level) }));
+
+  const detailElements = buildDetailPanel();
+
+  function openDetail(entry) {
+    searchWrap.hidden = true;
+    summary.hidden = true;
+    grid.hidden = true;
+    renderDetail(detailElements, entry, data.level, data.kanji, openDetail);
+    detailElements.wrap.hidden = false;
+  }
+
+  detailElements.exit.addEventListener('click', () => {
+    detailElements.wrap.hidden = true;
+    searchWrap.hidden = false;
+    summary.hidden = false;
+    grid.hidden = false;
+  });
+
+  const rows = data.kanji.map((entry) => ({ entry, item: createCard(entry, data.level, openDetail) }));
   grid.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
@@ -193,7 +381,7 @@ function renderGrid(container, data) {
   searchInput.addEventListener('input', applyFilter);
   applyFilter();
 
-  container.replaceChildren(searchWrap, summary, grid, empty);
+  container.replaceChildren(searchWrap, summary, grid, empty, detailElements.wrap);
 }
 
 function renderError(container, message) {
