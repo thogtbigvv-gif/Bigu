@@ -1,0 +1,122 @@
+/* ==========================================================================
+   intro.css
+   The first-visit cinematic overlay. Everything here is gated on
+   html[data-intro="playing"], which the inline script in index.html sets
+   before first paint — so with scripting off, or on a session that has
+   already seen the intro, none of this applies and the app renders normally.
+   ========================================================================== */
+
+/* Hidden by default: the attribute is the opt-in, never the opt-out. A
+   no-JS visitor must never be left staring at an overlay nothing will
+   dismiss. */
+.intro {
+  display: none;
+}
+
+html[data-intro="playing"] .intro {
+  position: fixed;
+  inset: 0;
+  /* Above everything the app can raise: the mobile drawer sits at 50 and its
+     header at 45. */
+  z-index: 1000;
+  display: block;
+  overflow: hidden;
+}
+
+/* The dark ground, kept separate from the container so introSequence.js can
+   fade it while the logo above it stays fully opaque all the way to the
+   header. Fixed by the brief, not themed — the reveal reads the same in light
+   and dark, and the footage is authored against a near-black ground. */
+.intro__backdrop {
+  position: absolute;
+  inset: 0;
+  background-color: #121312;
+}
+
+/* The app waits behind the overlay. Opacity only — a transform or a
+   will-change here would make .app-shell the containing block for the
+   position:fixed nav drawer and its backdrop. */
+html[data-intro="playing"] .app-shell {
+  opacity: 0;
+}
+
+/* The "Skip to main content" link is a sibling of .app-shell, not a child, so
+   the inert attribute introOverlay.js sets does not cover it — without this it
+   stays tabbable and would drop focus into content nobody can see. */
+html[data-intro="playing"] .skip-link {
+  display: none;
+}
+
+/* The permanent logo holds still and invisible until the flying video hands
+   off to it in the sequence's last 200ms. */
+html[data-intro="playing"] .brand__mark {
+  opacity: 0;
+}
+
+/* -- The animation itself --------------------------------------------------------
+   Positioned at the origin with a corner transform-origin: logoFlight.js
+   drives position *and* size entirely through one transform, so a point in
+   the element maps to `translate + scale * point` with no extra terms. Width
+   is set from the mark size rather than the frame, since the frame is mostly
+   transparent padding around it.
+   ------------------------------------------------------------------------------- */
+.intro__video {
+  --intro-mark-size: clamp(7rem, 34vmin, 15rem);
+
+  position: fixed;
+  top: 0;
+  left: 0;
+  transform-origin: 0 0;
+  /* The bubble mark is 0.225 of the frame's width (see MARK_RECT). */
+  width: calc(var(--intro-mark-size) / 0.225);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  /* JS writes the resting transform before the first frame is shown; until
+     then keep it off-screen rather than flashing at 0,0. */
+  transform: translate3d(-100vw, 0, 0);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* -- Skip -------------------------------------------------------------------------
+   The supplied animation runs ten seconds, which is a long time to hold
+   somebody who only wanted to check a kanji. Skip is always available, and
+   Escape does the same thing.
+   ------------------------------------------------------------------------------- */
+.intro__skip {
+  position: fixed;
+  right: var(--space-md);
+  bottom: var(--space-md);
+  z-index: 1;
+  padding: var(--space-2xs) var(--space-md);
+  font-size: var(--text-sm);
+  letter-spacing: var(--tracking-wide);
+  color: rgba(233, 235, 228, 0.55);
+  background: none;
+  border: var(--border-width) solid rgba(233, 235, 228, 0.2);
+  border-radius: var(--radius-md);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.intro__skip:hover {
+  color: rgba(233, 235, 228, 0.9);
+  border-color: rgba(233, 235, 228, 0.45);
+}
+
+.intro__skip:focus-visible {
+  outline: 2px solid rgba(233, 235, 228, 0.7);
+  outline-offset: 2px;
+}
+
+/* Reduced motion: introSequence.js never plays the video or the flight on this
+   path, it only cross-dissolves. Hiding the video here as well means no frame
+   of it can appear even for a tick while that fade runs. */
+@media (prefers-reduced-motion: reduce) {
+  .intro__video {
+    display: none;
+  }
+
+  .intro__skip {
+    transition: none;
+  }
+}
