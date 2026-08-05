@@ -86,8 +86,12 @@
   color: var(--color-ash);
 }
 
+/* The composer is an underline, not a box, so its focus ring is drawn inside
+   the textarea's own bounds — an outward one would float in the whitespace
+   above the rule. The border-color shift stays as a secondary cue. */
 .journal__textarea:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
   border-color: var(--color-indigo);
 }
 

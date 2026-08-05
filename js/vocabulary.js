@@ -6,36 +6,15 @@
    text styling is invented here, only structure.
    ========================================================================== */
 
-import { progress } from './storage.js';
+import { isLearned, setLearned } from './review.js';
+import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/vocabulary.json';
 const VIEW_ID = 'vocabulary';
 
-let cachedData = null;
-
 /* -- Data ------------------------------------------------------------------------- */
 
-async function loadVocabulary() {
-  if (cachedData) return cachedData;
-
-  const response = await fetch(DATA_URL);
-  if (!response.ok) {
-    throw new Error(`Failed to load vocabulary (${response.status})`);
-  }
-
-  cachedData = await response.json();
-  return cachedData;
-}
-
-/* -- Progress ------------------------------------------------------------------------ */
-
-function isLearned(wordId) {
-  return Boolean(progress.get(wordId)?.learned);
-}
-
-function setLearned(wordId, learned) {
-  progress.set(wordId, { ...progress.get(wordId), learned });
-}
+const loadVocabulary = createContentLoader(DATA_URL, 'vocabulary');
 
 /* -- Card building -------------------------------------------------------------------- */
 
@@ -99,7 +78,7 @@ function createProgressButton(word, onChange) {
 
 function createCard(word, level, onProgressChange) {
   const item = document.createElement('li');
-  item.className = 'vocab-card';
+  item.className = 'card vocab-card';
   item.dataset.wordId = word.id;
 
   const head = document.createElement('div');
@@ -146,26 +125,6 @@ function matchesQuery(word, query) {
   if (!query) return true;
   const haystack = `${word.kanji ?? ''} ${word.kana} ${word.meaning}`.toLowerCase();
   return haystack.includes(query);
-}
-
-function createSearchField() {
-  const wrap = document.createElement('div');
-  wrap.className = 'search-field';
-
-  const label = document.createElement('label');
-  label.className = 'field-label';
-  label.htmlFor = 'vocabulary-search';
-  label.textContent = 'Search vocabulary';
-
-  const input = document.createElement('input');
-  input.type = 'search';
-  input.id = 'vocabulary-search';
-  input.className = 'field';
-  input.placeholder = 'Search by kanji, kana, or meaning';
-  input.autocomplete = 'off';
-
-  wrap.append(label, input);
-  return { wrap, input };
 }
 
 /* Reuses the same .toggle-chip look as the per-card "Mark as learned"
@@ -215,7 +174,11 @@ function getContentContainer(view) {
 }
 
 function renderList(container, data) {
-  const { wrap: searchWrap, input: searchInput } = createSearchField();
+  const { wrap: searchWrap, input: searchInput } = createSearchField({
+    id: 'vocabulary-search',
+    label: 'Search vocabulary',
+    placeholder: 'Search by kanji, kana, or meaning',
+  });
   const learnedToggle = createLearnedToggle();
   const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters();
 
@@ -279,28 +242,19 @@ function renderList(container, data) {
   container.replaceChildren(filters, categoryWrap, summary, list, empty);
 }
 
-function renderError(container, message) {
-  const p = document.createElement('p');
-  p.className = 'meta';
-  p.textContent = message;
-  container.replaceChildren(p);
-}
-
 /* -- Init ---------------------------------------------------------------------------------- */
 
 async function initVocabulary() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getContentContainer(view);
-
-  try {
-    const data = await loadVocabulary();
-    renderList(content, data);
-  } catch (error) {
-    console.error('[Bigu]', error);
-    renderError(content, 'Vocabulary could not be loaded right now.');
-  }
+  await loadIntoView(getContentContainer(view), {
+    skeleton: 'card-grid',
+    load: loadVocabulary,
+    render: renderList,
+    errorTitle: 'Vocabulary didn’t load.',
+    errorDetail: `The word list is in data/vocabulary.json. ${OFFLINE_HINT}`,
+  });
 }
 
 export { initVocabulary, loadVocabulary };

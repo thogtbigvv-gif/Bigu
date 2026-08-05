@@ -3,10 +3,9 @@
    Styles for the #lessons view built by lessons.js: a stack of collapsible
    lesson groups, each opening onto a word list (headword, meaning, and a
    mark-as-learned toggle per row), plus a per-lesson quiz panel that
-   swaps in over the list. Self-contained, like vocabulary.css and
-   journal.css — nothing here depends on another feature module's classes
-   (the quiz card and progress toggle borrow the generic `.card`,
-   `.button`, and `.toggle-chip` treatments, all already global).
+   swaps in over the list. Card chrome, buttons, and the progress toggle
+   come from the global `.card`, `.button`, and `.toggle-chip` treatments;
+   only content layout lives here.
    ========================================================================== */
 
 .lessons-meta {
@@ -23,9 +22,6 @@
 }
 
 .lesson-group {
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
   overflow: hidden;
 }
 
@@ -60,8 +56,12 @@
   background-color: var(--color-washi);
 }
 
+/* .lesson-group sets overflow:hidden to keep the body's corners rounded, which
+   would clip an outward outline — so this one is drawn inside the header's own
+   box (negative offset) rather than around it. */
 .lesson-group__header:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
   box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
@@ -118,7 +118,7 @@
 }
 
 .lesson-word__head {
-  font-family: var(--font-display), var(--font-jp);
+  font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-base);
   color: var(--color-ink);
 }
@@ -187,7 +187,7 @@
 
 .lessons-quiz-card__headword {
   margin: 0;
-  font-family: var(--font-display), var(--font-jp);
+  font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-2xl);
   color: var(--color-ink);
 }

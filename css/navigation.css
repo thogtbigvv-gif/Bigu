@@ -34,10 +34,16 @@
   background-color: var(--color-washi);
 }
 
+/* 100dvh, with 100vh as the fallback line above it for browsers that don't
+   know the dynamic unit. On mobile Safari and Chrome Android, 100vh is the
+   viewport height with the browser chrome *hidden* — always taller than
+   what's actually on screen — so the bottom of a full-height panel sits
+   under the URL bar and its last rows can't be reached. */
 .site-nav__panel {
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh;
   overflow-y: auto;
   padding: var(--space-md) var(--space-sm);
 }
@@ -89,8 +95,12 @@
   border-left-color: var(--color-indigo);
 }
 
+/* Inset offset: the sidebar's own right border sits a hairline away from the
+   link's edge, so a positive offset would clip against it. Zero keeps the
+   full 2px ring visible inside the row. */
 .site-nav__link:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
@@ -151,6 +161,14 @@
   font-size: var(--text-xs);
 }
 
+/* Housekeeping, set apart from the four study destinations above it by a
+   rule rather than by being buried at the bottom of a long list. */
+.site-nav__item--foot {
+  margin-block-start: var(--space-sm);
+  padding-block-start: var(--space-sm);
+  border-top: var(--border-width) solid var(--color-stone);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .site-nav__submenu-wrapper,
   .site-nav__submenu,
@@ -192,7 +210,8 @@
 }
 
 .site-nav__mobile-toggle:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
@@ -238,8 +257,34 @@
   background: rgba(0, 0, 0, 0.35);
 }
 
-/* -- Small screens: sidebar -> off-canvas drawer --------------------------------------- */
-@media (max-width: 640px) {
+/* -- Touch targets ------------------------------------------------------------------
+   At and below the 768px line every control the study loop touches gets a
+   44px minimum box (Apple HIG's figure; Material asks 48dp). WCAG 2.2 SC
+   2.5.8's 24px floor was already met — but a floor is not a target, and
+   the most-tapped control in the app is a chip on a card pressed hundreds
+   of times a session, where a mis-tap breaks the reader's flow.
+
+   min-height plus inline-flex centring, not padding: the hit area grows,
+   the visual weight barely moves.
+   -------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .site-nav__link,
+  .site-nav__mobile-toggle {
+    min-height: 2.75rem;
+  }
+
+  .site-nav__mobile-toggle {
+    width: 2.75rem;
+  }
+}
+
+/* -- Below 1024px: sidebar -> off-canvas drawer ------------------------------------------
+   Moved up from 640px. A fixed 16rem sidebar left a 768px tablet page with
+   448px of usable column — narrower than the 20rem card grids rendering
+   into it — so the 641-1024px band was the worst-performing width in the
+   app. See the breakpoint block in variables.css.
+   -------------------------------------------------------------------------------------------- */
+@media (max-width: 1024px) {
   .site-nav__mobile-toggle {
     display: inline-flex;
   }
@@ -251,6 +296,14 @@
     z-index: 45;
   }
 
+  /* translateX moves the drawer out of sight but leaves it in the
+     accessibility tree and the tab order — a keyboard or switch user on a
+     phone would tab through every link in a closed drawer before reaching
+     the page, and the hamburger that opens it comes after all of them in
+     DOM order. visibility:hidden takes them out of both, and because
+     visibility transitions discretely at the end of its duration the panel
+     stays on screen for the whole slide-out instead of blinking away at
+     the start. Same reasoning as .site-nav__submenu above. */
   .site-nav {
     position: fixed;
     top: 0;
@@ -258,12 +311,15 @@
     z-index: 50;
     width: min(17rem, 80vw);
     height: 100vh;
+    height: 100dvh;
+    visibility: hidden;
     transform: translateX(-100%);
     box-shadow: var(--shadow-md);
-    transition: transform var(--transition-base);
+    transition: transform var(--transition-base), visibility var(--transition-base);
   }
 
   .site-nav.is-open {
+    visibility: visible;
     transform: translateX(0);
   }
 }

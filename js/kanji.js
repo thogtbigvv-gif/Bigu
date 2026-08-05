@@ -1,9 +1,9 @@
 /* ==========================================================================
    kanji.js
    Loads data/kanji.json and renders it as a grid inside the #kanji view.
-   Same fetch-once/cache and progress-store mastery pattern as vocabulary.js
-   and grammar.js; laid out as a grid instead of a list since a single
-   character card carries far less content than a vocab or grammar card.
+   Same content.js loader and review.js mastery pattern as vocabulary.js and
+   grammar.js; laid out as a grid instead of a list since a single character
+   card carries far less content than a vocab or grammar card.
 
    Each card also has a "View details" button opening a full-character
    detail panel — Meaning, On, Kun, Stroke Order, Animation, Examples,
@@ -24,36 +24,16 @@
    the character is found in this same dataset, plain text otherwise).
    ========================================================================== */
 
-import { progress } from './storage.js';
+import { isLearned as isMastered, setLearned as setMastered } from './review.js';
+import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/kanji.json';
 const VIEW_ID = 'kanji';
 
-let cachedData = null;
-
 /* -- Data --------------------------------------------------------------------------- */
 
-async function loadKanji() {
-  if (cachedData) return cachedData;
+const loadKanji = createContentLoader(DATA_URL, 'kanji');
 
-  const response = await fetch(DATA_URL);
-  if (!response.ok) {
-    throw new Error(`Failed to load kanji (${response.status})`);
-  }
-
-  cachedData = await response.json();
-  return cachedData;
-}
-
-/* -- Progress ------------------------------------------------------------------------- */
-
-function isMastered(kanjiId) {
-  return Boolean(progress.get(kanjiId)?.learned);
-}
-
-function setMastered(kanjiId, learned) {
-  progress.set(kanjiId, { ...progress.get(kanjiId), learned });
-}
 
 /* -- Shared fields -------------------------------------------------------------------
    `examples` is optional; entries that don't have one yet (all of today's
@@ -125,7 +105,7 @@ function createMasteryButton(entry) {
 
 function createCard(entry, level, onOpenDetail) {
   const item = document.createElement('li');
-  item.className = 'kanji-card';
+  item.className = 'card kanji-card';
   item.dataset.kanjiId = entry.id;
 
   const head = document.createElement('div');
@@ -171,7 +151,7 @@ function createCard(entry, level, onOpenDetail) {
 
 function createDetailSection(title, content) {
   const section = document.createElement('div');
-  section.className = 'kanji-detail__section';
+  section.className = 'card kanji-detail__section';
 
   const heading = document.createElement('h3');
   heading.className = 'kanji-detail__section-title';
@@ -298,26 +278,6 @@ function matchesQuery(entry, query) {
   return haystack.includes(query);
 }
 
-function createSearchField() {
-  const wrap = document.createElement('div');
-  wrap.className = 'search-field';
-
-  const label = document.createElement('label');
-  label.className = 'field-label';
-  label.htmlFor = 'kanji-search';
-  label.textContent = 'Search kanji';
-
-  const input = document.createElement('input');
-  input.type = 'search';
-  input.id = 'kanji-search';
-  input.className = 'field';
-  input.placeholder = 'Search by character, reading, or meaning';
-  input.autocomplete = 'off';
-
-  wrap.append(label, input);
-  return { wrap, input };
-}
-
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function getContentContainer(view) {
@@ -331,7 +291,11 @@ function getContentContainer(view) {
 }
 
 function renderGrid(container, data) {
-  const { wrap: searchWrap, input: searchInput } = createSearchField();
+  const { wrap: searchWrap, input: searchInput } = createSearchField({
+    id: 'kanji-search',
+    label: 'Search kanji',
+    placeholder: 'Search by character, reading, or meaning',
+  });
 
   const summary = document.createElement('p');
   summary.className = 'kanji-meta meta';
@@ -384,28 +348,19 @@ function renderGrid(container, data) {
   container.replaceChildren(searchWrap, summary, grid, empty, detailElements.wrap);
 }
 
-function renderError(container, message) {
-  const p = document.createElement('p');
-  p.className = 'meta';
-  p.textContent = message;
-  container.replaceChildren(p);
-}
-
 /* -- Init ---------------------------------------------------------------------------------- */
 
 async function initKanji() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getContentContainer(view);
-
-  try {
-    const data = await loadKanji();
-    renderGrid(content, data);
-  } catch (error) {
-    console.error('[Bigu]', error);
-    renderError(content, 'Kanji could not be loaded right now.');
-  }
+  await loadIntoView(getContentContainer(view), {
+    skeleton: 'compact-grid',
+    load: loadKanji,
+    render: renderGrid,
+    errorTitle: 'Kanji didn’t load.',
+    errorDetail: `The character set is in data/kanji.json. ${OFFLINE_HINT}`,
+  });
 }
 
 export { initKanji, loadKanji };

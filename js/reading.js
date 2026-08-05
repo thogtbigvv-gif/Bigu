@@ -18,7 +18,7 @@
    an audio shadowing recorder.
    ========================================================================== */
 
-import { createContentLoader } from './content.js';
+import { createContentLoader, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/reading.json';
 const VIEW_ID = 'reading';
@@ -102,7 +102,7 @@ function buildStagePanel(stageId, passage) {
 
 function createPassageCard(passage, level, onOpen) {
   const item = document.createElement('li');
-  item.className = 'reading-card';
+  item.className = 'card reading-card';
   item.dataset.passageId = passage.id;
 
   const head = document.createElement('div');
@@ -173,7 +173,7 @@ function buildStageFlow() {
   tabs.setAttribute('aria-label', 'Reading stages');
 
   const panel = document.createElement('div');
-  panel.className = 'reading-stage__panel';
+  panel.className = 'card reading-stage__panel';
   panel.id = 'reading-stage-panel';
   panel.setAttribute('role', 'tabpanel');
   panel.tabIndex = 0;
@@ -271,28 +271,19 @@ function renderList(container, data) {
   container.replaceChildren(summary, list, stageElements.wrap);
 }
 
-function renderError(container, message) {
-  const p = document.createElement('p');
-  p.className = 'meta';
-  p.textContent = message;
-  container.replaceChildren(p);
-}
-
 /* -- Init ---------------------------------------------------------------------------------- */
 
 async function initReading() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getContentContainer(view);
-
-  try {
-    const data = await loadReading();
-    renderList(content, data);
-  } catch (error) {
-    console.error('[Bigu]', error);
-    renderError(content, 'Reading passages could not be loaded right now.');
-  }
+  await loadIntoView(getContentContainer(view), {
+    skeleton: 'card-grid',
+    load: loadReading,
+    render: renderList,
+    errorTitle: 'Reading passages didn’t load.',
+    errorDetail: `The passage set is in data/reading.json. ${OFFLINE_HINT}`,
+  });
 }
 
 export { initReading, loadReading };

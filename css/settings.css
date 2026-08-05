@@ -1,0 +1,63 @@
+/* ==========================================================================
+   settings.css
+   Styles for the #settings view built by js/settings.js. Card chrome comes
+   from cards.css's .card — only the content inside each group (the choice
+   row, the action stack, the destructive-action warning) is defined here.
+   ========================================================================== */
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+  max-width: 40rem;
+}
+
+.settings__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+/* An <h2> inside a card, so it needs the card-title size rather than the
+   section-heading size the type scale gives it by default. */
+.settings__group-title {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.settings__choice-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-2xs);
+}
+
+.settings__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  margin-block-start: var(--space-2xs);
+}
+
+/* -- Destructive action ------------------------------------------------------------
+   Restore overwrites every store in the browser. The confirm() dialog is
+   the real gate, but a reader deserves to know that before they open a
+   file picker, not after — so the consequence is stated in place, in the
+   error colour, rather than left to the modal.
+   ------------------------------------------------------------------------------------- */
+.settings-backup__warning {
+  margin: var(--space-xs) 0 0 0;
+  padding-block-start: var(--space-xs);
+  border-top: var(--border-width) solid var(--color-stone);
+  font-size: var(--text-sm);
+  color: var(--color-error);
+}
+
+.settings-backup__status {
+  margin: 0;
+}
+
+.settings-backup__status--error {
+  color: var(--color-error);
+}

@@ -25,10 +25,6 @@
 
 .reading-card {
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .reading-card__head {
@@ -41,7 +37,7 @@
 
 .reading-card__title {
   margin: 0;
-  font-family: var(--font-display), var(--font-jp);
+  font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-lg);
   color: var(--color-ink);
 }
@@ -81,7 +77,7 @@
 
 .reading-stage__title {
   margin: 0;
-  font-family: var(--font-display), var(--font-jp);
+  font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-lg);
   color: var(--color-ink);
 }
@@ -100,14 +96,11 @@
 
 .reading-stage__panel {
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .reading-stage__panel:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 

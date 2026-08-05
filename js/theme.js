@@ -12,6 +12,11 @@ const THEME_SETTING_KEY = 'theme';
 const THEMES = ['light', 'dark'];
 const DARK_QUERY = '(prefers-color-scheme: dark)';
 
+/* Fired on <document> whenever the applied theme changes, from anywhere.
+   The header toggle and the Settings view are two controls over one piece
+   of state, and without this the one you didn't touch goes stale. */
+const THEME_CHANGE_EVENT = 'bigu:themechange';
+
 function isValidTheme(value) {
   return THEMES.includes(value);
 }
@@ -29,14 +34,32 @@ function currentTheme() {
   return document.documentElement.dataset.theme || systemTheme();
 }
 
+/* What the reader chose, as opposed to what's currently applied: 'system'
+   when they've expressed no preference and the OS is deciding. */
+function themePreference() {
+  return storedTheme() ?? 'system';
+}
+
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
+  document.dispatchEvent(new CustomEvent(THEME_CHANGE_EVENT, { detail: { theme } }));
 }
 
 function setTheme(theme) {
   if (!isValidTheme(theme)) return;
   applyTheme(theme);
   settings.set(THEME_SETTING_KEY, theme);
+}
+
+/* 'system' isn't a stored value — it's the absence of one, so the existing
+   matchMedia listener in initTheme() starts following the OS again. */
+function setThemePreference(preference) {
+  if (preference === 'system') {
+    settings.remove(THEME_SETTING_KEY);
+    applyTheme(systemTheme());
+    return;
+  }
+  setTheme(preference);
 }
 
 function toggleTheme() {
@@ -70,13 +93,20 @@ function bindToggleButton(button) {
     button.setAttribute('aria-pressed', String(currentTheme() === 'dark'));
   };
 
-  button.addEventListener('click', () => {
-    toggleTheme();
-    sync();
-  });
+  button.addEventListener('click', toggleTheme);
 
+  document.addEventListener(THEME_CHANGE_EVENT, sync);
   window.matchMedia(DARK_QUERY).addEventListener('change', sync);
   sync();
 }
 
-export { initTheme, setTheme, toggleTheme, currentTheme, bindToggleButton };
+export {
+  initTheme,
+  setTheme,
+  setThemePreference,
+  themePreference,
+  toggleTheme,
+  currentTheme,
+  bindToggleButton,
+  THEME_CHANGE_EVENT,
+};

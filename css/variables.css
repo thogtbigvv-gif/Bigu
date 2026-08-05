@@ -13,15 +13,15 @@
   --color-washi-raised: #F4F5F0;  /* lighter panel/card surface */
   --color-ink: #1C2225;           /* sumi ink — primary text */
   --color-ink-soft: #454B45;      /* softened ink — secondary text */
-  --color-ash: #6E6A5E;           /* muted stone-grey — tertiary text, meta */
+  --color-ash: #6A6558;           /* muted stone-grey — tertiary text, meta (4.83:1 on washi) */
   --color-stone: #D7D2C4;         /* borders, dividers, hairlines */
 
   /* -- Color: accent -------------------------------------------------------- */
   --color-indigo: #2C4A5C;        /* ai-iro — links, primary interactive */
   --color-indigo-deep: #1D3340;   /* hover/active state of indigo */
   --color-bengara: #9C4A3C;       /* bengara red-ochre — signature accent, hanko */
-  --color-moss: #6B7A5E;          /* moss/bamboo green — success, mastered state */
-  --color-gold: #A98548;          /* muted gold — highlight, streaks, badges */
+  --color-moss: #4E6B4A;          /* moss/bamboo green — success, mastered state */
+  --color-gold: #7A5F2E;          /* muted gold — highlight, streaks, level tags */
 
   /* -- Color: feedback ------------------------------------------------------ */
   --color-error: #A13B2E;
@@ -88,13 +88,37 @@
   color-scheme: light;
 }
 
+/* -- Breakpoints -------------------------------------------------------------------
+   Not tokens — custom properties can't be used inside a media query, so this
+   block is the single written source of truth and every @media in the app
+   quotes one of these three numbers verbatim. Adding a fourth value anywhere
+   is the thing to avoid; widening or narrowing one of these is fine as long
+   as it happens here and in every module at once.
+
+     480px  — phone. Single-column grids, stacked button pairs, tighter padding.
+     768px  — small tablet / large phone. Touch-target floor (44px) applies at
+              or below this width; grid minimums relax.
+    1024px  — the sidebar/drawer line. Below it the nav is an off-canvas
+              drawer, above it a fixed 16rem sidebar. Set here rather than at
+              640px because a 16rem sidebar leaves a tablet-portrait page too
+              narrow for the 20rem card grids inside it.
+
+   Mirrored in js/navigation.js's MOBILE_QUERY — change both together.
+   ------------------------------------------------------------------------------------ */
+
 /* -- Dark theme overrides ---------------------------------------------------------
    Applied when theme.js sets [data-theme="dark"] on <html>. Same token names,
    inverted ground and brightened accents so text/interactive colors stay
    legible against a dark surface — no new tokens, no selectors outside :root
    are touched anywhere else.
+
+   :root-scoped, not a bare [data-theme="dark"]. An attribute selector on its
+   own matches *any* element, so anything in the app that happened to carry
+   data-theme="dark" — a settings button naming the option, say — became its
+   own dark-theme scope and rendered dark-mode ink on a light page. Only
+   <html> is ever the theme root.
    ------------------------------------------------------------------------------------ */
-[data-theme="dark"] {
+:root[data-theme="dark"] {
   /* -- Color: ground (ink & paper, inverted) --------------------------------- */
   --color-washi: #1A1D1A;         /* page background — night ground */
   --color-washi-raised: #242823;  /* panel/card surface, lighter than ground */

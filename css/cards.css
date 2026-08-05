@@ -15,7 +15,8 @@
 }
 
 /* Only for cards that are themselves a click target — most study cards
-   hold their own buttons instead, so this stays opt-in */
+   hold their own buttons instead, so this stays opt-in. Applied to
+   .lesson-group, whose whole header row is a disclosure button. */
 .card--interactive {
   transition: box-shadow var(--transition-base);
 }
@@ -32,20 +33,14 @@
   margin-block-end: var(--space-sm);
 }
 
+/* Body face, not the display face. A card title sits a few pixels from a
+   page heading and a vocabulary headword; when all three are Shippori
+   Mincho the eye gets no entry point into the card. Weight carries the
+   emphasis here instead. */
 .card__title {
-  font-family: var(--font-display);
   font-size: var(--text-md);
   font-weight: var(--weight-bold);
   color: var(--color-ink);
-}
-
-.card__footer {
-  display: flex;
-  align-items: center;
-  gap: var(--space-sm);
-  margin-block-start: var(--space-md);
-  padding-block-start: var(--space-md);
-  border-top: var(--border-width) solid var(--color-stone);
 }
 
 /* -- Empty state -------------------------------------------------------------------
@@ -64,4 +59,91 @@
   background-color: var(--color-washi-raised);
   border: var(--border-width) dashed var(--color-stone);
   border-radius: var(--radius-lg);
+}
+
+/* -- Error state -------------------------------------------------------------------
+   The counterpart to .empty-state, and deliberately the louder of the two:
+   an empty list is a normal thing to arrive at, a failed load is not. Same
+   card shape, solid error border instead of a dashed stone one, and room
+   for a retry button — built by content.js's renderError().
+   ------------------------------------------------------------------------------------- */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2xs);
+  padding: var(--space-lg);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-error);
+  border-radius: var(--radius-lg);
+}
+
+.error-state__title {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-error);
+}
+
+.error-state__detail {
+  margin: 0 0 var(--space-2xs) 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+/* -- Loading skeleton -------------------------------------------------------------
+   Stands in for content between first paint and the fetch resolving, in
+   the shape of whatever grid is coming — see the shape table in
+   js/content.js. Built from --color-stone so it reads as structure rather
+   than as content, and pulses slowly enough to say "working" without
+   drawing the eye. reset.css's global prefers-reduced-motion rule already
+   collapses the animation, so no separate query is needed here.
+   ------------------------------------------------------------------------------------- */
+.skeleton {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.skeleton--card-grid {
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.skeleton--compact-grid {
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: var(--space-md);
+}
+
+.skeleton--dashboard {
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+}
+
+.skeleton--list,
+.skeleton--rows {
+  grid-template-columns: 1fr;
+  gap: var(--space-sm);
+}
+
+.skeleton__block {
+  background-color: var(--color-stone);
+  border-radius: var(--radius-lg);
+  animation: skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.skeleton__block--card { height: 13rem; }
+.skeleton__block--compact { height: 9rem; }
+.skeleton__block--row { height: 7rem; }
+.skeleton__block--bar { height: 3.5rem; }
+
+/* Opacity only — a moving highlight sweep would be a second animated thing
+   on a screen that is, by definition, still waiting. */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.8; }
+}
+
+@media (max-width: 480px) {
+  .skeleton--card-grid,
+  .skeleton--dashboard {
+    grid-template-columns: 1fr;
+    gap: var(--space-sm);
+  }
 }

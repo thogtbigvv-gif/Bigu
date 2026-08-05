@@ -5,52 +5,39 @@
    Sits alongside vocabulary/grammar/kanji as reference material, not part
    of the practice deck.
 
-   Each word has its own "Mark as learned" toggle, same shape and store
-   as vocabulary/grammar/kanji's mastery buttons (storage.js's `progress`
-   map, keyed by each word's `id`), so a lesson's progress survives a
-   reload. Each lesson group also has its own "Quiz" button: a self-graded
-   flashcard round scoped to that lesson's word list (reveal → self-mark →
-   next, same interaction language as practice.js's deck quizzes), shown
-   in place of the lesson list — purely in-memory for the session, doesn't
-   touch the progress store, kept as a separate quick-recall tool rather
-   than another way to mark words learned.
+   Each word has its own "Mark as learned" toggle, same shape and store as
+   vocabulary/grammar/kanji's mastery buttons (review.js over storage.js's
+   `progress` map, keyed by each word's `id`), so a lesson's progress
+   survives a reload. Each lesson group also has its own "Quiz" button: a
+   self-graded flashcard round scoped to that lesson's word list (reveal →
+   self-mark → next, same interaction language as practice.js's deck
+   quizzes), shown in place of the lesson list.
+
+   That quiz grades into the shared schedule like every other grading
+   surface. It deliberately didn't, once — it was kept as a separate
+   quick-recall tool — but the result was that "known" meant two different
+   things depending on which screen you were on: passing a word in the quiz
+   left it unlearned while tapping the chip beside it marked it learned.
+   One progress model is worth more than the separation was.
    ========================================================================== */
 
-import { progress } from './storage.js';
+import { grade as gradeItem, isLearned, setLearned, shuffled } from './review.js';
+import { createContentLoader, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/lessons.json';
 const VIEW_ID = 'lessons';
 
-let cachedData = null;
-
 /* -- Data ------------------------------------------------------------------------- */
 
-async function loadLessons() {
-  if (cachedData) return cachedData;
-
-  const response = await fetch(DATA_URL);
-  if (!response.ok) {
-    throw new Error(`Failed to load lessons (${response.status})`);
-  }
-
-  cachedData = await response.json();
-  return cachedData;
-}
+const loadLessons = createContentLoader(DATA_URL, 'lessons');
 
 /* -- Progress ------------------------------------------------------------------------
-   Same shape as vocabulary.js's isLearned/setLearned: one shared
-   `progress` map store, keyed by id, `{ learned: boolean }`. Lesson word
+   The shared schedule in review.js, same as every other view. Lesson word
    ids (l1-01, l1-02…) live in their own namespace, so they never collide
-   with vocabulary/grammar/kanji's n3-/gr-/kj- ids in the same store.
+   with vocabulary/grammar/kanji's n3-/gr-/kj- ids in the same store — and
+   practice.js routes that `l` prefix back to this module's card layout, so
+   lesson words join the review pool instead of being a dead end.
    -------------------------------------------------------------------------------------- */
-
-function isLearned(wordId) {
-  return Boolean(progress.get(wordId)?.learned);
-}
-
-function setLearned(wordId, learned) {
-  progress.set(wordId, { ...progress.get(wordId), learned });
-}
 
 function countLearned(words) {
   return words.filter((entry) => isLearned(entry.id)).length;
@@ -80,6 +67,10 @@ function createHeadword(entry) {
   return ruby;
 }
 
+/* Returns the button and its own sync(), so the row can be refreshed from
+   outside \u2014 the lesson quiz grades the same words this chip reflects, and
+   coming back from a round with the chips still showing the old state was
+   the visible half of the two-meanings-of-"known" problem. */
 function createProgressButton(entry, onChange) {
   const button = document.createElement('button');
   button.type = 'button';
@@ -98,7 +89,7 @@ function createProgressButton(entry, onChange) {
   });
 
   sync();
-  return button;
+  return { button, sync };
 }
 
 function createWordRow(entry, onProgressChange) {
@@ -113,8 +104,9 @@ function createWordRow(entry, onProgressChange) {
   meaning.className = 'lesson-word__meaning meta';
   meaning.textContent = entry.english;
 
-  item.append(head, meaning, createProgressButton(entry, onProgressChange));
-  return item;
+  const { button, sync } = createProgressButton(entry, onProgressChange);
+  item.append(head, meaning, button);
+  return { item, sync };
 }
 
 /* -- Lesson groups ---------------------------------------------------------------------
@@ -131,7 +123,7 @@ function createLessonGroup(lesson, index, onQuiz) {
   const expanded = index === 0;
 
   const li = document.createElement('li');
-  li.className = 'lesson-group';
+  li.className = 'card card--interactive lesson-group';
 
   const heading = document.createElement('h2');
   heading.className = 'lesson-group__heading';
@@ -185,7 +177,8 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   const list = document.createElement('ul');
   list.className = 'lesson-word-list';
-  list.append(...lesson.words.map((entry) => createWordRow(entry, updateCount)));
+  const rows = lesson.words.map((entry) => createWordRow(entry, updateCount));
+  list.append(...rows.map((row) => row.item));
   body.append(list);
 
   button.addEventListener('click', () => {
@@ -195,7 +188,14 @@ function createLessonGroup(lesson, index, onQuiz) {
   });
 
   li.append(heading, body);
-  return li;
+
+  return {
+    element: li,
+    refresh() {
+      updateCount();
+      for (const row of rows) row.sync();
+    },
+  };
 }
 
 /* -- Quiz --------------------------------------------------------------------------------
@@ -203,18 +203,11 @@ function createLessonGroup(lesson, index, onQuiz) {
    (headword shown via the same createHeadword used in the reference
    list — readings stay visible, only the English meaning hides behind
    "Show meaning"), self-mark each as "Still learning" or "I knew it",
-   then a summary with the round's score. Nothing here writes to
-   storage.js; closing the quiz just returns to the lesson list.
+   then a summary with the round's score. Each grade writes to the shared
+   schedule in review.js, so a word passed here moves out along the same
+   ladder it would from the Review deck; closing the quiz returns to the
+   lesson list, whose learned counts refresh to match.
    -------------------------------------------------------------------------------------- */
-
-function shuffled(items) {
-  const copy = items.slice();
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
 
 function buildQuizPanel() {
   const panel = document.createElement('div');
@@ -315,7 +308,7 @@ function buildQuizPanel() {
   };
 }
 
-function createQuizController(elements, { onExit }) {
+function createQuizController(elements, { onExit, onGrade }) {
   const state = { words: [], queue: [], index: 0, correct: 0 };
 
   function showPhase(phase) {
@@ -352,7 +345,9 @@ function createQuizController(elements, { onExit }) {
   }
 
   function grade(knew) {
+    gradeItem(state.queue[state.index].id, knew);
     if (knew) state.correct += 1;
+    onGrade();
     advance();
   }
 
@@ -436,15 +431,24 @@ function renderLessons(container, lessons) {
   list.className = 'lessons-list';
 
   const quizElements = buildQuizPanel();
+
+  const groups = [];
+
   const quizController = createQuizController(quizElements, {
     onExit() {
       quizElements.panel.hidden = true;
       intro.hidden = false;
       list.hidden = false;
     },
+    // A quiz round changes the same records the lesson rows display, so the
+    // list behind the panel is brought back into agreement as it happens
+    // rather than being left showing what was true before the round.
+    onGrade() {
+      for (const group of groups) group.refresh();
+    },
   });
 
-  list.append(
+  groups.push(
     ...lessons.map((lesson, index) =>
       createLessonGroup(lesson, index, (chosenLesson) => {
         intro.hidden = true;
@@ -454,14 +458,9 @@ function renderLessons(container, lessons) {
     ),
   );
 
-  container.replaceChildren(intro, list, quizElements.panel);
-}
+  list.append(...groups.map((group) => group.element));
 
-function renderError(container, message) {
-  const p = document.createElement('p');
-  p.className = 'meta';
-  p.textContent = message;
-  container.replaceChildren(p);
+  container.replaceChildren(intro, list, quizElements.panel);
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
@@ -470,15 +469,13 @@ async function initLessons() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getContentContainer(view);
-
-  try {
-    const data = await loadLessons();
-    renderLessons(content, data);
-  } catch (error) {
-    console.error('[Bigu]', error);
-    renderError(content, 'Lessons could not be loaded right now.');
-  }
+  await loadIntoView(getContentContainer(view), {
+    skeleton: 'rows',
+    load: loadLessons,
+    render: renderLessons,
+    errorTitle: 'Lessons didn’t load.',
+    errorDetail: `The lesson list is in data/lessons.json. ${OFFLINE_HINT}`,
+  });
 }
 
-export { initLessons };
+export { initLessons, loadLessons, createHeadword };

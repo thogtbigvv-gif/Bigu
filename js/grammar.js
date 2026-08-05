@@ -1,41 +1,21 @@
 /* ==========================================================================
    grammar.js
    Loads data/grammar.json and renders it as a list inside the #grammar
-   view. Follows vocabulary.js's shape: same fetch-once/cache pattern, same
-   progress-store mastery toggle, same createElement/append DOM building —
-   only the card fields differ.
+   view. Follows vocabulary.js's shape: same content.js loader and load/
+   skeleton/error cycle, same review.js mastery toggle, same createElement/
+   append DOM building — only the card fields differ.
    ========================================================================== */
 
-import { progress } from './storage.js';
+import { isLearned as isMastered, setLearned as setMastered } from './review.js';
+import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/grammar.json';
 const VIEW_ID = 'grammar';
 
-let cachedData = null;
-
 /* -- Data --------------------------------------------------------------------------- */
 
-async function loadGrammar() {
-  if (cachedData) return cachedData;
+const loadGrammar = createContentLoader(DATA_URL, 'grammar');
 
-  const response = await fetch(DATA_URL);
-  if (!response.ok) {
-    throw new Error(`Failed to load grammar (${response.status})`);
-  }
-
-  cachedData = await response.json();
-  return cachedData;
-}
-
-/* -- Progress ------------------------------------------------------------------------- */
-
-function isMastered(pointId) {
-  return Boolean(progress.get(pointId)?.learned);
-}
-
-function setMastered(pointId, learned) {
-  progress.set(pointId, { ...progress.get(pointId), learned });
-}
 
 /* -- Card building --------------------------------------------------------------------- */
 
@@ -100,7 +80,7 @@ function createMasteryButton(point) {
 
 function createCard(point, level) {
   const item = document.createElement('li');
-  item.className = 'grammar-card';
+  item.className = 'card grammar-card';
   item.dataset.pointId = point.id;
 
   const head = document.createElement('div');
@@ -156,26 +136,6 @@ function matchesQuery(point, query) {
   return haystack.includes(query);
 }
 
-function createSearchField() {
-  const wrap = document.createElement('div');
-  wrap.className = 'search-field';
-
-  const label = document.createElement('label');
-  label.className = 'field-label';
-  label.htmlFor = 'grammar-search';
-  label.textContent = 'Search grammar';
-
-  const input = document.createElement('input');
-  input.type = 'search';
-  input.id = 'grammar-search';
-  input.className = 'field';
-  input.placeholder = 'Search by pattern or meaning';
-  input.autocomplete = 'off';
-
-  wrap.append(label, input);
-  return { wrap, input };
-}
-
 /* One chip per JLPT level, multi-select. Reuses the same .toggle-chip
    look and pressed/unpressed language as the per-card mastery button. */
 function createCategoryFilters() {
@@ -209,7 +169,11 @@ function getContentContainer(view) {
 }
 
 function renderList(container, data) {
-  const { wrap: searchWrap, input: searchInput } = createSearchField();
+  const { wrap: searchWrap, input: searchInput } = createSearchField({
+    id: 'grammar-search',
+    label: 'Search grammar',
+    placeholder: 'Search by pattern or meaning',
+  });
   const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters();
 
   const summary = document.createElement('p');
@@ -262,28 +226,19 @@ function renderList(container, data) {
   container.replaceChildren(searchWrap, categoryWrap, summary, list, empty);
 }
 
-function renderError(container, message) {
-  const p = document.createElement('p');
-  p.className = 'meta';
-  p.textContent = message;
-  container.replaceChildren(p);
-}
-
 /* -- Init ---------------------------------------------------------------------------------- */
 
 async function initGrammar() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getContentContainer(view);
-
-  try {
-    const data = await loadGrammar();
-    renderList(content, data);
-  } catch (error) {
-    console.error('[Bigu]', error);
-    renderError(content, 'Grammar points could not be loaded right now.');
-  }
+  await loadIntoView(getContentContainer(view), {
+    skeleton: 'list',
+    load: loadGrammar,
+    render: renderList,
+    errorTitle: 'Grammar points didn’t load.',
+    errorDetail: `The pattern list is in data/grammar.json. ${OFFLINE_HINT}`,
+  });
 }
 
 export { initGrammar, loadGrammar };
