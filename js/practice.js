@@ -1,21 +1,36 @@
 /* ==========================================================================
    practice.js
    Self-graded flashcard quiz for the #practice view. A mode selector lets
-   the reader choose which deck to drill — vocabulary, grammar, or kanji —
-   each described by a small adapter in DECKS below (how to fill the card
-   front, the secondary line, and the reveal-answer fields). Reveal → self-
-   mark → next. Marking a card writes to the same progress store every
-   list view uses (so a card graded "I knew it" here shows as
-   learned/mastered there too), and each finished session is logged to the
-   practice store, tagged with its mode, for dashboard.js. A small history
-   block reads that same store back to list the most recent rounds (mode,
-   score, when), refreshed after every finished session.
+   the reader choose which deck to drill — everything due, or one of
+   lessons / vocabulary / grammar / kanji, or just the items they've been
+   getting wrong — each described by a small adapter in DECKS below (how to
+   fill the card front, the secondary line, and the reveal-answer fields).
+   Reveal → self-mark → next.
+
+   Grading goes through review.js, which is what decides when a card comes
+   back. Session contents come from the same place: due items first, oldest
+   due date first, then new items to top up. This used to be a shuffle of
+   whatever wasn't ticked off yet, which got less useful the more content
+   the app had — the opposite of how a review system should scale.
+
+   Each finished session is logged to the practice store, tagged with its
+   mode, for dashboard.js. A small history block reads that same store back
+   to list the most recent rounds (mode, score, when), refreshed after every
+   finished session.
    ========================================================================== */
 
-import { progress, practice, settings } from './storage.js';
+import { practice, settings } from './storage.js';
+import {
+  buildSession,
+  countDue,
+  describeNextReview,
+  getRecord,
+  grade as gradeItem,
+} from './review.js';
 import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
+import { loadLessons, createHeadword as createLessonHeadword } from './lessons.js';
 
 const VIEW_ID = 'practice';
 const SESSION_SIZE = 10;
@@ -110,12 +125,44 @@ const DECKS = {
     },
   },
 
-  /* "Review mistakes" isn't a content deck of its own — it's a live pool of
-     whatever's currently marked "Still learning" across vocabulary, grammar,
-     and kanji together. Each item still needs its real deck's card layout,
-     so every method here just looks up which deck the item's id belongs to
-     (the "n3-"/"gr-"/"kj-" prefix already used throughout the data) and
-     delegates to that deck's own fillFront/secondary/fillAnswer. */
+  lessons: {
+    label: 'Lessons',
+    fillFront(container, entry) {
+      container.replaceChildren(createLessonHeadword(entry));
+    },
+    secondary() {
+      // A lesson word carries no part of speech or structure line — the
+      // reading is already in the furigana on the front.
+      return { text: '', className: null, lang: null };
+    },
+    fillAnswer(elements, entry) {
+      elements.meaning.textContent = entry.english;
+      elements.exampleJp.textContent = '';
+      elements.exampleReading.textContent = '';
+      elements.exampleEn.textContent = '';
+    },
+  },
+
+  /* Two pools rather than content decks of their own: "Due today" is
+     everything the schedule says is ready across all four decks, and
+     "Review mistakes" is everything currently sitting at level 0. Each item
+     still needs its real deck's card layout, so every method here looks up
+     which deck the item's id belongs to (the "l"/"n3-"/"gr-"/"kj-" prefix
+     already used throughout the data) and delegates to that deck's own
+     fillFront/secondary/fillAnswer. */
+  due: {
+    label: 'Due today',
+    fillFront(container, item) {
+      deckForItem(item)?.fillFront(container, item);
+    },
+    secondary(item) {
+      return deckForItem(item)?.secondary(item) ?? { text: '', className: null, lang: null };
+    },
+    fillAnswer(elements, item) {
+      deckForItem(item)?.fillAnswer(elements, item);
+    },
+  },
+
   mistakes: {
     label: 'Review mistakes',
     fillFront(container, item) {
@@ -130,7 +177,13 @@ const DECKS = {
   },
 };
 
+/* Lesson ids are l1-01, l2-14, … — checked first because "l" is a looser
+   test than the three-character prefixes below it. Adding lessons here is
+   what lets lesson vocabulary be reviewed at all: it's the beginner
+   on-ramp, and until now it was the one deck that could be marked learned
+   but never scheduled. */
 function deckKeyForItemId(id) {
+  if (/^l\d+-/.test(id)) return 'lessons';
   if (id.startsWith('n3-')) return 'vocabulary';
   if (id.startsWith('gr-')) return 'grammar';
   if (id.startsWith('kj-')) return 'kanji';
@@ -147,34 +200,9 @@ function deckForItem(item) {
   return key ? DECKS[key] : null;
 }
 
-const DECK_KEYS = Object.keys(DECKS);
-
-/* -- Session selection ------------------------------------------------------------------
-   Unlearned items are prioritized so practice time goes where it's useful;
-   once everything is learned (or there simply aren't SESSION_SIZE unlearned
-   items left) the pool tops up from the full set instead of running short.
-   -------------------------------------------------------------------------------------------- */
-
-function shuffled(items) {
-  const copy = items.slice();
-  for (let i = copy.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
-function isLearned(itemId) {
-  return Boolean(progress.get(itemId)?.learned);
-}
-
-function buildSession(items) {
-  const unlearned = shuffled(items.filter((item) => !isLearned(item.id)));
-  if (unlearned.length >= SESSION_SIZE) return unlearned.slice(0, SESSION_SIZE);
-
-  const learned = shuffled(items.filter((item) => isLearned(item.id)));
-  return [...unlearned, ...learned].slice(0, Math.min(SESSION_SIZE, items.length));
-}
+/* "Due today" leads: it's the deck that answers the question the Dashboard
+   just asked, and the one a reader should be in most days. */
+const DECK_KEYS = ['due', 'lessons', 'vocabulary', 'grammar', 'kanji', 'mistakes'];
 
 /* -- View controller ------------------------------------------------------------------------
    Three phases live in the same markup, toggled with `hidden`: an intro
@@ -196,11 +224,16 @@ function buildView(view) {
   modeGroup.setAttribute('role', 'group');
   modeGroup.setAttribute('aria-label', 'Choose what to practice');
 
+  /* .toggle-chip, not a bespoke .practice__mode-button. The two were
+     visually near-identical and had already drifted: the local copy was
+     missing both the focus ring and the press feedback the shared chip has,
+     which made this deck picker the one control in the app with no focus
+     indicator at all. practice.css keeps only the row layout. */
   const modeButtons = {};
   for (const key of DECK_KEYS) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'practice__mode-button';
+    button.className = 'toggle-chip practice__mode-button';
     button.textContent = DECKS[key].label;
     button.dataset.mode = key;
     modeButtons[key] = button;
@@ -209,7 +242,7 @@ function buildView(view) {
 
   /* Intro */
   const intro = document.createElement('div');
-  intro.className = 'practice__intro';
+  intro.className = 'card practice__intro';
 
   const introText = document.createElement('p');
   introText.className = 'practice__intro-text';
@@ -217,7 +250,7 @@ function buildView(view) {
   const startButton = document.createElement('button');
   startButton.type = 'button';
   startButton.className = 'button button--primary';
-  startButton.textContent = 'Start practice';
+  startButton.textContent = 'Start review';
 
   intro.append(introText, startButton);
 
@@ -231,7 +264,7 @@ function buildView(view) {
   status.setAttribute('aria-live', 'polite');
 
   const card = document.createElement('div');
-  card.className = 'practice-card';
+  card.className = 'card practice-card';
 
   const headword = document.createElement('p');
   headword.className = 'practice-card__headword';
@@ -280,15 +313,31 @@ function buildView(view) {
 
   grade.append(stillLearningButton, knewItButton);
 
+  /* Feedback on the last grade — "back in 3 days". The schedule is the whole
+     point of grading honestly, so it shouldn't be invisible. */
+  const scheduleNote = document.createElement('p');
+  scheduleNote.className = 'practice__schedule-note meta';
+  scheduleNote.setAttribute('aria-live', 'polite');
+
   const shortcutHint = document.createElement('p');
   shortcutHint.className = 'practice__shortcut-hint meta';
   shortcutHint.textContent = 'Space to reveal · 1 still learning · 2 knew it';
 
-  session.append(status, card, revealButton, grade, shortcutHint);
+  /* The mode picker and history are hidden during a round on purpose, so
+     switching decks can't happen mid-session — but that left no way out of
+     one at all except the nav. The lessons quiz has always had its exit
+     button; this is the same control, kept quiet and at the foot so it
+     never competes with the two grade buttons. */
+  const endButton = document.createElement('button');
+  endButton.type = 'button';
+  endButton.className = 'button button--secondary practice__end';
+  endButton.textContent = 'End session';
+
+  session.append(status, card, revealButton, grade, scheduleNote, shortcutHint, endButton);
 
   /* Summary */
   const summary = document.createElement('div');
-  summary.className = 'practice__summary';
+  summary.className = 'card practice__summary';
   summary.hidden = true;
 
   const summaryText = document.createElement('p');
@@ -297,7 +346,7 @@ function buildView(view) {
   const againButton = document.createElement('button');
   againButton.type = 'button';
   againButton.className = 'button button--primary';
-  againButton.textContent = 'Practice again';
+  againButton.textContent = 'Review again';
 
   summary.append(summaryText, againButton);
 
@@ -325,9 +374,10 @@ function buildView(view) {
     modeGroup, modeButtons,
     intro, introText, startButton,
     session, status, headword, pos, answer, meaning, exampleJp, exampleReading, exampleEn,
-    revealButton, grade, stillLearningButton, knewItButton,
+    revealButton, grade, stillLearningButton, knewItButton, scheduleNote, endButton,
     summary, summaryText, againButton,
     history, historyList, historyEmpty,
+    card,
   };
 }
 
@@ -344,7 +394,7 @@ function applySecondary(elements, deck, item) {
 }
 
 function initController(elements, decks) {
-  const initialMode = DECK_KEYS.includes(settings.get(MODE_SETTING_KEY)) ? settings.get(MODE_SETTING_KEY) : 'vocabulary';
+  const initialMode = DECK_KEYS.includes(settings.get(MODE_SETTING_KEY)) ? settings.get(MODE_SETTING_KEY) : 'due';
   const state = { mode: initialMode, queue: [], index: 0, correct: 0 };
 
   function currentDeck() {
@@ -357,31 +407,41 @@ function initController(elements, decks) {
     }
   }
 
+  /* What the reader is about to get, in the schedule's own terms rather than
+     "N items in the deck" \u2014 the point of the ladder is that the number that
+     matters is what's ready, not how much content exists. */
   function updateIntroText() {
     const deck = currentDeck();
-    const count = deck.items.length;
+    const items = deck.items;
 
-    if (state.mode === 'mistakes') {
-      if (count === 0) {
-        elements.introText.textContent =
-          'No mistakes to review right now \u2014 everything you\u2019ve seen so far is marked "I knew it".';
-        elements.startButton.hidden = true;
-        return;
-      }
-      elements.startButton.hidden = false;
-      elements.introText.textContent =
-        `${count} item${count === 1 ? '' : 's'} marked "Still learning", pulled from every deck. A round covers up to ${SESSION_SIZE}.`;
-      return;
-    }
-
-    if (count === 0) {
-      elements.introText.textContent = `No ${deck.label.toLowerCase()} available to practice with yet.`;
+    if (items.length === 0) {
+      elements.introText.textContent = state.mode === 'mistakes'
+        ? 'Nothing to re-drill \u2014 nothing you\u2019ve seen is currently marked "Still learning".'
+        : `No ${deck.label.toLowerCase()} available to practice with yet.`;
       elements.startButton.hidden = true;
       return;
     }
+
     elements.startButton.hidden = false;
+    const { due, new: fresh } = countDue(items);
+
+    if (state.mode === 'mistakes') {
+      elements.introText.textContent =
+        `${items.length} item${items.length === 1 ? '' : 's'} sitting at the bottom of the ladder, pulled from every deck. A round covers up to ${SESSION_SIZE}.`;
+      return;
+    }
+
+    if (due === 0 && fresh === 0) {
+      elements.introText.textContent =
+        `Nothing due in ${deck.label.toLowerCase()} \u2014 everything is scheduled ahead. Starting a round reviews the items closest to coming back.`;
+      return;
+    }
+
+    const parts = [];
+    if (due > 0) parts.push(`${due} due`);
+    if (fresh > 0) parts.push(`${fresh} not started`);
     elements.introText.textContent =
-      `${count} ${deck.label.toLowerCase()} items in the deck. A round covers up to ${SESSION_SIZE}, unlearned items first.`;
+      `${parts.join(' \u00b7 ')}. A round covers up to ${SESSION_SIZE}, due items first.`;
   }
 
   function selectMode(mode) {
@@ -412,6 +472,14 @@ function initController(elements, decks) {
     elements.answer.hidden = true;
     elements.grade.hidden = true;
     elements.revealButton.hidden = false;
+    elements.scheduleNote.textContent = '';
+
+    // A 120ms cross-fade on the card, so the eye tracks that one card
+    // replaced another instead of the text simply being different. Restarting
+    // the animation needs the class off for a frame first. See the motion
+    // note in practice.css.
+    elements.card.classList.remove('is-advancing');
+    requestAnimationFrame(() => elements.card.classList.add('is-advancing'));
   }
 
   function formatSessionDate(timestamp) {
@@ -429,7 +497,7 @@ function initController(elements, decks) {
 
     for (const entry of recent) {
       const item = document.createElement('li');
-      item.className = 'practice__history-item';
+      item.className = 'card practice__history-item';
 
       const mode = document.createElement('span');
       mode.className = 'practice__history-mode';
@@ -448,11 +516,18 @@ function initController(elements, decks) {
     }
   }
 
-  function finishSession() {
-    practice.add({ total: state.queue.length, correct: state.correct, mode: state.mode });
-    elements.summaryText.textContent =
-      `${state.correct} / ${state.queue.length} marked "I knew it" this round.`;
+  /* `graded` is how many cards were actually answered, which is not the queue
+     length once "End session" exists — logging a 3/10 for a round the reader
+     stopped after three cards would quietly punish them for stopping. */
+  function finishSession(graded = state.queue.length) {
+    if (graded > 0) {
+      practice.add({ total: graded, correct: state.correct, mode: state.mode });
+    }
+    elements.summaryText.textContent = graded === 0
+      ? 'Session ended before any cards were graded.'
+      : `${state.correct} / ${graded} marked "I knew it" this round.`;
     renderHistory();
+    updateIntroText();
     showPhase('summary');
   }
 
@@ -465,16 +540,39 @@ function initController(elements, decks) {
     }
   }
 
-  function grade(learned) {
+  /* One animated thing per interaction: a single flash on the card's border,
+     moss for a pass and a 4px settle for a miss. The class is removed on
+     animationend rather than by the next renderCard, because advance() runs
+     immediately and would otherwise cancel the flash before it was seen. */
+  function flashCard(kind) {
+    const card = elements.card;
+    card.classList.remove('is-correct', 'is-incorrect');
+    // Reading offsetWidth forces the removal to take effect before the class
+    // goes back on, so consecutive grades each get their own animation.
+    void card.offsetWidth;
+    card.classList.add(kind);
+    card.addEventListener('animationend', () => card.classList.remove(kind), { once: true });
+  }
+
+  function grade(knewIt) {
     const item = state.queue[state.index];
-    progress.set(item.id, { ...progress.get(item.id), learned });
-    if (learned) state.correct += 1;
+    const record = gradeItem(item.id, knewIt);
+    if (knewIt) state.correct += 1;
+
+    flashCard(knewIt ? 'is-correct' : 'is-incorrect');
     advance();
+
+    // Set after advance(), which clears the note as part of rendering the
+    // next card — this is feedback about the grade just given, so it has to
+    // survive that.
+    elements.scheduleNote.textContent = describeNextReview(record) === 'again this round'
+      ? 'Still learning — this one comes back today.'
+      : `Marked known — ${describeNextReview(record)}.`;
   }
 
   function startSession() {
     const deck = currentDeck();
-    state.queue = buildSession(deck.items);
+    state.queue = buildSession(deck.items, SESSION_SIZE);
     state.index = 0;
     state.correct = 0;
 
@@ -503,6 +601,11 @@ function initController(elements, decks) {
 
   elements.stillLearningButton.addEventListener('click', () => grade(false));
   elements.knewItButton.addEventListener('click', () => grade(true));
+
+  // Ends the round at whatever card the reader is on. state.index is the
+  // number already graded, since renderCard shows queue[index] and grade()
+  // advances past it.
+  elements.endButton.addEventListener('click', () => finishSession(state.index));
 
   /* Keyboard shortcuts: Space/Enter reveals, 1/2 grade — only while the
      practice view is the active hash and a card is actually on screen, so
@@ -533,6 +636,18 @@ function initController(elements, decks) {
     }
   }
 
+  // Escape ends the round, matching the new "End session" button. Only while
+  // a card is on screen, so it can't interfere with the mobile drawer's own
+  // Escape handling on any other view.
+  function handleEscape(event) {
+    if (event.key !== 'Escape') return;
+    if (location.hash.slice(1) !== VIEW_ID) return;
+    if (elements.session.hidden) return;
+    finishSession(state.index);
+  }
+
+  document.addEventListener('keydown', handleEscape);
+
   document.addEventListener('keydown', handleKeydown);
 
   // The deck counts this screen reports go stale while the reader is on
@@ -562,25 +677,41 @@ async function initPractice() {
   const elements = buildView(view);
 
   try {
-    const [vocabData, grammarData, kanjiData] = await Promise.all([
+    const [vocabData, grammarData, kanjiData, lessonData] = await Promise.all([
       loadVocabulary(),
       loadGrammar(),
       loadKanji(),
+      loadLessons(),
     ]);
 
+    const lessonWords = lessonData.flatMap((lesson) => lesson.words);
+    const everything = [...lessonWords, ...vocabData.words, ...grammarData.points, ...kanjiData.kanji];
+
     const decks = {
+      lessons: { ...DECKS.lessons, items: lessonWords },
       vocabulary: { ...DECKS.vocabulary, items: vocabData.words },
       grammar: { ...DECKS.grammar, items: grammarData.points },
       kanji: { ...DECKS.kanji, items: kanjiData.kanji },
     };
-    // A getter, not a static array: what counts as "still learning" changes
-    // as the reader grades cards elsewhere, so this has to be read fresh
-    // every time rather than computed once at load.
+
+    // Getters, not static arrays: what's due and what's still being missed
+    // both change as the reader grades cards here and elsewhere, so each has
+    // to be read fresh every time rather than computed once at load.
+    decks.due = {
+      ...DECKS.due,
+      get items() {
+        return everything.filter((item) => deckKeyForItemId(item.id) !== null);
+      },
+    };
+
     decks.mistakes = {
       ...DECKS.mistakes,
       get items() {
-        return [...vocabData.words, ...grammarData.points, ...kanjiData.kanji].filter(
-          (item) => progress.get(item.id)?.learned === false && deckKeyForItemId(item.id) !== null,
+        return everything.filter(
+          (item) => {
+            const record = getRecord(item.id);
+            return record.seen && record.level === 0 && deckKeyForItemId(item.id) !== null;
+          },
         );
       },
     };
@@ -589,7 +720,8 @@ async function initPractice() {
   } catch (error) {
     console.error('[Bigu]', error);
     elements.modeGroup.hidden = true;
-    elements.introText.textContent = 'Practice decks could not be loaded right now.';
+    elements.introText.textContent =
+      'The review decks didn’t load. They’re built from the four JSON files in data/, and at least one didn’t arrive — if you opened this page as a file, it needs to run from a local server.';
     elements.startButton.hidden = true;
   }
 }

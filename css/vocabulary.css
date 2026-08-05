@@ -1,9 +1,16 @@
 /* ==========================================================================
    vocabulary.css
-   Styles for the #vocabulary view built by vocabulary.js. Card chrome is
-   defined locally (not via .card in cards.css) so this module stays as
-   self-contained as journal.css already is — nothing here depends on
-   another feature module's classes.
+   Styles for the #vocabulary view built by vocabulary.js. Card chrome —
+   surface, border, radius, shadow — comes from .card in cards.css; only
+   the content layout inside a card lives here.
+
+   That's a change from how this file used to work. It re-declared the same
+   four surface properties locally so the module stayed self-contained, and
+   four other feature modules did the same. Self-containment is the right
+   instinct for a *feature* class and the wrong one for a primitive: .card
+   isn't another feature's class, it's the design system, and keeping five
+   private copies of it meant the app's card radius and shadow couldn't be
+   changed from one place at all.
    ========================================================================== */
 
 /* -- Filters ------------------------------------------------------------------------
@@ -49,10 +56,6 @@
   flex-direction: column;
   gap: 0;
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .vocab-card__head {
@@ -106,12 +109,19 @@
 /* -- Level tag --------------------------------------------------------------------
    Shared look for the small badge that marks a word/point's JLPT level;
    grammar.css and kanji.css reuse this same class rather than redefining it.
+
+   Outlined, not filled. As a filled badge this was washi text on gold —
+   2.85:1 at 12px, the worst contrast in the app and repeated on every
+   vocabulary, grammar, and kanji card. Gold-on-paper at the darkened
+   --color-gold measures 4.99:1, and a hairline box matches the "a line, not
+   a spotlight" language the rest of the app already uses.
    ------------------------------------------------------------------------------------ */
 .jlpt-tag {
   display: inline-block;
   padding: var(--space-3xs) var(--space-2xs);
-  background-color: var(--color-gold);
-  color: var(--color-washi);
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-gold);
+  color: var(--color-gold);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);

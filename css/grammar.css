@@ -42,10 +42,6 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
 }
 
 .grammar-card__head {

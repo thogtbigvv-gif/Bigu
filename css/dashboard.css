@@ -6,17 +6,36 @@
    ========================================================================== */
 
 /* -- Hero / section spacing ---------------------------------------------------------------
-   The dashboard is the app's landing view, so its heading gets a touch
-   more air and a hairline rule beneath it — the same "thin line, not a
-   spotlight" divider language already used by the site header and footer.
+   The dashboard is the app's landing view, so it is the one h1 that keeps
+   the top of the type scale — every section heading sits a step below it
+   at --text-xl (see typography.css). That step is what tells a reader at a
+   glance whether they're at home or inside a section; before it, the
+   Dashboard and "Shadowing is coming soon" rendered identically.
+
+   The heading also gets a touch more air and a hairline rule beneath it —
+   the same "thin line, not a spotlight" divider language already used by
+   the site header and footer.
    ------------------------------------------------------------------------------------------ */
 #dashboard {
   gap: var(--space-xl);
 }
 
 #dashboard-heading {
+  font-size: var(--text-2xl);
+}
+
+/* The rule sits under the heading *and* its status line, so it reads as the
+   base of one hero block rather than a divider between the two. */
+.dashboard-hero {
   padding-block-end: var(--space-sm);
   border-bottom: var(--border-width) solid var(--color-stone);
+}
+
+.dashboard-hero__status {
+  margin: 0;
+  margin-block-start: var(--space-2xs);
+  font-size: var(--text-md);
+  color: var(--color-ink-soft);
 }
 
 .dashboard-grid {
@@ -31,22 +50,39 @@
   flex-direction: column;
 }
 
-/* The streak card renders first and is the one habit-tracking number the
-   dashboard exists to surface, so it reads as the hero summary among the
-   four — the signature hanko accent plus a slightly deeper shadow. */
-.dashboard-grid .card:first-child {
+/* The emphasised card among the four — the signature hanko accent plus a
+   slightly deeper shadow. Applied by class, not by :first-child: the
+   selector used to say "whatever renders first is important" when what was
+   meant is "the card carrying today's action is important", so reordering
+   the grid.append() call in dashboard.js silently moved the emphasis to
+   the wrong card. */
+.dashboard-card--hero {
   border-color: var(--color-bengara);
   box-shadow: var(--shadow-md);
 }
 
-/* -- Streak & practice score -------------------------------------------------------------- */
+/* -- Streak & practice score --------------------------------------------------------------
+   Mono, not the display face. These are data points — a count and a score —
+   and tabular figures read as numbers where a serif reads as a title. It
+   also keeps Shippori Mincho to the three roles typography.css reserves it
+   for. Medium weight because JetBrains Mono is only requested at 400/500,
+   and at 39px that is already emphatic.
+   ------------------------------------------------------------------------------------------- */
 .dashboard-streak__count {
-  font-family: var(--font-display);
+  font-family: var(--font-mono);
   font-size: var(--text-2xl);
-  font-weight: var(--weight-bold);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-normal);
   color: var(--color-bengara);
   line-height: var(--leading-tight);
   margin-block-end: var(--space-3xs);
+}
+
+.dashboard-today__detail {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
 }
 
 .dashboard-card__status {
@@ -98,21 +134,5 @@
   transition: width var(--transition-base);
 }
 
-/* -- Backup / restore actions ------------------------------------------------------------ */
-.dashboard-backup__actions {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-xs);
-  margin-block-start: auto;
-  padding-block-start: var(--space-md);
-  border-top: var(--border-width) solid var(--color-stone);
-}
-
-.dashboard-backup__status {
-  margin: 0;
-}
-
-.dashboard-backup__status--error {
-  color: var(--color-error);
-}
+/* Backup/restore used to be a fourth card here. It lives in settings.css
+   now — see the note at the top of js/settings.js. */

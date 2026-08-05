@@ -26,8 +26,12 @@
   border-color: var(--color-ash);
 }
 
+/* Outline first, halo second — see the note on .button:focus-visible in
+   buttons.css. The border-color change is a third, quieter cue and is not
+   load-bearing for contrast on its own. */
 .field:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
   border-color: var(--color-indigo);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
@@ -46,53 +50,53 @@ textarea.field {
 }
 
 /* -- Select -----------------------------------------------------------------------
-   The browser's own dropdown arrow is replaced with a quieter one so it
-   doesn't clash with the rest of the field. Its color is a literal hex,
-   not a token — data-URIs can't reference CSS custom properties — and it
-   currently matches --color-ash (#6E6A5E); update both together if that
-   token ever changes.
+   Keeps the browser's own dropdown arrow. This used to hide it with
+   appearance:none and draw a replacement from a data URI, which meant the
+   arrow's color was a literal hex in two places (light and dark) that a
+   comment asked future edits to keep in sync with --color-ash by hand — a
+   comment isn't a constraint, and darkening that token broke the pairing
+   the first time it changed. The native arrow follows the `color-scheme`
+   already declared in variables.css, so it themes itself correctly for
+   free and there is nothing left to keep in sync.
    ------------------------------------------------------------------------------------ */
 
 select.field {
-  appearance: none;
-  padding-inline-end: var(--space-xl);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236E6A5E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right var(--space-sm) center;
-  background-size: 1rem;
-}
-
-/* The arrow's stroke is a literal hex baked into the data URI (custom
-   properties can't be referenced inside one), so the dark theme's
-   --color-ash value (#8F9484) needs its own copy here to match. */
-[data-theme="dark"] select.field {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238F9484' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E");
+  padding-inline-end: var(--space-md);
 }
 
 /* -- Search field ------------------------------------------------------------------
    Shared wrapper for the search/filter input at the top of vocabulary,
    grammar, and kanji lists — icon, spacing, and the mobile-width collapse
    defined once so every list search reads and behaves the same way
-   instead of drifting into small per-view differences.
+   instead of drifting into small per-view differences. The markup comes
+   from content.js's createSearchField().
    ------------------------------------------------------------------------------------ */
 .search-field {
   max-width: 24rem;
   margin-block-end: var(--space-lg);
 }
 
-/* Matches the quiet icon treatment used for the select arrow above: a
-   literal hex (not a token — data-URIs can't reference custom properties)
-   that mirrors --color-ash, with its own dark-theme copy. */
-.search-field .field {
-  padding-inline-start: var(--space-xl);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%236E6A5E' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cline x1='11' y1='11' x2='14' y2='14'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: left var(--space-sm) center;
-  background-size: 1rem;
+/* Positioning context for the icon. The input can't hold one itself: a
+   replaced element renders no pseudo-elements, which is why this used to be
+   a background image with a baked-in color. */
+.search-field__control {
+  position: relative;
+  display: flex;
 }
 
-[data-theme="dark"] .search-field .field {
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='%238F9484' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='7' cy='7' r='5'/%3E%3Cline x1='11' y1='11' x2='14' y2='14'/%3E%3C/svg%3E");
+.search-field__icon {
+  position: absolute;
+  inset-inline-start: var(--space-sm);
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-ash);
+  pointer-events: none;
+}
+
+.search-field .field {
+  padding-inline-start: var(--space-xl);
 }
 
 @media (max-width: 480px) {

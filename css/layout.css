@@ -18,6 +18,7 @@
 .app-shell {
   display: flex;
   min-height: 100vh;
+  min-height: 100dvh;
 }
 
 .app-shell__content {
@@ -99,7 +100,7 @@
   stroke-width: 1;
 }
 
-[data-theme="dark"] .brand__mark-bubble {
+:root[data-theme="dark"] .brand__mark-bubble {
   stroke: none;
 }
 
@@ -118,7 +119,7 @@
   fill: #3b8bca;
 }
 
-[data-theme="dark"] .brand__mark-sparkle {
+:root[data-theme="dark"] .brand__mark-sparkle {
   fill: #d8ecf6;
 }
 
@@ -163,6 +164,20 @@
   gap: var(--space-lg);
 }
 
+/* router.js gives the active view's heading tabindex="-1" and focuses it on
+   every navigation, so a keyboard reader lands at the top of the new view
+   rather than back at the document root. That programmatic focus draws the
+   browser's default ring — a heavy black box around a 31px heading — so it
+   gets the app's own indicator instead: same colour and width as every
+   other focusable thing, offset enough to read as "you are here" rather
+   than as a control. */
+.view > h1:focus-visible,
+.view .dashboard-hero h1:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
 /* -- Footer ------------------------------------------------------------------------ */
 .site-footer {
   padding-block: var(--space-md);
@@ -171,16 +186,17 @@
 }
 
 /* -- Small screens -----------------------------------------------------------------
-   Same 640px line navigation.css switches the sidebar to an off-canvas
-   drawer at. The 64px/32px rhythm that gives a 1152px page room to
-   breathe just eats phone width instead — gutters and the main-region
-   padding scale down a step on the existing spacing scale; no new tokens.
+   The 64px/32px rhythm that gives a 1152px page room to breathe just eats
+   phone width instead, so gutters and the main-region padding step down
+   the existing spacing scale — twice, once per breakpoint, rather than
+   dropping straight to phone spacing the moment the sidebar leaves.
+   No new tokens. See the breakpoint block in variables.css.
    ------------------------------------------------------------------------------------- */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .site-header,
   .app-main,
   .site-footer {
-    padding-inline: var(--space-sm);
+    padding-inline: var(--space-md);
   }
 
   .app-main {
@@ -189,5 +205,17 @@
 
   .view {
     gap: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .site-header,
+  .app-main,
+  .site-footer {
+    padding-inline: var(--space-sm);
+  }
+
+  .app-main {
+    padding-block: var(--space-lg);
   }
 }

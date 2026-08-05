@@ -23,16 +23,58 @@
     })();
   </script>
 
+  <!-- Installability. This app's whole retention model is a daily streak, so
+       it has to survive being added to a home screen: without these it gets
+       a blank icon and a white status bar fighting the dark theme. The two
+       theme-color values mirror the light and dark --color-washi tokens. -->
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#E9EBE4" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1A1D1A" media="(prefers-color-scheme: dark)" />
+
+  <!-- Three families, not four. Noto Sans JP used to be requested here at
+       three weights — the largest asset in the app — but it sits fifth in
+       --font-jp-stack behind Hiragino (every Mac/iPhone) and Yu Gothic
+       (every Windows since 8.1), so on the overwhelming majority of devices
+       it was fetched, render-blocking, and never used to paint a glyph. It
+       still resolves from a local install where one exists; see the stack
+       comment in css/typography.css. Shippori Mincho drops weight 500 for
+       the same reason: nothing uses it. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&family=Noto+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
     rel="stylesheet"
   />
 
-  <!-- Modular CSS: design tokens load first, structural/component modules follow as they're built -->
+  <!-- Modular CSS, listed here rather than @import-ed from one file. The
+       browser can't discover an @import until the importing sheet has been
+       fetched and parsed, so 15 modules behind one main.css meant two
+       sequential round trips before styling began and no parallelism among
+       them. As <link> tags they're all requested at once, and the cascade
+       order is preserved by document order exactly as it was.
+
+       Order matters: tokens, then reset, then type, then structure, then
+       components. Add new modules at the end of the component run. -->
   <link rel="stylesheet" href="css/variables.css" />
-  <link rel="stylesheet" href="css/main.css" />
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/typography.css" />
+  <link rel="stylesheet" href="css/layout.css" />
+  <link rel="stylesheet" href="css/navigation.css" />
+  <link rel="stylesheet" href="css/buttons.css" />
+  <link rel="stylesheet" href="css/forms.css" />
+  <link rel="stylesheet" href="css/cards.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/vocabulary.css" />
+  <link rel="stylesheet" href="css/grammar.css" />
+  <link rel="stylesheet" href="css/kanji.css" />
+  <link rel="stylesheet" href="css/practice.css" />
+  <link rel="stylesheet" href="css/journal.css" />
+  <link rel="stylesheet" href="css/lessons.css" />
+  <link rel="stylesheet" href="css/reading.css" />
+  <link rel="stylesheet" href="css/settings.css" />
+  <link rel="stylesheet" href="css/intro.css" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -45,11 +87,23 @@
          covering the page, and would paint over the drawer's own links. -->
     <div class="site-nav__backdrop" id="site-nav-backdrop" hidden></div>
 
-    <!-- Primary nav: a sticky sidebar on desktop, an off-canvas drawer on
-         mobile (toggled by #site-nav-mobile-toggle in the header below).
+    <!-- Primary nav: a sticky sidebar on desktop, an off-canvas drawer below
+         1024px (toggled by #site-nav-mobile-toggle in the header below).
          "Study" is a disclosure toggle, not a link — it only expands and
          collapses its own submenu. Behavior lives in js/navigation.js;
-         active-link highlighting (aria-current) is set by js/router.js. -->
+         active-link highlighting (aria-current) is set by js/router.js.
+
+         Every row here goes somewhere real. Six of the previous thirteen
+         (Listening, Conversation, Shadowing, Search, Profile, Settings-as-
+         stub) led to a heading and a "coming soon" line — nearly half the
+         navigation was a promise the app didn't keep, and a nav where
+         clicking might do nothing teaches readers not to explore the parts
+         that work. Those sections still exist further down and are still
+         reachable by hash; they get their nav row back when they ship.
+
+         Order follows what the app actually rewards: Lessons first inside
+         Study as the beginner on-ramp, Journal up next to Review because it
+         feeds the same streak, Settings last as the housekeeping drawer. -->
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <div class="site-nav__panel" id="site-nav-panel">
         <ul class="site-nav__list">
@@ -73,13 +127,11 @@
 
             <div class="site-nav__submenu-wrapper" id="site-nav-study-submenu">
               <ul class="site-nav__submenu" role="group">
+                <li><a class="site-nav__link site-nav__sublink" href="#lessons" data-view="lessons">Lessons</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#vocabulary" data-view="vocabulary">Vocabulary</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#grammar" data-view="grammar">Grammar</a></li>
-                <li><a class="site-nav__link site-nav__sublink" href="#reading" data-view="reading">Reading</a></li>
-                <li><a class="site-nav__link site-nav__sublink" href="#listening" data-view="listening">Listening</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#kanji" data-view="kanji">Kanji</a></li>
-                <li><a class="site-nav__link site-nav__sublink" href="#conversation" data-view="conversation">Conversation</a></li>
-                <li><a class="site-nav__link site-nav__sublink" href="#shadowing" data-view="shadowing">Shadowing</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#reading" data-view="reading">Reading</a></li>
               </ul>
             </div>
           </li>
@@ -88,22 +140,11 @@
             <a class="site-nav__link" href="#practice" data-view="practice">Review</a>
           </li>
           <li class="site-nav__item">
-            <a class="site-nav__link" href="#search" data-view="search">Search</a>
-          </li>
-          <li class="site-nav__item">
-            <a class="site-nav__link" href="#profile" data-view="profile">Profile</a>
-          </li>
-          <li class="site-nav__item">
-            <a class="site-nav__link" href="#settings" data-view="settings">Settings</a>
-          </li>
-
-          <!-- Kept as extra items outside the core 6 — Journal and Lessons
-               are existing, fully-built features that predate this nav. -->
-          <li class="site-nav__item">
             <a class="site-nav__link" href="#journal" data-view="journal">Journal</a>
           </li>
-          <li class="site-nav__item">
-            <a class="site-nav__link" href="#lessons" data-view="lessons">Lessons</a>
+
+          <li class="site-nav__item site-nav__item--foot">
+            <a class="site-nav__link" href="#settings" data-view="settings">Settings</a>
           </li>
         </ul>
       </div>
@@ -228,8 +269,13 @@
 
       <main id="main-content" class="app-main">
         <!-- One <section> per view. JS toggles the `hidden` attribute to switch between them. -->
+        <!-- The heading and the "what's waiting for you" line form one hero
+             block; dashboard.js fills the status line on every visit. -->
         <section id="dashboard" class="view" aria-labelledby="dashboard-heading">
-          <h1 id="dashboard-heading">Dashboard</h1>
+          <div class="dashboard-hero">
+            <h1 id="dashboard-heading">Dashboard</h1>
+            <p class="dashboard-hero__status" id="dashboard-status" aria-live="polite"></p>
+          </div>
         </section>
 
         <section id="vocabulary" class="view" hidden aria-labelledby="vocabulary-heading">
@@ -263,9 +309,11 @@
           <h1 id="reading-heading">Reading</h1>
         </section>
 
-        <!-- New nav destinations added by the sidebar restructure. Bare
-             shells for now, matching how every other view started out —
-             each is a future initX() task away from real content. -->
+        <!-- Not in the nav. Bare shells, matching how every other view
+             started out — each is a future initX() task away from real
+             content, and each gets its nav row back when it has some.
+             They stay in the document so the hash still resolves and so
+             the work needed to ship one is visible from here. -->
         <section id="listening" class="view" hidden aria-labelledby="listening-heading">
           <h1 id="listening-heading">Listening</h1>
           <p class="empty-state">Listening practice is coming soon.</p>
@@ -291,9 +339,13 @@
           <p class="empty-state">Profile stats are coming soon.</p>
         </section>
 
+        <!-- Real, and the only home for its two controls. Appearance and
+             backup/restore used to live on the Dashboard, which is a status
+             surface — a restore that overwrites every store in the browser
+             and reloads the page does not belong in a grid of stat cards.
+             Built by js/settings.js. -->
         <section id="settings" class="view" hidden aria-labelledby="settings-heading">
           <h1 id="settings-heading">Settings</h1>
-          <p class="empty-state">Standalone settings are coming soon — theme and backup are on the Dashboard for now.</p>
         </section>
       </main>
 

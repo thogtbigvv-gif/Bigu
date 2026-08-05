@@ -7,9 +7,15 @@
 
 /* -- Font stacks -------------------------------------------------------------
    Native OS fonts render Japanese glyphs faster and closer to how the
-   reader already reads on their own device, so they come first. The
-   web-loaded --font-jp (Noto Sans JP) is the fallback for platforms
-   without Hiragino Sans / Yu Gothic installed (Linux, older Android, etc.).
+   reader already reads on their own device, so they come first: Hiragino
+   ships on every Mac and iPhone, Yu Gothic on every Windows since 8.1.
+
+   --font-jp (Noto Sans JP) sits fifth and is no longer *fetched* — it was
+   the largest asset in the app by a wide margin, a CJK face at three
+   weights, downloaded on every load and then never used to paint a glyph
+   on any of those platforms. It stays in the stack because a locally
+   installed copy is common on Linux and picks up for free; when it isn't
+   installed the stack falls through to Meiryo and then the system sans.
    ----------------------------------------------------------------------------- */
 :root {
   --font-jp-stack:
@@ -48,7 +54,18 @@ body {
   font-feature-settings: "palt" 1;
 }
 
-/* -- Headings --------------------------------------------------------------------- */
+/* -- Headings ---------------------------------------------------------------------
+   The display face (Shippori Mincho) is deliberately rare. It earns its
+   emphasis by only appearing in three roles across the whole app:
+
+     1. headings — the page's structure,
+     2. the brand mark,
+     3. Japanese headwords — the content the app is actually about.
+
+   Anything else that wants weight uses the body face or the mono face.
+   A display face used on seven different element types stops distinguishing
+   any of them; it just becomes the app's font.
+   ------------------------------------------------------------------------------------- */
 h1,
 h2,
 h3,
@@ -61,7 +78,10 @@ h6 {
   color: var(--color-ink);
 }
 
-h1 { font-size: var(--text-2xl); }
+/* Every view's title is an h1, so the default is the section size and the
+   Dashboard opts back up to the hero size in dashboard.css. Landing on a
+   section should not look identical to landing at home. */
+h1 { font-size: var(--text-xl); }
 h2 { font-size: var(--text-xl); }
 h3 { font-size: var(--text-lg); }
 h4 { font-size: var(--text-md); }
@@ -105,8 +125,7 @@ rt {
   user-select: none;
 }
 
-/* -- Readings, romaji, and level tags ----------------------------------------------- */
-.romaji,
+/* -- Readings and level tags -------------------------------------------------------- */
 .reading,
 .jlpt-tag {
   font-family: var(--font-mono);

@@ -598,11 +598,10 @@ function initJournalView(view) {
 function initJournal() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
-  // initJournalView is synchronous (unlike every other view's initX, which
-  // is async and so can't stall app.js's boot sequence by throwing). Any
-  // unexpected throw here — e.g. a corrupted stored entry slipping past
-  // getValidEntries — must not escape, or it takes initLessons, initReading,
-  // initRouter, and initNav down with it, breaking navigation app-wide.
+  // Any unexpected throw here — e.g. a corrupted stored entry slipping past
+  // getValidEntries — is caught rather than escaping. router.js also guards
+  // every initializer it calls, but a view that fails should still say so on
+  // screen instead of leaving a bare heading and a console message.
   try {
     initJournalView(view);
   } catch (error) {

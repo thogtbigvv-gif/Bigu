@@ -28,8 +28,14 @@
   cursor: not-allowed;
 }
 
+/* Two layers, and the order matters. The soft halo alone measures ~1.5:1
+   against the page — well under the 3:1 WCAG 2.2 SC 2.4.11 asks of a focus
+   indicator — so the solid outline is what actually carries the contrast and
+   the halo is decoration on top of it. Never replace the outline with only
+   the box-shadow; that is the state this rule was fixing. */
 .button:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
@@ -107,10 +113,11 @@
   transform: translateY(1px);
 }
 
-/* Aligned to the same box-shadow ring as .button so the two button
+/* Aligned to the same outline + halo pair as .button so the two button
    treatments that share the header row read as one consistent family. */
 .theme-toggle:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
@@ -144,6 +151,9 @@
    the app already gets, which the three original copies were missing.
    ------------------------------------------------------------------------------------- */
 .toggle-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-3xs) var(--space-sm);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
@@ -167,12 +177,53 @@
 }
 
 .toggle-chip:focus-visible {
-  outline: none;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
 
+/* The fill sweeps in from the left edge over 180ms rather than snapping.
+   Marking a word learned is the one moment the app says "you did it", and
+   it's worth a beat — a background-size transition on a gradient does it
+   without a pseudo-element or a second animated property. reset.css's
+   prefers-reduced-motion rule collapses it to an instant swap. */
 .toggle-chip[aria-pressed="true"] {
-  background-color: var(--color-moss);
   border-color: var(--color-moss);
   color: var(--color-washi);
+  background-color: transparent;
+  background-image: linear-gradient(var(--color-moss), var(--color-moss));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  transition:
+    background-size 180ms ease-out,
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.toggle-chip:not([aria-pressed="true"]) {
+  background-image: linear-gradient(var(--color-moss), var(--color-moss));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+}
+
+/* -- Touch targets --------------------------------------------------------------------
+   At and below 768px every button in the study loop gets a 44px minimum
+   box. See the matching block in navigation.css for the reasoning; the
+   short version is that .toggle-chip computed to about 30px and is the
+   single most-tapped control in the app.
+
+   min-height rather than extra padding, so the hit area grows without the
+   chip visibly inflating.
+   ---------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .button,
+  .toggle-chip {
+    min-height: 2.75rem;
+  }
+
+  .theme-toggle {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
 }

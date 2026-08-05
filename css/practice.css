@@ -24,25 +24,20 @@
   flex-wrap: wrap;
 }
 
+/* Layout only. The look — quiet outline, indigo on hover, filled when
+   pressed, plus the focus ring and press feedback — is .toggle-chip in
+   buttons.css. This used to be its own near-identical rule block, and had
+   already drifted: it was missing both :focus-visible and :active, which
+   made this the one control in the app with no focus indicator and no
+   press feedback at all. A picked deck is a pressed toggle, same as a
+   pressed filter chip, so it's the same component.
+
+   The pressed fill is now moss rather than the indigo this rule used, which
+   is the same "on" colour the vocabulary and grammar filter chips already
+   use for a selected facet — one pressed treatment across the app is worth
+   more than a per-view shade. */
 .practice__mode-button {
-  padding: var(--space-2xs) var(--space-md);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-md);
-  transition: background-color var(--transition-fast), border-color var(--transition-fast), color var(--transition-fast);
-}
-
-.practice__mode-button:hover {
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
-}
-
-.practice__mode-button[aria-pressed="true"] {
-  background-color: var(--color-indigo);
-  border-color: var(--color-indigo);
-  color: var(--color-washi);
+  padding-inline: var(--space-md);
 }
 
 /* -- Intro & summary -----------------------------------------------------------------
@@ -55,9 +50,6 @@
   align-items: flex-start;
   gap: var(--space-md);
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
 }
 
 .practice__intro-text,
@@ -84,10 +76,58 @@
   gap: var(--space-sm);
   padding: var(--space-2xl) var(--space-lg);
   text-align: center;
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+}
+
+/* -- Card motion ---------------------------------------------------------------------
+   One animated thing per interaction, all under 250ms, none looping. The
+   constraint matters more than the individual timings: a study loop is a
+   card every few seconds, and anything that reads as decoration the first
+   time reads as friction the fortieth.
+
+     is-advancing — a 120ms fade-in when a new card's content is swapped
+                    in, so the eye registers "next card" rather than
+                    "different words in the same place".
+     is-correct   — a moss pulse on the border, the success signal.
+     is-incorrect — a 4px horizontal settle. Not a shake: the reader got
+                    something wrong, which deserves a nudge, not a scolding.
+
+   reset.css's global prefers-reduced-motion rule collapses all three, so
+   there's no separate query here.
+   ------------------------------------------------------------------------------------- */
+
+.practice-card.is-advancing {
+  animation: practice-card-advance 120ms ease-out;
+}
+
+.practice-card.is-correct {
+  animation: practice-card-correct 200ms ease-out;
+}
+
+.practice-card.is-incorrect {
+  animation: practice-card-incorrect 150ms ease-in-out;
+}
+
+@keyframes practice-card-advance {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes practice-card-correct {
+  50% {
+    border-color: var(--color-moss);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-moss) 35%, transparent);
+  }
+}
+
+@keyframes practice-card-incorrect {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* The reveal is the other moment worth marking — the answer appearing is
+   the payoff for the recall attempt. */
+.practice-card__answer:not([hidden]) {
+  animation: practice-card-advance 120ms ease-out;
 }
 
 .practice-card__headword {
@@ -135,9 +175,24 @@
   gap: var(--space-sm);
 }
 
+.practice__schedule-note,
 .practice__shortcut-hint {
   margin: 0;
   text-align: center;
+}
+
+/* When the schedule note is empty (start of a card) it still holds its line
+   so the buttons beneath don't jump as it fills and empties. */
+.practice__schedule-note {
+  min-height: 1.6em;
+  color: var(--color-moss);
+}
+
+/* Quiet, and at the foot: it's the way out of a round, not a third option
+   alongside the two grade buttons. */
+.practice__end {
+  align-self: center;
+  margin-block-start: var(--space-2xs);
 }
 
 /* -- History -----------------------------------------------------------------------------
@@ -174,8 +229,6 @@
   align-items: baseline;
   gap: var(--space-sm);
   padding: var(--space-xs) var(--space-sm);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
   border-radius: var(--radius-md);
 }
 
