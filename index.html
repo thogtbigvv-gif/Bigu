@@ -23,23 +23,6 @@
     })();
   </script>
 
-  <!-- Decides whether the first-visit intro plays, synchronously and before
-       first paint. It has to be inline for the same reason the theme above
-       does: js/intro/ is a deferred module, and by the time it runs the
-       reader would already have seen a frame of the dashboard the overlay is
-       supposed to be covering. css/intro.css keys entirely off the attribute
-       set here, so if this never runs — scripting disabled, an exception —
-       the overlay stays hidden and the app renders normally. -->
-  <script>
-    (function () {
-      try {
-        if (sessionStorage.getItem('biguIntroPlayed') === null) {
-          document.documentElement.dataset.intro = 'playing';
-        }
-      } catch (e) {}
-    })();
-  </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -53,32 +36,6 @@
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
-
-  <!-- First-visit intro. Static markup rather than JS-built so it is painted
-       with the very first frame; js/intro/ takes it from here and removes it
-       entirely when the sequence ends. The app behind it is made inert for the
-       duration, so Skip is deliberately the only thing here a screen reader
-       can reach — note that aria-hidden is set on the video alone and not on
-       this container, since a descendant cannot opt back out of a hidden
-       ancestor and that would take Skip with it. -->
-  <div class="intro" id="intro">
-    <!-- The dark ground is its own element so it can fade on its own. Fading
-         the container instead would take the video down with it — opacity
-         applies to the whole subtree — and the logo would dissolve long
-         before it reached the header. -->
-    <div class="intro__backdrop" id="intro-backdrop"></div>
-    <video
-      class="intro__video"
-      id="intro-video"
-      src="assets/intro/bigu-intro.webm"
-      muted
-      playsinline
-      preload="auto"
-      disablepictureinpicture
-      aria-hidden="true"
-    ></video>
-    <button type="button" class="intro__skip" id="intro-skip">Skip intro</button>
-  </div>
 
   <div class="app-shell">
     <!-- Drawer backdrop. A sibling of the nav, not a child of it: below the
@@ -155,10 +112,83 @@
     <div class="app-shell__content">
       <header class="site-header">
         <div class="brand">
-          <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-            <rect x="2" y="2" width="44" height="44" rx="4" />
-            <text x="24" y="25" dy="0.35em" text-anchor="middle" lang="ja">ビグ</text>
-          </svg>
+          <!-- The Bigu mark: a speech bubble carrying ビ over an open book,
+               with two sparkles off its upper right. Drawn inline like every
+               other icon in the app (nav chevron, theme toggle, hamburger) so
+               it stays crisp at any size and each part can be animated on its
+               own — js/logoIntro.js plays them in sequence.
+
+               The blues are literal here rather than tokens on purpose: this
+               is brand artwork, not themed UI chrome, and it must read the
+               same in light and dark. Everything around it — the ring, the
+               shadow, the timings — does use css/variables.css tokens.
+
+               Wrapped in a button because clicking it replays the animation;
+               a bare div with a click handler would be unreachable by
+               keyboard. -->
+          <button
+            type="button"
+            class="brand__replay"
+            id="brand-replay"
+            aria-label="Replay the Bigu logo animation"
+          >
+            <!-- viewBox inset by a unit on every side: the bubble's ring sits
+                 flush against x=0 and would otherwise have its outer half
+                 clipped. Padding here rather than moving the geometry keeps
+                 the measured coordinates intact. -->
+            <svg class="brand__mark" viewBox="-1.5 -1.5 67 67" aria-hidden="true" focusable="false">
+              <!-- Disc and tail as one path, not a circle plus a triangle:
+                   the light-theme ring strokes this silhouette, and two
+                   overlapping shapes would draw that ring straight through
+                   the seam where they meet. The arc takes the long way round
+                   (large-arc-flag 1, sweep 0) from the tail's upper root back
+                   to its lower one. -->
+              <path
+                class="brand__mark-bubble"
+                d="M51.6 43.1A27.5 27.5 0 1 0 38.4 54.7C44.1 57.4 49.6 59.2 55.6 60.6C54.1 54.6 52.9 48.9 51.6 43.1Z"
+              />
+
+              <!-- ビ = ヒ plus dakuten. Strokes rather than filled outlines:
+                   one stroke-width keeps the weight even and editable. -->
+              <g
+                class="brand__mark-glyph"
+                fill="none"
+                stroke="#3B8BCA"
+                stroke-width="3.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21.9 13.9V27.4C21.9 30.3 23.2 31.5 26.1 31.5H37.9" />
+                <path d="M24.1 24.6L36.8 18" />
+              </g>
+              <g class="brand__mark-dakuten" fill="#3B8BCA">
+                <path d="M38.6 10.9L41.2 9.6L43.1 14.2L40.5 15.5Z" />
+                <path d="M43.6 8.6L46.2 7.3L48.1 11.9L45.5 13.2Z" />
+              </g>
+
+              <g class="brand__mark-book">
+                <path
+                  class="brand__mark-page"
+                  d="M9.6 38.4C16.4 38.6 23.2 40.6 27.9 44.4C32.6 40.6 39.4 38.6 46.2 38.4L46.2 40.7C39.6 40.9 33 42.9 27.9 46.6C22.8 42.9 16.2 40.9 9.6 40.7Z"
+                />
+                <path
+                  class="brand__mark-cover"
+                  d="M7.3 42.2C14.6 42.2 22.1 44.3 27.9 48.5C33.7 44.3 41.2 42.2 48.5 42.2L48.5 45.6C41.6 45.6 34.4 47.6 27.9 51.6C21.4 47.6 14.2 45.6 7.3 45.6Z"
+                />
+              </g>
+
+              <g class="brand__mark-sparkles">
+                <path
+                  class="brand__mark-sparkle brand__mark-sparkle--lead"
+                  d="M55 4.5C56 9.6 57.9 11.5 63 12.5C57.9 13.5 56 15.4 55 20.5C54 15.4 52.1 13.5 47 12.5C52.1 11.5 54 9.6 55 4.5Z"
+                />
+                <path
+                  class="brand__mark-sparkle brand__mark-sparkle--trail"
+                  d="M59.6 21.4C60.2 24.2 61.2 25.2 64 25.8C61.2 26.4 60.2 27.4 59.6 30.2C59 27.4 58 26.4 55.2 25.8C58 25.2 59 24.2 59.6 21.4Z"
+                />
+              </g>
+            </svg>
+          </button>
           <p class="brand__title">
             <span lang="ja">ビグ</span> <span class="brand__title-en">Bigu</span>
           </p>
