@@ -66,29 +66,60 @@
   gap: var(--space-xs);
 }
 
-/* SVG shapes default to fill:black with no stroke, so the mark's <rect> and
-   <text> need explicit paint here or the logo renders as a solid black square
-   with its (also black) characters invisible inside it. An outlined square
-   with ink-colored characters matches the app's "a line, not a spotlight"
-   language, and both follow the theme because they inherit currentColor. */
+/* The mark doubles as the replay control for its own intro animation, so it
+   lives in a button — stripped of every button default, since it must read as
+   a logo and not as a control. Only the focus ring survives, matching the one
+   every other interactive element in the app already uses. */
+.brand__replay {
+  display: flex;
+  padding: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.brand__replay:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
 .brand__mark {
   width: 2rem;
   height: 2rem;
   flex-shrink: 0;
-  color: var(--color-ink);
 }
 
-.brand__mark rect {
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
+/* The bubble is white in both themes because that is the artwork. On the dark
+   ground it separates by itself; on washi it would float, so a hairline ring
+   in the app's own divider colour gives it an edge without recolouring it. */
+.brand__mark-bubble {
+  fill: #fff;
+  stroke: var(--color-stone);
+  stroke-width: 1;
 }
 
-.brand__mark text {
-  fill: currentColor;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: 19px;
-  font-weight: var(--weight-medium);
+[data-theme="dark"] .brand__mark-bubble {
+  stroke: none;
+}
+
+.brand__mark-page {
+  fill: #9fd7e9;
+}
+
+.brand__mark-cover {
+  fill: #3b8bca;
+}
+
+/* The sparkles sit outside the bubble, against the page rather than the white
+   artwork, so they take the brand blue on light where a pale glint would
+   disappear, and stay pale on dark where it reads as the highlight it is. */
+.brand__mark-sparkle {
+  fill: #3b8bca;
+}
+
+[data-theme="dark"] .brand__mark-sparkle {
+  fill: #d8ecf6;
 }
 
 /* The title is a <p>, so typography.css's paragraph margin would push it off

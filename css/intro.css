@@ -1,122 +1,129 @@
 /* ==========================================================================
    intro.css
-   The first-visit cinematic overlay. Everything here is gated on
-   html[data-intro="playing"], which the inline script in index.html sets
-   before first paint — so with scripting off, or on a session that has
-   already seen the intro, none of this applies and the app renders normally.
+   The logo's own micro-animation. Everything is scoped to .brand__mark — no
+   overlay, no full-screen takeover, nothing that blocks the app while it
+   runs. js/logoIntro.js adds .brand__mark--playing to start it, on first load
+   and again whenever the reader clicks the mark.
+
+   Each part animates on its own so the logo assembles rather than simply
+   fading in: bubble, then glyph and book, then the sparkles catching up.
    ========================================================================== */
 
-/* Hidden by default: the attribute is the opt-in, never the opt-out. A
-   no-JS visitor must never be left staring at an overlay nothing will
-   dismiss. */
-.intro {
-  display: none;
+/* Groups inside an SVG transform around the user-space origin by default,
+   which would fling them off-canvas instead of scaling in place.
+   transform-box: fill-box re-centres each one on its own bounding box. */
+.brand__mark-bubble,
+.brand__mark-glyph,
+.brand__mark-dakuten,
+.brand__mark-book,
+.brand__mark-sparkle {
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
-html[data-intro="playing"] .intro {
-  position: fixed;
-  inset: 0;
-  /* Above everything the app can raise: the mobile drawer sits at 50 and its
-     header at 45. */
-  z-index: 1000;
-  display: block;
-  overflow: hidden;
-}
-
-/* The dark ground, kept separate from the container so introSequence.js can
-   fade it while the logo above it stays fully opaque all the way to the
-   header. Fixed by the brief, not themed — the reveal reads the same in light
-   and dark, and the footage is authored against a near-black ground. */
-.intro__backdrop {
-  position: absolute;
-  inset: 0;
-  background-color: #121312;
-}
-
-/* The app waits behind the overlay. Opacity only — a transform or a
-   will-change here would make .app-shell the containing block for the
-   position:fixed nav drawer and its backdrop. */
-html[data-intro="playing"] .app-shell {
-  opacity: 0;
-}
-
-/* The "Skip to main content" link is a sibling of .app-shell, not a child, so
-   the inert attribute introOverlay.js sets does not cover it — without this it
-   stays tabbable and would drop focus into content nobody can see. */
-html[data-intro="playing"] .skip-link {
-  display: none;
-}
-
-/* The permanent logo holds still and invisible until the flying video hands
-   off to it in the sequence's last 200ms. */
-html[data-intro="playing"] .brand__mark {
-  opacity: 0;
-}
-
-/* -- The animation itself --------------------------------------------------------
-   Positioned at the origin with a corner transform-origin: logoFlight.js
-   drives position *and* size entirely through one transform, so a point in
-   the element maps to `translate + scale * point` with no extra terms. Width
-   is set from the mark size rather than the frame, since the frame is mostly
-   transparent padding around it.
+/* -- Keyframes -------------------------------------------------------------------
+   Transform and opacity only, so the whole sequence stays on the compositor.
    ------------------------------------------------------------------------------- */
-.intro__video {
-  --intro-mark-size: clamp(7rem, 34vmin, 15rem);
 
-  position: fixed;
-  top: 0;
-  left: 0;
-  transform-origin: 0 0;
-  /* The bubble mark is 0.225 of the frame's width (see MARK_RECT). */
-  width: calc(var(--intro-mark-size) / 0.225);
-  height: auto;
-  aspect-ratio: 16 / 9;
-  /* JS writes the resting transform before the first frame is shown; until
-     then keep it off-screen rather than flashing at 0,0. */
-  transform: translate3d(-100vw, 0, 0);
-  pointer-events: none;
-  user-select: none;
-}
-
-/* -- Skip -------------------------------------------------------------------------
-   The supplied animation runs ten seconds, which is a long time to hold
-   somebody who only wanted to check a kanji. Skip is always available, and
-   Escape does the same thing.
-   ------------------------------------------------------------------------------- */
-.intro__skip {
-  position: fixed;
-  right: var(--space-md);
-  bottom: var(--space-md);
-  z-index: 1;
-  padding: var(--space-2xs) var(--space-md);
-  font-size: var(--text-sm);
-  letter-spacing: var(--tracking-wide);
-  color: rgba(233, 235, 228, 0.55);
-  background: none;
-  border: var(--border-width) solid rgba(233, 235, 228, 0.2);
-  border-radius: var(--radius-md);
-  transition: color var(--transition-fast), border-color var(--transition-fast);
-}
-
-.intro__skip:hover {
-  color: rgba(233, 235, 228, 0.9);
-  border-color: rgba(233, 235, 228, 0.45);
-}
-
-.intro__skip:focus-visible {
-  outline: 2px solid rgba(233, 235, 228, 0.7);
-  outline-offset: 2px;
-}
-
-/* Reduced motion: introSequence.js never plays the video or the flight on this
-   path, it only cross-dissolves. Hiding the video here as well means no frame
-   of it can appear even for a tick while that fade runs. */
-@media (prefers-reduced-motion: reduce) {
-  .intro__video {
-    display: none;
+@keyframes brand-mark-bubble-in {
+  from {
+    opacity: 0;
+    transform: scale(0.65);
   }
 
-  .intro__skip {
-    transition: none;
+  60% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* The glyph and book rise into the bubble a beat after it lands. */
+@keyframes brand-mark-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(2.5px) scale(0.86);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Sparkles twinkle rather than simply appear: they overshoot, settle, and
+   keep their final opacity because the animation is fill: both. */
+@keyframes brand-mark-twinkle {
+  from {
+    opacity: 0;
+    transform: scale(0.2) rotate(-45deg);
+  }
+
+  55% {
+    opacity: 1;
+    transform: scale(1.18) rotate(6deg);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
+/* -- The sequence ------------------------------------------------------------------
+   Only while .brand__mark--playing is set. The class is removed as soon as
+   the run finishes, so the mark spends almost all of its life as plain static
+   artwork with no animation attached.
+   ------------------------------------------------------------------------------- */
+
+.brand__mark--playing .brand__mark-bubble {
+  animation: brand-mark-bubble-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.brand__mark--playing .brand__mark-glyph,
+.brand__mark--playing .brand__mark-dakuten {
+  animation: brand-mark-rise-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 170ms both;
+}
+
+.brand__mark--playing .brand__mark-book {
+  animation: brand-mark-rise-in 300ms cubic-bezier(0.16, 1, 0.3, 1) 230ms both;
+}
+
+.brand__mark--playing .brand__mark-sparkle--lead {
+  animation: brand-mark-twinkle 380ms cubic-bezier(0.16, 1, 0.3, 1) 300ms both;
+}
+
+.brand__mark--playing .brand__mark-sparkle--trail {
+  animation: brand-mark-twinkle 380ms cubic-bezier(0.16, 1, 0.3, 1) 380ms both;
+}
+
+/* A quiet press cue on the replay control, matching the one-pixel settle every
+   other button in the app uses. */
+.brand__replay:active .brand__mark {
+  transform: translateY(1px);
+}
+
+/* -- Reduced motion ----------------------------------------------------------------
+   The mark is static artwork; the animation is decoration on top of it, so
+   there is nothing to substitute — it is simply skipped. logoIntro.js also
+   checks the query and never adds the class, but this makes the rule hold
+   even if the class arrives some other way.
+   ------------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .brand__mark--playing .brand__mark-bubble,
+  .brand__mark--playing .brand__mark-glyph,
+  .brand__mark--playing .brand__mark-dakuten,
+  .brand__mark--playing .brand__mark-book,
+  .brand__mark--playing .brand__mark-sparkle--lead,
+  .brand__mark--playing .brand__mark-sparkle--trail {
+    animation: none;
+  }
+
+  .brand__replay:active .brand__mark {
+    transform: none;
   }
 }

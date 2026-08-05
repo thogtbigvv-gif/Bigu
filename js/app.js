@@ -19,7 +19,7 @@ import { initPractice } from './practice.js';
 import { initJournal } from './journal.js';
 import { initLessons } from './lessons.js';
 import { initReading } from './reading.js';
-import { initIntro } from './intro/introSequence.js';
+import { initIntro } from './logoIntro.js';
 
 /* -- Storage ------------------------------------------------------------------
    Confirms localStorage actually works (Safari private mode and locked-down
@@ -62,10 +62,8 @@ function init() {
   initRouter();
   initNav();
 
-  // Last, and deliberately not awaited: every view above has already rendered
-  // into its section, so the app the intro reveals is complete rather than
-  // still filling in behind the overlay. If there is no intro to play this
-  // returns immediately.
+  // The header logo's own animation. Scoped entirely to the mark — it never
+  // blocks the app, so where it sits in this order does not matter.
   initIntro();
 }
 
