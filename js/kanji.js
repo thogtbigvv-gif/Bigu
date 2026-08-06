@@ -45,6 +45,24 @@ function getExamples(entry) {
   return entry.examples && entry.examples.length ? entry.examples : [entry.example];
 }
 
+/* The JLPT levels, hardest-last — the order the summary label reads them in. */
+const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+/* An entry's own level, not the file's: the set spans N5 and N2 now, so a
+   card labelled with `data.level` would put the wrong chip on most of the
+   grid. `level` is optional, so older entries still fall back to the file. */
+function getEntryLevel(entry, data) {
+  return entry.level ?? data.level;
+}
+
+/* "N5" for a single-level file, "N5–N2" once it spans several. */
+function getLevelLabel(data) {
+  const present = JLPT_LEVELS.filter((level) =>
+    data.kanji.some((entry) => getEntryLevel(entry, data) === level));
+  if (present.length === 0) return data.level;
+  return present.length === 1 ? present[0] : `${present[0]}–${present[present.length - 1]}`;
+}
+
 function createReadings(entry) {
   const wrap = document.createElement('p');
   wrap.className = 'kanji-card__readings reading';
@@ -299,6 +317,7 @@ function renderGrid(container, data) {
 
   const summary = document.createElement('p');
   summary.className = 'kanji-meta meta';
+  const levelLabel = getLevelLabel(data);
 
   const grid = document.createElement('ul');
   grid.className = 'kanji-grid';
@@ -309,7 +328,7 @@ function renderGrid(container, data) {
     searchWrap.hidden = true;
     summary.hidden = true;
     grid.hidden = true;
-    renderDetail(detailElements, entry, data.level, data.kanji, openDetail);
+    renderDetail(detailElements, entry, getEntryLevel(entry, data), data.kanji, openDetail);
     detailElements.wrap.hidden = false;
   }
 
@@ -320,7 +339,10 @@ function renderGrid(container, data) {
     grid.hidden = false;
   });
 
-  const rows = data.kanji.map((entry) => ({ entry, item: createCard(entry, data.level, openDetail) }));
+  const rows = data.kanji.map((entry) => ({
+    entry,
+    item: createCard(entry, getEntryLevel(entry, data), openDetail),
+  }));
   grid.append(...rows.map((row) => row.item));
 
   const empty = document.createElement('p');
@@ -337,8 +359,8 @@ function renderGrid(container, data) {
       if (matches) visible += 1;
     }
     summary.textContent = query
-      ? `${data.level} · ${visible} / ${data.kanji.length} kanji`
-      : `${data.level} · ${data.kanji.length} kanji`;
+      ? `${levelLabel} · ${visible} / ${data.kanji.length} kanji`
+      : `${levelLabel} · ${data.kanji.length} kanji`;
     empty.hidden = visible > 0;
   }
 

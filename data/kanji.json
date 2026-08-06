@@ -1,14 +1,2310 @@
 {
-  "level": "N2",
-  "updatedAt": "2026-07-27",
+  "level": "N5",
+  "updatedAt": "2026-08-06",
   "kanji": [
+    {
+      "id": "kj-n5-001",
+      "character": "日",
+      "level": "N5",
+      "meaning": "өдөр, нар",
+      "onyomi": "ニチ、ジツ",
+      "kunyomi": "ひ、か",
+      "example": {
+        "word": "日よう日",
+        "reading": "にちようび",
+        "mn": "ням гараг"
+      },
+      "related": [
+        "月",
+        "火",
+        "水",
+        "木",
+        "金",
+        "土"
+      ]
+    },
+    {
+      "id": "kj-n5-002",
+      "character": "月",
+      "level": "N5",
+      "meaning": "сар",
+      "onyomi": "ゲツ、ガツ",
+      "kunyomi": "つき",
+      "example": {
+        "word": "月よう日",
+        "reading": "げつようび",
+        "mn": "даваа гараг"
+      },
+      "related": [
+        "日",
+        "火",
+        "水",
+        "木",
+        "金",
+        "土",
+        "年"
+      ]
+    },
+    {
+      "id": "kj-n5-003",
+      "character": "一",
+      "level": "N5",
+      "meaning": "нэг",
+      "onyomi": "イチ、イツ",
+      "kunyomi": "ひと.つ",
+      "example": {
+        "word": "一つ",
+        "reading": "ひとつ",
+        "mn": "нэг"
+      },
+      "related": [
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-004",
+      "character": "人",
+      "level": "N5",
+      "meaning": "хүн",
+      "onyomi": "ジン、ニン",
+      "kunyomi": "ひと",
+      "example": {
+        "word": "外国人",
+        "reading": "がいこくじん",
+        "mn": "гадаад хүн"
+      },
+      "related": [
+        "女",
+        "男",
+        "子",
+        "友"
+      ]
+    },
+    {
+      "id": "kj-n5-005",
+      "character": "週",
+      "level": "N5",
+      "meaning": "долоо хоног",
+      "onyomi": "シュウ",
+      "kunyomi": "",
+      "example": {
+        "word": "毎週",
+        "reading": "まいしゅう",
+        "mn": "долоо хоног бүр"
+      },
+      "related": [
+        "日",
+        "月",
+        "毎",
+        "年"
+      ]
+    },
+    {
+      "id": "kj-n5-006",
+      "character": "今",
+      "level": "N5",
+      "meaning": "одоо",
+      "onyomi": "コン、キン",
+      "kunyomi": "いま",
+      "example": {
+        "word": "今日",
+        "reading": "きょう",
+        "mn": "өнөөдөр"
+      },
+      "related": [
+        "日",
+        "年",
+        "朝"
+      ]
+    },
+    {
+      "id": "kj-n5-007",
+      "character": "二",
+      "level": "N5",
+      "meaning": "хоёр",
+      "onyomi": "ニ",
+      "kunyomi": "ふた.つ",
+      "example": {
+        "word": "二人",
+        "reading": "ふたり",
+        "mn": "хоёр хүн"
+      },
+      "related": [
+        "一",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-008",
+      "character": "毎",
+      "level": "N5",
+      "meaning": "бүр, тутам",
+      "onyomi": "マイ",
+      "kunyomi": "",
+      "example": {
+        "word": "毎日",
+        "reading": "まいにち",
+        "mn": "өдөр бүр"
+      },
+      "related": [
+        "日",
+        "週",
+        "年",
+        "朝"
+      ]
+    },
+    {
+      "id": "kj-n5-009",
+      "character": "先",
+      "level": "N5",
+      "meaning": "түрүү, өмнө",
+      "onyomi": "セン",
+      "kunyomi": "さき",
+      "example": {
+        "word": "先生",
+        "reading": "せんせい",
+        "mn": "багш"
+      },
+      "related": [
+        "生",
+        "前",
+        "月",
+        "週"
+      ]
+    },
+    {
+      "id": "kj-n5-010",
+      "character": "年",
+      "level": "N5",
+      "meaning": "жил, он",
+      "onyomi": "ネン",
+      "kunyomi": "とし",
+      "example": {
+        "word": "来年",
+        "reading": "らいねん",
+        "mn": "ирэх жил"
+      },
+      "related": [
+        "月",
+        "日",
+        "今",
+        "毎"
+      ]
+    },
+    {
+      "id": "kj-n5-011",
+      "character": "本",
+      "level": "N5",
+      "meaning": "ном; үндэс",
+      "onyomi": "ホン",
+      "kunyomi": "もと",
+      "example": {
+        "word": "本",
+        "reading": "ほん",
+        "mn": "ном"
+      },
+      "related": [
+        "読",
+        "書",
+        "店"
+      ]
+    },
+    {
+      "id": "kj-n5-012",
+      "character": "電",
+      "level": "N5",
+      "meaning": "цахилгаан",
+      "onyomi": "デン",
+      "kunyomi": "",
+      "example": {
+        "word": "電気",
+        "reading": "でんき",
+        "mn": "цахилгаан"
+      },
+      "related": [
+        "話",
+        "車",
+        "気"
+      ]
+    },
+    {
+      "id": "kj-n5-013",
+      "character": "話",
+      "level": "N5",
+      "meaning": "яриа, ярих",
+      "onyomi": "ワ",
+      "kunyomi": "はな.す、はなし",
+      "example": {
+        "word": "電話",
+        "reading": "でんわ",
+        "mn": "утас"
+      },
+      "related": [
+        "電",
+        "言",
+        "聞",
+        "語"
+      ]
+    },
+    {
+      "id": "kj-n5-014",
+      "character": "何",
+      "level": "N5",
+      "meaning": "юу",
+      "onyomi": "カ",
+      "kunyomi": "なに、なん",
+      "example": {
+        "word": "何時",
+        "reading": "なんじ",
+        "mn": "хэдэн цаг"
+      },
+      "related": [
+        "時",
+        "日",
+        "人"
+      ]
+    },
+    {
+      "id": "kj-n5-015",
+      "character": "間",
+      "level": "N5",
+      "meaning": "хооронд, зай",
+      "onyomi": "カン、ケン",
+      "kunyomi": "あいだ",
+      "example": {
+        "word": "時間",
+        "reading": "じかん",
+        "mn": "цаг хугацаа"
+      },
+      "related": [
+        "時",
+        "週",
+        "日",
+        "中"
+      ]
+    },
+    {
+      "id": "kj-n5-016",
+      "character": "時",
+      "level": "N5",
+      "meaning": "цаг",
+      "onyomi": "ジ",
+      "kunyomi": "とき",
+      "example": {
+        "word": "時間",
+        "reading": "じかん",
+        "mn": "цаг хугацаа"
+      },
+      "related": [
+        "間",
+        "分",
+        "半",
+        "日"
+      ]
+    },
+    {
+      "id": "kj-n5-017",
+      "character": "生",
+      "level": "N5",
+      "meaning": "амьдрал, төрөх",
+      "onyomi": "セイ、ショウ",
+      "kunyomi": "い.きる、う.まれる",
+      "example": {
+        "word": "学生",
+        "reading": "がくせい",
+        "mn": "оюутан"
+      },
+      "related": [
+        "先",
+        "学",
+        "人",
+        "年"
+      ]
+    },
+    {
+      "id": "kj-n5-018",
+      "character": "前",
+      "level": "N5",
+      "meaning": "өмнө, урд",
+      "onyomi": "ゼン",
+      "kunyomi": "まえ",
+      "example": {
+        "word": "午前",
+        "reading": "ごぜん",
+        "mn": "үдээс өмнө"
+      },
+      "related": [
+        "後",
+        "午",
+        "中",
+        "間"
+      ]
+    },
+    {
+      "id": "kj-n5-019",
+      "character": "朝",
+      "level": "N5",
+      "meaning": "өглөө",
+      "onyomi": "チョウ",
+      "kunyomi": "あさ",
+      "example": {
+        "word": "今朝",
+        "reading": "けさ",
+        "mn": "өнөө өглөө"
+      },
+      "related": [
+        "昼",
+        "夜",
+        "日",
+        "毎"
+      ]
+    },
+    {
+      "id": "kj-n5-020",
+      "character": "大",
+      "level": "N5",
+      "meaning": "том",
+      "onyomi": "ダイ、タイ",
+      "kunyomi": "おお.きい",
+      "example": {
+        "word": "大学",
+        "reading": "だいがく",
+        "mn": "их сургууль"
+      },
+      "related": [
+        "小",
+        "中",
+        "高",
+        "少"
+      ]
+    },
+    {
+      "id": "kj-n5-021",
+      "character": "国",
+      "level": "N5",
+      "meaning": "улс",
+      "onyomi": "コク",
+      "kunyomi": "くに",
+      "example": {
+        "word": "外国",
+        "reading": "がいこく",
+        "mn": "гадаад улс"
+      },
+      "related": [
+        "外",
+        "人",
+        "日",
+        "本"
+      ]
+    },
+    {
+      "id": "kj-n5-022",
+      "character": "来",
+      "level": "N5",
+      "meaning": "ирэх",
+      "onyomi": "ライ",
+      "kunyomi": "く.る",
+      "example": {
+        "word": "来週",
+        "reading": "らいしゅう",
+        "mn": "ирэх долоо хоног"
+      },
+      "related": [
+        "行",
+        "出",
+        "入",
+        "月",
+        "週",
+        "年"
+      ]
+    },
+    {
+      "id": "kj-n5-023",
+      "character": "九",
+      "level": "N5",
+      "meaning": "ес",
+      "onyomi": "キュウ、ク",
+      "kunyomi": "ここの.つ",
+      "example": {
+        "word": "九日",
+        "reading": "ここのか",
+        "mn": "сарын есний өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-024",
+      "character": "十",
+      "level": "N5",
+      "meaning": "арав",
+      "onyomi": "ジュウ",
+      "kunyomi": "とお",
+      "example": {
+        "word": "十日",
+        "reading": "とおか",
+        "mn": "сарын аравны өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "百",
+        "千"
+      ]
+    },
+    {
+      "id": "kj-n5-025",
+      "character": "手",
+      "level": "N5",
+      "meaning": "гар",
+      "onyomi": "シュ",
+      "kunyomi": "て",
+      "example": {
+        "word": "手紙",
+        "reading": "てがみ",
+        "mn": "захидал"
+      },
+      "related": [
+        "足",
+        "目",
+        "耳",
+        "口"
+      ]
+    },
+    {
+      "id": "kj-n5-026",
+      "character": "出",
+      "level": "N5",
+      "meaning": "гарах",
+      "onyomi": "シュツ",
+      "kunyomi": "で.る、だ.す",
+      "example": {
+        "word": "出口",
+        "reading": "でぐち",
+        "mn": "гарах хаалга"
+      },
+      "related": [
+        "入",
+        "口",
+        "来",
+        "行"
+      ]
+    },
+    {
+      "id": "kj-n5-027",
+      "character": "六",
+      "level": "N5",
+      "meaning": "зургаа",
+      "onyomi": "ロク",
+      "kunyomi": "むっ.つ、む",
+      "example": {
+        "word": "六日",
+        "reading": "むいか",
+        "mn": "сарын зургааны өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "七",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-028",
+      "character": "会",
+      "level": "N5",
+      "meaning": "уулзах; нийгэмлэг",
+      "onyomi": "カイ",
+      "kunyomi": "あ.う",
+      "example": {
+        "word": "会社",
+        "reading": "かいしゃ",
+        "mn": "компани"
+      },
+      "related": [
+        "社",
+        "人",
+        "友",
+        "話"
+      ]
+    },
+    {
+      "id": "kj-n5-029",
+      "character": "後",
+      "level": "N5",
+      "meaning": "дараа, ард",
+      "onyomi": "ゴ、コウ",
+      "kunyomi": "あと、うし.ろ",
+      "example": {
+        "word": "午後",
+        "reading": "ごご",
+        "mn": "үдээс хойш"
+      },
+      "related": [
+        "前",
+        "午",
+        "中",
+        "後"
+      ]
+    },
+    {
+      "id": "kj-n5-030",
+      "character": "五",
+      "level": "N5",
+      "meaning": "тав",
+      "onyomi": "ゴ",
+      "kunyomi": "いつ.つ",
+      "example": {
+        "word": "五日",
+        "reading": "いつか",
+        "mn": "сарын тавны өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "四",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-031",
+      "character": "入",
+      "level": "N5",
+      "meaning": "орох",
+      "onyomi": "ニュウ",
+      "kunyomi": "はい.る、い.れる",
+      "example": {
+        "word": "入口",
+        "reading": "いりぐち",
+        "mn": "орох хаалга"
+      },
+      "related": [
+        "出",
+        "口",
+        "来",
+        "行"
+      ]
+    },
+    {
+      "id": "kj-n5-032",
+      "character": "口",
+      "level": "N5",
+      "meaning": "ам",
+      "onyomi": "コウ",
+      "kunyomi": "くち",
+      "example": {
+        "word": "入口",
+        "reading": "いりぐち",
+        "mn": "орох хаалга"
+      },
+      "related": [
+        "目",
+        "耳",
+        "手",
+        "足"
+      ]
+    },
+    {
+      "id": "kj-n5-033",
+      "character": "上",
+      "level": "N5",
+      "meaning": "дээр",
+      "onyomi": "ジョウ",
+      "kunyomi": "うえ、あ.がる",
+      "example": {
+        "word": "上手",
+        "reading": "じょうず",
+        "mn": "чадварлаг"
+      },
+      "related": [
+        "下",
+        "中",
+        "前",
+        "後"
+      ]
+    },
+    {
+      "id": "kj-n5-034",
+      "character": "金",
+      "level": "N5",
+      "meaning": "алт, мөнгө",
+      "onyomi": "キン",
+      "kunyomi": "かね",
+      "example": {
+        "word": "お金",
+        "reading": "おかね",
+        "mn": "мөнгө"
+      },
+      "related": [
+        "銀",
+        "土",
+        "日",
+        "月",
+        "火",
+        "水",
+        "木"
+      ]
+    },
+    {
+      "id": "kj-n5-035",
+      "character": "子",
+      "level": "N5",
+      "meaning": "хүүхэд",
+      "onyomi": "シ、ス",
+      "kunyomi": "こ",
+      "example": {
+        "word": "子ども",
+        "reading": "こども",
+        "mn": "хүүхэд"
+      },
+      "related": [
+        "女",
+        "男",
+        "人",
+        "学"
+      ]
+    },
+    {
+      "id": "kj-n5-036",
+      "character": "外",
+      "level": "N5",
+      "meaning": "гадна, гадаад",
+      "onyomi": "ガイ",
+      "kunyomi": "そと",
+      "example": {
+        "word": "外国",
+        "reading": "がいこく",
+        "mn": "гадаад улс"
+      },
+      "related": [
+        "中",
+        "国",
+        "人"
+      ]
+    },
+    {
+      "id": "kj-n5-037",
+      "character": "学",
+      "level": "N5",
+      "meaning": "сурах",
+      "onyomi": "ガク",
+      "kunyomi": "まな.ぶ",
+      "example": {
+        "word": "学校",
+        "reading": "がっこう",
+        "mn": "сургууль"
+      },
+      "related": [
+        "校",
+        "生",
+        "先",
+        "読",
+        "書"
+      ]
+    },
+    {
+      "id": "kj-n5-038",
+      "character": "木",
+      "level": "N5",
+      "meaning": "мод",
+      "onyomi": "モク、ボク",
+      "kunyomi": "き",
+      "example": {
+        "word": "木よう日",
+        "reading": "もくようび",
+        "mn": "пүрэв гараг"
+      },
+      "related": [
+        "日",
+        "月",
+        "火",
+        "水",
+        "金",
+        "土",
+        "花"
+      ]
+    },
+    {
+      "id": "kj-n5-039",
+      "character": "三",
+      "level": "N5",
+      "meaning": "гурав",
+      "onyomi": "サン",
+      "kunyomi": "みっ.つ",
+      "example": {
+        "word": "三日",
+        "reading": "みっか",
+        "mn": "сарын гурвны өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "四",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-040",
+      "character": "水",
+      "level": "N5",
+      "meaning": "ус",
+      "onyomi": "スイ",
+      "kunyomi": "みず",
+      "example": {
+        "word": "水よう日",
+        "reading": "すいようび",
+        "mn": "лхагва гараг"
+      },
+      "related": [
+        "日",
+        "月",
+        "火",
+        "木",
+        "金",
+        "土",
+        "雨"
+      ]
+    },
+    {
+      "id": "kj-n5-041",
+      "character": "八",
+      "level": "N5",
+      "meaning": "найм",
+      "onyomi": "ハチ",
+      "kunyomi": "やっ.つ、よう",
+      "example": {
+        "word": "八日",
+        "reading": "ようか",
+        "mn": "сарын наймны өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "七",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-042",
+      "character": "駅",
+      "level": "N5",
+      "meaning": "өртөө",
+      "onyomi": "エキ",
+      "kunyomi": "",
+      "example": {
+        "word": "駅",
+        "reading": "えき",
+        "mn": "өртөө"
+      },
+      "related": [
+        "車",
+        "電",
+        "行",
+        "道"
+      ]
+    },
+    {
+      "id": "kj-n5-043",
+      "character": "語",
+      "level": "N5",
+      "meaning": "хэл, үг",
+      "onyomi": "ゴ",
+      "kunyomi": "かた.る",
+      "example": {
+        "word": "日本語",
+        "reading": "にほんご",
+        "mn": "япон хэл"
+      },
+      "related": [
+        "話",
+        "言",
+        "読",
+        "聞",
+        "学"
+      ]
+    },
+    {
+      "id": "kj-n5-044",
+      "character": "中",
+      "level": "N5",
+      "meaning": "дунд, дотор",
+      "onyomi": "チュウ",
+      "kunyomi": "なか",
+      "example": {
+        "word": "中",
+        "reading": "なか",
+        "mn": "дотор"
+      },
+      "related": [
+        "上",
+        "下",
+        "外",
+        "前",
+        "後"
+      ]
+    },
+    {
+      "id": "kj-n5-045",
+      "character": "半",
+      "level": "N5",
+      "meaning": "хагас",
+      "onyomi": "ハン",
+      "kunyomi": "なか.ば",
+      "example": {
+        "word": "半分",
+        "reading": "はんぶん",
+        "mn": "хагас"
+      },
+      "related": [
+        "分",
+        "時",
+        "間"
+      ]
+    },
+    {
+      "id": "kj-n5-046",
+      "character": "分",
+      "level": "N5",
+      "meaning": "минут; хуваах",
+      "onyomi": "ブン、フン",
+      "kunyomi": "わ.ける",
+      "example": {
+        "word": "半分",
+        "reading": "はんぶん",
+        "mn": "хагас"
+      },
+      "related": [
+        "半",
+        "時",
+        "間"
+      ]
+    },
+    {
+      "id": "kj-n5-047",
+      "character": "赤",
+      "level": "N5",
+      "meaning": "улаан",
+      "onyomi": "セキ",
+      "kunyomi": "あか、あか.い",
+      "example": {
+        "word": "赤い",
+        "reading": "あかい",
+        "mn": "улаан"
+      },
+      "related": [
+        "白"
+      ]
+    },
+    {
+      "id": "kj-n5-048",
+      "character": "新",
+      "level": "N5",
+      "meaning": "шинэ",
+      "onyomi": "シン",
+      "kunyomi": "あたら.しい",
+      "example": {
+        "word": "新聞",
+        "reading": "しんぶん",
+        "mn": "сонин"
+      },
+      "related": [
+        "古",
+        "聞",
+        "書"
+      ]
+    },
+    {
+      "id": "kj-n5-049",
+      "character": "行",
+      "level": "N5",
+      "meaning": "явах",
+      "onyomi": "コウ、ギョウ",
+      "kunyomi": "い.く",
+      "example": {
+        "word": "行きます",
+        "reading": "いきます",
+        "mn": "явах"
+      },
+      "related": [
+        "来",
+        "出",
+        "入",
+        "道"
+      ]
+    },
+    {
+      "id": "kj-n5-050",
+      "character": "母",
+      "level": "N5",
+      "meaning": "ээж",
+      "onyomi": "ボ",
+      "kunyomi": "はは",
+      "example": {
+        "word": "母",
+        "reading": "はは",
+        "mn": "ээж"
+      },
+      "related": [
+        "父",
+        "人",
+        "女",
+        "子",
+        "家"
+      ]
+    },
+    {
+      "id": "kj-n5-051",
+      "character": "父",
+      "level": "N5",
+      "meaning": "аав",
+      "onyomi": "フ",
+      "kunyomi": "ちち",
+      "example": {
+        "word": "父",
+        "reading": "ちち",
+        "mn": "аав"
+      },
+      "related": [
+        "母",
+        "人",
+        "男",
+        "子",
+        "家"
+      ]
+    },
+    {
+      "id": "kj-n5-052",
+      "character": "男",
+      "level": "N5",
+      "meaning": "эрэгтэй",
+      "onyomi": "ダン、ナン",
+      "kunyomi": "おとこ",
+      "example": {
+        "word": "男の子",
+        "reading": "おとこのこ",
+        "mn": "хүү"
+      },
+      "related": [
+        "女",
+        "人",
+        "子"
+      ]
+    },
+    {
+      "id": "kj-n5-053",
+      "character": "店",
+      "level": "N5",
+      "meaning": "дэлгүүр",
+      "onyomi": "テン",
+      "kunyomi": "みせ",
+      "example": {
+        "word": "店",
+        "reading": "みせ",
+        "mn": "дэлгүүр"
+      },
+      "related": [
+        "買",
+        "本",
+        "社"
+      ]
+    },
+    {
+      "id": "kj-n5-054",
+      "character": "女",
+      "level": "N5",
+      "meaning": "эмэгтэй",
+      "onyomi": "ジョ",
+      "kunyomi": "おんな",
+      "example": {
+        "word": "女の子",
+        "reading": "おんなのこ",
+        "mn": "охин"
+      },
+      "related": [
+        "男",
+        "人",
+        "子",
+        "母"
+      ]
+    },
+    {
+      "id": "kj-n5-055",
+      "character": "火",
+      "level": "N5",
+      "meaning": "гал",
+      "onyomi": "カ",
+      "kunyomi": "ひ",
+      "example": {
+        "word": "火よう日",
+        "reading": "かようび",
+        "mn": "мягмар гараг"
+      },
+      "related": [
+        "日",
+        "月",
+        "水",
+        "木",
+        "金",
+        "土"
+      ]
+    },
+    {
+      "id": "kj-n5-056",
+      "character": "社",
+      "level": "N5",
+      "meaning": "нийгэмлэг, компани",
+      "onyomi": "シャ",
+      "kunyomi": "やしろ",
+      "example": {
+        "word": "会社",
+        "reading": "かいしゃ",
+        "mn": "компани"
+      },
+      "related": [
+        "会",
+        "店",
+        "人"
+      ]
+    },
+    {
+      "id": "kj-n5-057",
+      "character": "買",
+      "level": "N5",
+      "meaning": "худалдаж авах",
+      "onyomi": "バイ",
+      "kunyomi": "か.う",
+      "example": {
+        "word": "買います",
+        "reading": "かいます",
+        "mn": "худалдаж авах"
+      },
+      "related": [
+        "店",
+        "金",
+        "車"
+      ]
+    },
+    {
+      "id": "kj-n5-058",
+      "character": "紙",
+      "level": "N5",
+      "meaning": "цаас",
+      "onyomi": "シ",
+      "kunyomi": "かみ",
+      "example": {
+        "word": "手紙",
+        "reading": "てがみ",
+        "mn": "захидал"
+      },
+      "related": [
+        "書",
+        "本",
+        "文"
+      ]
+    },
+    {
+      "id": "kj-n5-059",
+      "character": "聞",
+      "level": "N5",
+      "meaning": "сонсох, асуух",
+      "onyomi": "ブン",
+      "kunyomi": "き.く",
+      "example": {
+        "word": "新聞",
+        "reading": "しんぶん",
+        "mn": "сонин"
+      },
+      "related": [
+        "話",
+        "言",
+        "語",
+        "読",
+        "新"
+      ]
+    },
+    {
+      "id": "kj-n5-060",
+      "character": "下",
+      "level": "N5",
+      "meaning": "доор",
+      "onyomi": "カ、ゲ",
+      "kunyomi": "した、さ.がる",
+      "example": {
+        "word": "くつ下",
+        "reading": "くつした",
+        "mn": "оймс"
+      },
+      "related": [
+        "上",
+        "中",
+        "前",
+        "後"
+      ]
+    },
+    {
+      "id": "kj-n5-061",
+      "character": "車",
+      "level": "N5",
+      "meaning": "машин, тэрэг",
+      "onyomi": "シャ",
+      "kunyomi": "くるま",
+      "example": {
+        "word": "電車",
+        "reading": "でんしゃ",
+        "mn": "галт тэрэг"
+      },
+      "related": [
+        "電",
+        "駅",
+        "道",
+        "行"
+      ]
+    },
+    {
+      "id": "kj-n5-062",
+      "character": "午",
+      "level": "N5",
+      "meaning": "үд",
+      "onyomi": "ゴ",
+      "kunyomi": "",
+      "example": {
+        "word": "午後",
+        "reading": "ごご",
+        "mn": "үдээс хойш"
+      },
+      "related": [
+        "前",
+        "後",
+        "時",
+        "日"
+      ]
+    },
+    {
+      "id": "kj-n5-063",
+      "character": "四",
+      "level": "N5",
+      "meaning": "дөрөв",
+      "onyomi": "シ",
+      "kunyomi": "よっ.つ、よん",
+      "example": {
+        "word": "四つ",
+        "reading": "よっつ",
+        "mn": "дөрөв"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "五",
+        "六",
+        "七",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-064",
+      "character": "少",
+      "level": "N5",
+      "meaning": "цөөн, бага",
+      "onyomi": "ショウ",
+      "kunyomi": "すく.ない、すこ.し",
+      "example": {
+        "word": "少し",
+        "reading": "すこし",
+        "mn": "бага зэрэг"
+      },
+      "related": [
+        "多",
+        "小",
+        "大",
+        "高"
+      ]
+    },
+    {
+      "id": "kj-n5-065",
+      "character": "高",
+      "level": "N5",
+      "meaning": "өндөр, үнэтэй",
+      "onyomi": "コウ",
+      "kunyomi": "たか.い",
+      "example": {
+        "word": "高い",
+        "reading": "たかい",
+        "mn": "үнэтэй"
+      },
+      "related": [
+        "安",
+        "広",
+        "長",
+        "大"
+      ]
+    },
+    {
+      "id": "kj-n5-066",
+      "character": "食",
+      "level": "N5",
+      "meaning": "идэх, хоол",
+      "onyomi": "ショク",
+      "kunyomi": "た.べる",
+      "example": {
+        "word": "食べます",
+        "reading": "たべます",
+        "mn": "идэх"
+      },
+      "related": [
+        "飲",
+        "昼",
+        "朝",
+        "店"
+      ]
+    },
+    {
+      "id": "kj-n5-067",
+      "character": "小",
+      "level": "N5",
+      "meaning": "жижиг",
+      "onyomi": "ショウ",
+      "kunyomi": "ちい.さい、こ",
+      "example": {
+        "word": "小さい",
+        "reading": "ちいさい",
+        "mn": "жижиг"
+      },
+      "related": [
+        "大",
+        "中",
+        "少",
+        "高"
+      ]
+    },
+    {
+      "id": "kj-n5-068",
+      "character": "近",
+      "level": "N5",
+      "meaning": "ойрхон",
+      "onyomi": "キン",
+      "kunyomi": "ちか.い",
+      "example": {
+        "word": "近い",
+        "reading": "ちかい",
+        "mn": "ойрхон"
+      },
+      "related": [
+        "道",
+        "行",
+        "来",
+        "長"
+      ]
+    },
+    {
+      "id": "kj-n5-069",
+      "character": "気",
+      "level": "N5",
+      "meaning": "агаар, сэтгэл",
+      "onyomi": "キ、ケ",
+      "kunyomi": "いき",
+      "example": {
+        "word": "天気",
+        "reading": "てんき",
+        "mn": "цаг агаар"
+      },
+      "related": [
+        "天",
+        "電",
+        "気",
+        "雨"
+      ]
+    },
+    {
+      "id": "kj-n5-070",
+      "character": "七",
+      "level": "N5",
+      "meaning": "долоо",
+      "onyomi": "シチ",
+      "kunyomi": "なな.つ",
+      "example": {
+        "word": "七日",
+        "reading": "なのか",
+        "mn": "сарын долооны өдөр"
+      },
+      "related": [
+        "一",
+        "二",
+        "三",
+        "四",
+        "五",
+        "六",
+        "八",
+        "九",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-071",
+      "character": "名",
+      "level": "N5",
+      "meaning": "нэр",
+      "onyomi": "メイ",
+      "kunyomi": "な",
+      "example": {
+        "word": "名前",
+        "reading": "なまえ",
+        "mn": "нэр"
+      },
+      "related": [
+        "前",
+        "人",
+        "有"
+      ]
+    },
+    {
+      "id": "kj-n5-072",
+      "character": "飲",
+      "level": "N5",
+      "meaning": "уух",
+      "onyomi": "イン",
+      "kunyomi": "の.む",
+      "example": {
+        "word": "飲みます",
+        "reading": "のみます",
+        "mn": "уух"
+      },
+      "related": [
+        "食",
+        "水",
+        "気"
+      ]
+    },
+    {
+      "id": "kj-n5-073",
+      "character": "昼",
+      "level": "N5",
+      "meaning": "өдөр, үд дунд",
+      "onyomi": "チュウ",
+      "kunyomi": "ひる",
+      "example": {
+        "word": "昼ごはん",
+        "reading": "ひるごはん",
+        "mn": "өдрийн хоол"
+      },
+      "related": [
+        "朝",
+        "夜",
+        "日",
+        "食"
+      ]
+    },
+    {
+      "id": "kj-n5-074",
+      "character": "見",
+      "level": "N5",
+      "meaning": "харах",
+      "onyomi": "ケン",
+      "kunyomi": "み.る、み.せる",
+      "example": {
+        "word": "見ます",
+        "reading": "みます",
+        "mn": "харах"
+      },
+      "related": [
+        "聞",
+        "読",
+        "目",
+        "知"
+      ]
+    },
+    {
+      "id": "kj-n5-075",
+      "character": "休",
+      "level": "N5",
+      "meaning": "амрах",
+      "onyomi": "キュウ",
+      "kunyomi": "やす.む",
+      "example": {
+        "word": "休み",
+        "reading": "やすみ",
+        "mn": "амралт"
+      },
+      "related": [
+        "日",
+        "人",
+        "木"
+      ]
+    },
+    {
+      "id": "kj-n5-076",
+      "character": "私",
+      "level": "N5",
+      "meaning": "би",
+      "onyomi": "シ",
+      "kunyomi": "わたし、わたくし",
+      "example": {
+        "word": "私",
+        "reading": "わたし",
+        "mn": "би"
+      },
+      "related": [
+        "人",
+        "友",
+        "家"
+      ]
+    },
+    {
+      "id": "kj-n5-077",
+      "character": "円",
+      "level": "N5",
+      "meaning": "иен, дугуй",
+      "onyomi": "エン",
+      "kunyomi": "まる.い",
+      "example": {
+        "word": "円",
+        "reading": "えん",
+        "mn": "иен"
+      },
+      "related": [
+        "金",
+        "千",
+        "百",
+        "万"
+      ]
+    },
+    {
+      "id": "kj-n5-078",
+      "character": "足",
+      "level": "N5",
+      "meaning": "хөл; хангалттай",
+      "onyomi": "ソク",
+      "kunyomi": "あし",
+      "example": {
+        "word": "足",
+        "reading": "あし",
+        "mn": "хөл"
+      },
+      "related": [
+        "手",
+        "目",
+        "耳",
+        "口",
+        "歩"
+      ]
+    },
+    {
+      "id": "kj-n5-079",
+      "character": "雨",
+      "level": "N5",
+      "meaning": "бороо",
+      "onyomi": "ウ",
+      "kunyomi": "あめ",
+      "example": {
+        "word": "雨",
+        "reading": "あめ",
+        "mn": "бороо"
+      },
+      "related": [
+        "天",
+        "空",
+        "水",
+        "気"
+      ]
+    },
+    {
+      "id": "kj-n5-080",
+      "character": "歩",
+      "level": "N5",
+      "meaning": "алхах",
+      "onyomi": "ホ",
+      "kunyomi": "ある.く",
+      "example": {
+        "word": "歩きます",
+        "reading": "あるきます",
+        "mn": "алхах"
+      },
+      "related": [
+        "行",
+        "道",
+        "足",
+        "立"
+      ]
+    },
+    {
+      "id": "kj-n5-081",
+      "character": "言",
+      "level": "N5",
+      "meaning": "хэлэх, үг",
+      "onyomi": "ゲン",
+      "kunyomi": "い.う",
+      "example": {
+        "word": "言います",
+        "reading": "いいます",
+        "mn": "хэлэх"
+      },
+      "related": [
+        "話",
+        "語",
+        "聞",
+        "読",
+        "文"
+      ]
+    },
+    {
+      "id": "kj-n5-082",
+      "character": "家",
+      "level": "N5",
+      "meaning": "гэр",
+      "onyomi": "カ、ケ",
+      "kunyomi": "いえ",
+      "example": {
+        "word": "家",
+        "reading": "いえ",
+        "mn": "гэр"
+      },
+      "related": [
+        "店",
+        "校",
+        "社",
+        "住"
+      ]
+    },
+    {
+      "id": "kj-n5-083",
+      "character": "多",
+      "level": "N5",
+      "meaning": "олон",
+      "onyomi": "タ",
+      "kunyomi": "おお.い",
+      "example": {
+        "word": "多い",
+        "reading": "おおい",
+        "mn": "олон"
+      },
+      "related": [
+        "少",
+        "大",
+        "広"
+      ]
+    },
+    {
+      "id": "kj-n5-084",
+      "character": "書",
+      "level": "N5",
+      "meaning": "бичих",
+      "onyomi": "ショ",
+      "kunyomi": "か.く",
+      "example": {
+        "word": "書きます",
+        "reading": "かきます",
+        "mn": "бичих"
+      },
+      "related": [
+        "読",
+        "文",
+        "紙",
+        "学",
+        "本"
+      ]
+    },
+    {
+      "id": "kj-n5-085",
+      "character": "校",
+      "level": "N5",
+      "meaning": "сургууль",
+      "onyomi": "コウ",
+      "kunyomi": "",
+      "example": {
+        "word": "学校",
+        "reading": "がっこう",
+        "mn": "сургууль"
+      },
+      "related": [
+        "学",
+        "生",
+        "先",
+        "木"
+      ]
+    },
+    {
+      "id": "kj-n5-086",
+      "character": "川",
+      "level": "N5",
+      "meaning": "гол",
+      "onyomi": "セン",
+      "kunyomi": "かわ",
+      "example": {
+        "word": "川",
+        "reading": "かわ",
+        "mn": "гол"
+      },
+      "related": [
+        "水",
+        "山",
+        "空",
+        "天"
+      ]
+    },
+    {
+      "id": "kj-n5-087",
+      "character": "北",
+      "level": "N5",
+      "meaning": "хойд",
+      "onyomi": "ホク",
+      "kunyomi": "きた",
+      "example": {
+        "word": "北",
+        "reading": "きた",
+        "mn": "хойд зүг"
+      },
+      "related": [
+        "南",
+        "東",
+        "西"
+      ]
+    },
+    {
+      "id": "kj-n5-088",
+      "character": "銀",
+      "level": "N5",
+      "meaning": "мөнгө (метал)",
+      "onyomi": "ギン",
+      "kunyomi": "",
+      "example": {
+        "word": "銀行",
+        "reading": "ぎんこう",
+        "mn": "банк"
+      },
+      "related": [
+        "金",
+        "行",
+        "店"
+      ]
+    },
+    {
+      "id": "kj-n5-089",
+      "character": "魚",
+      "level": "N5",
+      "meaning": "загас",
+      "onyomi": "ギョ",
+      "kunyomi": "さかな",
+      "example": {
+        "word": "魚",
+        "reading": "さかな",
+        "mn": "загас"
+      },
+      "related": [
+        "水",
+        "川",
+        "食"
+      ]
+    },
+    {
+      "id": "kj-n5-090",
+      "character": "知",
+      "level": "N5",
+      "meaning": "мэдэх",
+      "onyomi": "チ",
+      "kunyomi": "し.る",
+      "example": {
+        "word": "知ります",
+        "reading": "しります",
+        "mn": "мэдэх"
+      },
+      "related": [
+        "見",
+        "聞",
+        "学",
+        "読"
+      ]
+    },
+    {
+      "id": "kj-n5-091",
+      "character": "白",
+      "level": "N5",
+      "meaning": "цагаан",
+      "onyomi": "ハク",
+      "kunyomi": "しろ、しろ.い",
+      "example": {
+        "word": "白い",
+        "reading": "しろい",
+        "mn": "цагаан"
+      },
+      "related": [
+        "赤"
+      ]
+    },
+    {
+      "id": "kj-n5-092",
+      "character": "住",
+      "level": "N5",
+      "meaning": "амьдрах",
+      "onyomi": "ジュウ",
+      "kunyomi": "す.む",
+      "example": {
+        "word": "住みます",
+        "reading": "すみます",
+        "mn": "амьдрах"
+      },
+      "related": [
+        "家",
+        "人",
+        "生"
+      ]
+    },
+    {
+      "id": "kj-n5-093",
+      "character": "千",
+      "level": "N5",
+      "meaning": "мянга",
+      "onyomi": "セン",
+      "kunyomi": "ち",
+      "example": {
+        "word": "千",
+        "reading": "せん",
+        "mn": "мянга"
+      },
+      "related": [
+        "百",
+        "万",
+        "円",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-094",
+      "character": "空",
+      "level": "N5",
+      "meaning": "тэнгэр, хоосон",
+      "onyomi": "クウ",
+      "kunyomi": "そら、あ.く",
+      "example": {
+        "word": "空",
+        "reading": "そら",
+        "mn": "тэнгэр"
+      },
+      "related": [
+        "天",
+        "雨",
+        "気",
+        "山"
+      ]
+    },
+    {
+      "id": "kj-n5-095",
+      "character": "立",
+      "level": "N5",
+      "meaning": "зогсох",
+      "onyomi": "リツ",
+      "kunyomi": "た.つ",
+      "example": {
+        "word": "立ちます",
+        "reading": "たちます",
+        "mn": "зогсох"
+      },
+      "related": [
+        "歩",
+        "行",
+        "足"
+      ]
+    },
+    {
+      "id": "kj-n5-096",
+      "character": "天",
+      "level": "N5",
+      "meaning": "тэнгэр, байгаль",
+      "onyomi": "テン",
+      "kunyomi": "あま",
+      "example": {
+        "word": "天気",
+        "reading": "てんき",
+        "mn": "цаг агаар"
+      },
+      "related": [
+        "気",
+        "空",
+        "雨",
+        "日"
+      ]
+    },
+    {
+      "id": "kj-n5-097",
+      "character": "友",
+      "level": "N5",
+      "meaning": "найз",
+      "onyomi": "ユウ",
+      "kunyomi": "とも",
+      "example": {
+        "word": "友だち",
+        "reading": "ともだち",
+        "mn": "найз"
+      },
+      "related": [
+        "人",
+        "会",
+        "話",
+        "私"
+      ]
+    },
+    {
+      "id": "kj-n5-098",
+      "character": "土",
+      "level": "N5",
+      "meaning": "шороо, газар",
+      "onyomi": "ド、ト",
+      "kunyomi": "つち",
+      "example": {
+        "word": "土よう日",
+        "reading": "どようび",
+        "mn": "бямба гараг"
+      },
+      "related": [
+        "日",
+        "月",
+        "火",
+        "水",
+        "木",
+        "金",
+        "山"
+      ]
+    },
+    {
+      "id": "kj-n5-099",
+      "character": "長",
+      "level": "N5",
+      "meaning": "урт, ахлагч",
+      "onyomi": "チョウ",
+      "kunyomi": "なが.い",
+      "example": {
+        "word": "長い",
+        "reading": "ながい",
+        "mn": "урт"
+      },
+      "related": [
+        "高",
+        "広",
+        "多"
+      ]
+    },
+    {
+      "id": "kj-n5-100",
+      "character": "西",
+      "level": "N5",
+      "meaning": "баруун",
+      "onyomi": "セイ",
+      "kunyomi": "にし",
+      "example": {
+        "word": "西",
+        "reading": "にし",
+        "mn": "баруун зүг"
+      },
+      "related": [
+        "東",
+        "南",
+        "北"
+      ]
+    },
+    {
+      "id": "kj-n5-101",
+      "character": "花",
+      "level": "N5",
+      "meaning": "цэцэг",
+      "onyomi": "カ",
+      "kunyomi": "はな",
+      "example": {
+        "word": "花",
+        "reading": "はな",
+        "mn": "цэцэг"
+      },
+      "related": [
+        "木",
+        "山",
+        "空"
+      ]
+    },
+    {
+      "id": "kj-n5-102",
+      "character": "東",
+      "level": "N5",
+      "meaning": "зүүн",
+      "onyomi": "トウ",
+      "kunyomi": "ひがし",
+      "example": {
+        "word": "東",
+        "reading": "ひがし",
+        "mn": "зүүн зүг"
+      },
+      "related": [
+        "西",
+        "南",
+        "北"
+      ]
+    },
+    {
+      "id": "kj-n5-103",
+      "character": "左",
+      "level": "N5",
+      "meaning": "зүүн (гар тал)",
+      "onyomi": "サ",
+      "kunyomi": "ひだり",
+      "example": {
+        "word": "左",
+        "reading": "ひだり",
+        "mn": "зүүн"
+      },
+      "related": [
+        "右",
+        "上",
+        "下",
+        "手"
+      ]
+    },
+    {
+      "id": "kj-n5-104",
+      "character": "百",
+      "level": "N5",
+      "meaning": "зуу",
+      "onyomi": "ヒャク",
+      "kunyomi": "",
+      "example": {
+        "word": "百",
+        "reading": "ひゃく",
+        "mn": "зуу"
+      },
+      "related": [
+        "千",
+        "万",
+        "円",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-105",
+      "character": "広",
+      "level": "N5",
+      "meaning": "өргөн, уужим",
+      "onyomi": "コウ",
+      "kunyomi": "ひろ.い",
+      "example": {
+        "word": "広い",
+        "reading": "ひろい",
+        "mn": "уужим"
+      },
+      "related": [
+        "大",
+        "多",
+        "長",
+        "高"
+      ]
+    },
+    {
+      "id": "kj-n5-106",
+      "character": "古",
+      "level": "N5",
+      "meaning": "хуучин",
+      "onyomi": "コ",
+      "kunyomi": "ふる.い",
+      "example": {
+        "word": "古い",
+        "reading": "ふるい",
+        "mn": "хуучин"
+      },
+      "related": [
+        "新",
+        "本",
+        "文"
+      ]
+    },
+    {
+      "id": "kj-n5-107",
+      "character": "文",
+      "level": "N5",
+      "meaning": "бичиг, өгүүлбэр",
+      "onyomi": "ブン",
+      "kunyomi": "ふみ",
+      "example": {
+        "word": "文",
+        "reading": "ぶん",
+        "mn": "өгүүлбэр"
+      },
+      "related": [
+        "書",
+        "学",
+        "語",
+        "紙"
+      ]
+    },
+    {
+      "id": "kj-n5-108",
+      "character": "万",
+      "level": "N5",
+      "meaning": "арван мянга",
+      "onyomi": "マン",
+      "kunyomi": "",
+      "example": {
+        "word": "万",
+        "reading": "まん",
+        "mn": "арван мянга"
+      },
+      "related": [
+        "千",
+        "百",
+        "円",
+        "十"
+      ]
+    },
+    {
+      "id": "kj-n5-109",
+      "character": "右",
+      "level": "N5",
+      "meaning": "баруун (гар тал)",
+      "onyomi": "ユウ",
+      "kunyomi": "みぎ",
+      "example": {
+        "word": "右",
+        "reading": "みぎ",
+        "mn": "баруун"
+      },
+      "related": [
+        "左",
+        "上",
+        "下",
+        "手"
+      ]
+    },
+    {
+      "id": "kj-n5-110",
+      "character": "道",
+      "level": "N5",
+      "meaning": "зам",
+      "onyomi": "ドウ",
+      "kunyomi": "みち",
+      "example": {
+        "word": "道",
+        "reading": "みち",
+        "mn": "зам"
+      },
+      "related": [
+        "行",
+        "来",
+        "車",
+        "近",
+        "歩"
+      ]
+    },
+    {
+      "id": "kj-n5-111",
+      "character": "南",
+      "level": "N5",
+      "meaning": "өмнөд",
+      "onyomi": "ナン",
+      "kunyomi": "みなみ",
+      "example": {
+        "word": "南",
+        "reading": "みなみ",
+        "mn": "өмнөд зүг"
+      },
+      "related": [
+        "北",
+        "東",
+        "西"
+      ]
+    },
+    {
+      "id": "kj-n5-112",
+      "character": "耳",
+      "level": "N5",
+      "meaning": "чих",
+      "onyomi": "ジ",
+      "kunyomi": "みみ",
+      "example": {
+        "word": "耳",
+        "reading": "みみ",
+        "mn": "чих"
+      },
+      "related": [
+        "目",
+        "口",
+        "手",
+        "足",
+        "聞"
+      ]
+    },
+    {
+      "id": "kj-n5-113",
+      "character": "目",
+      "level": "N5",
+      "meaning": "нүд",
+      "onyomi": "モク",
+      "kunyomi": "め",
+      "example": {
+        "word": "目",
+        "reading": "め",
+        "mn": "нүд"
+      },
+      "related": [
+        "耳",
+        "口",
+        "手",
+        "足",
+        "見"
+      ]
+    },
+    {
+      "id": "kj-n5-114",
+      "character": "安",
+      "level": "N5",
+      "meaning": "хямд, тайван",
+      "onyomi": "アン",
+      "kunyomi": "やす.い",
+      "example": {
+        "word": "安い",
+        "reading": "やすい",
+        "mn": "хямд"
+      },
+      "related": [
+        "高",
+        "家",
+        "女"
+      ]
+    },
+    {
+      "id": "kj-n5-115",
+      "character": "山",
+      "level": "N5",
+      "meaning": "уул",
+      "onyomi": "サン",
+      "kunyomi": "やま",
+      "example": {
+        "word": "山",
+        "reading": "やま",
+        "mn": "уул"
+      },
+      "related": [
+        "川",
+        "空",
+        "土",
+        "木"
+      ]
+    },
+    {
+      "id": "kj-n5-116",
+      "character": "有",
+      "level": "N5",
+      "meaning": "байх, эзэмших",
+      "onyomi": "ユウ",
+      "kunyomi": "あ.る",
+      "example": {
+        "word": "有名",
+        "reading": "ゆうめい",
+        "mn": "алдартай"
+      },
+      "related": [
+        "名",
+        "月",
+        "人"
+      ]
+    },
+    {
+      "id": "kj-n5-117",
+      "character": "読",
+      "level": "N5",
+      "meaning": "унших",
+      "onyomi": "ドク",
+      "kunyomi": "よ.む",
+      "example": {
+        "word": "読みます",
+        "reading": "よみます",
+        "mn": "унших"
+      },
+      "related": [
+        "書",
+        "聞",
+        "語",
+        "言",
+        "学"
+      ]
+    },
+    {
+      "id": "kj-n5-118",
+      "character": "夜",
+      "level": "N5",
+      "meaning": "шөнө",
+      "onyomi": "ヤ",
+      "kunyomi": "よる",
+      "example": {
+        "word": "夜",
+        "reading": "よる",
+        "mn": "шөнө"
+      },
+      "related": [
+        "朝",
+        "昼",
+        "日",
+        "月"
+      ]
+    },
     {
       "id": "kj-001",
       "character": "却",
       "meaning": "татгалзах; ухрах",
       "onyomi": "キャク",
       "kunyomi": "",
-      "example": { "word": "却下", "reading": "きゃっか", "mn": "татгалзах, хэрэгсэхгүй болгох" }
+      "example": {
+        "word": "却下",
+        "reading": "きゃっか",
+        "mn": "татгалзах, хэрэгсэхгүй болгох"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-002",
@@ -16,7 +2312,12 @@
       "meaning": "байдал, нөхцөл байдал",
       "onyomi": "ジョウ",
       "kunyomi": "",
-      "example": { "word": "状況", "reading": "じょうきょう", "mn": "нөхцөл байдал" }
+      "example": {
+        "word": "状況",
+        "reading": "じょうきょう",
+        "mn": "нөхцөл байдал"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-003",
@@ -24,7 +2325,12 @@
       "meaning": "байдал, хэлбэр, төрх",
       "onyomi": "タイ",
       "kunyomi": "",
-      "example": { "word": "態度", "reading": "たいど", "mn": "хандлага" }
+      "example": {
+        "word": "態度",
+        "reading": "たいど",
+        "mn": "хандлага"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-004",
@@ -32,7 +2338,12 @@
       "meaning": "бүс нутаг, хил хязгаар, бүс",
       "onyomi": "イキ",
       "kunyomi": "",
-      "example": { "word": "地域", "reading": "ちいき", "mn": "бүс нутаг, орон нутаг" }
+      "example": {
+        "word": "地域",
+        "reading": "ちいき",
+        "mn": "бүс нутаг, орон нутаг"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-005",
@@ -40,7 +2351,12 @@
       "meaning": "хазайх, налах, хандлага",
       "onyomi": "ケイ",
       "kunyomi": "かたむ.く、かたむ.ける",
-      "example": { "word": "傾向", "reading": "けいこう", "mn": "хандлага, чиг хандлага" }
+      "example": {
+        "word": "傾向",
+        "reading": "けいこう",
+        "mn": "хандлага, чиг хандлага"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-006",
@@ -48,7 +2364,12 @@
       "meaning": "эргэлзэх, сэжиглэх",
       "onyomi": "ギ",
       "kunyomi": "うたが.う",
-      "example": { "word": "疑問", "reading": "ぎもん", "mn": "асуулт, эргэлзээ" }
+      "example": {
+        "word": "疑問",
+        "reading": "ぎもん",
+        "mn": "асуулт, эргэлзээ"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-007",
@@ -56,7 +2377,12 @@
       "meaning": "буурах, багасах",
       "onyomi": "ゲン",
       "kunyomi": "へ.る、へ.らす",
-      "example": { "word": "減少", "reading": "げんしょう", "mn": "бууралт, багасалт" }
+      "example": {
+        "word": "減少",
+        "reading": "げんしょう",
+        "mn": "бууралт, багасалт"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-008",
@@ -64,7 +2390,12 @@
       "meaning": "өсөх, нэмэгдэх",
       "onyomi": "ゾウ",
       "kunyomi": "ま.す、ふ.える、ふ.やす",
-      "example": { "word": "増加", "reading": "ぞうか", "mn": "өсөлт, нэмэгдэл" }
+      "example": {
+        "word": "増加",
+        "reading": "ぞうか",
+        "mn": "өсөлт, нэмэгдэл"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-009",
@@ -72,7 +2403,12 @@
       "meaning": "харьцаа, хувь; удирдах",
       "onyomi": "リツ",
       "kunyomi": "ひき.いる",
-      "example": { "word": "比率", "reading": "ひりつ", "mn": "харьцаа, хувь" }
+      "example": {
+        "word": "比率",
+        "reading": "ひりつ",
+        "mn": "харьцаа, хувь"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-010",
@@ -80,7 +2416,12 @@
       "meaning": "цэвэр, жинхэнэ",
       "onyomi": "ジュン",
       "kunyomi": "",
-      "example": { "word": "純粋", "reading": "じゅんすい", "mn": "цэвэр, хольцгүй, жинхэнэ" }
+      "example": {
+        "word": "純粋",
+        "reading": "じゅんすい",
+        "mn": "цэвэр, хольцгүй, жинхэнэ"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-011",
@@ -88,7 +2429,12 @@
       "meaning": "дагах, дагаж мөрдөх, бараа болох",
       "onyomi": "ジュウ",
       "kunyomi": "したが.う、したが.える",
-      "example": { "word": "従来", "reading": "じゅうらい", "mn": "уламжлалт, өнөөг хүртэлх" }
+      "example": {
+        "word": "従来",
+        "reading": "じゅうらい",
+        "mn": "уламжлалт, өнөөг хүртэлх"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-012",
@@ -96,7 +2442,12 @@
       "meaning": "хууль, дүрэм, зохицуулах",
       "onyomi": "リツ",
       "kunyomi": "",
-      "example": { "word": "法律", "reading": "ほうりつ", "mn": "хууль" }
+      "example": {
+        "word": "法律",
+        "reading": "ほうりつ",
+        "mn": "хууль"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-013",
@@ -104,7 +2455,12 @@
       "meaning": "хязгаар, хязгаарлах",
       "onyomi": "ゲン",
       "kunyomi": "かぎ.る",
-      "example": { "word": "制限", "reading": "せいげん", "mn": "хязгаарлалт" }
+      "example": {
+        "word": "制限",
+        "reading": "せいげん",
+        "mn": "хязгаарлалт"
+      },
+      "level": "N2"
     },
     {
       "id": "kj-014",
@@ -112,7 +2468,12 @@
       "meaning": "алдаа, буруу",
       "onyomi": "ゴ",
       "kunyomi": "あやま.る",
-      "example": { "word": "誤解", "reading": "ごかい", "mn": "буруу ойлголт, төөрөгдөл" }
+      "example": {
+        "word": "誤解",
+        "reading": "ごかい",
+        "mn": "буруу ойлголт, төөрөгдөл"
+      },
+      "level": "N2"
     }
   ]
 }

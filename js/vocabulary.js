@@ -121,6 +121,27 @@ function getWordTags(word, data) {
   return word.tags && word.tags.length ? word.tags : [data.level];
 }
 
+/* The JLPT levels, hardest-last — the order both the per-card chip and the
+   summary label read levels in. */
+const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+/* A word's own JLPT tag, not the file's. The dataset holds more than one
+   level now (802 N5 words alongside the older N2 set), so a card that
+   labelled itself with `data.level` would put the wrong chip on most of
+   the list. Topic-only tags fall through to the file level, same as before. */
+function getWordLevel(word, data) {
+  const tags = getWordTags(word, data);
+  return JLPT_LEVELS.find((level) => tags.includes(level)) ?? data.level;
+}
+
+/* "N5" for a single-level file, "N5–N2" once it spans several. */
+function getLevelLabel(data) {
+  const present = JLPT_LEVELS.filter((level) =>
+    data.words.some((word) => getWordLevel(word, data) === level));
+  if (present.length === 0) return data.level;
+  return present.length === 1 ? present[0] : `${present[0]}–${present[present.length - 1]}`;
+}
+
 function matchesQuery(word, query) {
   if (!query) return true;
   const haystack = `${word.kanji ?? ''} ${word.kana} ${word.meaning}`.toLowerCase();
@@ -188,13 +209,14 @@ function renderList(container, data) {
 
   const summary = document.createElement('p');
   summary.className = 'vocab-meta meta';
+  const levelLabel = getLevelLabel(data);
 
   const list = document.createElement('ul');
   list.className = 'vocab-list';
   const rows = data.words.map((word) => ({
     word,
     tags: getWordTags(word, data),
-    item: createCard(word, data.level, applyFilter),
+    item: createCard(word, getWordLevel(word, data), applyFilter),
   }));
   list.append(...rows.map((row) => row.item));
 
@@ -216,8 +238,8 @@ function renderList(container, data) {
       if (matches) visible += 1;
     }
     summary.textContent = query || hideLearned || selectedTags.size > 0
-      ? `${data.level} · ${visible} / ${data.words.length} words`
-      : `${data.level} · ${data.words.length} words`;
+      ? `${levelLabel} · ${visible} / ${data.words.length} words`
+      : `${levelLabel} · ${data.words.length} words`;
     empty.hidden = visible > 0;
   }
 

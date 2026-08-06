@@ -8,7 +8,7 @@
   "properties": {
     "level": {
       "type": "string",
-      "description": "JLPT level this file covers, e.g. \"N2\"."
+      "description": "Fallback JLPT level for entries that don't carry their own `level`. The file spans several levels now, so this is a default rather than a description of the whole set."
     },
     "updatedAt": {
       "type": "string",
@@ -32,6 +32,11 @@
         "character": {
           "type": "string",
           "description": "The single kanji character."
+        },
+        "level": {
+          "type": "string",
+          "enum": ["N5", "N4", "N3", "N2", "N1"],
+          "description": "Optional JLPT level for this entry, shown as its .jlpt-tag chip. If omitted, kanji.js falls back to the file's own `level`."
         },
         "meaning": {
           "type": "string",
