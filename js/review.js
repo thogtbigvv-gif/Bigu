@@ -341,22 +341,20 @@ function describeNextReview(record, now = Date.now()) {
   return `back in ${days} days`;
 }
 
+/* The ladder's own machinery — the interval table, the band table, the
+   record normalizer, and the four per-item predicates buildSession and
+   countDue are built out of — stays inside this module. What the rest of
+   the app needs is the *answers*: what a record says, how strong it is,
+   what's due, and how to grade it. Eight fewer names on the way out, and
+   no caller can reach past countDue() to re-derive "due" its own way. */
 export {
-  INTERVALS_DAYS,
-  MAX_LEVEL,
-  STRENGTH_BANDS,
   FAINT_STRENGTH,
   getRecord,
-  normalizeRecord,
   snapshotRecords,
   strengthOf,
   bandFor,
   describeTiming,
   isRemembered,
-  isNew,
-  isDue,
-  dueItems,
-  newItems,
   countDue,
   grade,
   setRemembered,

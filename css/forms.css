@@ -30,10 +30,10 @@
    buttons.css. The border-color change is a third, quieter cue and is not
    load-bearing for contrast on its own. */
 .field:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
   border-color: var(--color-indigo);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 .field:disabled {

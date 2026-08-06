@@ -286,4 +286,7 @@ async function initReading() {
   });
 }
 
-export { initReading, loadReading };
+/* Unlike the other four content loaders, this one has no second caller:
+   passages aren't part of the review pool, so neither the Dashboard nor
+   Review nor Memory reads them. */
+export { initReading };

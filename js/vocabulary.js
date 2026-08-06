@@ -90,7 +90,7 @@ function createExample(example) {
    lesson word all say it the same way. */
 function createCard(word, level, onProgressChange) {
   const item = document.createElement('li');
-  item.className = 'card vocab-card';
+  item.className = 'card vocab-card card--deferred';
   item.dataset.wordId = word.id;
 
   const head = document.createElement('div');

@@ -617,4 +617,6 @@ function initJournal() {
   }
 }
 
-export { initJournal, buildMonthCalendar, shiftMonth };
+/* The calendar's date maths is this view's own; nothing outside it has ever
+   asked for a month grid. */
+export { initJournal };

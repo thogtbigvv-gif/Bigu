@@ -48,6 +48,14 @@
 
    `minmax(0, 1fr)` rather than `1fr` so a long word in a card can't push
    a track wider than its share. */
+/* The content wrapper is a column so a notice above the grid gets a real
+   gap under it rather than sitting flush against the first card. */
+.dashboard-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

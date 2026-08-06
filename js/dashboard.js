@@ -22,8 +22,14 @@
    browser does not belong in a grid of stat cards.
    ========================================================================== */
 
-import { progress, journal, practice } from './storage.js';
-import { formatCount, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
+import { progress, journal, practice, isAvailable as isStorageAvailable } from './storage.js';
+import {
+  createStorageNotice,
+  formatCount,
+  getViewContainer,
+  loadIntoView,
+  OFFLINE_HINT,
+} from './content.js';
 import { dailyGoal } from './preferences.js';
 import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from './review.js';
 import { loadVocabulary } from './vocabulary.js';
@@ -589,8 +595,13 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
 
   renderHeroStatus(totals, { firstVisit });
 
+  /* Above everything, including the welcome — a reader whose browser can't
+     save anything needs to know that before they spend an evening studying,
+     not after. It only ever appears in the broken case. */
+  const notices = isStorageAvailable() ? [] : [createStorageNotice()];
+
   if (firstVisit) {
-    container.replaceChildren(createWelcome());
+    container.replaceChildren(...notices, createWelcome());
     return;
   }
 
@@ -613,7 +624,7 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
     createPracticeCard(sessions),
   );
 
-  container.replaceChildren(grid);
+  container.replaceChildren(...notices, grid);
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */

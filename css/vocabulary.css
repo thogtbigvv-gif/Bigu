@@ -75,6 +75,10 @@
   flex-direction: column;
   gap: 0;
   padding: var(--space-lg);
+  /* See .card--deferred in cards.css. Measured resting height of a card
+     carrying a headword, a meaning, a three-line example and the control
+     row. */
+  contain-intrinsic-size: auto 21rem;
 }
 
 .vocab-card__head {
@@ -122,15 +126,12 @@
    now lives in the shared .toggle-chip class in buttons.css. The row is
    pushed to the foot of the card so the control line sits on the same
    baseline across a grid of cards of different heights. */
+/* Placement only. The row itself — the chip, the bookmark, and the flex
+   that pairs them — is .study-controls in buttons.css, built by
+   js/studyControls.js. Pushed to the foot of the card so the control line
+   sits on one baseline across a grid of cards of different heights. */
 .vocab-card__controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2xs);
   margin-block-start: auto;
-}
-
-.vocab-card__progress {
-  align-self: center;
 }
 
 /* -- Level tag --------------------------------------------------------------------

@@ -16,10 +16,69 @@
    option a two-state button can't express.
    ========================================================================== */
 
-import { settings, progress, journal, practice, favorites } from './storage.js';
+import {
+  settings,
+  progress,
+  journal,
+  practice,
+  favorites,
+  clearAll,
+  isAvailable as isStorageAvailable,
+} from './storage.js';
 import { setThemePreference, themePreference, THEME_CHANGE_EVENT } from './theme.js';
+import { createStorageNotice, getViewContainer } from './content.js';
+import {
+  DAILY_GOALS,
+  SESSION_SIZES,
+  dailyGoal,
+  sessionSize,
+  setDailyGoal,
+  setSessionSize,
+} from './preferences.js';
 
 const VIEW_ID = 'settings';
+
+/* -- A row of mutually exclusive chips ---------------------------------------------
+   Appearance was the only setting here, and it built its own chip group
+   inline. Three settings later that would be three copies of the same
+   twelve lines, so the group is a builder: options in, a sync() that reads
+   the current value back out of wherever it actually lives, and one
+   pressed chip.
+
+   sync() reads rather than tracks, deliberately — the same reason the
+   appearance row already did. Two controls over one piece of state (the
+   header's theme toggle and this row) can't disagree if neither of them
+   remembers anything.
+   ------------------------------------------------------------------------------------ */
+function createChoiceRow({ options, labelledBy, read, write }) {
+  const group = document.createElement('div');
+  group.className = 'settings__choice-group';
+  group.setAttribute('role', 'group');
+  group.setAttribute('aria-labelledby', labelledBy);
+
+  const buttons = options.map(({ value, label }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toggle-chip';
+    button.textContent = label;
+    button.addEventListener('click', () => {
+      write(value);
+      sync();
+    });
+    group.append(button);
+    return { button, value };
+  });
+
+  function sync() {
+    const active = read();
+    for (const { button, value } of buttons) {
+      button.setAttribute('aria-pressed', String(value === active));
+    }
+  }
+
+  sync();
+  return { group, sync };
+}
 
 /* -- Appearance ------------------------------------------------------------------------- */
 
@@ -37,41 +96,69 @@ function createAppearanceCard() {
   description.textContent =
     'System follows your device’s light/dark setting and changes with it through the day.';
 
-  const group = document.createElement('div');
-  group.className = 'settings__choice-group';
-  group.setAttribute('role', 'group');
-  group.setAttribute('aria-labelledby', 'settings-appearance-heading');
-
-  /* data-theme-choice, not data-theme: variables.css keys the dark palette
-     off [data-theme="dark"], and an attribute selector matches any element
-     — so a button carrying data-theme="dark" became its own dark-theme
-     scope and rendered in dark-mode ink on the light page. The token
-     selectors are :root-scoped now as well, but the attribute still has no
-     business being reused here. */
-  const buttons = THEME_OPTIONS.map(({ value, label }) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'toggle-chip';
-    button.dataset.themeChoice = value;
-    button.textContent = label;
-    button.addEventListener('click', () => setThemePreference(value));
-    group.append(button);
-    return button;
+  const { group, sync } = createChoiceRow({
+    options: THEME_OPTIONS,
+    labelledBy: 'settings-appearance-heading',
+    read: themePreference,
+    write: setThemePreference,
   });
 
-  // Reads the preference back rather than tracking its own state, so the
-  // header toggle and this row can never disagree about what's selected.
-  function sync() {
-    const active = themePreference();
-    for (const button of buttons) {
-      button.setAttribute('aria-pressed', String(button.dataset.themeChoice === active));
-    }
-  }
-
+  // The theme can also change from the header toggle and from the OS, so
+  // this row listens as well as reads.
   document.addEventListener(THEME_CHANGE_EVENT, sync);
-  sync();
 
   card.append(description, group);
+  return card;
+}
+
+/* -- Studying -----------------------------------------------------------------------
+   Two things that used to be decided for the reader: how long a round is
+   (a constant of 10 in practice.js) and whether there is a daily target at
+   all (there wasn't one).
+
+   Both are here rather than on the Review screen because they describe how
+   the app should behave, not what to do next — and a control that changes
+   the shape of every future session does not belong beside the button that
+   starts this one.
+   ------------------------------------------------------------------------------------ */
+function createStudyCard() {
+  const card = createCard('Studying', 'settings-study-heading');
+
+  const sizeLabel = document.createElement('h3');
+  sizeLabel.className = 'settings__field-label';
+  sizeLabel.id = 'settings-session-size';
+  sizeLabel.textContent = 'Cards per round';
+
+  const sizeNote = document.createElement('p');
+  sizeNote.className = 'meta';
+  sizeNote.textContent =
+    'How many cards a review round covers. Shorter rounds are easier to start, which matters more than length over a month.';
+
+  const { group: sizeGroup } = createChoiceRow({
+    options: SESSION_SIZES.map((value) => ({ value, label: String(value) })),
+    labelledBy: 'settings-session-size',
+    read: sessionSize,
+    write: setSessionSize,
+  });
+
+  const goalLabel = document.createElement('h3');
+  goalLabel.className = 'settings__field-label';
+  goalLabel.id = 'settings-daily-goal';
+  goalLabel.textContent = 'Daily goal';
+
+  const goalNote = document.createElement('p');
+  goalNote.className = 'meta';
+  goalNote.textContent =
+    'Shows one line on the Dashboard tracking how many items you’ve reviewed today. Off by default — a target helps some people and quietly punishes others, so Bigu doesn’t assume one.';
+
+  const { group: goalGroup } = createChoiceRow({
+    options: DAILY_GOALS.map((value) => ({ value, label: value === 0 ? 'No goal' : String(value) })),
+    labelledBy: 'settings-daily-goal',
+    read: dailyGoal,
+    write: setDailyGoal,
+  });
+
+  card.append(sizeLabel, sizeNote, sizeGroup, goalLabel, goalNote, goalGroup);
   return card;
 }
 
@@ -248,6 +335,85 @@ function createBackupCard() {
   return card;
 }
 
+/* -- Start over -------------------------------------------------------------------------
+   storage.js has had a clearAll() since it was written and nothing has ever
+   called it — the app could restore over your data but never let go of it.
+   That gap shows up in two ordinary situations: a reader who tried the app,
+   left it a year, and wants to begin again rather than face a thousand
+   overdue items; and anyone handing the browser to someone else.
+
+   Two confirmations, because there is no undo and no server copy. The first
+   is the button turning into its own confirmation — the same pattern the
+   journal's delete already uses, so the app asks twice in one voice — and
+   the second is the browser's own dialog naming what goes. The offer to
+   download a backup first sits directly above it, which is the actual
+   answer for most people who click this.
+   ------------------------------------------------------------------------------------------ */
+
+function createResetCard() {
+  const card = createCard('Start over', 'settings-reset-heading');
+
+  const description = document.createElement('p');
+  description.className = 'meta';
+  description.textContent =
+    'Clears everything saved in this browser: review schedule, memory, kept words, journal entries, session history, and these settings. There is no undo and no copy anywhere else — download a backup first if there is any chance you’ll want it.';
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'button button--secondary settings-reset__button';
+  button.textContent = 'Erase everything…';
+
+  const status = document.createElement('p');
+  status.className = 'meta settings-backup__status';
+  status.setAttribute('aria-live', 'polite');
+  status.hidden = true;
+
+  let armed = false;
+  let disarmTimer = null;
+
+  function disarm() {
+    armed = false;
+    button.textContent = 'Erase everything…';
+    button.classList.remove('is-armed');
+  }
+
+  button.addEventListener('click', () => {
+    if (!armed) {
+      armed = true;
+      button.textContent = 'Erase everything — are you sure?';
+      button.classList.add('is-armed');
+      // Disarms itself, so a stray click never leaves a loaded button
+      // sitting on the page waiting for the next one.
+      disarmTimer = window.setTimeout(disarm, 5000);
+      return;
+    }
+
+    window.clearTimeout(disarmTimer);
+    const confirmed = window.confirm(
+      'Erase all Bigu data in this browser? Your schedule, memory, kept words, journal and history will be gone, and this cannot be undone.',
+    );
+
+    if (!confirmed) {
+      disarm();
+      status.textContent = 'Nothing was erased.';
+      status.hidden = false;
+      return;
+    }
+
+    clearAll();
+    status.textContent = 'Everything erased. Starting fresh…';
+    status.hidden = false;
+    button.disabled = true;
+    // Reload rather than re-render: every view holds its own already-built
+    // DOM and its own idea of the reader's progress, and only a fresh boot
+    // puts all of them back to a true first visit.
+    window.setTimeout(() => location.reload(), 700);
+  });
+
+  card.append(description, button, status);
+  return card;
+}
+
 /* -- Rendering ------------------------------------------------------------------------- */
 
 /* Each settings group is a .card with a real <h2>, not a styled <p> like the
@@ -267,25 +433,29 @@ function createCard(titleText, headingId) {
   return card;
 }
 
-function getContentContainer(view) {
-  let content = view.querySelector('.settings-content');
-  if (!content) {
-    content = document.createElement('div');
-    content.className = 'settings-content';
-    view.append(content);
-  }
-  return content;
-}
-
 /* -- Init ---------------------------------------------------------------------------------- */
 
 function initSettings() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
+  /* Order runs from the everyday to the irreversible: how it looks, how it
+     studies, how to keep a copy, how to let go of everything. The one
+     destructive action on this screen is last, which is both the
+     conventional place for it and the furthest point from where a reader
+     lands. */
+  const sections = [
+    createAppearanceCard(),
+    createStudyCard(),
+    createBackupCard(),
+    createResetCard(),
+  ];
+
+  if (!isStorageAvailable()) sections.unshift(createStorageNotice());
+
   // No fetch here — everything on this screen reads localStorage, which is
   // synchronous, so there's nothing to show a skeleton for.
-  getContentContainer(view).replaceChildren(createAppearanceCard(), createBackupCard());
+  getViewContainer(view, 'settings-content').replaceChildren(...sections);
 }
 
 export { initSettings };

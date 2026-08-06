@@ -111,7 +111,7 @@ function createExample(example) {
 
 function createCard(entry, level, onOpenDetail) {
   const item = document.createElement('li');
-  item.className = 'card kanji-card';
+  item.className = 'card kanji-card card--deferred';
   item.dataset.kanjiId = entry.id;
 
   const head = document.createElement('div');

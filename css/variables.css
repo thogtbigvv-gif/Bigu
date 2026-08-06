@@ -74,6 +74,25 @@
   --shadow-sm: 0 1px 2px rgba(28, 34, 37, 0.06);
   --shadow-md: 0 2px 8px rgba(28, 34, 37, 0.08);
 
+  /* -- Focus indicator ---------------------------------------------------------
+     One ring, described once. The same three declarations were written out
+     sixteen times across buttons, chips, fields, nav links, slips and the
+     brand mark, which meant the app's focus indicator could not be adjusted
+     without finding all sixteen — and two of them had already drifted apart.
+
+     Two layers, and the order matters. The soft halo alone measures ~1.5:1
+     against the page, well under the 3:1 WCAG 2.2 SC 2.4.11 asks of a focus
+     indicator, so the solid outline is what carries the contrast and the
+     halo is decoration on top of it. Never use the halo without the
+     outline; that is the state these tokens were factored out of.
+
+     Offset is deliberately not a token: it is the one part that legitimately
+     differs per control (2px on a button, -2px inside a nav row whose edge
+     touches the sidebar border, 3px around the brand mark). --focus-ring
+     is the outline shorthand, --focus-halo the box-shadow. */
+  --focus-ring: 2px solid var(--color-focus);
+  --focus-halo: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+
   /* -- Motion ----------------------------------------------------------------- */
   --transition-fast: 150ms ease;
   --transition-base: 250ms ease;

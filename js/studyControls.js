@@ -57,4 +57,4 @@ function createStudyControls(itemId, { onChange, className } = {}) {
   return { row, sync };
 }
 
-export { createMemoryChip, createStudyControls };
+export { createStudyControls };

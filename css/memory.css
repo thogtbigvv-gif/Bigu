@@ -342,7 +342,7 @@
 }
 
 .memory-shelf__more:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 3px;
   border-radius: var(--radius-sm);
 }
@@ -434,7 +434,7 @@
 }
 
 .memory-slip__face:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
 }
 

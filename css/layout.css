@@ -81,7 +81,7 @@
 }
 
 .brand__replay:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
@@ -203,7 +203,7 @@
    than as a control. */
 .view > h1:focus-visible,
 .view .dashboard-hero h1:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 4px;
   border-radius: var(--radius-sm);
 }

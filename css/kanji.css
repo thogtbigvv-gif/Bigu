@@ -15,6 +15,17 @@
   gap: var(--space-md);
 }
 
+/* -- Level facets ---------------------------------------------------------------------
+   The chip row above the grid, matching the one vocabulary and grammar
+   already had. Layout only; the chip's look is .toggle-chip in buttons.css.
+   ------------------------------------------------------------------------------------ */
+.kanji-filters__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-end: var(--space-lg);
+}
+
 .kanji-card {
   display: flex;
   flex-direction: column;
@@ -22,6 +33,10 @@
   gap: var(--space-2xs);
   padding: var(--space-lg);
   text-align: center;
+  /* See .card--deferred in cards.css. Measured resting height of a card
+     carrying the character, its tag, meaning, readings, one example and the
+     two control rows. */
+  contain-intrinsic-size: auto 26rem;
 }
 
 .kanji-card__head {
@@ -69,11 +84,10 @@
 
 /* The chip and the bookmark share one row, same pairing as the vocabulary
    and grammar cards. */
+/* Placement only — see the note on .vocab-card__controls. The kanji card is
+   centred, so its control row is too. */
 .kanji-card__controls {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: var(--space-2xs);
 }
 
 .kanji-card__detail-button {

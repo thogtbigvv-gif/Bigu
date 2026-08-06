@@ -28,15 +28,14 @@
   cursor: not-allowed;
 }
 
-/* Two layers, and the order matters. The soft halo alone measures ~1.5:1
-   against the page — well under the 3:1 WCAG 2.2 SC 2.4.11 asks of a focus
-   indicator — so the solid outline is what actually carries the contrast and
-   the halo is decoration on top of it. Never replace the outline with only
-   the box-shadow; that is the state this rule was fixing. */
+/* --focus-ring and --focus-halo, in that pairing, wherever the app shows
+   focus — see the note on the two tokens in variables.css for why the
+   outline is load-bearing and the halo is not. Only the offset varies per
+   control. */
 .button:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 /* Pressed feedback, independent of :hover so touch input (mobile-first)
@@ -116,9 +115,9 @@
 /* Aligned to the same outline + halo pair as .button so the two button
    treatments that share the header row read as one consistent family. */
 .theme-toggle:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 .theme-toggle__icon {
@@ -177,9 +176,9 @@
 }
 
 .toggle-chip:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 /* The fill sweeps in from the left edge over 180ms rather than snapping.
@@ -268,7 +267,7 @@
 }
 
 .favorite-button:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
 }
 

@@ -90,7 +90,7 @@
    the textarea's own bounds — an outward one would float in the whitespace
    above the rule. The border-color shift stays as a secondary cue. */
 .journal__textarea:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: -2px;
   border-color: var(--color-indigo);
 }

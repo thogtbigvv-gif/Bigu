@@ -259,11 +259,48 @@ async function loadIntoView(container, { skeleton, load, render, errorTitle, err
   await attempt();
 }
 
+/* -- Storage warning ---------------------------------------------------------------------
+   When localStorage throws — Safari private browsing, a locked-down
+   profile, site data blocked — every store in the app silently becomes a
+   no-op: chips un-press themselves on the next render, the streak never
+   starts, a saved journal entry is gone on reload. app.js has always
+   detected this at boot and told nobody but the console, which means the
+   one failure that loses a reader's work was also the only one the reader
+   was never shown.
+
+   Shown on the Dashboard, because that is where people land, and on
+   Settings, because that is the screen about their data. Stated plainly and
+   without alarm: the app still works, nothing will be here tomorrow.
+   ------------------------------------------------------------------------------------------ */
+
+function createStorageNotice() {
+  const wrap = document.createElement('div');
+  wrap.className = 'error-state storage-notice';
+  wrap.setAttribute('role', 'alert');
+
+  const title = document.createElement('p');
+  title.className = 'error-state__title';
+  title.textContent = 'This browser isn’t letting Bigu save anything.';
+
+  const detail = document.createElement('p');
+  detail.className = 'error-state__detail';
+  detail.textContent =
+    'You can study normally, but your schedule, memory and journal will be gone when you close the tab. Private browsing is the usual cause; allowing site data for this page fixes it.';
+
+  wrap.append(title, detail);
+  return wrap;
+}
+
 /* The second half of every error message in the app. Named once so the six
    views can't describe the same failure six different ways. */
 const OFFLINE_HINT =
   'It couldn’t be fetched. If you opened this page as a file, it needs to run from a local server — check the README for the one-line command.';
 
+/* Only what another module actually imports. renderError and
+   renderSkeleton are the two halves of loadIntoView and are called from
+   nowhere else; exporting them advertised an API with no callers, which is
+   the kind of surface that quietly grows a second, slightly different
+   error state the first time someone reaches for it. */
 export {
   createContentLoader,
   createIcon,
@@ -271,7 +308,7 @@ export {
   getViewContainer,
   formatCount,
   debounce,
-  renderError,
+  createStorageNotice,
   loadIntoView,
   OFFLINE_HINT,
 };
