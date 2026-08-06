@@ -38,9 +38,19 @@
   color: var(--color-ink-soft);
 }
 
+/* Three tracks, fixed, not `auto-fill`. Four cards into an auto-fill grid
+   of 16rem minimums produced three across and one alone on a second row,
+   with two thirds of that row empty — the app's home screen ending on a
+   ragged edge at the width most people use it at. With the Today card
+   spanning the full row above them, the remaining three fill their row
+   exactly, and the layout says what the view already believed: today's
+   action first, the three reports after it.
+
+   `minmax(0, 1fr)` rather than `1fr` so a long word in a card can't push
+   a track wider than its share. */
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-lg);
   align-items: stretch;
 }
@@ -56,9 +66,37 @@
    meant is "the card carrying today's action is important", so reordering
    the grid.append() call in dashboard.js silently moved the emphasis to
    the wrong card. */
+/* Spans the whole grid, so the three report cards below it fill their row
+   exactly instead of leaving a ragged 3+1. The card itself stays a column;
+   only its body is a row — see .dashboard-today__body. */
 .dashboard-card--hero {
+  grid-column: 1 / -1;
   border-color: var(--color-bengara);
   box-shadow: var(--shadow-md);
+}
+
+/* Figure and sentence on the left, the day's one action on the right,
+   bottom-aligned so the button sits on the baseline of the block it
+   belongs to rather than floating in the middle of it. */
+.dashboard-today__body {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.dashboard-today__lead {
+  min-width: 0;
+}
+
+/* The hero's action is beside the figure, not under a rule at the foot of a
+   column, so it drops the divider and the auto top margin the stacked
+   cards use to push their CTA down. */
+.dashboard-card--hero .dashboard-card__cta {
+  flex: 0 0 auto;
+  margin-block-start: 0;
+  padding-block-start: 0;
+  border-top: none;
 }
 
 /* -- Streak & practice score --------------------------------------------------------------
@@ -79,10 +117,145 @@
   margin-block-end: var(--space-3xs);
 }
 
+.dashboard-streak__count--score {
+  font-size: var(--text-xl);
+  letter-spacing: -0.01em;
+}
+
 .dashboard-today__detail {
   margin: 0;
   font-size: var(--text-sm);
   color: var(--color-ink-soft);
+}
+
+/* -- Daily goal ----------------------------------------------------------------------
+   Only rendered when the reader has set one (see preferences.js). A line of
+   plain text over a hairline that fills — the same rule-not-spotlight
+   vocabulary the rest of the app uses, and deliberately not a ring, a
+   badge, or a percentage. It turns moss once the goal is met and then says
+   nothing further about it: the point is to notice, not to be congratulated.
+   ------------------------------------------------------------------------------------ */
+.dashboard-goal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  margin-block-start: var(--space-sm);
+  max-width: 18rem;
+}
+
+.dashboard-goal__label {
+  margin: 0;
+}
+
+.dashboard-goal__track {
+  height: 2px;
+  border-radius: 999px;
+  background-color: var(--color-stone);
+  overflow: hidden;
+}
+
+.dashboard-goal__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--color-indigo);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition: transform var(--transition-base);
+}
+
+.dashboard-goal__fill.is-met {
+  background-color: var(--color-moss);
+}
+
+/* -- First visit ----------------------------------------------------------------------
+   Shown in place of the whole grid on a first visit — see the note above
+   createWelcome() in js/dashboard.js. Full width and given real vertical
+   room: it is the only thing on the screen, and a welcome squeezed into a
+   stat tile's proportions would read as another stat tile.
+   ------------------------------------------------------------------------------------ */
+.dashboard-welcome {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-xl);
+}
+
+.dashboard-welcome__kicker {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ash);
+}
+
+/* The display face, at the size the Dashboard heading itself uses one step
+   down. This is the app introducing itself, which is the one other place a
+   sentence earns the serif. */
+.dashboard-welcome__heading {
+  margin: 0;
+  max-width: 24ch;
+  font-size: var(--text-xl);
+}
+
+/* Three columns of equal weight rather than a numbered list running down
+   the page: the three steps are a loop, not a ranking, and side by side
+   they can be read in one glance. */
+.dashboard-welcome__steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-lg);
+  margin: var(--space-2xs) 0 0;
+  padding: var(--space-lg) 0 0;
+  list-style: none;
+  border-top: var(--border-width) solid var(--color-stone);
+}
+
+.dashboard-welcome__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+/* 出会う / 思い出す / 薄れる — the step's own name in Japanese, sitting above
+   its English title the way the shelf headings on #memory do. It is the
+   app's subject matter used as its own ornament, which is cheaper and more
+   honest than an icon set. */
+.dashboard-welcome__step-mark {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-bengara);
+}
+
+.dashboard-welcome__step-title {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.dashboard-welcome__step-body {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.dashboard-welcome__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-2xs);
+}
+
+.dashboard-welcome__foot {
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-stone);
+}
+
+.dashboard-welcome__note {
+  margin: 0;
 }
 
 .dashboard-card__status {
@@ -111,6 +284,50 @@
    The bar treatment itself is not missed. What memory strength does over
    time is decay, and a bar that only ever fills is the one shape that
    cannot show that; #memory draws it as ink instead (see css/memory.css). */
+
+/* -- Narrow widths ---------------------------------------------------------------------
+   Three fixed tracks are right where there is room for them and wrong the
+   moment there isn't; a 16rem card in a third of a tablet column is a
+   column of two-word lines. Two tracks at the drawer breakpoint, one below
+   the phone line. The hero spans whatever the row is (grid-column 1/-1),
+   so it needs no rule of its own at either step — it only has to stop
+   being a horizontal card once its two halves no longer fit side by side.
+   ------------------------------------------------------------------------------------ */
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-today__body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Back to the divider the stacked cards use, now that the action is once
+     again below the figure rather than beside it. */
+  .dashboard-card--hero .dashboard-card__cta {
+    margin-block-start: var(--space-md);
+    padding-block-start: var(--space-md);
+    border-top: var(--border-width) solid var(--color-stone);
+  }
+
+  .dashboard-welcome {
+    padding: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-md);
+  }
+
+  .dashboard-welcome__steps {
+    gap: var(--space-md);
+  }
+}
 
 /* Backup/restore used to be a fourth card here. It lives in settings.css
    now — see the note at the top of js/settings.js. */

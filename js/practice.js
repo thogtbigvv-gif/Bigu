@@ -20,6 +20,7 @@
    ========================================================================== */
 
 import { practice, settings } from './storage.js';
+import { formatCount } from './content.js';
 import {
   buildSession,
   countDue,
@@ -31,9 +32,9 @@ import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
 import { loadLessons, createHeadword as createLessonHeadword } from './lessons.js';
+import { sessionSize } from './preferences.js';
 
 const VIEW_ID = 'practice';
-const SESSION_SIZE = 10;
 const MODE_SETTING_KEY = 'practiceMode';
 const HISTORY_LIMIT = 5;
 
@@ -66,10 +67,10 @@ const DECKS = {
       return { text: word.partOfSpeech, className: 'practice-card__pos--capitalize', lang: null };
     },
     fillAnswer(elements, word) {
-      elements.meaning.textContent = word.meaning;
-      elements.exampleJp.textContent = word.example.jp;
-      elements.exampleReading.textContent = word.example.reading;
-      elements.exampleEn.textContent = word.example.mn;
+      setField(elements.meaning, word.meaning);
+      setField(elements.exampleJp, word.example?.jp);
+      setField(elements.exampleReading, word.example?.reading);
+      setField(elements.exampleEn, word.example?.mn);
     },
   },
 
@@ -95,10 +96,10 @@ const DECKS = {
       return { text: point.structure, className: 'reading', lang: null };
     },
     fillAnswer(elements, point) {
-      elements.meaning.textContent = point.meaning;
-      elements.exampleJp.textContent = point.example.jp;
-      elements.exampleReading.textContent = point.example.reading;
-      elements.exampleEn.textContent = point.example.mn;
+      setField(elements.meaning, point.meaning);
+      setField(elements.exampleJp, point.example?.jp);
+      setField(elements.exampleReading, point.example?.reading);
+      setField(elements.exampleEn, point.example?.mn);
     },
   },
 
@@ -118,10 +119,10 @@ const DECKS = {
       return { text: parts.join(' ・ '), className: 'reading', lang: 'ja' };
     },
     fillAnswer(elements, entry) {
-      elements.meaning.textContent = entry.meaning;
-      elements.exampleJp.textContent = entry.example.word;
-      elements.exampleReading.textContent = entry.example.reading;
-      elements.exampleEn.textContent = entry.example.mn;
+      setField(elements.meaning, entry.meaning);
+      setField(elements.exampleJp, entry.example?.word);
+      setField(elements.exampleReading, entry.example?.reading);
+      setField(elements.exampleEn, entry.example?.mn);
     },
   },
 
@@ -136,10 +137,10 @@ const DECKS = {
       return { text: '', className: null, lang: null };
     },
     fillAnswer(elements, entry) {
-      elements.meaning.textContent = entry.english;
-      elements.exampleJp.textContent = '';
-      elements.exampleReading.textContent = '';
-      elements.exampleEn.textContent = '';
+      setField(elements.meaning, entry.english);
+      setField(elements.exampleJp, '');
+      setField(elements.exampleReading, '');
+      setField(elements.exampleEn, '');
     },
   },
 
@@ -263,6 +264,20 @@ function buildView(view) {
   status.className = 'practice__status meta';
   status.setAttribute('aria-live', 'polite');
 
+  /* How far through the round the reader is, as a line rather than only as
+     "Card 3 / 10". A round has no other sense of shape — every card looks
+     like the one before it — and knowing whether the end is near is the
+     difference between "I'll do a couple more" and "I don't know how long
+     this is". aria-hidden because the status line above already says the
+     same thing in words, and announcing it twice per card is noise. */
+  const progress = document.createElement('div');
+  progress.className = 'practice__progress';
+  progress.setAttribute('aria-hidden', 'true');
+
+  const progressBar = document.createElement('span');
+  progressBar.className = 'practice__progress-bar';
+  progress.append(progressBar);
+
   const card = document.createElement('div');
   card.className = 'card practice-card';
 
@@ -333,7 +348,7 @@ function buildView(view) {
   endButton.className = 'button button--secondary practice__end';
   endButton.textContent = 'End session';
 
-  session.append(status, card, revealButton, grade, scheduleNote, shortcutHint, endButton);
+  session.append(status, progress, card, revealButton, grade, scheduleNote, shortcutHint, endButton);
 
   /* Summary */
   const summary = document.createElement('div');
@@ -343,12 +358,26 @@ function buildView(view) {
   const summaryText = document.createElement('p');
   summaryText.className = 'practice__summary-text';
 
+  const summaryActions = document.createElement('div');
+  summaryActions.className = 'practice__summary-actions';
+
   const againButton = document.createElement('button');
   againButton.type = 'button';
   againButton.className = 'button button--primary';
-  againButton.textContent = 'Review again';
+  againButton.textContent = 'Another round';
 
-  summary.append(summaryText, againButton);
+  /* A way out of the loop. The summary used to offer exactly one action —
+     start again — which reads as an app that would like you to keep going
+     rather than one that thinks stopping is a fine outcome. Finishing a
+     round is a good place to stop, and the Dashboard is where the reader
+     can see what that round did. */
+  const doneLink = document.createElement('a');
+  doneLink.href = '#dashboard';
+  doneLink.className = 'button button--secondary';
+  doneLink.textContent = 'Done for now';
+
+  summaryActions.append(againButton, doneLink);
+  summary.append(summaryText, summaryActions);
 
   /* History */
   const history = document.createElement('div');
@@ -373,12 +402,23 @@ function buildView(view) {
   return {
     modeGroup, modeButtons,
     intro, introText, startButton,
-    session, status, headword, pos, answer, meaning, exampleJp, exampleReading, exampleEn,
+    session, status, progressBar, headword, pos, answer, meaning, exampleJp, exampleReading, exampleEn,
     revealButton, grade, stillLearningButton, knewItButton, scheduleNote, endButton,
     summary, summaryText, againButton,
     history, historyList, historyEmpty,
     card,
   };
+}
+
+/* An empty field is hidden, not left blank. A lesson word carries no
+   example sentence, so its three example paragraphs were rendered with
+   empty text — three empty line boxes that opened a hole roughly a third of
+   the card tall between the meaning and the bottom edge, on every lesson
+   card, in the middle of a round. Nothing was wrong and it looked like
+   something had failed to load. */
+function setField(element, text) {
+  element.textContent = text ?? '';
+  element.hidden = !text;
 }
 
 function applySecondary(elements, deck, item) {
@@ -390,7 +430,7 @@ function applySecondary(elements, deck, item) {
   } else {
     elements.pos.removeAttribute('lang');
   }
-  elements.pos.textContent = text;
+  setField(elements.pos, text);
 }
 
 function initController(elements, decks) {
@@ -425,9 +465,11 @@ function initController(elements, decks) {
     elements.startButton.hidden = false;
     const { due, new: fresh } = countDue(items);
 
+    const size = sessionSize();
+
     if (state.mode === 'mistakes') {
       elements.introText.textContent =
-        `${items.length} item${items.length === 1 ? '' : 's'} sitting at the bottom of the ladder, pulled from every deck. A round covers up to ${SESSION_SIZE}.`;
+        `${items.length} item${items.length === 1 ? '' : 's'} sitting at the bottom of the ladder, pulled from every deck. A round covers up to ${size}.`;
       return;
     }
 
@@ -437,11 +479,16 @@ function initController(elements, decks) {
       return;
     }
 
+    /* Due first, and said in that order. "not started" is deliberately not
+       given a total here: the catalogue holds well over a thousand items a
+       reader has never met, and a four-figure number attached to the word
+       "not" is a debt notice, not a status line. What's due is the part
+       today can actually move. */
     const parts = [];
     if (due > 0) parts.push(`${due} due`);
-    if (fresh > 0) parts.push(`${fresh} not started`);
+    if (fresh > 0) parts.push(`${formatCount(fresh)} not started`);
     elements.introText.textContent =
-      `${parts.join(' \u00b7 ')}. A round covers up to ${SESSION_SIZE}, due items first.`;
+      `${parts.join(' \u00b7 ')}. A round covers up to ${size}, due items first.`;
   }
 
   function selectMode(mode) {
@@ -463,7 +510,11 @@ function initController(elements, decks) {
   function renderCard() {
     const deck = currentDeck();
     const item = state.queue[state.index];
-    elements.status.textContent = `Card ${state.index + 1} / ${state.queue.length} · ${state.correct} known so far`;
+    elements.status.textContent = `Card ${state.index + 1} of ${state.queue.length} · ${state.correct} known so far`;
+    elements.progressBar.style.setProperty(
+      '--progress',
+      (state.index / state.queue.length).toFixed(3),
+    );
 
     deck.fillFront(elements.headword, item);
     applySecondary(elements, deck, item);
@@ -488,8 +539,16 @@ function initController(elements, decks) {
     });
   }
 
+  /* Sorted by when they happened, not by where they sit in the array. The
+     store appends, so those agreed — right up until a restored backup or a
+     hand-merged file arrived in a different order, at which point a list
+     headed "Recent sessions" would quietly show the oldest five. */
   function renderHistory() {
-    const recent = practice.getAll().slice(-HISTORY_LIMIT).reverse();
+    const recent = practice
+      .getAll()
+      .slice()
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, HISTORY_LIMIT);
     elements.historyList.replaceChildren();
 
     elements.historyEmpty.hidden = recent.length > 0;
@@ -523,9 +582,10 @@ function initController(elements, decks) {
     if (graded > 0) {
       practice.add({ total: graded, correct: state.correct, mode: state.mode });
     }
+    elements.progressBar.style.setProperty('--progress', '1');
     elements.summaryText.textContent = graded === 0
-      ? 'Session ended before any cards were graded.'
-      : `${state.correct} / ${graded} marked "I knew it" this round.`;
+      ? 'Ended before any cards were graded — nothing was recorded.'
+      : `${state.correct} of ${graded} marked "I knew it". The ones you missed come back today; the rest are scheduled.`;
     renderHistory();
     updateIntroText();
     showPhase('summary');
@@ -572,7 +632,9 @@ function initController(elements, decks) {
 
   function startSession() {
     const deck = currentDeck();
-    state.queue = buildSession(deck.items, SESSION_SIZE);
+    // Read per round, not once at boot: changing the round length in
+    // Settings should apply to the next round, not the next page load.
+    state.queue = buildSession(deck.items, sessionSize());
     state.index = 0;
     state.correct = 0;
 
