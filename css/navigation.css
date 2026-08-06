@@ -99,9 +99,9 @@
    link's edge, so a positive offset would clip against it. Zero keeps the
    full 2px ring visible inside the row. */
 .site-nav__link:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: -2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 /* -- Study submenu -------------------------------------------------------------------
@@ -210,9 +210,9 @@
 }
 
 .site-nav__mobile-toggle:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 .site-nav__hamburger {

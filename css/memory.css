@@ -134,6 +134,44 @@
   border-block: var(--border-width) solid var(--color-stone);
 }
 
+/* -- The top of the page, at width ---------------------------------------------------------
+   The hero is a narrow editorial column by design — a 22ch measure at 39px
+   is what makes its one sentence read as a sentence — and the week strip is
+   seven dots. Stacked, they left the top third of a 1150px page as one
+   short column of text with two thirds of the row empty beside it, above
+   shelves that span the full width. The imbalance read as an unfinished
+   layout rather than as deliberate space.
+
+   Side by side, each keeps exactly the proportions it was designed with and
+   the row is composed: the sentence on the left where reading starts, the
+   week on the right where the eye lands after it. The week's own rules
+   become the divider between them, which is why the top border goes and a
+   left one arrives. Below 900px they stack again, unchanged.
+   -------------------------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  .memory-top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(14rem, 0.75fr);
+    gap: var(--space-2xl);
+    align-items: start;
+  }
+
+  .memory-top .memory-week {
+    padding-block: 0;
+    padding-inline-start: var(--space-2xl);
+    border-block: none;
+    border-inline-start: var(--border-width) solid var(--color-stone);
+  }
+
+  /* The dots spread across whatever column they're given rather than
+     huddling at its left edge, so the strip reads as a week rather than as
+     a cluster. */
+  .memory-top .memory-week__days {
+    justify-content: space-between;
+    gap: var(--space-2xs);
+  }
+}
+
 .memory-week__title {
   display: flex;
   align-items: baseline;
@@ -266,11 +304,47 @@
   color: var(--color-ink-soft);
 }
 
-.memory-shelf__more,
 .memory-shelf__empty {
   margin: 0;
   font-size: var(--text-sm);
   color: var(--color-ash);
+}
+
+/* How full a shelf is, beside its name — the schedule's own number, so it
+   is set in the face the app uses for data. Quiet enough that the shelf
+   still reads as a name rather than as a count. */
+.memory-shelf__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ash);
+}
+
+/* A real control now, not the dead "+ 30 more on this shelf" line it
+   replaces. Styled as text rather than as a button: it belongs to the shelf
+   it extends, and a filled or outlined button here would out-weigh the
+   slips it is offering to show. Left-aligned under the first column, where
+   the eye already is after reading the last row. */
+.memory-shelf__more {
+  align-self: start;
+  padding: var(--space-3xs) 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  text-decoration: underline;
+  text-decoration-color: var(--color-stone);
+  text-underline-offset: 0.3em;
+  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+}
+
+.memory-shelf__more:hover {
+  color: var(--color-indigo);
+  text-decoration-color: currentColor;
+}
+
+.memory-shelf__more:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
 }
 
 /* A grid rather than a wrapping flex row. Slips sized to their own content
@@ -360,7 +434,7 @@
 }
 
 .memory-slip__face:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
 }
 

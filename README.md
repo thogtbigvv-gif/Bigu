@@ -48,7 +48,10 @@ That philosophy influences every design and development decision.
 - Word meanings
 - Readings
 - Example sentences
-- Search and filtering
+- Search, and level/topic filters that are read out of the data — a chip only
+  appears when there are words behind it, and carries its own count
+- Rendered a page at a time. Eight hundred cards at once is not a list, it's a
+  wall; "Show more" is there for the days you want to browse
 - Keep a word (bookmark) — kept words get their own shelf in Memory
 
 ### 📝 Grammar
@@ -83,6 +86,8 @@ That philosophy influences every design and development decision.
   you haven't started
 - One deck per content type, plus "Due today" across all of them
 - Self-graded: reveal, then "I knew it" or "Still learning"
+- Round length is yours — 5, 10 or 20 cards, in Settings
+- Keyboard throughout: Space reveals, 1 and 2 grade, Escape ends the round
 
 ### 🖌 Memory
 
@@ -99,6 +104,8 @@ ink, and ink fades.
   session to start or finish
 - **This week** — seven marks, one per day, and your review streak
 - Every shelf is derived from the schedule except Kept, which is yours
+- Shelves show a handful at a time and say how full they are; "Show more"
+  opens the rest when you want it
 
 ### 📊 Dashboard
 
@@ -107,6 +114,19 @@ ink, and ink fades.
   journal entry, not just one of the three
 - How much of what you hold has gone faint, and a door into Memory
 - Your last review session at a glance
+- On a first visit, none of the above: four cards reading zero are no way to
+  meet an app, so a first visit gets one card explaining the loop instead. It
+  leaves for good as soon as you've studied anything
+- An optional daily goal, off by default. A target helps some people and
+  quietly punishes others, so Bigu doesn't assume one — and when it's on, it
+  is one line of plain text, never a badge
+
+### ⚙️ Settings
+
+- Appearance: system, light, or dark
+- Studying: cards per round, and the daily goal
+- Backup: download everything as JSON, or restore from a file
+- Start over: erase everything in this browser, behind two confirmations
 
 ---
 
@@ -139,7 +159,9 @@ to build and no dependencies to install.
 
 Your progress lives in this browser's `localStorage` and never leaves the
 device. **Settings → Backup** downloads all of it as a JSON file, and restores
-from one.
+from one. If the browser won't allow storage at all — private browsing, or
+site data blocked — the app says so on the Dashboard and in Settings rather
+than silently forgetting everything at the end of the session.
 
 ### Deployment
 

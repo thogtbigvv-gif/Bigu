@@ -14,6 +14,26 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* -- Off-screen cards -------------------------------------------------------------------
+   Opt-in, for the two views that render a grid of dozens of near-identical
+   cards: the browser skips layout, style and paint for any of them outside
+   the viewport, and does the work when they scroll into it.
+
+   contain-intrinsic-size is what makes that safe rather than jumpy — it is
+   the height the browser should assume for a card it hasn't laid out, so
+   the scrollbar stays honest and nothing shifts as cards are skipped and
+   restored. The two numbers are the measured resting heights of a
+   vocabulary card and a kanji card; if either card's content changes shape
+   substantially, these move with it.
+
+   Not applied to the dashboard's four cards or to Memory's slips: below
+   about a screenful there is nothing to skip, and containment on a handful
+   of elements costs more than it saves.
+   ------------------------------------------------------------------------------------ */
+.card--deferred {
+  content-visibility: auto;
+}
+
 /* Only for cards that are themselves a click target — most study cards
    hold their own buttons instead, so this stays opt-in. Applied to
    .lesson-group, whose whole header row is a disclosure button. */

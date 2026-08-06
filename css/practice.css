@@ -69,6 +69,41 @@
   margin: 0;
 }
 
+/* -- Round progress -------------------------------------------------------------------
+   A hairline under the status line, filling as the round is worked
+   through. A rule, not a bar: it is the same "a line, not a spotlight"
+   language the header and footer dividers use, and it sits at the exact
+   width of the card below it so it reads as that card's own edge rather
+   than as a gauge bolted above it.
+
+   Deliberately not a <progress>: the native element carries a UA appearance
+   that has to be undone in three engines to look like a hairline, and the
+   number is already announced in words by the status line above.
+   ------------------------------------------------------------------------------------ */
+.practice__progress {
+  height: 2px;
+  border-radius: 999px;
+  background-color: var(--color-stone);
+  overflow: hidden;
+}
+
+.practice__progress-bar {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--color-indigo);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition: transform var(--transition-base);
+}
+
+/* -- Summary actions ------------------------------------------------------------------ */
+.practice__summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
 .practice-card {
   display: flex;
   flex-direction: column;

@@ -16,10 +16,16 @@
 /* -- Filters ------------------------------------------------------------------------
    Pairs the search field with the "hide what's in memory" toggle chip above
    the list. The search field's own margin-block-end is zeroed here so the
-   row's gap is the only spacing between the two controls. */
+   row's gap is the only spacing between the two controls.
+
+   align-items:end, not center. The search field is a label stacked over an
+   input and the chip is a single box, so centring the two centred the chip
+   against the *whole* stack — leaving it floating half a line above the
+   input it sits beside. Aligning their bottom edges puts the chip and the
+   input on one line, which is the row a reader sees. */
 .vocab-filters {
   display: flex;
-  align-items: center;
+  align-items: end;
   flex-wrap: wrap;
   gap: var(--space-sm);
   margin-block-end: var(--space-sm);
@@ -51,11 +57,28 @@
   gap: var(--space-lg);
 }
 
+/* -- Show more -----------------------------------------------------------------------
+   The foot of a paged list. Centred and full-width-ish so it reads as the
+   end of the run rather than as one more control belonging to the last
+   card; the summary line above the list carries the count, so this only has
+   to be pressable.
+   ------------------------------------------------------------------------------------ */
+.vocab-more {
+  display: flex;
+  width: fit-content;
+  margin: var(--space-lg) auto 0;
+  padding-inline: var(--space-xl);
+}
+
 .vocab-card {
   display: flex;
   flex-direction: column;
   gap: 0;
   padding: var(--space-lg);
+  /* See .card--deferred in cards.css. Measured resting height of a card
+     carrying a headword, a meaning, a three-line example and the control
+     row. */
+  contain-intrinsic-size: auto 21rem;
 }
 
 .vocab-card__head {
@@ -103,15 +126,12 @@
    now lives in the shared .toggle-chip class in buttons.css. The row is
    pushed to the foot of the card so the control line sits on the same
    baseline across a grid of cards of different heights. */
+/* Placement only. The row itself — the chip, the bookmark, and the flex
+   that pairs them — is .study-controls in buttons.css, built by
+   js/studyControls.js. Pushed to the foot of the card so the control line
+   sits on one baseline across a grid of cards of different heights. */
 .vocab-card__controls {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2xs);
   margin-block-start: auto;
-}
-
-.vocab-card__progress {
-  align-self: center;
 }
 
 /* -- Level tag --------------------------------------------------------------------

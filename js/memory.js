@@ -50,7 +50,7 @@ import {
   strengthOf,
 } from './review.js';
 import { createFavoriteButton, favoriteIds } from './favorites.js';
-import { createIcon, loadIntoView, OFFLINE_HINT } from './content.js';
+import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
 import { practice } from './storage.js';
 import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
@@ -507,28 +507,56 @@ function createShelf(definition, entries, handlers) {
     japanese('span', 'memory-shelf__jp', definition.jp),
   );
 
+  // How full the shelf is, beside its name. The cap is what keeps this page
+  // from becoming the wall of rows it replaced, but a capped shelf that
+  // doesn't say so is a shelf that quietly under-reports — a reader with 36
+  // words waiting saw six and no number.
+  if (entries.length > 0) {
+    title.append(element('span', 'memory-shelf__count', String(entries.length)));
+  }
+
   head.append(title, element('p', 'memory-shelf__note', definition.note));
 
   const list = element('ul', 'memory-shelf__slips');
-  const shown = entries.slice(0, SHELF_LIMIT);
 
-  shown.forEach((entry, index) => {
-    const slip = createSlip(entry, handlers.onGraded, handlers.onKeptChange);
-    // Staggered entrance, 40ms apart — the shelf writes itself onto the page
-    // left to right the way a hand would, instead of appearing all at once.
-    slip.style.setProperty('--index', String(index));
-    list.append(slip);
-  });
+  /* One page of slips at a time. The rest used to be named in a dead line —
+     "+ 30 more on this shelf" — which told the reader something existed and
+     gave them no way to reach it; the only route to those 30 words was to
+     grade the six on screen and reload the page. They come in a page at a
+     time now, which keeps the shelf a handful of real things by default and
+     still lets a reader who wants the whole shelf have it. */
+  let shown = 0;
+
+  function appendPage() {
+    const next = entries.slice(shown, shown + SHELF_LIMIT);
+    next.forEach((entry, index) => {
+      const slip = createSlip(entry, handlers.onGraded, handlers.onKeptChange);
+      // Staggered entrance, 40ms apart — the shelf writes itself onto the
+      // page left to right the way a hand would, rather than all at once.
+      slip.style.setProperty('--index', String(index));
+      list.append(slip);
+    });
+    shown += next.length;
+    syncMore();
+  }
 
   const emptyNote = element('p', 'memory-shelf__empty', definition.empty);
-  emptyNote.hidden = shown.length > 0;
+  emptyNote.hidden = entries.length > 0;
 
-  section.append(head, list, emptyNote);
+  const more = document.createElement('button');
+  more.type = 'button';
+  more.className = 'memory-shelf__more';
 
-  const remaining = entries.length - shown.length;
-  if (remaining > 0) {
-    section.append(element('p', 'memory-shelf__more', `+ ${remaining} more on this shelf`));
+  function syncMore() {
+    const remaining = entries.length - shown;
+    more.hidden = remaining <= 0;
+    more.textContent = `Show ${Math.min(remaining, SHELF_LIMIT)} more · ${remaining} left on this shelf`;
   }
+
+  more.addEventListener('click', appendPage);
+
+  section.append(head, list, emptyNote, more);
+  appendPage();
 
   return { section, list, emptyNote };
 }
@@ -695,16 +723,6 @@ function createEmptyState() {
 
 /* -- Rendering ------------------------------------------------------------------------- */
 
-function getContentContainer(view) {
-  let content = view.querySelector('.memory-content');
-  if (!content) {
-    content = document.createElement('div');
-    content.className = 'memory-content';
-    view.append(content);
-  }
-  return content;
-}
-
 /* Stands in for "this item has no progress record at all" — used for a word
    the reader kept but never studied, which still deserves a slip on the Kept
    shelf. Frozen because every such item shares this one object. */
@@ -777,6 +795,12 @@ function renderMemory(container, datasets) {
   const days = collectReviewDays(records);
   const week = createWeek(buildWeek(days), computeReviewStreak(days));
 
+  /* The hero and the week share one row above 900px — see .memory-top in
+     css/memory.css for why. Below that the wrapper is inert and the two
+     simply stack, exactly as they did. */
+  const top = element('div', 'memory-top');
+  top.append(hero, week);
+
   const shelvesWrap = element('div', 'memory-shelves');
 
   /* Only shelves with something on them. An empty shelf is a promise the
@@ -808,7 +832,7 @@ function renderMemory(container, datasets) {
     shelvesWrap.append(createShelf(definition, shelfEntries, handlers).section);
   }
 
-  container.replaceChildren(hero, week, shelvesWrap);
+  container.replaceChildren(top, shelvesWrap);
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
@@ -817,7 +841,7 @@ async function initMemory() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getContentContainer(view);
+  const content = getViewContainer(view, 'memory-content');
 
   function render() {
     openSlip = null;

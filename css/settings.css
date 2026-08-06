@@ -32,6 +32,25 @@
   margin-block-start: var(--space-2xs);
 }
 
+/* A named setting inside a card that holds more than one — "Cards per
+   round", "Daily goal". An <h3> so the two are reachable as structure, at
+   body size rather than the type scale's --text-lg, because inside a card
+   a sub-setting's name is a label and not a section title. The top margin
+   separates it from the previous setting's controls; the first one in a
+   card doesn't need it. */
+.settings__field-label {
+  margin: 0;
+  margin-block-start: var(--space-md);
+  font-family: var(--font-body-stack);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.settings__field-label:first-of-type {
+  margin-block-start: 0;
+}
+
 .settings__actions {
   display: flex;
   flex-direction: column;
@@ -61,3 +80,27 @@
 .settings-backup__status--error {
   color: var(--color-error);
 }
+
+/* -- Start over ---------------------------------------------------------------------
+   The one irreversible action in the app, and the only button anywhere that
+   goes red. It stays a quiet secondary button at rest — a destructive
+   control that shouts before it has been asked for anything is a control
+   readers learn to ignore — and takes the error colour only once it is
+   armed and one press from doing it.
+   ------------------------------------------------------------------------------------ */
+.settings-reset__button {
+  align-self: flex-start;
+  margin-block-start: var(--space-2xs);
+}
+
+.settings-reset__button.is-armed {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+.settings-reset__button.is-armed:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-error) 10%, transparent);
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+

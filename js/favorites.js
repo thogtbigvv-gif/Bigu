@@ -77,4 +77,6 @@ function createFavoriteButton(itemId, onChange) {
   return button;
 }
 
-export { isFavorite, toggleFavorite, favoriteIds, createFavoriteButton };
+/* isFavorite and toggleFavorite are the button's own internals — every
+   caller in the app uses the control, not the pair of functions behind it. */
+export { favoriteIds, createFavoriteButton };
