@@ -158,10 +158,14 @@ const settings = createMapStore('settings');
 const progress = createMapStore('progress');
 const journal = createListStore('journal');
 const practice = createListStore('practice');
+/* id → true for anything the reader has chosen to keep. A map rather than a
+   list so the "is this one kept?" lookup every card does is a key check, and
+   so un-keeping is a delete instead of a filter. */
+const favorites = createMapStore('favorites');
 
 function clearAll() {
-  const results = [settings.clear(), progress.clear(), journal.clear(), practice.clear()];
+  const results = [settings.clear(), progress.clear(), journal.clear(), practice.clear(), favorites.clear()];
   return results.every(Boolean);
 }
 
-export { isAvailable, settings, progress, journal, practice, clearAll };
+export { isAvailable, settings, progress, journal, practice, favorites, clearAll };

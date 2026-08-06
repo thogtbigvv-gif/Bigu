@@ -49,7 +49,7 @@ That philosophy influences every design and development decision.
 - Readings
 - Example sentences
 - Search and filtering
-- Favorites
+- Keep a word (bookmark) — kept words get their own shelf in Memory
 
 ### 📝 Grammar
 
@@ -84,12 +84,28 @@ That philosophy influences every design and development decision.
 - One deck per content type, plus "Due today" across all of them
 - Self-graded: reveal, then "I knew it" or "Still learning"
 
+### 🖌 Memory
+
+There is no "learned" in Bigu. A word is never finished — it is written in
+ink, and ink fades.
+
+- **Memory strength** — a continuous estimate of how much of each word you
+  still hold, halving over that word's own review interval. Drawn as a brush
+  stroke that shortens and pales as the memory does
+- **Shelves instead of a list** — Waiting for you, Fading, Newly met, Hard to
+  hold, Kept, Deep ink. Each one is a state of memory, not a category of
+  content, and each is capped so no shelf becomes a wall
+- **Review in place** — turn a slip over, answer, watch the ink darken. No
+  session to start or finish
+- **This week** — seven marks, one per day, and your review streak
+- Every shelf is derived from the schedule except Kept, which is yours
+
 ### 📊 Dashboard
 
 - What's due today, and one button to start it
-- Study streak — counts reviewing, marking a word learned, or writing a
+- Study streak — counts reviewing, taking a word into memory, or writing a
   journal entry, not just one of the three
-- Learned/total progress per deck
+- How much of what you hold has gone faint, and a door into Memory
 - Your last review session at a glance
 
 ---

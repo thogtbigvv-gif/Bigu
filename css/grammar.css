@@ -88,7 +88,16 @@
 }
 
 /* Layout only — visual treatment now lives in the shared .toggle-chip
-   class in buttons.css. */
-.grammar-card__progress {
+   class in buttons.css. The chip and the bookmark share one row; see the
+   note on .vocab-card__controls for why they're paired but only one of them
+   carries a label. */
+.grammar-card__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
   align-self: flex-start;
+}
+
+.grammar-card__progress {
+  align-self: center;
 }

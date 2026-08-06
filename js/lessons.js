@@ -5,10 +5,9 @@
    Sits alongside vocabulary/grammar/kanji as reference material, not part
    of the practice deck.
 
-   Each word has its own "Mark as learned" toggle, same shape and store as
-   vocabulary/grammar/kanji's mastery buttons (review.js over storage.js's
-   `progress` map, keyed by each word's `id`), so a lesson's progress
-   survives a reload. Each lesson group also has its own "Quiz" button: a
+   Each word has its own "Remember this" toggle, same shape and store as
+   vocabulary/grammar/kanji's (review.js over storage.js's `progress` map,
+   keyed by each word's `id`), so a lesson's progress survives a reload. Each lesson group also has its own "Quiz" button: a
    self-graded flashcard round scoped to that lesson's word list (reveal →
    self-mark → next, same interaction language as practice.js's deck
    quizzes), shown in place of the lesson list.
@@ -21,7 +20,7 @@
    One progress model is worth more than the separation was.
    ========================================================================== */
 
-import { grade as gradeItem, isLearned, setLearned, shuffled } from './review.js';
+import { grade as gradeItem, isRemembered, setRemembered, shuffled } from './review.js';
 import { createContentLoader, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/lessons.json';
@@ -39,8 +38,8 @@ const loadLessons = createContentLoader(DATA_URL, 'lessons');
    lesson words join the review pool instead of being a dead end.
    -------------------------------------------------------------------------------------- */
 
-function countLearned(words) {
-  return words.filter((entry) => isLearned(entry.id)).length;
+function countRemembered(words) {
+  return words.filter((entry) => isRemembered(entry.id)).length;
 }
 
 /* -- Word rendering --------------------------------------------------------------------
@@ -77,13 +76,13 @@ function createProgressButton(entry, onChange) {
   button.className = 'toggle-chip lesson-word__progress';
 
   const sync = () => {
-    const learned = isLearned(entry.id);
-    button.setAttribute('aria-pressed', String(learned));
-    button.textContent = learned ? 'Learned \u2713' : 'Mark as learned';
+    const remembered = isRemembered(entry.id);
+    button.setAttribute('aria-pressed', String(remembered));
+    button.textContent = remembered ? 'In memory' : 'Remember this';
   };
 
   button.addEventListener('click', () => {
-    setLearned(entry.id, !isLearned(entry.id));
+    setRemembered(entry.id, !isRemembered(entry.id));
     sync();
     onChange();
   });
@@ -143,8 +142,8 @@ function createLessonGroup(lesson, index, onQuiz) {
   count.className = 'lesson-group__count meta';
 
   const updateCount = () => {
-    const learned = countLearned(lesson.words);
-    count.textContent = `${lesson.words.length} words \u00b7 ${learned} learned`;
+    const remembered = countRemembered(lesson.words);
+    count.textContent = `${lesson.words.length} words \u00b7 ${remembered} in memory`;
   };
   updateCount();
 
@@ -206,7 +205,7 @@ function createLessonGroup(lesson, index, onQuiz) {
    then a summary with the round's score. Each grade writes to the shared
    schedule in review.js, so a word passed here moves out along the same
    ladder it would from the Review deck; closing the quiz returns to the
-   lesson list, whose learned counts refresh to match.
+   lesson list, whose in-memory counts refresh to match.
    -------------------------------------------------------------------------------------- */
 
 function buildQuizPanel() {

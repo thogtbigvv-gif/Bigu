@@ -67,6 +67,15 @@
   max-width: none;
 }
 
+/* The chip and the bookmark share one row, same pairing as the vocabulary
+   and grammar cards. */
+.kanji-card__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
 .kanji-card__detail-button {
   margin-block-start: var(--space-3xs);
 }

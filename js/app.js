@@ -23,6 +23,7 @@ import { initVocabulary } from './vocabulary.js';
 import { initGrammar } from './grammar.js';
 import { initKanji } from './kanji.js';
 import { initPractice } from './practice.js';
+import { initMemory } from './memory.js';
 import { initJournal } from './journal.js';
 import { initLessons } from './lessons.js';
 import { initReading } from './reading.js';
@@ -59,6 +60,7 @@ const VIEW_INITIALIZERS = {
   grammar: initGrammar,
   kanji: initKanji,
   practice: initPractice,
+  memory: initMemory,
   journal: initJournal,
   lessons: initLessons,
   reading: initReading,

@@ -1,0 +1,616 @@
+/* ==========================================================================
+   memory.css
+   Styles for the #memory view built by js/memory.js.
+
+   The whole sheet is one idea: ink on paper, at four densities. Nothing here
+   introduces a colour — every value is --color-ink, --color-stone or
+   --color-bengara at some opacity, so the page reads as one material in both
+   themes and inverts for free when the ink and the paper swap places.
+
+   Two custom properties do most of the work:
+     --strength  0…1, an item's estimated memory strength (review.js)
+     --weight    0…1, how much came back to the reader on one day
+
+   Both are set inline from JS, and everything visual — how dark a stroke is,
+   how tall, how solid a day's mark reads — is derived from them in CSS. No
+   state classes for "strong" or "weak", because memory is continuous and a
+   class list can only be discrete.
+
+   Motion is deliberately small and always finite: an entrance stagger, an
+   ink transition, one settle. Nothing loops. A screen a learner is meant to
+   sit quietly with cannot have something breathing on it, and reset.css's
+   prefers-reduced-motion rule flattens all of it for readers who ask.
+   ========================================================================== */
+
+#memory {
+  gap: var(--space-2xl);
+}
+
+.memory-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+/* -- Hero --------------------------------------------------------------------------------
+   The page's opening sentence, and the only prose in the app set at heading
+   scale in the display face. It replaces a stat tile: a sentence carries its
+   own label, where a number needs one printed underneath it.
+   ------------------------------------------------------------------------------------------ */
+
+.memory-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-xs);
+}
+
+.memory-hero__kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-ash);
+}
+
+.memory-hero__line {
+  margin: 0;
+  max-width: 22ch;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.memory-hero__sub {
+  margin: 0;
+  max-width: 46ch;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--color-ink-soft);
+}
+
+/* -- The wash ----------------------------------------------------------------------------
+   One brush stroke, as wide as the reader's average memory strength, drying
+   out toward its right end. The track underneath it is the unwritten part of
+   the paper — visible, but only just.
+   ------------------------------------------------------------------------------------------ */
+
+.memory-hero__wash {
+  width: 100%;
+  max-width: 34rem;
+  height: 3px;
+  margin-block-start: var(--space-sm);
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--color-stone) 55%, transparent);
+  overflow: hidden;
+}
+
+.memory-hero__stroke {
+  display: block;
+  height: 100%;
+  width: calc(var(--strength) * 100%);
+  border-radius: inherit;
+  background-image: linear-gradient(
+    90deg,
+    var(--color-ink) 0%,
+    color-mix(in srgb, var(--color-ink) 70%, transparent) 72%,
+    color-mix(in srgb, var(--color-ink) 20%, transparent) 100%
+  );
+  /* Drawn on arrival rather than simply present: the stroke is the reader's
+     own work, and watching it laid down once is the single most emotive
+     moment on the page. 700ms — slower than UI feedback, faster than an
+     animation you have to wait for. */
+  animation: memory-wash-in 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes memory-wash-in {
+  from { width: 0; }
+}
+
+.memory-hero__wash-note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ash);
+}
+
+.memory-hero__cta {
+  margin-block-start: var(--space-sm);
+}
+
+/* -- The week ------------------------------------------------------------------------------
+   Seven marks, no axis, no numbers. It answers "have I been coming back?"
+   with a shape, which is the only form of that answer a reader takes in
+   without stopping to read.
+   -------------------------------------------------------------------------------------------- */
+
+.memory-week {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-block: var(--space-md);
+  border-block: var(--border-width) solid var(--color-stone);
+}
+
+.memory-week__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  font-size: var(--text-base);
+  font-weight: var(--weight-regular);
+  color: var(--color-ink-soft);
+}
+
+.memory-week__jp {
+  font-size: var(--text-sm);
+  color: var(--color-ash);
+}
+
+.memory-week__days {
+  display: flex;
+  gap: var(--space-md);
+  margin: 0;
+  padding: 0;
+}
+
+.memory-week__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+/* Opacity *and* scale from the same value: a light day is a small pale mark,
+   a full day a solid one. Two channels for one number means the difference
+   is legible at a glance and still legible to someone who can't separate the
+   two greys. */
+.memory-week__dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: var(--color-ink);
+  opacity: calc(0.12 + var(--weight) * 0.78);
+  transform: scale(calc(0.55 + var(--weight) * 0.45));
+  transition: opacity var(--transition-base), transform var(--transition-base);
+}
+
+/* A day with nothing on it is still a day — an empty ring, not a gap, so the
+   week keeps its shape and a missed day reads as a pause rather than an
+   absence. */
+.memory-week__dot--empty {
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-stone);
+  opacity: 1;
+}
+
+.memory-week__day.is-today .memory-week__dot {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-bengara) 28%, transparent);
+}
+
+.memory-week__initial {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ash);
+}
+
+.memory-week__note {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+/* The one place a number is allowed to be loud on this page — a run of days
+   is the single figure worth protecting, and the hanko red is the app's
+   established mark for "this one matters". */
+.memory-week__streak {
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-bengara);
+}
+
+/* -- Shelves --------------------------------------------------------------------------------
+   64px between shelves, which is the largest gap in the app. The space is
+   the design: it is what stops six groups of words from reading as one long
+   inventory, and what gives a reader permission to stop after the first one.
+   ---------------------------------------------------------------------------------------------- */
+
+.memory-shelves {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+}
+
+.memory-shelf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.memory-shelf__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.memory-shelf__title {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-regular);
+  color: var(--color-ink);
+}
+
+.memory-shelf__icon {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  align-self: center;
+  color: var(--color-ash);
+}
+
+.memory-shelf__jp {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+.memory-shelf__note {
+  margin: 0;
+  max-width: 56ch;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.memory-shelf__more,
+.memory-shelf__empty {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ash);
+}
+
+/* A grid rather than a wrapping flex row. Slips sized to their own content
+   read as scattered paper, which sounds right and isn't: Japanese layout
+   gets its calm from alignment, and the ragged right edge of intrinsically
+   sized slips looked like a mistake rather than an arrangement. Equal
+   columns, and the shelf reads as one composed block. */
+.memory-shelf__slips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--space-sm);
+  margin: 0;
+  padding: 0;
+  align-items: start;
+}
+
+/* -- Slips ------------------------------------------------------------------------------------
+   短冊: a strip of paper with one thing on it. No border and no shadow —
+   a hairline box around every word is what made the old list read as a
+   database. Separation comes from the paper tone and the space around it.
+
+   Slips size to their content and wrap, so a shelf looks like slips laid out
+   on a desk rather than cells in a grid. Opening one lets it take the full
+   row: the detail needs the width, and the row it displaces is a clear
+   signal about which slip you are now inside of.
+   ------------------------------------------------------------------------------------------------ */
+
+.memory-slip {
+  min-width: 0;
+  border-radius: var(--radius-md);
+  background-color: var(--color-washi-raised);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast),
+    opacity var(--transition-base);
+  animation: memory-slip-in 320ms ease-out both;
+  animation-delay: calc(var(--index, 0) * 40ms);
+}
+
+@keyframes memory-slip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* Open, a slip takes the whole row. The detail needs the width, and a slip
+   that displaces its own row is an unmistakable answer to "which one am I
+   inside of?" — no highlight or overlay required. */
+.memory-slip.is-open {
+  grid-column: 1 / -1;
+  box-shadow: var(--shadow-sm);
+}
+
+/* …and its state line comes back to sit beside the word. Left where it is,
+   the full-row width would fling "holding · 1 day late" a thousand pixels
+   away from the word it describes. */
+.memory-slip.is-open .memory-slip__body {
+  flex: 0 1 auto;
+}
+
+.memory-slip.is-open .memory-slip__state {
+  margin-inline-start: var(--space-2xs);
+}
+
+/* The settle: the slip has been answered, the ink has already moved, and now
+   it leaves. Upward and out, because the item is going forward in time —
+   scheduled, not deleted. */
+.memory-slip.is-settling {
+  opacity: 0;
+  transform: translateY(-6px);
+}
+
+.memory-slip__face {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-sm) var(--space-md);
+  text-align: start;
+  border-radius: inherit;
+  transition: background-color var(--transition-fast);
+}
+
+.memory-slip__face:hover {
+  background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
+}
+
+.memory-slip__face:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* The stroke. Height and opacity both read from --strength, so a faint word
+   is a short pale mark and a deep one is a full dark line — the difference
+   is visible across a whole shelf before any word is read, which is the
+   point. transform-origin at the top so it drains downward as it weakens,
+   the way ink actually leaves a stroke. */
+.memory-slip__ink {
+  flex-shrink: 0;
+  width: 2px;
+  border-radius: 999px;
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-ink) 0%,
+    var(--color-ink) 65%,
+    color-mix(in srgb, var(--color-ink) 25%, transparent) 100%
+  );
+  opacity: calc(0.14 + var(--strength) * 0.76);
+  transform-origin: top center;
+  transform: scaleY(calc(0.4 + var(--strength) * 0.6));
+  /* Slower than any other transition in the app on purpose: this is the one
+     moment the page shows a memory changing, and at 150ms nobody sees it. */
+  transition: opacity 600ms ease-out, transform 600ms ease-out;
+}
+
+/* The faintest band gets the app's attention colour instead of ink — the
+   single exception to the one-material rule, and it is spent on the one
+   thing worth interrupting a calm page for. */
+.memory-slip[data-band="faint"] .memory-slip__ink {
+  background-image: linear-gradient(
+    to bottom,
+    var(--color-bengara) 0%,
+    color-mix(in srgb, var(--color-bengara) 30%, transparent) 100%
+  );
+  opacity: 0.85;
+}
+
+/* Kept but never studied: an outline where the stroke would be. There is no
+   ink on this word yet, and drawing a faint one would claim a memory that
+   doesn't exist. */
+.memory-slip[data-band="unmet"] .memory-slip__ink {
+  background-image: none;
+  border: var(--border-width) dashed var(--color-stone);
+  opacity: 1;
+  transform: none;
+  width: 3px;
+}
+
+.memory-slip__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+/* The display face on Japanese headwords is already one of its three
+   sanctioned roles (see typography.css) — this is that role, at the size the
+   word deserves when it is the only thing on the slip. */
+.memory-slip__word {
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.memory-slip__word--long {
+  font-size: var(--text-base);
+}
+
+.memory-slip__reading {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ash);
+  overflow-wrap: anywhere;
+}
+
+/* Right-aligned and quiet: the state line is what you check, not what you
+   read. It carries the band name in words as well as in ink, so the
+   information is never colour-only. */
+.memory-slip__state {
+  align-self: center;
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+  text-align: end;
+}
+
+.memory-slip[data-band="faint"] .memory-slip__state {
+  color: var(--color-bengara);
+}
+
+/* -- Slip detail ------------------------------------------------------------------------------
+   Recall before answer. The turn-over button is not ceremony: seeing the
+   meaning without trying to produce it first is recognition, which feels
+   like studying and does very little. One tap enforces retrieval.
+   ------------------------------------------------------------------------------------------------ */
+
+.memory-slip__detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-sm);
+  padding: 0 var(--space-md) var(--space-md);
+  animation: memory-detail-in 200ms ease-out both;
+}
+
+@keyframes memory-detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+.memory-slip__answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  animation: memory-detail-in 200ms ease-out both;
+}
+
+.memory-slip__meaning {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-ink);
+}
+
+.memory-slip__example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding-inline-start: var(--space-sm);
+  border-inline-start: var(--border-width) solid var(--color-stone);
+}
+
+.memory-slip__example p {
+  margin: 0;
+}
+
+.memory-slip__actions {
+  display: flex;
+  gap: var(--space-2xs);
+}
+
+.memory-slip__note {
+  margin: 0;
+  min-height: 1.2em;
+  font-size: var(--text-sm);
+  color: var(--color-moss);
+}
+
+.memory-slip__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  padding-block-start: var(--space-2xs);
+  border-block-start: var(--border-width) solid var(--color-stone);
+}
+
+.memory-slip__kind {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* -- Empty state ---------------------------------------------------------------------------------
+   Not a dashed placeholder box. A reader who has never studied anything is
+   being introduced to the idea of the page, so the page shows them the idea:
+   one large ink character, one sentence about how it works, one door.
+   ---------------------------------------------------------------------------------------------------- */
+
+.memory-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-block: var(--space-3xl);
+  text-align: center;
+}
+
+.memory-empty__mark {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: 5rem;
+  line-height: 1;
+  color: var(--color-ink);
+  opacity: 0.12;
+  animation: memory-detail-in 600ms ease-out both;
+}
+
+.memory-empty__line {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-regular);
+  color: var(--color-ink);
+}
+
+.memory-empty__body {
+  margin: 0;
+  max-width: 42ch;
+  font-size: var(--text-base);
+  color: var(--color-ink-soft);
+}
+
+.memory-empty .button {
+  margin-block-start: var(--space-sm);
+}
+
+/* reset.css flattens animation *duration* globally for readers who ask for
+   reduced motion, but not the stagger delay — which would leave slips
+   sitting at opacity 0 (fill-mode: both) for up to a third of a second
+   after the page had otherwise finished. */
+@media (prefers-reduced-motion: reduce) {
+  .memory-slip {
+    animation-delay: 0s;
+  }
+}
+
+/* -- Small screens ----------------------------------------------------------------------------------
+   Slips go full width below 480px. A wrapped row of intrinsically-sized
+   slips on a phone produces one-word orphans on their own line; a stack of
+   full-width slips is the same object, just read vertically.
+   -------------------------------------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  #memory,
+  .memory-content,
+  .memory-shelves {
+    gap: var(--space-xl);
+  }
+
+  .memory-hero__line {
+    font-size: var(--text-xl);
+  }
+
+  .memory-week__days {
+    gap: var(--space-sm);
+    justify-content: space-between;
+  }
+}
+
+@media (max-width: 480px) {
+  .memory-shelf__slips {
+    grid-template-columns: 1fr;
+  }
+}

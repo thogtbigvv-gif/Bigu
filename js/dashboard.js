@@ -7,11 +7,15 @@
    summarizing the others.
 
    The view leads with what to do next, not with what was done. Everything
-   here used to be retrospective — a streak, three progress bars, the last
+   here used to be retrospective — a streak, four completion bars, the last
    session's score — so a reader opening the app had to decide for
    themselves where to go, every single time, and that friction is what
    kills a daily habit. The Today card answers the question instead: what's
    due, and one button that starts it.
+
+   The completion bars are gone entirely; see the note above
+   createMemoryCard() for why a learned/total ratio was the wrong shape for
+   this app's subject, and what took its place.
 
    Backup/restore used to be a fourth card here. It moved to Settings: this
    is a status surface, and an action that overwrites every store in the
@@ -20,7 +24,7 @@
 
 import { progress, journal, practice } from './storage.js';
 import { loadIntoView, OFFLINE_HINT } from './content.js';
-import { countDue } from './review.js';
+import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from './review.js';
 import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
@@ -58,8 +62,8 @@ function formatSessionDate(timestamp) {
    month saw a streak of zero, which is not just wrong, it's discouraging.
 
    A day counts as studied if any of three things happened on it: a journal
-   entry was written, a review session was finished, or an item was marked
-   learned. All three are already timestamped in storage, so this needs no
+   entry was written, a review session was finished, or an item was put into
+   memory. All three are already timestamped in storage, so this needs no
    new data — only for the streak to look at all of it. The set of kinds per
    day is kept, not just the fact of one, so the card can say which.
    ------------------------------------------------------------------------------------------ */
@@ -240,54 +244,64 @@ function createStreakCard(days, entries) {
   return card;
 }
 
-function createProgressRow(label, stats) {
-  const row = document.createElement('div');
-  row.className = 'dashboard-stat';
+/* -- Memory --------------------------------------------------------------------------------
+   This card used to be four learned/total progress bars, one per deck. They
+   were removed rather than restyled, and the reasoning is worth keeping
+   written down: a completion bar over a JLPT deck is a bar that can only
+   ever crawl, that treats a word recalled this morning and a word "learned"
+   in March as the same unit, and that quietly promises an end state a
+   language does not have. Four of them made the app's home screen a
+   progress report on a syllabus.
 
-  const head = document.createElement('div');
-  head.className = 'dashboard-stat__head';
+   What replaces them is one line about the state of the reader's memory
+   right now — how much of it is fading — and a door into #memory, where
+   that state is the whole subject. Same data, opposite posture: not how far
+   through the list you are, but what is happening to what you already hold.
+   -------------------------------------------------------------------------------------------- */
 
-  const name = document.createElement('span');
-  name.textContent = label;
+function createMemoryCard(entries) {
+  const card = createCard('Memory');
+  const now = Date.now();
 
-  const fraction = document.createElement('span');
-  fraction.className = 'meta';
-  fraction.textContent = `${stats.learned} / ${stats.total}`;
+  let held = 0;
+  let fading = 0;
+  let strengthTotal = 0;
 
-  head.append(name, fraction);
+  for (const record of entries) {
+    if (!record.seen) continue;
+    held += 1;
+    const strength = strengthOf(record, now);
+    strengthTotal += strength;
+    // The same threshold #memory splits its Fading shelf on, so the two
+    // screens can't quote different numbers for the same word.
+    if (strength < FAINT_STRENGTH) fading += 1;
+  }
 
-  /* The track is a plain <div>, so without these it's decoration a screen
-     reader steps over — the "12 / 14" line beside it is announced, but the
-     bar itself carries no value. role + the three value attributes make it
-     a real progress bar; aria-label names which deck it belongs to, since
-     the adjacent label text isn't wired to it as an accessible name. */
-  const track = document.createElement('div');
-  track.className = 'dashboard-stat__track';
-  track.setAttribute('role', 'progressbar');
-  track.setAttribute('aria-label', `${label} learned`);
-  track.setAttribute('aria-valuemin', '0');
-  track.setAttribute('aria-valuemax', String(stats.total));
-  track.setAttribute('aria-valuenow', String(stats.learned));
-  track.setAttribute('aria-valuetext', `${stats.learned} of ${stats.total} learned`);
+  const count = document.createElement('p');
+  count.className = 'dashboard-streak__count';
+  count.textContent = String(held);
 
-  const fill = document.createElement('div');
-  fill.className = 'dashboard-stat__fill';
-  const percent = stats.total === 0 ? 0 : Math.round((stats.learned / stats.total) * 100);
-  fill.style.width = `${percent}%`;
+  const label = document.createElement('p');
+  label.className = 'meta';
+  label.textContent = held === 1 ? 'word in memory' : 'words in memory';
 
-  track.append(fill);
-  row.append(head, track);
-  return row;
-}
+  const detail = document.createElement('p');
+  detail.className = 'dashboard-today__detail';
+  if (held === 0) {
+    detail.textContent = 'Nothing written yet. Every word you meet starts fading the moment you meet it — this is where you watch it.';
+  } else {
+    const band = bandFor(strengthTotal / held);
+    detail.textContent = fading > 0
+      ? `The ink is ${band.label} overall, and ${fading} ${fading === 1 ? 'word has' : 'words have'} gone faint.`
+      : `The ink is ${band.label} across all of them. Nothing has gone faint.`;
+  }
 
-function createProgressCard(stats) {
-  const card = createCard('Progress');
-  card.append(
-    createProgressRow('Lessons', stats.lessons),
-    createProgressRow('Vocabulary', stats.vocabulary),
-    createProgressRow('Grammar', stats.grammar),
-    createProgressRow('Kanji', stats.kanji),
-  );
+  const cta = document.createElement('a');
+  cta.href = '#memory';
+  cta.className = 'button button--secondary dashboard-card__cta';
+  cta.textContent = held === 0 ? 'See how it works' : 'Open memory';
+
+  card.append(count, label, detail, cta);
   return card;
 }
 
@@ -369,11 +383,17 @@ function renderHeroStatus(counts) {
 function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) {
   const lessonWords = lessonData.flatMap((lesson) => lesson.words);
 
+  // One read of the progress store for all four decks. countDue() would
+  // otherwise re-read and re-parse it once per item, which on a catalogue
+  // this size is thousands of parses to draw one card.
+  const records = snapshotRecords();
+  const now = Date.now();
+
   const stats = {
-    lessons: countDue(lessonWords),
-    vocabulary: countDue(vocabData.words),
-    grammar: countDue(grammarData.points),
-    kanji: countDue(kanjiData.kanji),
+    lessons: countDue(lessonWords, now, records),
+    vocabulary: countDue(vocabData.words, now, records),
+    grammar: countDue(grammarData.points, now, records),
+    kanji: countDue(kanjiData.kanji, now, records),
   };
 
   // One combined figure across every deck: the reader's day isn't split by
@@ -382,10 +402,10 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
     (sum, deck) => ({
       due: sum.due + deck.due,
       new: sum.new + deck.new,
-      learned: sum.learned + deck.learned,
+      remembered: sum.remembered + deck.remembered,
       total: sum.total + deck.total,
     }),
-    { due: 0, new: 0, learned: 0, total: 0 },
+    { due: 0, new: 0, remembered: 0, total: 0 },
   );
 
   renderHeroStatus(totals);
@@ -402,7 +422,7 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
   grid.append(
     createTodayCard(totals),
     createStreakCard(days, journal.getAll()),
-    createProgressCard(stats),
+    createMemoryCard(records.values()),
     createPracticeCard(practice.getAll()),
   );
 

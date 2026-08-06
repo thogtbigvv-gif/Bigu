@@ -2,11 +2,12 @@
    grammar.js
    Loads data/grammar.json and renders it as a list inside the #grammar
    view. Follows vocabulary.js's shape: same content.js loader and load/
-   skeleton/error cycle, same review.js mastery toggle, same createElement/
+   skeleton/error cycle, same review.js memory toggle, same createElement/
    append DOM building — only the card fields differ.
    ========================================================================== */
 
-import { isLearned as isMastered, setLearned as setMastered } from './review.js';
+import { isRemembered, setRemembered } from './review.js';
+import { createFavoriteButton } from './favorites.js';
 import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/grammar.json';
@@ -58,24 +59,32 @@ function createExample(example) {
   return wrap;
 }
 
-function createMasteryButton(point) {
+/* Same two controls, same two questions, same words as every other study
+   card in the app — "Mastered ✓" used to be a third vocabulary for what is
+   one state, and a pattern you have "mastered" is an even bolder claim than
+   a word you have "learned". */
+function createMemoryControls(point) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'toggle-chip grammar-card__progress';
 
   const sync = () => {
-    const mastered = isMastered(point.id);
-    button.setAttribute('aria-pressed', String(mastered));
-    button.textContent = mastered ? 'Mastered ✓' : 'Mark as mastered';
+    const remembered = isRemembered(point.id);
+    button.setAttribute('aria-pressed', String(remembered));
+    button.textContent = remembered ? 'In memory' : 'Remember this';
   };
 
   button.addEventListener('click', () => {
-    setMastered(point.id, !isMastered(point.id));
+    setRemembered(point.id, !isRemembered(point.id));
     sync();
   });
 
   sync();
-  return button;
+
+  const controls = document.createElement('div');
+  controls.className = 'grammar-card__controls';
+  controls.append(button, createFavoriteButton(point.id));
+  return controls;
 }
 
 function createCard(point, level) {
@@ -109,7 +118,7 @@ function createCard(point, level) {
     item.append(notes);
   }
 
-  item.append(createMasteryButton(point));
+  item.append(createMemoryControls(point));
   return item;
 }
 
@@ -137,7 +146,7 @@ function matchesQuery(point, query) {
 }
 
 /* One chip per JLPT level, multi-select. Reuses the same .toggle-chip
-   look and pressed/unpressed language as the per-card mastery button. */
+   look and pressed/unpressed language as the per-card memory button. */
 function createCategoryFilters() {
   const wrap = document.createElement('div');
   wrap.className = 'grammar-filters__categories';

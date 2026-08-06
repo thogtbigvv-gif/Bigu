@@ -122,6 +122,14 @@
   gap: var(--space-sm);
 }
 
+/* #memory is one full-width column of tall bands (hero, then shelves), and
+   the gap matches the generous rhythm that view keeps between its shelves,
+   so nothing shifts when the real content lands. */
+.skeleton--memory {
+  grid-template-columns: 1fr;
+  gap: var(--space-2xl);
+}
+
 .skeleton__block {
   background-color: var(--color-stone);
   border-radius: var(--radius-lg);

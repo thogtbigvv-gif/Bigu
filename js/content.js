@@ -117,6 +117,7 @@ function createSearchField({ id, label: labelText, placeholder }) {
      list          — grammar: full-width rows
      rows          — lessons: a stack of collapsed group headers
      dashboard     — four summary cards: minmax(16rem, 1fr)
+     memory        — a hero block over two shelf-height bands
 
    The pulse is a CSS animation, so reset.css's global prefers-reduced-motion
    rule already stops it — nothing extra is needed here.
@@ -128,6 +129,7 @@ const SKELETON_SHAPES = {
   list: { count: 5, block: 'skeleton__block--row' },
   rows: { count: 6, block: 'skeleton__block--bar' },
   dashboard: { count: 4, block: 'skeleton__block--card' },
+  memory: { count: 3, block: 'skeleton__block--row' },
 };
 
 function renderSkeleton(container, shape) {

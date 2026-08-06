@@ -6,7 +6,8 @@
    text styling is invented here, only structure.
    ========================================================================== */
 
-import { isLearned, setLearned } from './review.js';
+import { isRemembered, setRemembered } from './review.js';
+import { createFavoriteButton } from './favorites.js';
 import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/vocabulary.json';
@@ -55,19 +56,23 @@ function createExample(example) {
   return wrap;
 }
 
+/* "In memory", not "Learned ✓". The tick was the problem: it said a word was
+   finished, when what actually happens next is that it starts fading. This
+   chip now claims only that the word is being held — a state #memory shows
+   decaying in real time, and one the reader can act on. */
 function createProgressButton(word, onChange) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'toggle-chip vocab-card__progress';
 
   const sync = () => {
-    const learned = isLearned(word.id);
-    button.setAttribute('aria-pressed', String(learned));
-    button.textContent = learned ? 'Learned ✓' : 'Mark as learned';
+    const remembered = isRemembered(word.id);
+    button.setAttribute('aria-pressed', String(remembered));
+    button.textContent = remembered ? 'In memory' : 'Remember this';
   };
 
   button.addEventListener('click', () => {
-    setLearned(word.id, !isLearned(word.id));
+    setRemembered(word.id, !isRemembered(word.id));
     sync();
     onChange();
   });
@@ -98,7 +103,16 @@ function createCard(word, level, onProgressChange) {
   meaning.className = 'vocab-card__meaning';
   meaning.textContent = word.meaning;
 
-  item.append(head, meaning, createExample(word.example), createProgressButton(word, onProgressChange));
+  /* Two controls, two different questions: the chip answers "do I hold
+     this?" (schedule state), the bookmark answers "do I want this?"
+     (a choice). They sit in one row because they're both about this word,
+     and only the chip is labelled because only one of them can be the
+     obvious action. */
+  const controls = document.createElement('div');
+  controls.className = 'vocab-card__controls';
+  controls.append(createProgressButton(word, onProgressChange), createFavoriteButton(word.id));
+
+  item.append(head, meaning, createExample(word.example), controls);
   return item;
 }
 
@@ -148,20 +162,20 @@ function matchesQuery(word, query) {
   return haystack.includes(query);
 }
 
-/* Reuses the same .toggle-chip look as the per-card "Mark as learned"
-   button — a filled chip here means "learned words are hidden", same
-   pressed/unpressed language as everywhere else the class is used. */
-function createLearnedToggle() {
+/* Reuses the same .toggle-chip look as the per-card "Remember this"
+   button — a filled chip here means "words already in memory are hidden",
+   same pressed/unpressed language as everywhere else the class is used. */
+function createRememberedToggle() {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'toggle-chip vocab-filters__learned-toggle';
+  button.className = 'toggle-chip vocab-filters__memory-toggle';
   button.setAttribute('aria-pressed', 'false');
-  button.textContent = 'Hide learned';
+  button.textContent = 'Hide what’s in memory';
   return button;
 }
 
 /* One chip per JLPT level / topic tag, multi-select. Reuses the same
-   .toggle-chip look and pressed/unpressed language as the learned toggle
+   .toggle-chip look and pressed/unpressed language as the memory toggle
    and per-card progress button above, just applied as a group instead of
    a single switch. */
 function createCategoryFilters() {
@@ -200,12 +214,12 @@ function renderList(container, data) {
     label: 'Search vocabulary',
     placeholder: 'Search by kanji, kana, or meaning',
   });
-  const learnedToggle = createLearnedToggle();
+  const rememberedToggle = createRememberedToggle();
   const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters();
 
   const filters = document.createElement('div');
   filters.className = 'vocab-filters';
-  filters.append(searchWrap, learnedToggle);
+  filters.append(searchWrap, rememberedToggle);
 
   const summary = document.createElement('p');
   summary.className = 'vocab-meta meta';
@@ -229,24 +243,24 @@ function renderList(container, data) {
 
   function applyFilter() {
     const query = searchInput.value.trim().toLowerCase();
-    const hideLearned = learnedToggle.getAttribute('aria-pressed') === 'true';
+    const hideRemembered = rememberedToggle.getAttribute('aria-pressed') === 'true';
     let visible = 0;
     for (const row of rows) {
       const inSelectedTags = selectedTags.size === 0 || row.tags.some((tag) => selectedTags.has(tag));
-      const matches = inSelectedTags && matchesQuery(row.word, query) && !(hideLearned && isLearned(row.word.id));
+      const matches = inSelectedTags && matchesQuery(row.word, query) && !(hideRemembered && isRemembered(row.word.id));
       row.item.hidden = !matches;
       if (matches) visible += 1;
     }
-    summary.textContent = query || hideLearned || selectedTags.size > 0
+    summary.textContent = query || hideRemembered || selectedTags.size > 0
       ? `${levelLabel} · ${visible} / ${data.words.length} words`
       : `${levelLabel} · ${data.words.length} words`;
     empty.hidden = visible > 0;
   }
 
   searchInput.addEventListener('input', applyFilter);
-  learnedToggle.addEventListener('click', () => {
-    const pressed = learnedToggle.getAttribute('aria-pressed') === 'true';
-    learnedToggle.setAttribute('aria-pressed', String(!pressed));
+  rememberedToggle.addEventListener('click', () => {
+    const pressed = rememberedToggle.getAttribute('aria-pressed') === 'true';
+    rememberedToggle.setAttribute('aria-pressed', String(!pressed));
     applyFilter();
   });
   categoryButtons.forEach((button) => {
