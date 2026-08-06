@@ -10,14 +10,21 @@
 #      directly skips ~15 seconds and a whole class of "why did Jekyll touch
 #      that file" surprises (it ignores anything starting with `_`).
 #
-#   2. Its deploy step's timeout is fixed at 10 minutes and cannot be
-#      configured. On 2026-08-06 GitHub's Pages deployment queue stalled: the
-#      build succeeded in 20 seconds and the deployment then sat in
-#      `deployment_queued` until the action gave up — twice, on two separate
-#      commits, where a healthy deploy on this repo takes about 6 seconds.
-#      Nothing was wrong with the site; the run went red and nothing shipped.
-#      Here the timeout is ours to set, so a slow queue means a slow deploy
-#      rather than a failed one.
+#   2. A stalled deploy can be retried from the Actions tab. On 2026-08-06
+#      GitHub's Pages deployment queue stalled for over an hour: builds
+#      succeeded in 20 seconds and the deployment then sat unfinished until
+#      the action gave up, on commit after commit, where a healthy deploy on
+#      this repo takes about 6 seconds. The built-in workflow has no manual
+#      trigger, so the only way to retry was to push an empty commit to main.
+#      The `workflow_dispatch` below is that missing button.
+#
+#      What this does NOT fix: the ten-minute ceiling. deploy-pages caps its
+#      own `timeout` input at 600000 ms and warns if you ask for more —
+#      "timeout value is greater than the allowed maximum" — so a deployment
+#      GitHub takes longer than ten minutes to process will fail here exactly
+#      as it did there, and the action cancels it on the way out. When Pages
+#      is having a bad day, no workflow config can save the run; only waiting
+#      for GitHub can.
 #
 # REQUIRES: Settings → Pages → Source must be "GitHub Actions". While it is
 # still "Deploy from a branch", this workflow cannot create a deployment and
@@ -74,11 +81,12 @@ jobs:
         id: deploy
         uses: actions/deploy-pages@v4
         with:
-          # 30 minutes, against the action's own 10-minute default. A deploy
-          # here normally completes in seconds; this budget exists only so a
-          # backed-up Pages queue doesn't turn a perfectly good commit into a
-          # red X. Raise it, don't lower it.
-          timeout: 1800000
-          # Poll every 15s rather than every 5s. Over a 30-minute ceiling the
-          # default would be 360 status requests to say one thing.
+          # No `timeout` here on purpose. The action's default is 600000 ms
+          # and that is also its hard maximum — passing anything larger is
+          # silently clamped back down with a warning, so a longer budget is
+          # not available to ask for. Lowering it would only fail sooner.
+          #
+          # Poll every 15s rather than the default 5s: over a ten-minute
+          # ceiling that is 40 status requests instead of 120, to learn the
+          # same one thing.
           reporting_interval: 15000

@@ -152,12 +152,15 @@ This depends on one repository setting: **Settings → Pages → Source** must b
 its own Jekyll workflow and this one fails, because two workflows cannot both
 own the same Pages site.
 
-The deploy step waits up to 30 minutes rather than the action's default 10.
-That is not because deploying is slow — it normally takes seconds — but
-because GitHub's Pages queue occasionally stalls, and a queued deployment
-should mean a slow release, not a failed one. A stalled run can also be
-retried from the Actions tab (`Deploy to GitHub Pages` → `Run workflow`)
-without pushing an empty commit.
+A stalled run can be retried from the Actions tab (`Deploy to GitHub Pages` →
+`Run workflow`), which the built-in workflow gave no way to do.
+
+Deploying normally takes a few seconds. When GitHub's Pages service is
+degraded it can take longer than the ten minutes `actions/deploy-pages` waits
+— and that ceiling can't be raised, the action clamps its own `timeout` input
+to 600000 ms — so the run goes red and the deployment is cancelled even though
+nothing is wrong with the site. There is no configuration that avoids this.
+Wait for GitHub to recover, then re-run the workflow.
 
 ### Regenerating the app icons
 
