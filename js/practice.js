@@ -184,7 +184,7 @@ const DECKS = {
    but never scheduled. */
 function deckKeyForItemId(id) {
   if (/^l\d+-/.test(id)) return 'lessons';
-  if (id.startsWith('n3-')) return 'vocabulary';
+  if (/^n[1-5]-/.test(id)) return 'vocabulary';
   if (id.startsWith('gr-')) return 'grammar';
   if (id.startsWith('kj-')) return 'kanji';
   return null;
