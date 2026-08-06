@@ -141,6 +141,24 @@ Your progress lives in this browser's `localStorage` and never leaves the
 device. **Settings → Backup** downloads all of it as a JSON file, and restores
 from one.
 
+### Deployment
+
+`main` publishes to <https://thogtbigvv-gif.github.io/Bigu/> through
+`.github/workflows/deploy.yml` — the repository is uploaded as-is and handed
+to GitHub Pages. There is no build step, because there is nothing to build.
+
+This depends on one repository setting: **Settings → Pages → Source** must be
+**GitHub Actions**. If it is set to "Deploy from a branch" instead, GitHub runs
+its own Jekyll workflow and this one fails, because two workflows cannot both
+own the same Pages site.
+
+The deploy step waits up to 30 minutes rather than the action's default 10.
+That is not because deploying is slow — it normally takes seconds — but
+because GitHub's Pages queue occasionally stalls, and a queued deployment
+should mean a slow release, not a failed one. A stalled run can also be
+retried from the Actions tab (`Deploy to GitHub Pages` → `Run workflow`)
+without pushing an empty commit.
+
 ### Regenerating the app icons
 
 The PNGs in `icons/` are rendered from `icons/icon.svg`. If you edit the SVG:
