@@ -1,0 +1,84 @@
+# Publishes the site to GitHub Pages.
+#
+# This replaces GitHub's built-in "pages build and deployment" workflow, the
+# one that runs automatically when Pages is set to deploy from a branch. Two
+# reasons to own it instead:
+#
+#   1. That workflow runs the site through Jekyll. Bigu is plain HTML, CSS and
+#      ES modules with nothing for Jekyll to do — it pulls a container, builds,
+#      and produces the same files it was given. Uploading the directory
+#      directly skips ~15 seconds and a whole class of "why did Jekyll touch
+#      that file" surprises (it ignores anything starting with `_`).
+#
+#   2. Its deploy step's timeout is fixed at 10 minutes and cannot be
+#      configured. On 2026-08-06 GitHub's Pages deployment queue stalled: the
+#      build succeeded in 20 seconds and the deployment then sat in
+#      `deployment_queued` until the action gave up — twice, on two separate
+#      commits, where a healthy deploy on this repo takes about 6 seconds.
+#      Nothing was wrong with the site; the run went red and nothing shipped.
+#      Here the timeout is ours to set, so a slow queue means a slow deploy
+#      rather than a failed one.
+#
+# REQUIRES: Settings → Pages → Source must be "GitHub Actions". While it is
+# still "Deploy from a branch", this workflow cannot create a deployment and
+# every run fails — the setting and this file have to land together.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  # So a stalled or aborted deployment can be retried from the Actions tab
+  # without pushing an empty commit, which is what the outage above forced.
+  workflow_dispatch:
+
+# Least privilege: read the repo, mint the OIDC token deploy-pages exchanges
+# for its deployment, and write Pages itself. No contents: write anywhere.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deployment at a time. Queued runs collapse to the latest, but an
+# in-flight one is never cancelled — cancelling a production deploy halfway
+# is worse than waiting for it, and with a 30-minute timeout below there is
+# real waiting to protect.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      # The whole repository is the site — index.html sits at the root and
+      # every asset is relative to it, so there is no build output directory
+      # to point at. .git and .github are excluded by the action itself.
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4
+        with:
+          # 30 minutes, against the action's own 10-minute default. A deploy
+          # here normally completes in seconds; this budget exists only so a
+          # backed-up Pages queue doesn't turn a perfectly good commit into a
+          # red X. Raise it, don't lower it.
+          timeout: 1800000
+          # Poll every 15s rather than every 5s. Over a 30-minute ceiling the
+          # default would be 360 status requests to say one thing.
+          reporting_interval: 15000
