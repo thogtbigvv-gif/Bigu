@@ -31,6 +31,48 @@ function createContentLoader(url, label) {
   };
 }
 
+/* -- View plumbing --------------------------------------------------------------------
+   Every view module opened with the same six lines: look for its own
+   content wrapper inside the section, create it on first render, return it.
+   Seven copies of one function that differed only in a class name — and
+   because each was private, the one thing they all needed later (a
+   scroll-margin hook, an aria-busy contract) had to be added seven times.
+   ------------------------------------------------------------------------------------ */
+
+function getViewContainer(view, className) {
+  let content = view.querySelector(`.${className}`);
+  if (!content) {
+    content = document.createElement('div');
+    content.className = className;
+    view.append(content);
+  }
+  return content;
+}
+
+/* -- Small utilities -------------------------------------------------------------------
+   Counts are read, not just seen. "1132" is a string of digits a reader has
+   to parse; "1,132" is a number. Used anywhere the app shows a catalogue
+   size, which is the only place its figures get big enough to matter.
+   ------------------------------------------------------------------------------------ */
+
+const countFormatter = new Intl.NumberFormat('en');
+
+function formatCount(value) {
+  return countFormatter.format(value);
+}
+
+/* Trailing-edge debounce. Filtering used to run on every keystroke over
+   every row in the list; at 800 words that is a full pass plus a layout
+   flush per character typed, and it showed as dropped keys on a phone.
+   One pass after the reader stops typing does the same job. */
+function debounce(fn, wait = 140) {
+  let timer = null;
+  return function debounced(...args) {
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+
 /* -- Inline SVG ---------------------------------------------------------------------
    Every icon in the app is an inline <svg> (nav chevron, theme toggle,
    hamburger, lesson chevron, brand mark) except the two that used to be
@@ -226,7 +268,9 @@ export {
   createContentLoader,
   createIcon,
   createSearchField,
-  renderSkeleton,
+  getViewContainer,
+  formatCount,
+  debounce,
   renderError,
   loadIntoView,
   OFFLINE_HINT,

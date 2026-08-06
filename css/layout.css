@@ -164,6 +164,36 @@
   gap: var(--space-lg);
 }
 
+/* The incoming view's entrance — see playEnter() in js/router.js. Opacity
+   plus a 4px rise: enough to read as "this arrived", small enough that it
+   never delays the reader from acting on what arrived. */
+.view.is-entering {
+  animation: view-enter 160ms ease-out;
+}
+
+@keyframes view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+
+/* The header is sticky, so any scroll that lands an element at the top of
+   the viewport lands it *underneath* the header. That happened on every
+   single load: the app's routes are fragments, so opening #vocabulary makes
+   the browser scroll `#vocabulary` to the top of the viewport, where 72px
+   of sticky header is already sitting — the view's own <h1> was cut off
+   above the fold before the reader had done anything at all.
+
+   The margin is the header's height plus air. It goes on the view itself
+   (the fragment target) and on its headings (in-page anchors, and the
+   browser scrolling a focused heading into view). router.js handles the
+   navigation path separately with preventScroll. */
+.view,
+.view :is(h1, h2, h3) {
+  scroll-margin-top: var(--space-3xl);
+}
+
 /* router.js gives the active view's heading tabindex="-1" and focuses it on
    every navigation, so a keyboard reader lands at the top of the new view
    rather than back at the document root. That programmatic focus draws the

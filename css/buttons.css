@@ -207,6 +207,34 @@
   background-size: 0% 100%;
 }
 
+/* -- Chip count ---------------------------------------------------------------------
+   How many items sit behind a filter chip, shown on the chip itself. A
+   facet whose size you can only learn by pressing it is a facet you press
+   to find out and then press again to undo; the number turns two taps into
+   none. Mono and a step down so it reads as data attached to the label
+   rather than as part of it, and it inherits the chip's colour in both
+   states so the pressed fill doesn't need a second rule.
+   ------------------------------------------------------------------------------------ */
+.toggle-chip__count {
+  margin-inline-start: var(--space-2xs);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* -- Study controls row ---------------------------------------------------------------
+   The "Remember this" chip and the 栞 bookmark side by side at the foot of
+   every study card — vocabulary, grammar, kanji. Built by
+   js/studyControls.js; the four views used to each define this row under
+   their own class name with the same two declarations.
+   ------------------------------------------------------------------------------------ */
+.study-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
 /* -- Keep (favorite) --------------------------------------------------------------------
    A 栞 (bookmark) beside the progress chip on every study card, and in the
    foot of every slip on #memory. Icon-only and unfilled at rest so it never

@@ -48,10 +48,19 @@ function initStudyToggle(nav) {
        nav link rather than wherever the reader happened to be on the page;
      - focus returns to the toggle when it closes, so they aren't dropped
        back at the top of the document;
-     - the rest of the page is marked `inert` while it's open, which both
-       traps Tab inside the drawer and stops a screen reader wandering into
-       the content behind the backdrop. One attribute, and it's the whole
-       focus trap — no keydown cycling of first/last focusable elements.
+     - the page behind the backdrop is marked `inert` while it's open, which
+       both traps Tab inside the drawer and stops a screen reader wandering
+       into the content behind it. One attribute, and it's the whole focus
+       trap — no keydown cycling of first/last focusable elements.
+
+   Inert is applied to the main region and the footer, *not* to
+   .app-shell__content. The header is inside that wrapper, and the header
+   holds the toggle — so inerting the wrapper inerted the very button the
+   drawer turns into an X, and the one control a reader would reach for to
+   close it did nothing at all. The backdrop and Escape still worked, which
+   is why this survived: it failed silently, on touch, on the obvious
+   affordance. Two named regions instead of their parent keeps the intent
+   (page unreachable, header reachable) and makes it true.
 
    Being visually off-screen is handled in CSS (visibility:hidden on the
    closed drawer), so nothing here has to manage the tab order of the links
@@ -60,8 +69,15 @@ function initStudyToggle(nav) {
 function initMobileDrawer(nav) {
   const toggleBtn = document.getElementById('site-nav-mobile-toggle');
   const backdrop = document.getElementById('site-nav-backdrop');
-  const shellContent = document.querySelector('.app-shell__content');
+  const behindDrawer = [
+    document.getElementById('main-content'),
+    document.querySelector('.site-footer'),
+  ].filter(Boolean);
   if (!toggleBtn || !backdrop) return;
+
+  function setBehindInert(inert) {
+    for (const region of behindDrawer) region.inert = inert;
+  }
 
   function isOpen() {
     return nav.classList.contains('is-open');
@@ -71,10 +87,7 @@ function initMobileDrawer(nav) {
     nav.classList.add('is-open');
     backdrop.hidden = false;
     toggleBtn.setAttribute('aria-expanded', 'true');
-
-    // The header holds the toggle itself, so it can't go inert with the
-    // rest of the page — the reader has to be able to tab back to the X.
-    if (shellContent) shellContent.inert = true;
+    setBehindInert(true);
 
     // visibility flips to visible on the same frame the class lands, but
     // focus() before style resolution can be dropped on a still-hidden
@@ -89,7 +102,7 @@ function initMobileDrawer(nav) {
     nav.classList.remove('is-open');
     backdrop.hidden = true;
     toggleBtn.setAttribute('aria-expanded', 'false');
-    if (shellContent) shellContent.inert = false;
+    setBehindInert(false);
 
     // Only when the drawer was actually open and the close came from a
     // keyboard/Escape path: pulling focus back on an ordinary link click
@@ -110,6 +123,12 @@ function initMobileDrawer(nav) {
   nav.addEventListener('click', (event) => {
     if (event.target.closest('.site-nav__link:not(.site-nav__toggle)')) close();
   });
+
+  // Any route change closes it, not only a tap on one of these links. The
+  // back button is a route change the drawer never heard about: pressing it
+  // with the menu open left the drawer sitting over a view it hadn't
+  // navigated to, with the page behind it still inert.
+  window.addEventListener('hashchange', () => close());
 
   // Resizing past the mobile breakpoint with the drawer open would leave
   // it stuck mid-transform once it becomes a static sidebar — reset it.

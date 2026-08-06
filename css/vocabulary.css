@@ -16,10 +16,16 @@
 /* -- Filters ------------------------------------------------------------------------
    Pairs the search field with the "hide what's in memory" toggle chip above
    the list. The search field's own margin-block-end is zeroed here so the
-   row's gap is the only spacing between the two controls. */
+   row's gap is the only spacing between the two controls.
+
+   align-items:end, not center. The search field is a label stacked over an
+   input and the chip is a single box, so centring the two centred the chip
+   against the *whole* stack — leaving it floating half a line above the
+   input it sits beside. Aligning their bottom edges puts the chip and the
+   input on one line, which is the row a reader sees. */
 .vocab-filters {
   display: flex;
-  align-items: center;
+  align-items: end;
   flex-wrap: wrap;
   gap: var(--space-sm);
   margin-block-end: var(--space-sm);
@@ -49,6 +55,19 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
   gap: var(--space-lg);
+}
+
+/* -- Show more -----------------------------------------------------------------------
+   The foot of a paged list. Centred and full-width-ish so it reads as the
+   end of the run rather than as one more control belonging to the last
+   card; the summary line above the list carries the count, so this only has
+   to be pressable.
+   ------------------------------------------------------------------------------------ */
+.vocab-more {
+  display: flex;
+  width: fit-content;
+  margin: var(--space-lg) auto 0;
+  padding-inline: var(--space-xl);
 }
 
 .vocab-card {
