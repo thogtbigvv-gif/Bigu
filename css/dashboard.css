@@ -101,38 +101,16 @@
   border-top: var(--border-width) solid var(--color-stone);
 }
 
-/* -- Progress bars ---------------------------------------------------------------------------- */
-.dashboard-stat {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xs);
-  margin-block-start: var(--space-sm);
-}
+/* The four learned/total progress bars that used to live here were removed
+   with the "Learned" concept itself — their markup builder is gone from
+   dashboard.js, so their .dashboard-stat rules went with it rather than
+   sitting here as dead weight. The Memory card that replaced them needs no
+   chrome of its own: it reuses .dashboard-streak__count and
+   .dashboard-today__detail, like the two cards beside it.
 
-.dashboard-stat:first-of-type {
-  margin-block-start: 0;
-}
-
-.dashboard-stat__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  font-size: var(--text-sm);
-}
-
-.dashboard-stat__track {
-  height: var(--space-2xs);
-  background-color: var(--color-stone);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.dashboard-stat__fill {
-  height: 100%;
-  background-color: var(--color-moss);
-  border-radius: var(--radius-sm);
-  transition: width var(--transition-base);
-}
+   The bar treatment itself is not missed. What memory strength does over
+   time is decay, and a bar that only ever fills is the one shape that
+   cannot show that; #memory draws it as ink instead (see css/memory.css). */
 
 /* Backup/restore used to be a fourth card here. It lives in settings.css
    now — see the note at the top of js/settings.js. */

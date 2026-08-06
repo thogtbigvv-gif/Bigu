@@ -1,7 +1,7 @@
 /* ==========================================================================
    kanji.js
    Loads data/kanji.json and renders it as a grid inside the #kanji view.
-   Same content.js loader and review.js mastery pattern as vocabulary.js and
+   Same content.js loader and review.js memory pattern as vocabulary.js and
    grammar.js; laid out as a grid instead of a list since a single character
    card carries far less content than a vocab or grammar card.
 
@@ -24,7 +24,8 @@
    the character is found in this same dataset, plain text otherwise).
    ========================================================================== */
 
-import { isLearned as isMastered, setLearned as setMastered } from './review.js';
+import { isRemembered, setRemembered } from './review.js';
+import { createFavoriteButton } from './favorites.js';
 import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/kanji.json';
@@ -94,29 +95,36 @@ function createExample(example) {
   return wrap;
 }
 
-function createMasteryButton(entry) {
+/* One vocabulary across the app: a kanji is held in memory or it isn't,
+   said the same way a word or a grammar pattern is. The bookmark beside it
+   is the same control too — see js/favorites.js. */
+function createMemoryControls(entry) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'toggle-chip';
 
   const sync = () => {
-    const mastered = isMastered(entry.id);
-    button.setAttribute('aria-pressed', String(mastered));
-    button.textContent = mastered ? 'Mastered ✓' : 'Mark as mastered';
+    const remembered = isRemembered(entry.id);
+    button.setAttribute('aria-pressed', String(remembered));
+    button.textContent = remembered ? 'In memory' : 'Remember this';
   };
 
   button.addEventListener('click', () => {
-    setMastered(entry.id, !isMastered(entry.id));
+    setRemembered(entry.id, !isRemembered(entry.id));
     sync();
   });
 
   sync();
-  return button;
+
+  const controls = document.createElement('div');
+  controls.className = 'kanji-card__controls';
+  controls.append(button, createFavoriteButton(entry.id));
+  return controls;
 }
 
 /* -- Grid card -------------------------------------------------------------------------
    The compact overview: character, meaning, readings, one example
-   preview, mastery toggle, and now a "View details" button opening the
+   preview, memory controls, and now a "View details" button opening the
    full entry below. The card itself stays exactly as small as before —
    detail content only exists once the button is pressed.
    ------------------------------------------------------------------------------------------ */
@@ -155,7 +163,7 @@ function createCard(entry, level, onOpenDetail) {
     meaning,
     createReadings(entry),
     createExample(entry.example),
-    createMasteryButton(entry),
+    createMemoryControls(entry),
     detailButton,
   );
   return item;

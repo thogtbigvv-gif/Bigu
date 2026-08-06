@@ -16,7 +16,7 @@
    option a two-state button can't express.
    ========================================================================== */
 
-import { settings, progress, journal, practice } from './storage.js';
+import { settings, progress, journal, practice, favorites } from './storage.js';
 import { setThemePreference, themePreference, THEME_CHANGE_EVENT } from './theme.js';
 
 const VIEW_ID = 'settings';
@@ -78,7 +78,7 @@ function createAppearanceCard() {
 /* -- Backup export ----------------------------------------------------------------------
    Everything this app knows lives only in this browser's localStorage, so
    there's no server copy to fall back on if a cache gets cleared. This
-   bundles all four stores into one downloadable JSON file.
+   bundles all five stores into one downloadable JSON file.
    ------------------------------------------------------------------------------------------ */
 
 function todayKey() {
@@ -98,6 +98,7 @@ function buildBackupPayload() {
       progress: progress.getAll(),
       journal: journal.getAll(),
       practice: practice.getAll(),
+      favorites: favorites.getAll(),
     },
   };
 }
@@ -121,7 +122,7 @@ function downloadBackup() {
 
 /* -- Backup restore ---------------------------------------------------------------------
    The reverse of the export above: read a previously-downloaded JSON file,
-   confirm it's actually a Bigu backup with all four stores present, then
+   confirm it's actually a Bigu backup with the core stores present, then
    overwrite everything in localStorage in one go. This is destructive, so
    it always asks for confirmation before touching a single key, and the
    page reloads afterward so every view (not just this one) picks up the
@@ -133,6 +134,9 @@ function isValidBackupPayload(payload) {
   if (payload.app !== 'Bigu') return false;
   const data = payload.data;
   if (!data || typeof data !== 'object') return false;
+  // Four required, not five: `favorites` arrived after this format did, and
+  // a backup downloaded before it existed is still a perfectly good backup.
+  // Requiring the new key would have rejected every file already on disk.
   return ['settings', 'progress', 'journal', 'practice'].every((storeKey) => storeKey in data);
 }
 
@@ -142,6 +146,10 @@ function restoreBackup(payload) {
   progress.replaceAll(data.progress);
   journal.replaceAll(data.journal);
   practice.replaceAll(data.practice);
+  // Absent in pre-favorites backups; replaceAll's own guard turns undefined
+  // into an empty map, which is the correct reading of "this file predates
+  // keeping things".
+  favorites.replaceAll(data.favorites);
 }
 
 function setRestoreStatus(statusEl, message, isError) {

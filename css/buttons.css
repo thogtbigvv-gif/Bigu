@@ -144,7 +144,7 @@
 }
 
 /* -- Toggle chip -----------------------------------------------------------------
-   Shared "mark as known/mastered" control used by vocabulary, grammar, and
+   Shared "Remember this / In memory" control used by vocabulary, grammar, and
    kanji cards — the same quiet outline that fills solid on press, now
    defined once instead of three near-identical copies. Also brings the
    same focus ring and press feedback every other interactive element in
@@ -183,8 +183,8 @@
 }
 
 /* The fill sweeps in from the left edge over 180ms rather than snapping.
-   Marking a word learned is the one moment the app says "you did it", and
-   it's worth a beat — a background-size transition on a gradient does it
+   Taking a word into memory is the one moment the app marks with a state
+   change on the spot, and it's worth a beat — a background-size transition on a gradient does it
    without a pseudo-element or a second animated property. reset.css's
    prefers-reduced-motion rule collapses it to an instant swap. */
 .toggle-chip[aria-pressed="true"] {
@@ -207,6 +207,58 @@
   background-size: 0% 100%;
 }
 
+/* -- Keep (favorite) --------------------------------------------------------------------
+   A 栞 (bookmark) beside the progress chip on every study card, and in the
+   foot of every slip on #memory. Icon-only and unfilled at rest so it never
+   competes with the labelled chip next to it; filled in hanko red when set,
+   which is the same "this one is marked" language the app uses everywhere
+   else it spends that colour.
+
+   No background and no border in either state — a kept word should feel
+   annotated, not tagged.
+   ------------------------------------------------------------------------------------------- */
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  color: var(--color-ash);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.favorite-button:hover {
+  color: var(--color-bengara);
+}
+
+.favorite-button:active {
+  transform: translateY(1px);
+}
+
+.favorite-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.favorite-button__icon {
+  width: 1rem;
+  height: 1rem;
+  transition: fill var(--transition-base);
+  fill: transparent;
+}
+
+.favorite-button[aria-pressed="true"] {
+  color: var(--color-bengara);
+}
+
+.favorite-button[aria-pressed="true"] .favorite-button__icon {
+  fill: color-mix(in srgb, var(--color-bengara) 22%, transparent);
+}
+
 /* -- Touch targets --------------------------------------------------------------------
    At and below 768px every button in the study loop gets a 44px minimum
    box. See the matching block in navigation.css for the reasoning; the
@@ -222,7 +274,8 @@
     min-height: 2.75rem;
   }
 
-  .theme-toggle {
+  .theme-toggle,
+  .favorite-button {
     width: 2.75rem;
     height: 2.75rem;
   }

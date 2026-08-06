@@ -14,8 +14,8 @@
    ========================================================================== */
 
 /* -- Filters ------------------------------------------------------------------------
-   Pairs the search field with the "hide learned" toggle chip above the
-   list. The search field's own margin-block-end is zeroed here so the
+   Pairs the search field with the "hide what's in memory" toggle chip above
+   the list. The search field's own margin-block-end is zeroed here so the
    row's gap is the only spacing between the two controls. */
 .vocab-filters {
   display: flex;
@@ -31,7 +31,7 @@
 }
 
 /* -- Category chips -----------------------------------------------------------------
-   JLPT level + topic facets, one row beneath the search/learned-toggle row.
+   JLPT level + topic facets, one row beneath the search/memory-toggle row.
    Reuses .toggle-chip (buttons.css) for the pressed/unpressed treatment, so
    this rule only carries the row layout, not the chip's own look. */
 .vocab-filters__categories {
@@ -100,10 +100,18 @@
 }
 
 /* Layout only — visual treatment (color, border, hover, pressed state)
-   now lives in the shared .toggle-chip class in buttons.css. */
-.vocab-card__progress {
-  align-self: flex-start;
+   now lives in the shared .toggle-chip class in buttons.css. The row is
+   pushed to the foot of the card so the control line sits on the same
+   baseline across a grid of cards of different heights. */
+.vocab-card__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
   margin-block-start: auto;
+}
+
+.vocab-card__progress {
+  align-self: center;
 }
 
 /* -- Level tag --------------------------------------------------------------------
