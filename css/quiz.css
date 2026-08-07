@@ -1,0 +1,466 @@
+/* ==========================================================================
+   quiz.css
+   The shared quiz panel built by js/quiz.js — used by both the Review deck
+   and the per-lesson quiz. Replaces the two separate sets of quiz styles
+   that used to live in practice.css and lessons.css.
+
+   The screen is deliberately narrow and deliberately empty. A question is
+   the only thing on it: no deck picker, no history, no filters. Everything
+   competing for attention during a round is a reason to answer wrong.
+   ========================================================================== */
+
+.quiz {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  max-width: 38rem;
+  margin-inline: auto;
+  width: 100%;
+}
+
+.quiz__round {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* -- Progress --------------------------------------------------------------------------
+   A bar rather than "Card 3 of 10" alone: how far through a round you are
+   is the one thing worth knowing at a glance mid-question, and a filling
+   line says it without asking anyone to read.
+   ------------------------------------------------------------------------------------------ */
+.quiz__bar {
+  height: var(--space-2xs);
+  background-color: var(--color-stone);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.quiz__bar-fill {
+  height: 100%;
+  width: 0;
+  background-color: var(--color-moss);
+  border-radius: var(--radius-sm);
+  transition: width var(--transition-base);
+}
+
+.quiz__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+}
+
+.quiz__title {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.quiz__count {
+  margin: 0;
+  margin-inline-start: auto;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ash);
+}
+
+.quiz__exit {
+  flex-shrink: 0;
+  padding-inline: var(--space-sm);
+  font-size: var(--text-xs);
+}
+
+/* -- The card ----------------------------------------------------------------------------
+   Surface comes from .card. What's here is the question's own layout: the
+   instruction line small and quiet above, the Japanese large and alone in
+   the middle, the reading or structure line quiet below it.
+   ------------------------------------------------------------------------------------------ */
+/* A fixed minimum height with the content centred in it, rather than a
+   card that shrinks to whatever this particular item happens to carry. A
+   lesson word has no hint line and a grammar pattern has a long one, so
+   without this the card — and every option below it — would jump up and
+   down the page between questions. */
+.quiz__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  min-height: 11rem;
+  padding: var(--space-lg);
+  text-align: center;
+}
+
+.quiz__prompt {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ash);
+}
+
+.quiz__front {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+}
+
+.quiz__hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+/* -- Answers -----------------------------------------------------------------------------
+   Two columns on anything wider than a phone, one below it. Each option is
+   a full row rather than a chip: meanings run long, and a wrapped chip is
+   harder to scan than a wrapped line.
+   ------------------------------------------------------------------------------------------ */
+.quiz__options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-2xs);
+}
+
+.quiz__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  min-height: 3.25rem;
+  padding: var(--space-xs) var(--space-sm);
+  text-align: start;
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+  color: var(--color-ink);
+  font-size: var(--text-sm);
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.quiz__option:hover:not(:disabled) {
+  border-color: var(--color-indigo);
+}
+
+.quiz__option:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.quiz__option:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* The number is the keyboard shortcut made visible. Boxed so it reads as a
+   key rather than as part of the answer text. */
+.quiz__option-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-ash);
+}
+
+.quiz__option-text {
+  min-width: 0;
+}
+
+/* Answered state. Both the chosen wrong option and the right one are
+   marked — a wrong guess should end with the reader having seen which one
+   it should have been, not just that theirs wasn't it. */
+.quiz__option:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.quiz__option.is-answer {
+  border-color: var(--color-moss);
+  background-color: color-mix(in srgb, var(--color-moss) 14%, var(--color-washi-raised));
+}
+
+.quiz__option.is-answer .quiz__option-key {
+  border-color: var(--color-moss);
+  color: var(--color-moss);
+}
+
+.quiz__option.is-wrong {
+  border-color: var(--color-error);
+  background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-washi-raised));
+}
+
+.quiz__option.is-wrong .quiz__option-key {
+  border-color: var(--color-error);
+  color: var(--color-error);
+}
+
+/* Options that were neither picked nor correct step back so the two that
+   matter carry the eye. */
+.quiz__option:disabled:not(.is-answer):not(.is-wrong) {
+  opacity: 0.55;
+}
+
+/* -- Flip mode --------------------------------------------------------------------------- */
+.quiz__reveal {
+  align-self: center;
+}
+
+.quiz__grade {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.quiz__grade-button {
+  flex: 1 1 0;
+  max-width: 12rem;
+}
+
+/* -- Feedback ------------------------------------------------------------------------------ */
+.quiz__feedback {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+}
+
+.quiz__verdict {
+  margin: 0;
+  font-weight: var(--weight-medium);
+}
+
+.quiz__verdict.is-correct {
+  color: var(--color-moss);
+}
+
+.quiz__verdict.is-incorrect {
+  color: var(--color-error);
+}
+
+.quiz__example {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding: var(--space-sm) var(--space-md);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-radius: var(--radius-md);
+}
+
+.quiz__example p {
+  margin: 0;
+  max-width: none;
+}
+
+.quiz__example-jp {
+  color: var(--color-ink);
+}
+
+.quiz__shortcuts {
+  margin: 0;
+  text-align: center;
+}
+
+/* -- Card motion ---------------------------------------------------------------------------
+   One animated thing per moment, all under 250ms, none looping. A round is
+   a card every few seconds: anything that reads as decoration the first
+   time reads as friction the fortieth. reset.css's global
+   prefers-reduced-motion rule collapses all of these.
+   ---------------------------------------------------------------------------------------------- */
+.quiz__card.is-entering {
+  animation: quiz-card-enter 140ms ease-out;
+}
+
+.quiz__card.is-correct {
+  animation: quiz-card-correct 220ms ease-out;
+}
+
+/* A settle, not a shake — the reader got something wrong, which deserves a
+   nudge, not a scolding. */
+.quiz__card.is-incorrect {
+  animation: quiz-card-incorrect 150ms ease-in-out;
+}
+
+.quiz__feedback:not([hidden]) {
+  animation: quiz-card-enter 140ms ease-out;
+}
+
+@keyframes quiz-card-enter {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes quiz-card-correct {
+  50% {
+    border-color: var(--color-moss);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-moss) 30%, transparent);
+  }
+}
+
+@keyframes quiz-card-incorrect {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* -- Summary --------------------------------------------------------------------------------
+   The score, then what to do about it. "Practise the N you missed" is the
+   button that matters: a round that ends by naming exactly what to fix is
+   worth more than one that ends with a percentage.
+   ---------------------------------------------------------------------------------------------- */
+.quiz__summary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-block: var(--space-lg);
+  text-align: center;
+}
+
+/* Ink by default, moss only for a clean round. A 1/3 rendered in the
+   success colour congratulates someone for getting it wrong. */
+.quiz__summary-score {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  line-height: var(--leading-tight);
+}
+
+.quiz__summary-score.is-perfect {
+  color: var(--color-moss);
+}
+
+.quiz__summary-text {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+
+.quiz__missed-heading {
+  margin: var(--space-sm) 0 0 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.quiz__missed-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  width: 100%;
+  max-width: 26rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: start;
+}
+
+.quiz__missed-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-2xs) var(--space-sm);
+  background-color: var(--color-washi-raised);
+  border: var(--border-width) solid var(--color-stone);
+  border-inline-start: 2px solid var(--color-error);
+  border-radius: var(--radius-md);
+}
+
+.quiz__missed-front {
+  flex-shrink: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  color: var(--color-ink);
+}
+
+.quiz__missed-meaning {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.quiz__summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-sm);
+}
+
+/* -- Mode picker -----------------------------------------------------------------------------
+   Shown before a round, on the intro screen. The hint line under the chips
+   explains what the selected mode actually does — two one-word labels
+   don't, and "which of these two do I want?" is exactly the question a
+   study screen should answer for you rather than pose.
+   ---------------------------------------------------------------------------------------------- */
+.quiz-modes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+.quiz-modes__label {
+  margin: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+}
+
+.quiz-modes__group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.quiz-modes__button {
+  min-width: 6rem;
+}
+
+.quiz-modes__hint {
+  margin: 0;
+}
+
+/* -- Small screens ------------------------------------------------------------------------- */
+@media (max-width: 480px) {
+  .quiz__options {
+    grid-template-columns: 1fr;
+  }
+
+  .quiz__card {
+    padding: var(--space-lg) var(--space-md);
+  }
+
+  .quiz__grade,
+  .quiz__summary-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .quiz__grade-button,
+  .quiz__summary-actions .button {
+    max-width: none;
+    width: 100%;
+  }
+
+  .quiz__missed-item {
+    flex-direction: column;
+    gap: var(--space-3xs);
+  }
+
+  .quiz__missed-meaning {
+    margin-inline-start: 0;
+    text-align: start;
+  }
+}

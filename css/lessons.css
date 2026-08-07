@@ -2,10 +2,10 @@
    lessons.css
    Styles for the #lessons view built by lessons.js: a stack of collapsible
    lesson groups, each opening onto a word list (headword, meaning, and a
-   mark-as-learned toggle per row), plus a per-lesson quiz panel that
-   swaps in over the list. Card chrome, buttons, and the progress toggle
-   come from the global `.card`, `.button`, and `.toggle-chip` treatments;
-   only content layout lives here.
+   mark-as-learned toggle per row). The per-lesson quiz that swaps in over
+   the list is the shared one in quiz.css. Card chrome, buttons, and the
+   progress toggle come from the global `.card`, `.button`, and
+   `.toggle-chip` treatments; only content layout lives here.
    ========================================================================== */
 
 .lessons-meta {
@@ -136,103 +136,8 @@
   margin-block-start: auto;
 }
 
-/* -- Quiz ----------------------------------------------------------------------------
-   Swapped in over .lessons-meta/.lessons-list (both hidden by lessons.js
-   while a round is active). One card at a time, centered, narrower than
-   the full content column since it only ever holds a headword and a
-   short meaning line.
-   -------------------------------------------------------------------------------------- */
-
-.lessons-quiz {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  max-width: 32rem;
-  margin-inline: auto;
-}
-
-.lessons-quiz__exit {
-  align-self: flex-start;
-}
-
-.lessons-quiz__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  color: var(--color-ink);
-  text-align: center;
-}
-
-.lessons-quiz__session {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.lessons-quiz__status {
-  margin: 0;
-}
-
-.lessons-quiz-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-  padding: var(--space-2xl) var(--space-lg);
-  text-align: center;
-}
-
-.lessons-quiz-card__headword {
-  margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-2xl);
-  color: var(--color-ink);
-}
-
-.lessons-quiz-card__answer {
-  width: 100%;
-  padding-block-start: var(--space-md);
-  border-top: var(--border-width) solid var(--color-stone);
-}
-
-.lessons-quiz-card__meaning {
-  margin: 0;
-  font-size: var(--text-md);
-  color: var(--color-ink-soft);
-}
-
-.lessons-quiz__grade {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-sm);
-}
-
-.lessons-quiz__shortcut-hint {
-  margin: 0;
-}
-
-.lessons-quiz__summary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  padding-block: var(--space-xl);
-  text-align: center;
-}
-
-.lessons-quiz__summary-text {
-  margin: 0;
-  font-size: var(--text-md);
-  color: var(--color-ink);
-}
-
-.lessons-quiz__summary-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
+/* The quiz that opens over this list is shared with the Review deck and
+   lives in quiz.css — nothing about it is defined here. */
 
 /* -- Mobile spacing ---------------------------------------------------------------- */
 @media (max-width: 480px) {
@@ -247,20 +152,5 @@
   .lesson-word-list {
     grid-template-columns: 1fr;
     padding: var(--space-sm) var(--space-md) var(--space-md);
-  }
-
-  .lessons-quiz-card {
-    padding: var(--space-xl) var(--space-md);
-  }
-
-  .lessons-quiz__grade,
-  .lessons-quiz__summary-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .lessons-quiz__grade .button,
-  .lessons-quiz__summary-actions .button {
-    width: 100%;
   }
 }
