@@ -2,8 +2,8 @@
    lessons.css
    Styles for the #lessons view built by lessons.js: a stack of collapsible
    lesson groups, each opening onto a word list (headword, meaning, and a
-   mark-as-learned toggle per row), plus a per-lesson quiz panel that
-   swaps in over the list. Card chrome, buttons, and the progress toggle
+   memory mark per row). The per-lesson quiz that swaps in over the list is
+   the shared one in quiz.css. Card chrome, buttons, and the progress toggle
    come from the global `.card`, `.button`, and `.toggle-chip` treatments;
    only content layout lives here.
    ========================================================================== */
@@ -191,136 +191,15 @@
   fill: var(--color-moss);
 }
 
-/* -- Quiz ----------------------------------------------------------------------------
-   Swapped in over .lessons-meta/.lessons-list (both hidden by lessons.js
-   while a round is active). One card at a time, centered, narrower than
-   the full content column since it only ever holds a headword and a
-   short meaning line.
-   -------------------------------------------------------------------------------------- */
+/* The quiz that opens over this list is shared with the Review deck and
+   lives in quiz.css — nothing about it is defined here. */
 
-.lessons-quiz {
+/* The lesson count and the study-mode picker, above the list. */
+.lessons-intro {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
-  max-width: 32rem;
-  margin-inline: auto;
-}
-
-.lessons-quiz__exit {
-  align-self: flex-start;
-}
-
-.lessons-quiz__title {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  color: var(--color-ink);
-  text-align: center;
-}
-
-.lessons-quiz__session {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-}
-
-.lessons-quiz__status {
-  margin: 0;
-}
-
-.lessons-quiz-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  width: 100%;
-  padding: var(--space-2xl) var(--space-lg);
-  text-align: center;
-}
-
-.lessons-quiz-card__headword {
-  margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-2xl);
-  color: var(--color-ink);
-}
-
-.lessons-quiz-card__answer {
-  width: 100%;
-  padding-block-start: var(--space-md);
-  border-top: var(--border-width) solid var(--color-stone);
-}
-
-.lessons-quiz-card__meaning {
-  margin: 0;
-  font-size: var(--text-md);
-  color: var(--color-ink-soft);
-}
-
-.lessons-quiz__grade {
-  display: flex;
-  justify-content: center;
   gap: var(--space-sm);
-}
-
-.lessons-quiz__shortcut-hint {
-  margin: 0;
-}
-
-.lessons-quiz__summary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-md);
-  padding-block: var(--space-xl);
-  text-align: center;
-}
-
-.lessons-quiz__summary-text {
-  margin: 0;
-  font-size: var(--text-md);
-  color: var(--color-ink);
-}
-
-.lessons-quiz__summary-actions {
-  display: flex;
-  gap: var(--space-sm);
-}
-
-/* -- Narrow lesson headers -----------------------------------------------------------
-   The header packs four things onto one line: the lesson title, its word
-   count, the chevron, and the Quiz button. On a phone those don't fit, and
-   flex resolved the overflow the way flex does — by squeezing the only
-   flexible item down to its minimum content width. The result was a lesson
-   title set one character per line, ten lines tall, with the count running
-   underneath the Quiz button. Every lesson header on every phone.
-
-   Below the tablet line the title takes a row of its own and the count and
-   chevron sit beneath it, which is the reading order anyway: what the
-   lesson is, then how far through it you are.
-   ------------------------------------------------------------------------------------ */
-@media (max-width: 768px) {
-  .lesson-group__header {
-    flex-wrap: wrap;
-    gap: var(--space-3xs) var(--space-sm);
-  }
-
-  .lesson-group__title {
-    flex: 1 1 100%;
-  }
-
-  /* The count shrinks to its text and the chevron takes the slack, so the
-     disclosure affordance stays on the same edge it occupies at full width
-     instead of wrapping to a third line of its own. */
-  .lesson-group__count {
-    flex: 0 1 auto;
-  }
-
-  .lesson-group__icon {
-    margin-inline-start: auto;
-  }
+  margin-block-end: var(--space-md);
 }
 
 /* -- Mobile spacing ---------------------------------------------------------------- */
@@ -345,20 +224,5 @@
     height: 2.75rem;
     margin-block-start: -0.5rem;
     margin-inline-start: -0.5rem;
-  }
-
-  .lessons-quiz-card {
-    padding: var(--space-xl) var(--space-md);
-  }
-
-  .lessons-quiz__grade,
-  .lessons-quiz__summary-actions {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .lessons-quiz__grade .button,
-  .lessons-quiz__summary-actions .button {
-    width: 100%;
   }
 }
