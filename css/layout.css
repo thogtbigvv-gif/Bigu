@@ -46,6 +46,16 @@
    Sticky so the study room's navigation is always one glance away.
    A hairline border marks the edge instead of a shadow — a line, not
    a spotlight.
+
+   The ground is now the app's one piece of glass. This is the only surface in
+   Bigu that content passes *underneath*, and an opaque bar simply guillotines
+   whatever scrolls beneath it: a kanji card's top edge is there, then it isn't.
+   A translucent ground with a small blur keeps the page legible as one
+   continuous thing while still holding the header's own type — see the note on
+   --glass-surface in variables.css for why 82% and not less.
+
+   No cards, no panels, no chips get this treatment. They sit *on* the page,
+   not over it; frosting them would be an effect with nothing behind it.
    ------------------------------------------------------------------------------- */
 .site-header {
   position: sticky;
@@ -57,8 +67,65 @@
   flex-wrap: wrap;
   gap: var(--space-md);
   padding-block: var(--space-md);
-  background-color: var(--color-washi);
+  background-color: var(--glass-surface);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
   border-bottom: var(--border-width) solid var(--color-stone);
+}
+
+/* Without the blur, translucency is not a softer header — it is content
+   showing through the header's own text at full sharpness, which is worse
+   than the opaque bar this replaced. So the fallback is the opaque bar. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-header {
+    background-color: var(--color-washi);
+  }
+}
+
+/* -- Header, scroll shadow --------------------------------------------------------
+   The one cue the sticky header was missing: at the top of a view its border is
+   simply the edge of the page, and it should look like one. Once content has
+   travelled under it, it is a layer, and it should look like that instead.
+
+   Drawn as a gradient on a pseudo-element hanging below the header rather than
+   as a box-shadow on the header itself, because only the pseudo-element's
+   *opacity* then has to change — a compositor property — where a box-shadow
+   interpolating on every scroll frame repaints the whole bar. It fades in
+   across the first 96px of the page and stays.
+
+   Progress is read straight from the scroll position via a scroll-driven
+   animation, so there is no scroll listener, no class toggling, and nothing
+   for JavaScript to own. Engines without `animation-timeline` never enter the
+   block and keep the hairline border alone, which is the design this app
+   shipped with and is complete on its own.
+   ------------------------------------------------------------------------------- */
+.site-header::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  top: 100%;
+  height: 10px;
+  opacity: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--color-ink) 10%, transparent),
+    transparent
+  );
+}
+
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .site-header::after {
+      animation: header-shadow-in linear both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 96px;
+    }
+  }
+}
+
+@keyframes header-shadow-in {
+  to { opacity: 1; }
 }
 
 .brand {
@@ -162,18 +229,122 @@
   gap: var(--space-lg);
 }
 
-/* The incoming view's entrance — see playEnter() in js/router.js. Opacity
-   plus a 4px rise: enough to read as "this arrived", small enough that it
-   never delays the reader from acting on what arrived. */
+/* The incoming view's entrance — see playEnter() in js/router.js. Opacity plus
+   a small rise: enough to read as "this arrived", small enough that it never
+   delays the reader from acting on what arrived.
+
+   220ms on the entrance curve rather than 160ms on `ease-out`. The extra 60ms
+   is spent entirely in the tail — --ease-entrance is already 90% travelled at
+   the old duration — so the view is legible just as fast and simply stops
+   snapping to a halt at the end. The rise goes to 6px for the same reason:
+   with a decelerating curve, 4px was over before it registered as movement.
+
+   ------------------------------------------------------------------------------
+   CONSTRAINT for anything added under a .view, read this before staggering:
+
+   router.js removes .is-entering on the first `animationend` it receives, and
+   animation events bubble — so a *descendant* animation that finishes before
+   this one does will strip the class mid-flight and snap the view to opacity 1.
+
+   Every reveal that can run inside a view is therefore longer than the 220ms
+   here — the shortest is --duration-base at 250ms (the skeleton, the empty
+   state, a swapped reading panel), and the staggers are 320ms. That makes the
+   clash impossible rather than unlikely: a descendant can never *start* before
+   its ancestor, so with a longer duration it can never finish first either.
+
+   Keep new reveals under a .view at --duration-base or longer and this stays
+   true without JS knowing anything about it.
+   ------------------------------------------------------------------------------ */
 .view.is-entering {
-  animation: view-enter 160ms ease-out;
+  animation: view-enter 220ms var(--ease-entrance);
 }
 
 @keyframes view-enter {
   from {
     opacity: 0;
-    transform: translateY(4px);
+    transform: translateY(6px);
   }
+}
+
+/* -- Shared reveal --------------------------------------------------------------
+   One rise-and-fade, defined once, used by every list, grid and panel in the
+   app that appears after its container is already on screen. Six modules had
+   grown their own near-identical copy of this (memory-slip-in,
+   memory-detail-in, quiz-card-enter, view-enter…) at four different distances
+   and three different durations, which is why arrivals in this app used to
+   feel subtly inconsistent from one view to the next.
+
+   Transform and opacity only, so the whole thing stays on the compositor and
+   never touches layout. `--rise` lets a caller tune the distance without a
+   second keyframe block: a slip on a shelf travels less than a full panel.
+   ------------------------------------------------------------------------------- */
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--rise, 8px));
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+/* -- Staggered lists ------------------------------------------------------------
+   The roster of containers whose direct children reveal in sequence, listed in
+   one place so the app has exactly one stagger and not eight that drifted. A
+   view opts in by adding its container class here — no JS, no hook class in
+   the markup, nothing for a render path to remember to set.
+
+   THE CAP IS THE POINT. Only the first nine children are delayed at all;
+   everything past them arrives with the ninth. Without it a 300-card
+   vocabulary grid would schedule its last card ten seconds out — a stagger's
+   cost grows with the list while its benefit does not, because a reader only
+   ever perceives the first screenful arriving. Nine steps at 32ms is 288ms of
+   texture, and then the list is simply there.
+
+   `backwards`, not `both`: the start state applies during the delay, and the
+   element reverts to its own natural styles the instant the run ends. Nothing
+   can be stranded at opacity 0 by a fill mode — which matters, because the two
+   largest grids here also carry `content-visibility: auto`, so their cards'
+   animations are paused while off-screen and resolve only once scrolled to.
+   (Which is a scroll reveal, arrived at honestly and for free.)
+
+   Written with native CSS nesting to keep the roster single-source. An engine
+   without nesting drops the whole block and renders every list plainly, which
+   is exactly what this app looked like before — the degradation is the old
+   design, not a broken one.
+
+   Deliberately NOT on the roster: .quiz__options. A round is a new question
+   every few seconds, and quiz.css is right that what reads as polish on the
+   first card reads as a wait on the fortieth. The quiz gets its motion at the
+   card, once per question, and nowhere else.
+   ------------------------------------------------------------------------------- */
+.stagger,
+.dashboard-grid,
+.dashboard-welcome__steps,
+.vocab-list,
+.grammar-list,
+.kanji-grid,
+.kanji-detail__sections,
+.reading-list,
+.lessons-list,
+.practice__history-list,
+.journal__entry-list,
+.quiz__missed-list,
+.settings-content {
+  & > * {
+    animation: rise-in 320ms var(--ease-entrance) backwards;
+    animation-delay: calc(var(--stagger-step) * var(--stagger-index, 0));
+  }
+
+  & > :nth-child(2) { --stagger-index: 1; }
+  & > :nth-child(3) { --stagger-index: 2; }
+  & > :nth-child(4) { --stagger-index: 3; }
+  & > :nth-child(5) { --stagger-index: 4; }
+  & > :nth-child(6) { --stagger-index: 5; }
+  & > :nth-child(7) { --stagger-index: 6; }
+  & > :nth-child(8) { --stagger-index: 7; }
+  & > :nth-child(n + 9) { --stagger-index: 8; }
 }
 
 /* The header is sticky, so any scroll that lands an element at the top of

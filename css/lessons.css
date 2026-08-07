@@ -98,8 +98,24 @@
   font-size: var(--text-xs);
 }
 
+/* The body reveals rather than appearing. lessons.js toggles the element's
+   `hidden` attribute, so removing it is the frame the box first exists on and
+   the animation runs then — no class, no JS change, the same free hook the
+   drawer backdrop uses.
+
+   Only the *contents* animate, not the group's height: opening still snaps the
+   card to its full size in one frame. That is deliberate. Animating the height
+   of a disclosure holding up to eighteen word rows means laying out those rows
+   on every frame of the open, and the honest version — a panel whose content
+   settles into a box that is already the right size — is both cheaper and
+   less disorienting than one that pushes the rest of the page down gradually.
+
+   `-6px` rather than the shared rise-in's positive default: this content
+   descends from the header it opened out of, so it should arrive from above. */
 .lesson-group__body {
   border-top: var(--border-width) solid var(--color-stone);
+  --rise: -6px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 .lesson-word-list {
@@ -168,7 +184,8 @@
 }
 
 .lesson-word__mark:active {
-  transform: translateY(1px);
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
 }
 
 .lesson-word__mark:focus-visible {
@@ -180,15 +197,25 @@
   width: 1rem;
   height: 1rem;
   fill: transparent;
-  transition: fill var(--transition-base), stroke var(--transition-base);
+  transition:
+    fill var(--transition-base),
+    stroke var(--transition-base),
+    transform var(--transition-base);
 }
 
 .lesson-word__mark[aria-pressed="true"] {
   color: var(--color-moss);
 }
 
+/* The ring fills and springs a few percent past its resting size as it does.
+   A transition and not a keyframe animation, for the same reason as the 栞 in
+   buttons.css: a lesson group opens with its already-held words pressed, and
+   an animation would set eighteen rings popping at once for a state nobody
+   just changed. A transition can only fire on a real toggle. */
 .lesson-word__mark[aria-pressed="true"] .lesson-word__mark-icon {
   fill: var(--color-moss);
+  transform: scale(1.1);
+  transition-timing-function: var(--ease-spring);
 }
 
 /* The quiz that opens over this list is shared with the Review deck and

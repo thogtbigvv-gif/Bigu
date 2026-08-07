@@ -26,6 +26,24 @@ html {
   height: 100%;
 }
 
+/* In-page jumps glide rather than teleport — the skip link, and any anchor
+   inside a long passage or a settings page. Deliberately *not* a blanket
+   `scroll-behavior: smooth` on its own: router.js scrolls with
+   `behavior: 'instant'` on every view change, which opts that one path out
+   explicitly, because switching views is a page change and a page change
+   should not be watched travelling.
+
+   Wrapped in the positive query rather than left to the reduce block below:
+   `scroll-behavior` is not a transition or an animation, so the duration
+   overrides down there cannot reach it, and `scroll-behavior: auto !important`
+   is the only thing that undoes it. Stating the preference the other way round
+   means the reduce case is simply never opted in. */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
 /* Full-height body, smoother glyph rendering (matters for dense kanji) */
 body {
   min-height: 100%;
@@ -87,14 +105,25 @@ h6 {
   overflow-wrap: break-word;
 }
 
-/* Respect reduced-motion preferences globally */
+/* Respect reduced-motion preferences globally.
+
+   The two *-delay lines are the part that is easy to miss. Collapsing only the
+   duration leaves a staggered reveal technically instant but still scheduled:
+   an element with `animation: rise-in 300ms both` and a 320ms delay finishes in
+   0.01ms and then sits at its `from` state — invisible — for the rest of the
+   delay. On a twelve-item grid that is a third of a second of blank page for
+   precisely the reader who asked for less motion. Zeroing the delays makes the
+   whole staggered set resolve on the same frame, which is the correct
+   reduced-motion answer: everything simply is where it belongs. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }

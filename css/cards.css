@@ -12,6 +12,64 @@
   border: var(--border-width) solid var(--color-stone);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
+  /* Declared on the resting card, not only on the hover states below, so the
+     card eases *back down* as gently as it rose. A transition written on
+     :hover alone animates one direction and snaps the other, which is the
+     single most common way a lift ends up feeling cheap. */
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+
+/* -- Raised on approach ----------------------------------------------------------
+   A study card answers the pointer with two pixels and a deeper shadow. Not
+   because a card is clickable — most are not, they hold their own controls —
+   but because a grid of forty identical surfaces gives the eye nothing to hold
+   on to, and lifting the one under the pointer is the quietest possible way to
+   say which one that is.
+
+   `:focus-within` earns the same lift, so tabbing through a grid raises each
+   card as its controls take focus. Without it, a keyboard reader crosses those
+   forty surfaces with no sense of place at all — the lift is wayfinding, and
+   wayfinding cannot be pointer-only.
+
+   The exclusion list is the important part, and it is the same list in both
+   rules. `.card` is the app's generic surface, so it is worn by two different
+   kinds of object: *items in a collection*, which is what a lift is for, and
+   *panels you are reading inside of* — the quiz question, a reading passage, a
+   kanji detail section, a settings group, the welcome block. Lifting those is
+   nonsense at best and motion sickness at worst: a wall of text that shifts
+   two pixels because the cursor crossed it, or a settings panel that jumps
+   every time a <select> takes focus.
+
+   Hover is gated behind (hover: hover). On a touch screen :hover latches onto
+   the last thing tapped and stays there, leaving a card raised behind the
+   reader — worse than no lift at all. Focus-within is not gated, because a
+   keyboard is a keyboard on any device.
+   ------------------------------------------------------------------------------- */
+@media (hover: hover) {
+  .card:not(
+    .quiz__card,
+    .reading-stage__panel,
+    .kanji-detail__section,
+    .settings__group,
+    .dashboard-welcome
+  ):hover {
+    transform: translateY(var(--lift-card));
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.card:not(
+  .quiz__card,
+  .reading-stage__panel,
+  .kanji-detail__section,
+  .settings__group,
+  .dashboard-welcome
+):focus-within {
+  transform: translateY(var(--lift-card));
+  box-shadow: var(--shadow-lg);
 }
 
 /* -- Off-screen cards -------------------------------------------------------------------
@@ -34,15 +92,19 @@
   content-visibility: auto;
 }
 
-/* Only for cards that are themselves a click target — most study cards
-   hold their own buttons instead, so this stays opt-in. Applied to
-   .lesson-group, whose whole header row is a disclosure button. */
-.card--interactive {
-  transition: box-shadow var(--transition-base);
-}
+/* Only for cards that are themselves a click target — most study cards hold
+   their own buttons instead, so this stays opt-in. Applied to .lesson-group,
+   whose whole header row is a disclosure button.
 
-.card--interactive:hover {
-  box-shadow: var(--shadow-md);
+   The elevation this used to own now belongs to .card above, which lifts every
+   collection card on hover and focus — keeping a second, shallower shadow rule
+   here would have meant the app's most obviously pressable card rose *less*
+   than the ones around it. What is left is the part that was always specific
+   to being a target: the edge picks up the interactive colour, so the surface
+   says "press me" in the same language the buttons and chips do. */
+.card--interactive:hover,
+.card--interactive:focus-within {
+  border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
 }
 
 .card__header {
@@ -79,6 +141,11 @@
   background-color: var(--color-washi-raised);
   border: var(--border-width) dashed var(--color-stone);
   border-radius: var(--radius-lg);
+  /* Fades without travelling — softer than the .error-state below, which
+     shares this shape but rises as it arrives. The asymmetry is the message:
+     "nothing here" is a normal place to end up, "something broke" is not, and
+     the two should never make the same entrance. */
+  animation: fade-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 /* -- Error state -------------------------------------------------------------------
@@ -96,6 +163,18 @@
   background-color: var(--color-washi-raised);
   border: var(--border-width) solid var(--color-error);
   border-radius: var(--radius-lg);
+  /* An error is the one thing on screen that must not be missed, and it always
+     arrives *replacing* something — a skeleton that was working, a list that
+     was fine. Without an entrance it simply blinks into the same rectangle and
+     a reader who glanced away misses that anything changed at all.
+
+     The rise is larger than the app's usual 8px and the shadow is the raised
+     one, so the panel reads as having come forward rather than as having been
+     swapped in. This is deliberately the loudest arrival in Bigu, and it is
+     still under half a second and still transform-and-opacity only. */
+  box-shadow: var(--shadow-lg);
+  --rise: 12px;
+  animation: rise-in var(--duration-slow) var(--ease-entrance) backwards;
 }
 
 .error-state__title {
@@ -150,11 +229,31 @@
   gap: var(--space-2xl);
 }
 
+/* The whole placeholder fades up rather than appearing at full strength. The
+   skeleton is itself an interruption — it replaces whatever was on screen the
+   instant a fetch starts — and arriving abruptly is what makes a loading state
+   read as a glitch instead of as an answer to "is this working?". */
+.skeleton {
+  animation: fade-in var(--duration-base) var(--ease-entrance) backwards;
+}
+
 .skeleton__block {
   background-color: var(--color-stone);
   border-radius: var(--radius-lg);
   animation: skeleton-pulse 1.6s ease-in-out infinite;
 }
+
+/* Phase, not delay. A negative animation-delay starts the block partway
+   through its own cycle, so every placeholder is already mid-breath on the
+   first frame — where a positive delay would hold three of them flat and
+   still while the others moved.
+
+   The effect of offsetting neighbours by a third of a cycle is that the grid
+   breathes as a slow diagonal rather than as one flashing block, which reads
+   as a system working through something instead of a page blinking at you.
+   Same single animated property, same cost. */
+.skeleton__block:nth-child(3n + 2) { animation-delay: -0.53s; }
+.skeleton__block:nth-child(3n + 3) { animation-delay: -1.06s; }
 
 .skeleton__block--card { height: 13rem; }
 .skeleton__block--compact { height: 9rem; }

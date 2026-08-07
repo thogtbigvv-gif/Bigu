@@ -88,12 +88,30 @@
   gap: var(--space-2xs);
 }
 
+/* Mirrors .toggle-chip's own [aria-pressed="true"] treatment — including the
+   gradient it fills with, so a tab being selected sweeps in from the left over
+   180ms exactly as a memory chip does. Before this, the tab set the fill as a
+   flat background-color, which meant the app's two "this one is active" states
+   looked identical at rest and behaved differently the moment you touched
+   them. The base .toggle-chip class already declares the gradient and the
+   transition; all that is needed here is to let it through instead of
+   overriding it with a solid colour. */
 .reading-stage__tab[aria-selected="true"] {
-  background-color: var(--color-moss);
+  background-color: transparent;
+  background-image: linear-gradient(var(--color-moss), var(--color-moss));
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
   border-color: var(--color-moss);
   color: var(--color-washi);
+  transition:
+    background-size 180ms var(--ease-exit),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
+/* The panel is on the .card exclusion list in cards.css — a wall of Japanese
+   prose must not move two pixels because a pointer crossed it. */
 .reading-stage__panel {
   padding: var(--space-lg);
 }
@@ -102,6 +120,25 @@
   outline: var(--focus-ring);
   outline-offset: 2px;
   box-shadow: var(--focus-halo);
+}
+
+/* The contents fade in when a tab is chosen. The animation goes on the panel's
+   *child* and not on the panel itself, which is the whole trick: reading.js
+   keeps one persistent panel element and calls replaceChildren() on it, so the
+   panel never re-enters the document and an animation declared there would
+   play once on open and never again on a tab switch. The child is new every
+   time, so it animates every time.
+
+   Written as `> *` rather than against .reading-stage__body, because that
+   class is only what the Article and Translation tabs return — the vocabulary,
+   grammar, questions and shadowing panels are each a different element, and
+   all six should arrive the same way.
+
+   Fade only, no travel. The reader's eye is already fixed on this rectangle
+   when the swap happens; sliding the replacement in would drag it off the line
+   they were about to read. */
+.reading-stage__panel > * {
+  animation: fade-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 .reading-stage__body {

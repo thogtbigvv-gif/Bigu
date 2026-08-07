@@ -2,7 +2,8 @@
    buttons.css
    Two treatments: a solid primary for the one action a screen wants you
    to take, and a quiet outlined secondary for everything else. Both
-   restrained — no motion beyond a color shift and a light press feedback.
+   restrained — the motion budget here is one pixel of travel and a colour
+   shift, and the point of writing it down is that it stays that way.
    ========================================================================== */
 
 .button {
@@ -16,9 +17,15 @@
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   line-height: var(--leading-tight);
+  /* box-shadow joins the list so the primary's elevation can rise with the
+     rest of the hover state instead of snapping while the colour fades. It is
+     one shadow on one element under the pointer — the thing the performance
+     note warns against is a page of resting elements each animating a blur,
+     which is not this. */
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
@@ -31,39 +38,74 @@
 /* --focus-ring and --focus-halo, in that pairing, wherever the app shows
    focus — see the note on the two tokens in variables.css for why the
    outline is load-bearing and the halo is not. Only the offset varies per
-   control. */
+   control.
+
+   The focused control also lifts, on the same 1px it uses under a pointer.
+   Keyboard focus and hover are the same fact about a button — "this is the
+   one you are about to press" — and there is no reason the reader who tabbed
+   to it should be told less than the one who pointed at it. */
 .button:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;
   box-shadow: var(--focus-halo);
 }
 
-/* Pressed feedback, independent of :hover so touch input (mobile-first)
-   gets the same cue a mouse gets from :hover — a single-pixel settle,
-   nothing bouncy. */
-.button:active:not(:disabled) {
-  transform: translateY(1px);
+.button:focus-visible:not(:disabled) {
+  transform: translateY(var(--lift-card));
 }
 
-/* -- Primary ------------------------------------------------------------------ */
+/* Pressed feedback, independent of :hover so touch input (mobile-first)
+   gets the same cue a mouse gets from :hover — a single-pixel settle,
+   nothing bouncy. Last in the file's :active/:hover/:focus order and
+   repeated on the primary and secondary blocks below, so a press always
+   beats a hover or focus lift no matter which combination is live. */
+.button:active:not(:disabled) {
+  transform: translateY(var(--lift-press));
+  /* The press is the one moment worth spending the spring curve on: a control
+     the size of a chip can overshoot by a few percent and read as physical
+     rather than as a wobble. Nothing card-sized ever gets this. */
+  transition-timing-function: var(--ease-spring);
+}
+
+/* -- Primary ------------------------------------------------------------------
+   The one filled control on a screen, so it is the one that carries weight:
+   a resting shadow tied to its own colour rather than to neutral ink, which
+   keeps a coloured button from looking like it is sitting in grey smoke.
+   ------------------------------------------------------------------------------ */
 
 .button--primary {
   background-color: var(--color-indigo);
   border-color: var(--color-indigo);
   color: var(--color-washi);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-indigo) 24%, transparent);
 }
 
+/* Rise and deepen together. The travel is the same --lift-card the cards use,
+   so "this is raised" means one distance everywhere in the app. */
 .button--primary:hover:not(:disabled) {
   background-color: var(--color-indigo-deep);
   border-color: var(--color-indigo-deep);
+  transform: translateY(var(--lift-card));
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--color-indigo) 55%, transparent);
 }
 
+/* Pressed: back to the page, and the shadow collapses with it. A button that
+   keeps its elevation while travelling downward reads as a sticker rather
+   than as something being pushed. */
 .button--primary:active:not(:disabled) {
   background-color: var(--color-indigo-deep);
   border-color: var(--color-indigo-deep);
+  transform: translateY(var(--lift-press));
+  box-shadow: 0 0 0 0 transparent;
 }
 
-/* -- Secondary ------------------------------------------------------------------ */
+/* -- Secondary ------------------------------------------------------------------
+   Quiet by default and quiet on hover. The tint that used to appear only on
+   :active now arrives with the pointer — an outlined button whose interior
+   never changes gives no feedback at all until the moment of the click, which
+   is one beat too late to feel responsive. It stays faint (6%) so the control
+   is still plainly the secondary one.
+   ------------------------------------------------------------------------------ */
 
 .button--secondary {
   background-color: transparent;
@@ -72,14 +114,17 @@
 }
 
 .button--secondary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
+  transform: translateY(var(--lift-card));
 }
 
 .button--secondary:active:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-indigo) 8%, transparent);
+  background-color: color-mix(in srgb, var(--color-indigo) 12%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
+  transform: translateY(var(--lift-press));
 }
 
 /* -- Theme toggle -----------------------------------------------------------------
@@ -98,18 +143,44 @@
   border-radius: var(--radius-md);
   color: var(--color-ink-soft);
   transition:
+    background-color var(--transition-fast),
     border-color var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
 .theme-toggle:hover {
+  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
 
 .theme-toggle:active {
-  transform: translateY(1px);
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
+}
+
+/* The icon turns as the theme does. Sun and moon are swapped by `display`
+   (below) rather than cross-faded, so there is no shared element to tween —
+   what animates is the *incoming* glyph rotating the last few degrees into
+   place, which is enough to make a hard swap read as a movement.
+
+   On the SVG, not the button: the button's own box is what carries the border
+   and the press, and rotating that would spin the frame too.
+
+   `both` would be wrong here. The icons are display:none until their state is
+   live, so each run begins the moment its glyph appears; a forwards fill would
+   then pin the transform after a state the element may leave and re-enter. */
+.theme-toggle__icon--sun,
+.theme-toggle[aria-pressed="true"] .theme-toggle__icon--moon {
+  animation: theme-icon-in var(--duration-base) var(--ease-entrance);
+}
+
+@keyframes theme-icon-in {
+  from {
+    opacity: 0;
+    transform: rotate(-35deg) scale(0.75);
+  }
 }
 
 /* Aligned to the same outline + halo pair as .button so the two button
@@ -167,12 +238,14 @@
 }
 
 .toggle-chip:hover {
+  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
 
 .toggle-chip:active {
-  transform: translateY(1px);
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
 }
 
 .toggle-chip:focus-visible {
@@ -263,7 +336,8 @@
 }
 
 .favorite-button:active {
-  transform: translateY(1px);
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
 }
 
 .favorite-button:focus-visible {
@@ -274,7 +348,7 @@
 .favorite-button__icon {
   width: 1rem;
   height: 1rem;
-  transition: fill var(--transition-base);
+  transition: fill var(--transition-base), transform var(--transition-base);
   fill: transparent;
 }
 
@@ -284,6 +358,23 @@
 
 .favorite-button[aria-pressed="true"] .favorite-button__icon {
   fill: color-mix(in srgb, var(--color-bengara) 22%, transparent);
+}
+
+/* Marking a 栞 is a deliberate, occasional act — unlike the memory chip beside
+   it, which gets pressed hundreds of times a session — so it can afford a beat
+   of acknowledgement. The bookmark springs up as it fills, overshooting a
+   couple of percent past its resting size before settling: the ink arriving
+   and the shape moving are one event, read twice.
+
+   A transition and not an @keyframes, which matters more than it looks. An
+   animation would replay on every *render* — and a shelf on #memory is built
+   fresh from storage with its kept items already pressed, so a page of
+   bookmarks would all pop in unison on arrival for a state nobody just
+   changed. A transition ignores the initial value by definition and can only
+   fire on an actual toggle, which is precisely the event worth marking. */
+.favorite-button[aria-pressed="true"] .favorite-button__icon {
+  transform: scale(1.08);
+  transition-timing-function: var(--ease-spring);
 }
 
 /* -- Touch targets --------------------------------------------------------------------
