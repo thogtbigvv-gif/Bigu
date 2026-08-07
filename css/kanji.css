@@ -46,11 +46,27 @@
   gap: var(--space-2xs);
 }
 
+/* The character grows a shade while its card is raised. This is the one place
+   in the app where a scale on hover is right rather than gimmicky: a kanji
+   card is a character *and* its annotations, the character is the entire
+   reason the card exists, and 3% is enough to bring it forward without moving
+   anything around it — the transform is compositor-only and takes no layout
+   with it, so the meaning, readings and example below stay exactly put.
+
+   Behind the hover query, so a touch reader never gets a card left permanently
+   enlarged by the last thing they tapped. */
 .kanji-card__character {
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-2xl);
   line-height: var(--leading-tight);
   color: var(--color-ink);
+  transition: transform var(--transition-base);
+}
+
+@media (hover: hover) {
+  .kanji-card:hover .kanji-card__character {
+    transform: scale(1.03);
+  }
 }
 
 .kanji-card__meaning {
@@ -63,6 +79,8 @@
   margin: 0;
 }
 
+/* Same recessed example block as vocabulary and grammar — see the note in
+   vocabulary.css for why one inset hairline reads as an impression. */
 .kanji-card__example {
   display: flex;
   flex-direction: column;
@@ -71,6 +89,7 @@
   padding: var(--space-xs) var(--space-sm);
   background-color: var(--color-washi);
   border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
 }
 
 .kanji-card__example ruby {

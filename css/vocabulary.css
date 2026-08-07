@@ -107,6 +107,15 @@
   color: var(--color-ink);
 }
 
+/* The example sits *into* the card rather than on it — the card's surface is
+   washi-raised, so an inset panel takes the page tone one step back down. The
+   inset hairline is what makes that read as a recess instead of as a second,
+   flatter card: a single top-edge highlight is how a physical impression
+   catches light, and it costs one inset shadow with no blur.
+
+   It deepens fractionally while the card is raised, so the whole card reads as
+   one object coming forward rather than as a panel sliding around inside a
+   frame. */
 .vocab-card__example {
   display: flex;
   flex-direction: column;
@@ -115,6 +124,14 @@
   margin-block-end: var(--space-sm);
   background-color: var(--color-washi);
   border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
+  transition: box-shadow var(--transition-base);
+}
+
+@media (hover: hover) {
+  .vocab-card:hover .vocab-card__example {
+    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  }
 }
 
 .vocab-card__example p {
@@ -147,7 +164,14 @@
 .jlpt-tag {
   display: inline-block;
   padding: var(--space-3xs) var(--space-2xs);
-  background-color: transparent;
+  /* A wash of the tag's own colour rather than nothing at all. At 7% it is
+     barely a tint — well under the point where the outlined-not-filled
+     decision above would be undone — but it gives the badge a body, so it
+     reads as a small object attached to the headword instead of as an empty
+     rectangle drawn around two characters. Contrast is unaffected: the text
+     colour and the border are exactly as they were, and the tint is mixed
+     into the card surface rather than laid over it. */
+  background-color: color-mix(in srgb, var(--color-gold) 7%, transparent);
   border: var(--border-width) solid var(--color-gold);
   color: var(--color-gold);
   border-radius: var(--radius-sm);

@@ -82,17 +82,34 @@
   text-align: left;
   cursor: pointer;
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
+/* Two pixels to the right, and a wash of the interactive colour behind the
+   row. The nudge is what makes a flat list of text feel like a set of objects
+   rather than a paragraph — it is the smallest movement in the app, and it is
+   on the control the reader touches most often outside a study card.
+
+   transform, not padding or margin: shifting the box would reflow the row and
+   drag the 2px state border along with it, which is the one thing on this
+   element that must not move. */
 .site-nav__link:hover {
+  background-color: color-mix(in srgb, var(--color-indigo) 7%, transparent);
   color: var(--color-indigo);
+  transform: translateX(2px);
 }
 
+/* The active row does not travel. It is where you already are, not somewhere
+   to go, and a permanent 2px offset would just read as a misaligned list. */
 .site-nav__link[aria-current="page"] {
   color: var(--color-indigo);
   font-weight: var(--weight-medium);
   border-left-color: var(--color-indigo);
+  transform: none;
 }
 
 /* Inset offset: the sidebar's own right border sits a hairline away from the
@@ -197,16 +214,22 @@
   background: none;
   color: var(--color-ink-soft);
   cursor: pointer;
-  transition: border-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .site-nav__mobile-toggle:hover {
+  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
 }
 
 .site-nav__mobile-toggle:active {
-  transform: translateY(1px);
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
 }
 
 .site-nav__mobile-toggle:focus-visible {
@@ -222,6 +245,11 @@
   display: block;
 }
 
+/* The three bars fold into an X. Both properties are compositor-only, and the
+   timing is what sells it: the middle bar's opacity is given no delay so it is
+   gone before the outer two have finished rotating into its place, rather than
+   fading out through them. On the way back the outer bars unfold first for the
+   same reason — a delay on the middle bar's return. */
 .site-nav__hamburger span {
   position: absolute;
   left: 0;
@@ -229,7 +257,15 @@
   height: 2px;
   border-radius: 2px;
   background: currentColor;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    opacity var(--duration-fast) var(--ease-exit) var(--duration-fast);
+}
+
+.site-nav__mobile-toggle[aria-expanded="true"] .site-nav__hamburger span {
+  transition:
+    transform var(--duration-base) var(--ease-spring),
+    opacity var(--duration-fast) var(--ease-exit);
 }
 
 .site-nav__hamburger span:nth-child(1) { top: 0; }
@@ -248,13 +284,30 @@
 
 /* -- Backdrop -------------------------------------------------------------------------
    Hidden via the native [hidden] attribute (toggled in js/navigation.js);
-   only ever shown below the 640px line, when the drawer is open.
+   only ever shown below the 1024px line, when the drawer is open.
+
+   The fade is driven by the attribute itself rather than by a class, which is
+   what makes it free: `[hidden]` is display:none, so removing it is the moment
+   the element first generates a box and its animation starts. No state to
+   toggle, no JS to change, no second class to keep in sync — the animation is
+   simply what "appeared" looks like.
+
+   A close cannot be animated the same way (display:none takes effect at once)
+   and that asymmetry is correct here: dismissing is an action the reader has
+   already committed to, and a backdrop that lingers on the way out is a
+   backdrop still in the way.
+
+   The blur is the drawer's whole job made visible — the page is still there,
+   it is just not what you are looking at.
    -------------------------------------------------------------------------------------- */
 .site-nav__backdrop {
   position: fixed;
   inset: 0;
   z-index: 40;
   background: rgba(0, 0, 0, 0.35);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  animation: fade-in var(--duration-base) var(--ease-exit);
 }
 
 /* -- Touch targets ------------------------------------------------------------------
@@ -314,12 +367,59 @@
     height: 100dvh;
     visibility: hidden;
     transform: translateX(-100%);
-    box-shadow: var(--shadow-md);
-    transition: transform var(--transition-base), visibility var(--transition-base);
+    /* The one panel in the app that floats over the page rather than sitting
+       in it, so it gets the raised shadow rather than the emphasised one. */
+    box-shadow: var(--shadow-lg);
+    /* Slower than the app's base, on the entrance curve. A drawer travels most
+       of the width of a phone — an order of magnitude further than anything
+       else that moves here — and at 250ms on a symmetrical curve that distance
+       reads as a panel being snapped into place. The extra 170ms is spent
+       almost entirely in the deceleration, so it arrives at the same moment
+       and simply stops shoving.
+
+       The visibility duration has to stay identical: because visibility
+       transitions discretely at the end of its interval, any shorter value
+       would blank the panel partway through its own slide-out. */
+    transition:
+      transform var(--duration-slow) var(--ease-entrance),
+      visibility var(--duration-slow) var(--ease-entrance);
   }
 
   .site-nav.is-open {
     visibility: visible;
     transform: translateX(0);
+  }
+
+  /* The rows arrive after the panel does. The drawer's own slide carries the
+     surface in; this carries the *contents*, so the menu assembles instead of
+     flying in pre-drawn — the same idea as the logo intro, at a tenth of the
+     scale.
+
+     Delays are per row and capped by the list being nine rows long, so the
+     whole cascade is over in under 300ms. It runs only on the drawer, never on
+     the desktop sidebar: the sidebar is permanent furniture and animating it
+     would mean re-introducing the navigation on every page load.
+
+     `backwards` and emphatically not `both`. These rows also carry a hover
+     transform (the 2px nudge above), and a forwards fill pins the animated
+     transform at its final computed value — which would silently win over
+     :hover for as long as the drawer stayed open, leaving every row in the
+     mobile menu dead to the touch. `backwards` applies the start state during
+     the delay and then gets out of the way entirely. */
+  .site-nav.is-open .site-nav__link {
+    animation: nav-row-in var(--duration-base) var(--ease-entrance) backwards;
+  }
+
+  .site-nav.is-open .site-nav__item:nth-child(2) .site-nav__link { animation-delay: 30ms; }
+  .site-nav.is-open .site-nav__item:nth-child(3) .site-nav__link { animation-delay: 60ms; }
+  .site-nav.is-open .site-nav__item:nth-child(4) .site-nav__link { animation-delay: 90ms; }
+  .site-nav.is-open .site-nav__item:nth-child(5) .site-nav__link { animation-delay: 120ms; }
+  .site-nav.is-open .site-nav__item:nth-child(6) .site-nav__link { animation-delay: 150ms; }
+
+  @keyframes nav-row-in {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
   }
 }

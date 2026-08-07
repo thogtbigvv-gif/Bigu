@@ -76,6 +76,24 @@ h6 {
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
   color: var(--color-ink);
+  /* A heading that wraps is one of the few places automatic line-breaking
+     visibly fails: the browser fills line one to the edge and drops a single
+     orphaned word onto line two. `balance` distributes the words evenly
+     instead, which is what a typesetter would do by hand and what the display
+     face deserves. Capped by the spec at a handful of lines, so it costs
+     nothing on the short headings that make up most of this app, and engines
+     without it simply wrap as before. */
+  text-wrap: balance;
+}
+
+/* Optical tightening. Shippori Mincho sets loosely at display sizes — correct
+   for a body serif, slightly slack for a 39px page title — so the two largest
+   steps pull back by a hair. Below --text-lg nothing is touched: negative
+   tracking on small text costs legibility, which is the opposite of the trade
+   being made here. */
+h1,
+h2 {
+  letter-spacing: -0.012em;
 }
 
 /* Every view's title is an h1, so the default is the section size and the
@@ -92,18 +110,32 @@ h6 {
 }
 
 /* Japanese headings keep the display face but fall back through the
-   Japanese stack for glyphs Shippori Mincho doesn't cover */
+   Japanese stack for glyphs Shippori Mincho doesn't cover.
+
+   Tracking goes back to zero here. CJK glyphs are drawn on a full em square
+   with their breathing room already inside it, so the negative tracking that
+   tightens a Latin display line just collides kanji with their neighbours —
+   and `text-wrap: balance` is likewise dropped, since Japanese breaks between
+   almost any two characters and has no orphan problem to solve. */
 h1:lang(ja),
 h2:lang(ja),
 h3:lang(ja) {
   font-family: var(--font-display), var(--font-jp-stack);
   line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-normal);
+  text-wrap: wrap;
 }
 
-/* -- Body copy ------------------------------------------------------------------- */
+/* -- Body copy -------------------------------------------------------------------
+   `pretty` is the cheap half of the same idea as `balance` on headings: it
+   leaves the paragraph's line-breaking alone and only prevents the last line
+   from being a single stranded word. Unlike `balance` it has no line cap, so
+   it is safe on running prose, and unsupported engines ignore it.
+   ---------------------------------------------------------------------------------- */
 p {
   max-width: 68ch; /* comfortable measure for mixed JP/EN reading */
   margin-block-end: var(--space-sm);
+  text-wrap: pretty;
 }
 
 small,
@@ -133,16 +165,29 @@ rt {
   letter-spacing: var(--tracking-wide);
 }
 
-/* -- Links ------------------------------------------------------------------------- */
+/* -- Links -------------------------------------------------------------------------
+   The underline is present in both states and only its *colour* changes, from
+   transparent to the link's own. Adding `text-decoration: underline` on hover
+   the way this used to means the rule appears from nothing, which no
+   transition can smooth and which nudges the line box on engines that reserve
+   no space for it. Fading a decoration that was always there is the same
+   effect with none of the jump — and `from-font` puts the rule wherever the
+   typeface says it belongs rather than at a guessed offset.
+   ---------------------------------------------------------------------------------- */
 a {
   color: var(--color-indigo);
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-decoration-color: transparent;
   text-underline-offset: 0.15em;
-  transition: color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
 }
 
 a:hover {
   color: var(--color-indigo-deep);
-  text-decoration: underline;
+  text-decoration-color: currentColor;
 }
 
 a:focus-visible,

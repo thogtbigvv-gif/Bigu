@@ -73,8 +73,23 @@
   color: var(--color-error);
 }
 
+/* settings.js keeps this element in the DOM and flips its `hidden` attribute,
+   so un-hiding it is the frame it first gets a box — which starts the
+   animation for free, with no class to add and no JS to touch. The same hook
+   the drawer backdrop and the lesson body use.
+
+   It is the app's only inline confirmation ("Backup restored. Reloading…",
+   "That file isn't valid JSON.") and it appears in space that was empty a
+   moment ago, at the bottom of a stack of buttons the reader is looking away
+   from as they reach for a file picker. Without an entrance it is a line of
+   grey text that was simply always there as far as anyone can tell.
+
+   aria-live already announces it; this is the same courtesy for people who are
+   watching rather than listening. */
 .settings-backup__status {
   margin: 0;
+  --rise: 4px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 .settings-backup__status--error {
@@ -93,9 +108,15 @@
   margin-block-start: var(--space-2xs);
 }
 
+/* Arming is the one state change in the app that should be felt rather than
+   merely seen. The button settles once — the same damped nudge a wrong quiz
+   answer gets, and deliberately the same, because both mean "stop and look at
+   this". It runs on the class landing, so it fires on arming and not on the
+   button's initial render. */
 .settings-reset__button.is-armed {
   border-color: var(--color-error);
   color: var(--color-error);
+  animation: field-settle 220ms var(--ease-exit);
 }
 
 .settings-reset__button.is-armed:hover:not(:disabled) {

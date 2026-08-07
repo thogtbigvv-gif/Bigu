@@ -81,6 +81,38 @@
   grid-column: 1 / -1;
   border-color: var(--color-bengara);
   box-shadow: var(--shadow-md);
+  /* A hairline of the hanko colour bleeding in from the leading edge. The card
+     already carries a bengara border on all four sides; this thickens the one
+     the eye reaches first, so "today's action" reads as marked at a glance
+     rather than only on inspection.
+
+     A background-image rather than a border-left, because a border would
+     change the card's inner box and shift its content relative to the three
+     cards beneath it. This paints inside the existing padding and moves
+     nothing. */
+  background-image: linear-gradient(
+    to right,
+    color-mix(in srgb, var(--color-bengara) 55%, transparent) 0 3px,
+    transparent 3px
+  );
+}
+
+/* The one card whose lift is worth more than the others', so it gets a bengara
+   shadow instead of the neutral one — the same "this is the thing to do"
+   signal the border and the streak figure already carry, in the one channel
+   that was still speaking in grey.
+
+   Written as `.card.dashboard-card--hero` and not on the modifier alone: the
+   generic lift in cards.css is `.card:not(…):hover`, which scores 0-3-0, so a
+   single-class rule here would lose to it on specificity no matter that this
+   file loads later. Matching that score and relying on source order is the
+   honest fix; an !important would have hidden the reason. */
+@media (hover: hover) {
+  .card.dashboard-card--hero:hover {
+    box-shadow:
+      0 12px 30px -16px color-mix(in srgb, var(--color-bengara) 60%, transparent),
+      var(--shadow-md);
+  }
 }
 
 /* Figure and sentence on the left, the day's one action on the right,
@@ -162,6 +194,18 @@
   overflow: hidden;
 }
 
+/* Draws itself on arrival instead of appearing already filled. The rule is the
+   only thing on the Dashboard that reports the day's own progress, and a bar
+   that is simply *there* when the page paints tells the reader a number where
+   watching it travel tells them they moved it.
+
+   scaleX with a left origin, so it is a compositor transform and not a width —
+   and the same `to` is written out explicitly that memory.css's wash needs, so
+   the fill survives --progress being updated in place.
+
+   --duration-slow, matching the drawer: this is the other piece of motion in
+   the app that is allowed to take its time, because it happens once a visit
+   and nothing waits behind it. */
 .dashboard-goal__fill {
   display: block;
   height: 100%;
@@ -170,6 +214,12 @@
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--transition-base);
+  animation: dashboard-goal-fill var(--duration-slow) var(--ease-entrance) both;
+}
+
+@keyframes dashboard-goal-fill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(var(--progress, 0)); }
 }
 
 .dashboard-goal__fill.is-met {

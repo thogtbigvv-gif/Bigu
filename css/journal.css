@@ -69,6 +69,11 @@
 /* Font family, line-height, and letter spacing for the Japanese text inside
    come from typography.css's :lang(ja) rule (journal.js sets lang="ja" on
    this element) — only the writing-surface chrome is defined here. */
+/* The writing rule thickens as you write on it. Drawn as a box-shadow sitting
+   exactly on the existing 1px border rather than as a wider border, so the
+   textarea's box never changes and the text does not shift down by a pixel the
+   moment the field takes focus — which, on a writing surface, is the one place
+   a layout nudge is genuinely felt. */
 .journal__textarea {
   display: block;
   width: 100%;
@@ -79,7 +84,14 @@
   border-block-end: var(--border-width) solid var(--color-stone);
   padding-block-end: var(--space-sm);
   resize: vertical;
-  transition: border-color var(--transition-fast);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.journal__textarea:focus {
+  border-color: var(--color-indigo);
+  box-shadow: inset 0 -1px 0 0 var(--color-indigo);
 }
 
 .journal__textarea::placeholder {
@@ -176,7 +188,27 @@
   font-size: var(--text-xs);
   color: var(--color-ash);
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+/* A written day swells under the pointer. The cells are 30-odd small squares
+   in a tight grid, which is exactly the situation where a colour change alone
+   is hard to place — the scale says *this* one, unambiguously, without needing
+   a ring that would crowd its neighbours.
+
+   Only on the button cells: a day with no entry is not interactive and must
+   not pretend to be. */
+button.journal__calendar-day:hover,
+button.journal__calendar-day:focus-visible {
+  transform: scale(1.12);
+  transition-timing-function: var(--ease-spring);
+}
+
+button.journal__calendar-day:active {
+  transform: scale(0.96);
 }
 
 .journal__calendar-day--blank {
@@ -251,11 +283,17 @@ button.journal__calendar-day:hover {
   padding: var(--space-2xs);
   border-radius: var(--radius-sm);
   text-align: left;
-  transition: background-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
+/* The same 2px nudge the nav rows use, for the same reason: a list of plain
+   text rows needs one cue that they are objects and not paragraphs, and the
+   smallest possible movement is the one that says it without decorating. */
 .journal__entry-row:hover {
   background-color: var(--color-washi-raised);
+  transform: translateX(2px);
 }
 
 .journal__entry--active .journal__entry-row {

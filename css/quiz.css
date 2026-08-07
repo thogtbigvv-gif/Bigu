@@ -151,12 +151,28 @@
     transform var(--transition-fast);
 }
 
+/* The row tints as well as outlining. Four options that only change their
+   1px edge on hover give the pointer almost nothing to land on, and this is
+   the control the reader hits most often in the entire app — the tint is what
+   makes the target feel like a target without adding a single moving part. */
 .quiz__option:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
   border-color: var(--color-indigo);
 }
 
 .quiz__option:active:not(:disabled) {
-  transform: translateY(1px);
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
+}
+
+/* The keyed box follows its own row into hover and focus. It is the shortcut
+   made visible, so it should look live exactly when the row it belongs to
+   does — otherwise a keyboard reader watching the numbers sees them stay grey
+   while everything around them responds. */
+.quiz__option:hover:not(:disabled) .quiz__option-key,
+.quiz__option:focus-visible .quiz__option-key {
+  border-color: var(--color-indigo);
+  color: var(--color-indigo);
 }
 
 .quiz__option:focus-visible {
@@ -179,6 +195,10 @@
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   color: var(--color-ash);
+  /* Declared on the base so the box eases back out of hover as smoothly as it
+     eases in, and so the answered states above (moss / error) fade into place
+     rather than snapping the instant a choice is graded. */
+  transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
 .quiz__option-text {
@@ -287,39 +307,57 @@
    time reads as friction the fortieth. reset.css's global
    prefers-reduced-motion rule collapses all of these.
    ---------------------------------------------------------------------------------------------- */
+/* 180ms on the entrance curve. Still the shortest arrival in the app by some
+   way, because it is also the most repeated one — but 140ms of symmetrical
+   `ease-out` was short enough that the card read as popping rather than
+   arriving, and the extra 40ms all goes into the settle. */
 .quiz__card.is-entering {
-  animation: quiz-card-enter 140ms ease-out;
+  animation: quiz-card-enter 180ms var(--ease-entrance);
 }
 
 .quiz__card.is-correct {
-  animation: quiz-card-correct 220ms ease-out;
+  animation: quiz-card-correct 260ms var(--ease-exit);
 }
 
 /* A settle, not a shake — the reader got something wrong, which deserves a
    nudge, not a scolding. */
 .quiz__card.is-incorrect {
-  animation: quiz-card-incorrect 150ms ease-in-out;
+  animation: quiz-card-incorrect 180ms var(--ease-exit);
 }
 
 .quiz__feedback:not([hidden]) {
-  animation: quiz-card-enter 140ms ease-out;
+  animation: quiz-card-enter 180ms var(--ease-entrance);
 }
 
+/* Kept local rather than folded into the shared `rise-in`: this one needs an
+   explicit `to`, because the card it runs on is also the target of the two
+   graded animations below and an implicit final keyframe would compose against
+   whichever of those happened to be resolving. */
 @keyframes quiz-card-enter {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
 
+/* The ring blooms and fades on a card that is already still. A correct answer
+   is confirmation, not celebration: no bounce, no scale, nothing that has to
+   finish before the next question can be read. The two stops (rather than one
+   at 50%) hold the ring at full strength for a beat so it registers at a
+   glance, then release it slowly. */
 @keyframes quiz-card-correct {
-  50% {
+  30%, 55% {
     border-color: var(--color-moss);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-moss) 30%, transparent);
   }
 }
 
+/* Damped: the second swing is half the first. An even shake reads as a buzzer,
+   a decaying one reads as something being set back down — which is the
+   difference between being corrected and being buzzed at, forty times a
+   session. */
 @keyframes quiz-card-incorrect {
-  25% { transform: translateX(-4px); }
-  75% { transform: translateX(4px); }
+  20% { transform: translateX(-5px); }
+  55% { transform: translateX(3px); }
+  80% { transform: translateX(-1px); }
 }
 
 /* -- Summary --------------------------------------------------------------------------------
@@ -327,6 +365,9 @@
    button that matters: a round that ends by naming exactly what to fix is
    worth more than one that ends with a percentage.
    ---------------------------------------------------------------------------------------------- */
+/* The one screen in a round that is worth an arrival. Everything else here is
+   deliberately abrupt because it repeats every few seconds; the summary
+   happens once, at the end, and is the moment the reader stops and reads. */
 .quiz__summary {
   display: flex;
   flex-direction: column;
@@ -334,6 +375,8 @@
   gap: var(--space-sm);
   padding-block: var(--space-lg);
   text-align: center;
+  --rise: 10px;
+  animation: rise-in var(--duration-slow) var(--ease-entrance) backwards;
 }
 
 /* Ink by default, moss only for a clean round. A 1/3 rendered in the

@@ -100,6 +100,10 @@
   list-style: none;
 }
 
+/* Carries .card, so cards.css already gives it the surface, the hover lift and
+   the focus-within lift. What is set here is only the row's own shape — and
+   the radius steps down to --radius-md, because at list density the card
+   radius reads as a stack of pills rather than as a log. */
 .practice__history-item {
   display: flex;
   align-items: baseline;
@@ -108,14 +112,23 @@
   border-radius: var(--radius-md);
 }
 
+
 .practice__history-mode {
   flex: 1;
   font-weight: var(--weight-medium);
   color: var(--color-ink);
 }
 
+/* The one figure a returning reader is actually looking for, so it takes the
+   app's data face and tabular figures — the same treatment the streak count
+   and the quiz score already get. A column of scores set in the proportional
+   body face does not line up, and a log you cannot scan down is just a
+   paragraph of history. */
 .practice__history-score {
   color: var(--color-ink-soft);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
 }
 
 .practice__history-date {

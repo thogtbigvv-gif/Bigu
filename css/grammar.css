@@ -50,11 +50,27 @@
   gap: var(--space-sm);
 }
 
+/* The pattern is the card's headword and the only bengara on a grammar card,
+   so it is what carries the card's accent edge — the same device the
+   Dashboard's hero card uses, at list scale. The rule is transparent at rest
+   and only colours in on hover or focus: forty stacked cards each with a red
+   bar down the side is a warning, not a page of grammar.
+
+   The padding and the (transparent) border live here on the base rule, so the
+   text never moves when the colour arrives — only the colour animates. */
 .grammar-card__pattern {
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-lg);
   color: var(--color-bengara);
   margin-inline-end: auto;
+  padding-inline-start: var(--space-2xs);
+  border-inline-start: 2px solid transparent;
+  transition: border-color var(--transition-base);
+}
+
+.grammar-card:hover .grammar-card__pattern,
+.grammar-card:focus-within .grammar-card__pattern {
+  border-inline-start-color: color-mix(in srgb, var(--color-bengara) 50%, transparent);
 }
 
 .grammar-card__meaning {
@@ -68,6 +84,9 @@
   font-family: var(--font-mono);
 }
 
+/* The same recessed treatment vocabulary.css gives its example block, so an
+   example reads as the same kind of thing on both card shapes — see the note
+   there for why a single inset hairline is what sells the impression. */
 .grammar-card__example {
   display: flex;
   flex-direction: column;
@@ -75,6 +94,7 @@
   padding: var(--space-sm);
   background-color: var(--color-washi);
   border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
 }
 
 .grammar-card__example p {

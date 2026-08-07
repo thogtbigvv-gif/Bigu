@@ -88,10 +88,27 @@
   overflow: hidden;
 }
 
+/* The stroke is laid out at the wash's full width and scaled down to
+   --strength, rather than being sized to it. That swap is what lets the
+   entrance animate `transform` instead of `width`.
+
+   Animating width made the browser lay out, paint and composite the element on
+   every frame of a 700ms run — the most expensive property in the app's whole
+   motion vocabulary, on the one animation the page opens with. scaleX runs
+   entirely on the compositor.
+
+   The painted result is identical, which is the part worth being sure about:
+   the gradient's stops are proportional to the element's own box, so a box
+   drawn at 40% width and a full-width box compressed to 40% carry the same
+   gradient across the same pixels. The dry-out still lands exactly at the
+   stroke's right end.
+
+   transform-origin is the left edge so the stroke grows from where a brush
+   would start, not outward from its own middle. */
 .memory-hero__stroke {
   display: block;
   height: 100%;
-  width: calc(var(--strength) * 100%);
+  width: 100%;
   border-radius: inherit;
   background-image: linear-gradient(
     90deg,
@@ -99,15 +116,26 @@
     color-mix(in srgb, var(--color-ink) 70%, transparent) 72%,
     color-mix(in srgb, var(--color-ink) 20%, transparent) 100%
   );
+  transform-origin: left center;
+  transform: scaleX(var(--strength));
   /* Drawn on arrival rather than simply present: the stroke is the reader's
      own work, and watching it laid down once is the single most emotive
      moment on the page. 700ms — slower than UI feedback, faster than an
      animation you have to wait for. */
+  /* Curve left exactly as it was. --ease-entrance would be wrong here: it is
+     ~90% travelled a third of the way in, which is right for a panel arriving
+     and wrong for a brush, where the ink should keep moving at a readable
+     speed for most of the stroke and only ease off as it dries. */
   animation: memory-wash-in 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
+/* `to` is written out rather than left implicit. With a `from`-only keyframe
+   and a forwards fill, the browser pins the 100% value it computed when the
+   animation began — correct today, and silently wrong the first time this
+   element's --strength is updated in place the way the slips' already is. */
 @keyframes memory-wash-in {
-  from { width: 0; }
+  from { transform: scaleX(0); }
+  to { transform: scaleX(var(--strength)); }
 }
 
 .memory-hero__wash-note {
@@ -372,6 +400,16 @@
    signal about which slip you are now inside of.
    ------------------------------------------------------------------------------------------------ */
 
+/* The stagger here is JS-driven (--index, set per slip by memory.js) rather
+   than the nth-child ladder layout.css uses everywhere else, because a shelf's
+   index has to keep counting across shelf boundaries — the whole page is one
+   sequence, not six restarting ones. So it keeps its own delay and simply
+   borrows the shared `rise-in` keyframes and entrance curve, which is what
+   memory-slip-in was a hand-rolled copy of.
+
+   40ms per step against the app's 32ms: a slip is a larger object than a row
+   in a list and the shelves are meant to be read slowly. This is the one place
+   the beat is deliberately off the token. */
 .memory-slip {
   min-width: 0;
   border-radius: var(--radius-md);
@@ -380,15 +418,9 @@
     background-color var(--transition-fast),
     transform var(--transition-fast),
     opacity var(--transition-base);
-  animation: memory-slip-in 320ms ease-out both;
+  --rise: 6px;
+  animation: rise-in 320ms var(--ease-entrance) both;
   animation-delay: calc(var(--index, 0) * 40ms);
-}
-
-@keyframes memory-slip-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
 }
 
 /* Open, a slip takes the whole row. The detail needs the width, and a slip

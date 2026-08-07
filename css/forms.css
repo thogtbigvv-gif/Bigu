@@ -15,11 +15,22 @@
   background-color: var(--color-washi-raised);
   color: var(--color-ink);
   font-size: var(--text-base);
-  transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  transition:
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
 }
 
+/* The placeholder softens as you start using the field, rather than sitting at
+   full strength until the first character replaces it. It is the one piece of
+   text on screen whose job ends the moment you engage with it. */
 .field::placeholder {
   color: var(--color-ash);
+  transition: color var(--transition-base), opacity var(--transition-base);
+}
+
+.field:focus::placeholder {
+  opacity: 0.55;
 }
 
 .field:hover {
@@ -28,11 +39,17 @@
 
 /* Outline first, halo second — see the note on .button:focus-visible in
    buttons.css. The border-color change is a third, quieter cue and is not
-   load-bearing for contrast on its own. */
+   load-bearing for contrast on its own.
+
+   The surface also lightens by a hair. On a page of washi-raised panels, a
+   focused field previously differed from an unfocused one only at its edge;
+   lifting the ground a few percent makes the *area* you are typing into read
+   as active, which is what a writer's eye is actually tracking. */
 .field:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;
   border-color: var(--color-indigo);
+  background-color: color-mix(in srgb, var(--color-indigo) 3%, var(--color-washi-raised));
   box-shadow: var(--focus-halo);
 }
 
@@ -40,6 +57,51 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* -- Validity ---------------------------------------------------------------------
+   Driven by the browser's own :user-invalid / :user-valid, not by a class an
+   application layer has to remember to add and remove. That pseudo-class is
+   the whole reason this is worth having: :invalid matches from the first
+   render, so an empty required field is "wrong" before it has been touched,
+   which is how forms end up shouting at people for not having typed yet.
+   :user-invalid waits until the reader has actually interacted and moved on.
+
+   The shake is a settle, not a scold — the same 4px, twice, that quiz.css uses
+   for a wrong answer, so being corrected feels the same everywhere in the app.
+   Colour is never the only signal: the border weight changes with it, and the
+   message element below carries the reason in words.
+
+   Nothing in Bigu currently sets `required` or `pattern` — these fire the
+   moment anything does, which is the point of putting them in the shared
+   sheet rather than in whichever view grows a validated field first.
+   ---------------------------------------------------------------------------------- */
+.field:user-invalid {
+  border-color: var(--color-error);
+  animation: field-settle 220ms var(--ease-exit);
+}
+
+.field:user-invalid:focus-visible {
+  outline-color: var(--color-error);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-error) 22%, transparent);
+}
+
+.field:user-valid {
+  border-color: color-mix(in srgb, var(--color-moss) 60%, var(--color-stone));
+}
+
+@keyframes field-settle {
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+/* No .field-message class is defined here on purpose. The app's per-field
+   messages are written by the views that own them (settings.css's
+   .settings-backup__status, cards.css's .error-state), and inventing a
+   general one with no caller would be advertising an API nothing implements —
+   which is the surface that later grows a second, slightly different error
+   style the first time someone reaches for it. The two pseudo-classes above
+   need no markup at all, which is exactly why they belong here and a message
+   class does not. */
 
 /* -- Textarea ------------------------------------------------------------------- */
 
@@ -84,6 +146,14 @@ select.field {
   display: flex;
 }
 
+/* The icon takes the interactive colour while the field beside it has focus.
+   It sits inside the input's box, so it is read as part of the control rather
+   than as an ornament next to it — and a control's parts should change state
+   together. :has() makes that possible without JS or a wrapper class; engines
+   without it simply keep a static grey icon, which is where this started.
+
+   Only the colour animates. The icon is vertically centred with a translate,
+   so anything touching `transform` here would fight that centring. */
 .search-field__icon {
   position: absolute;
   inset-inline-start: var(--space-sm);
@@ -93,6 +163,11 @@ select.field {
   height: 1rem;
   color: var(--color-ash);
   pointer-events: none;
+  transition: color var(--transition-base);
+}
+
+.search-field__control:has(.field:focus-visible) .search-field__icon {
+  color: var(--color-indigo);
 }
 
 .search-field .field {
@@ -107,10 +182,22 @@ select.field {
 
 /* -- Labels ------------------------------------------------------------------------- */
 
+/* The label follows its own field into focus, for the same reason the search
+   icon does: a label and its input are one control, and a reader scanning a
+   settings page with several of them should be able to see which one is live
+   without tracing the outline. */
 .field-label {
   display: block;
   margin-block-end: var(--space-2xs);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--color-ink-soft);
+  transition: color var(--transition-base);
+}
+
+/* Scoped to .search-field rather than written against .field-label generally:
+   the wrapper has to be the one that holds exactly one field, or a group with
+   several would light up every label in it when any single input took focus. */
+.search-field:has(.field:focus-visible) .field-label {
+  color: var(--color-indigo);
 }
