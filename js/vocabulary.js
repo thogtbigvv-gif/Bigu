@@ -6,13 +6,13 @@
    text styling is invented here, only structure.
 
    Rendering is paged. It did not used to be, and the difference is the
-   difference between a page and a wall: the N5 set landed in a view built
-   for a few dozen N2 words, and 816 cards came out as ~13,000 DOM nodes and
-   a document 150,000 pixels tall. Every keystroke in the search field then
-   walked all 816 rows and toggled `hidden` on each, forcing a full layout
-   of that document per character typed. Nothing about that was visible as a
-   bug — it was just an app that felt slow and a list nobody could reach the
-   bottom of.
+   difference between a page and a wall: the view was built for a few dozen
+   cards, the word list grew into the hundreds, and 816 cards came out as
+   ~13,000 DOM nodes and a document 150,000 pixels tall. Every keystroke in
+   the search field then walked all 816 rows and toggled `hidden` on each,
+   forcing a full layout of that document per character typed. Nothing about
+   that was visible as a bug — it was just an app that felt slow and a list
+   nobody could reach the bottom of.
 
    Now a page of cards is built at a time and the rest arrive on request,
    which is also the honest reading of what a reader wants here: a
@@ -23,12 +23,19 @@
 import { isRemembered } from './review.js';
 import { createStudyControls } from './studyControls.js';
 import {
+  collectFacets,
   createContentLoader,
+  createFacetChips,
   createSearchField,
   debounce,
+  describeLevelSpan,
   formatCount,
   getViewContainer,
+  jlptLevelOf,
+  levelBucketOf,
   loadIntoView,
+  JLPT_LEVELS,
+  NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
 
@@ -96,15 +103,24 @@ function createCard(word, level, onProgressChange) {
   const head = document.createElement('div');
   head.className = 'vocab-card__head';
 
-  const tag = document.createElement('span');
-  tag.className = 'jlpt-tag';
-  tag.textContent = level;
-
   const pos = document.createElement('span');
   pos.className = 'vocab-card__pos meta';
   pos.textContent = word.partOfSpeech;
 
-  head.append(createHeadword(word), tag, pos);
+  head.append(createHeadword(word));
+
+  /* A word with no JLPT level gets no level badge — not a guessed one and
+     not an "Outside JLPT" pill crowding a two-character headword. It is
+     still reachable: the chip row above the list files it under that
+     bucket, which is where a reader goes looking for it. */
+  if (level) {
+    const tag = document.createElement('span');
+    tag.className = 'jlpt-tag';
+    tag.textContent = level;
+    head.append(tag);
+  }
+
+  head.append(pos);
 
   const meaning = document.createElement('p');
   meaning.className = 'vocab-card__meaning';
@@ -120,13 +136,15 @@ function createCard(word, level, onProgressChange) {
 }
 
 /* -- Facets -------------------------------------------------------------------------
-   The chip row above the list. A word's tags come from an optional `tags`
-   array on the word itself; words without one fall back to the dataset's
-   `level`, so untagged data needs no migration.
+   The chip row above the list. A word's facets are its own `tags` array and
+   nothing else — there is no file-level `level` to fall back on any more,
+   and there shouldn't be: one string at the top of vocabulary.json could
+   only ever describe a file holding one level, and this file has held
+   several for a long time while still claiming "N5".
 
-   Which chips are offered is now read out of the data rather than written
-   here as a fixed list. It used to be a nine-chip row — four JLPT levels
-   and five topics (Business, Daily, Travel, Anime, News) — of which five
+   Which chips are offered is read out of the data rather than written here
+   as a fixed list. It used to be a nine-chip row — four JLPT levels and
+   five topics (Business, Daily, Travel, Anime, News) — of which five
    matched nothing at all, so a third of the visible controls on this screen
    did nothing but empty the list and show "No words match your search."
    That is the same broken promise the navigation was cleaned up to remove
@@ -134,51 +152,27 @@ function createCard(word, level, onProgressChange) {
    appears when there is something behind it.
    ------------------------------------------------------------------------------------ */
 
-/* The order facets are offered in when they are present. JLPT levels first
-   and easiest-first, because that is how a learner reads them; topics after,
-   in a fixed order so the row doesn't reshuffle as data is added. */
-const FACET_ORDER = ['N5', 'N4', 'N3', 'N2', 'N1', 'Business', 'Daily', 'Travel', 'Anime', 'News'];
+/* Topics, in a fixed order so the row doesn't reshuffle as data is added.
+   A word can carry both a level and a topic and shows up under each. */
+const TOPIC_ORDER = ['Business', 'Daily', 'Travel', 'Anime', 'News'];
 
-const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+/* The whole ladder first, easiest-first, because that is how a learner
+   reads it; the unleveled bucket after it, since it is a level's peer
+   rather than a topic; topics last. */
+const FACET_ORDER = [...JLPT_LEVELS, NO_LEVEL, ...TOPIC_ORDER];
 
-function getWordTags(word, data) {
-  return word.tags && word.tags.length ? word.tags : [data.level];
+/* A word's facet tags. A word with topic tags but no JLPT level — slang, a
+   line out of a drama, something met in the wild — picks up the unleveled
+   bucket alongside its topics, so it is filterable rather than invisible. */
+function getWordTags(word) {
+  const tags = word.tags ?? [];
+  return jlptLevelOf(tags) ? tags : [...tags, NO_LEVEL];
 }
 
-/* A word's own JLPT tag, not the file's. The dataset holds more than one
-   level now (816 N5 words alongside the older N2 set), so a card that
-   labelled itself with `data.level` would put the wrong chip on most of
-   the list. Topic-only tags fall through to the file level, same as before. */
-function getWordLevel(word, data) {
-  const tags = getWordTags(word, data);
-  return JLPT_LEVELS.find((level) => tags.includes(level)) ?? data.level;
-}
-
-/* "N5" for a single-level file, "N5–N2" once it spans several. */
-function getLevelLabel(data) {
-  const present = JLPT_LEVELS.filter((level) =>
-    data.words.some((word) => getWordLevel(word, data) === level));
-  if (present.length === 0) return data.level;
-  return present.length === 1 ? present[0] : `${present[0]}–${present[present.length - 1]}`;
-}
-
-function collectFacets(rows) {
-  const counts = new Map();
-  for (const row of rows) {
-    for (const tag of row.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-  }
-
-  const present = [...counts.keys()];
-  const ordered = FACET_ORDER.filter((tag) => counts.has(tag));
-  // Anything the data carries that this file has never heard of still gets
-  // a chip, appended after the known ones — new topic tags shouldn't have
-  // to be registered in two places to become usable.
-  const extra = present.filter((tag) => !FACET_ORDER.includes(tag)).sort();
-
-  // One facet is not a filter, it's a label: a lone "N5" chip on an all-N5
-  // file can only ever be pressed to show exactly what is already shown.
-  const tags = [...ordered, ...extra];
-  return tags.length > 1 ? tags.map((tag) => ({ tag, count: counts.get(tag) })) : [];
+/* A word's own JLPT level, or null when it has none. Null reaches the card
+   as "draw no level badge" and the chip row as the unleveled bucket. */
+function getWordLevel(word) {
+  return jlptLevelOf(word.tags ?? []);
 }
 
 function matchesQuery(word, query) {
@@ -199,38 +193,6 @@ function createRememberedToggle() {
   return button;
 }
 
-/* One chip per facet, multi-select, each carrying how many words are behind
-   it. The count is the discoverability half of the fix above: a reader can
-   see that N5 holds 816 words and N2 holds 20 before spending a tap to
-   find out. */
-function createFacetFilters(facets) {
-  const wrap = document.createElement('div');
-  wrap.className = 'vocab-filters__categories';
-  wrap.setAttribute('role', 'group');
-  wrap.setAttribute('aria-label', 'Filter by level or topic');
-
-  const buttons = facets.map(({ tag, count }) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'toggle-chip';
-    button.dataset.tag = tag;
-    button.setAttribute('aria-pressed', 'false');
-
-    const label = document.createElement('span');
-    label.textContent = tag;
-
-    const badge = document.createElement('span');
-    badge.className = 'toggle-chip__count';
-    badge.textContent = formatCount(count);
-
-    button.append(label, badge);
-    wrap.append(button);
-    return button;
-  });
-
-  return { wrap, buttons };
-}
-
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function renderList(container, data) {
@@ -248,7 +210,6 @@ function renderList(container, data) {
   const summary = document.createElement('p');
   summary.className = 'vocab-meta meta';
   summary.setAttribute('aria-live', 'polite');
-  const levelLabel = getLevelLabel(data);
 
   const list = document.createElement('ul');
   list.className = 'vocab-list';
@@ -258,12 +219,18 @@ function renderList(container, data) {
      over 816 small objects — not over 816 live DOM subtrees. */
   const rows = data.words.map((word) => ({
     word,
-    tags: getWordTags(word, data),
-    level: getWordLevel(word, data),
+    tags: getWordTags(word),
+    level: getWordLevel(word),
     item: null,
   }));
 
-  const { wrap: facetWrap, buttons: facetButtons } = createFacetFilters(collectFacets(rows));
+  /* The span the file actually covers, read off the words themselves. */
+  const levelLabel = describeLevelSpan(rows.map((row) => levelBucketOf(row.level)));
+
+  const { wrap: facetWrap, buttons: facetButtons } = createFacetChips(
+    collectFacets(rows.map((row) => row.tags), FACET_ORDER),
+    { className: 'vocab-filters__categories', ariaLabel: 'Filter by level or topic' },
+  );
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
@@ -300,21 +267,25 @@ function renderList(container, data) {
     summary.textContent = describeSummary();
   }
 
+  /* The span is a prefix, not a heading — and it is dropped rather than
+     printed as an empty separator when there is no span to state. */
+  function withSpan(text) {
+    return levelLabel ? `${levelLabel} · ${text}` : text;
+  }
+
   function describeSummary() {
     const filtering = searchInput.value.trim() !== '' || selectedTags.size > 0
       || rememberedToggle.getAttribute('aria-pressed') === 'true';
     const total = formatCount(data.words.length);
 
     if (!filtering) {
-      return matched.length > shown
-        ? `${levelLabel} · showing ${formatCount(shown)} of ${total} words`
-        : `${levelLabel} · ${total} words`;
+      return withSpan(matched.length > shown
+        ? `showing ${formatCount(shown)} of ${total} words`
+        : `${total} words`);
     }
 
     const found = `${formatCount(matched.length)} of ${total} words`;
-    return matched.length > shown
-      ? `${levelLabel} · ${found} — showing ${formatCount(shown)}`
-      : `${levelLabel} · ${found}`;
+    return withSpan(matched.length > shown ? `${found} — showing ${formatCount(shown)}` : found);
   }
 
   /* Recomputes the match set and starts the list again from the first page.

@@ -26,12 +26,18 @@
 
 import { createStudyControls } from './studyControls.js';
 import {
+  collectFacets,
   createContentLoader,
+  createFacetChips,
   createSearchField,
   debounce,
+  describeLevelSpan,
   formatCount,
   getViewContainer,
+  levelBucketOf,
   loadIntoView,
+  JLPT_LEVELS,
+  NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
 
@@ -53,22 +59,16 @@ function getExamples(entry) {
   return entry.examples && entry.examples.length ? entry.examples : [entry.example];
 }
 
-/* The JLPT levels, hardest-last — the order the summary label reads them in. */
-const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+/* The order the chip row and the summary label read the levels in, plus the
+   bucket for characters the exam lists at no level at all. */
+const LEVEL_ORDER = [...JLPT_LEVELS, NO_LEVEL];
 
-/* An entry's own level, not the file's: the set spans N5 and N2 now, so a
-   card labelled with `data.level` would put the wrong chip on most of the
-   grid. `level` is optional, so older entries still fall back to the file. */
-function getEntryLevel(entry, data) {
-  return entry.level ?? data.level;
-}
-
-/* "N5" for a single-level file, "N5–N2" once it spans several. */
-function getLevelLabel(data) {
-  const present = JLPT_LEVELS.filter((level) =>
-    data.kanji.some((entry) => getEntryLevel(entry, data) === level));
-  if (present.length === 0) return data.level;
-  return present.length === 1 ? present[0] : `${present[0]}–${present[present.length - 1]}`;
+/* An entry's own level, and only its own. kanji.json used to carry one
+   `level` string for the whole file, which was wrong the moment the second
+   level arrived and stayed wrong for as long as it existed. `level` is
+   optional per entry; absent means unleveled, not "whatever the file says". */
+function getEntryLevel(entry) {
+  return entry.level ?? null;
 }
 
 function createReadings(entry) {
@@ -122,11 +122,16 @@ function createCard(entry, level, onOpenDetail) {
   character.lang = 'ja';
   character.textContent = entry.character;
 
-  const tag = document.createElement('span');
-  tag.className = 'jlpt-tag';
-  tag.textContent = level;
+  head.append(character);
 
-  head.append(character, tag);
+  /* No level, no badge — the chip row files the entry under the unleveled
+     bucket rather than the card inventing a level for it. */
+  if (level) {
+    const tag = document.createElement('span');
+    tag.className = 'jlpt-tag';
+    tag.textContent = level;
+    head.append(tag);
+  }
 
   const meaning = document.createElement('p');
   meaning.className = 'kanji-card__meaning';
@@ -267,7 +272,8 @@ function buildDetailPanel() {
 
 function renderDetail(elements, entry, level, allEntries, onJump) {
   elements.character.textContent = entry.character;
-  elements.tag.textContent = level;
+  elements.tag.textContent = level ?? '';
+  elements.tag.hidden = !level;
 
   elements.sections.replaceChildren(
     createDetailSection('Meaning', createTextBlock(entry.meaning)),
@@ -301,47 +307,6 @@ function matchesQuery(entry, query) {
   return haystack.includes(query);
 }
 
-/* The same level facets vocabulary and grammar offer, which this view was
-   simply missing. The set spans N5 and N2, so a reader wanting to drill one
-   level had to read 132 cards to find them — while the two neighbouring
-   views one row apart in the nav both had a chip row. A single level
-   present means no row, same rule as the other two. */
-function collectLevels(rows) {
-  const counts = new Map();
-  for (const row of rows) counts.set(row.level, (counts.get(row.level) ?? 0) + 1);
-  const present = JLPT_LEVELS.filter((level) => counts.has(level));
-  return present.length > 1 ? present.map((level) => ({ tag: level, count: counts.get(level) })) : [];
-}
-
-function createLevelFilters(facets) {
-  const wrap = document.createElement('div');
-  wrap.className = 'kanji-filters__levels';
-  wrap.hidden = facets.length === 0;
-  wrap.setAttribute('role', 'group');
-  wrap.setAttribute('aria-label', 'Filter by level');
-
-  const buttons = facets.map(({ tag, count }) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'toggle-chip';
-    button.dataset.tag = tag;
-    button.setAttribute('aria-pressed', 'false');
-
-    const label = document.createElement('span');
-    label.textContent = tag;
-
-    const badge = document.createElement('span');
-    badge.className = 'toggle-chip__count';
-    badge.textContent = formatCount(count);
-
-    button.append(label, badge);
-    wrap.append(button);
-    return button;
-  });
-
-  return { wrap, buttons };
-}
-
 /* -- Rendering ------------------------------------------------------------------------- */
 
 function renderGrid(container, data) {
@@ -354,7 +319,6 @@ function renderGrid(container, data) {
   const summary = document.createElement('p');
   summary.className = 'kanji-meta meta';
   summary.setAttribute('aria-live', 'polite');
-  const levelLabel = getLevelLabel(data);
 
   const grid = document.createElement('ul');
   grid.className = 'kanji-grid';
@@ -364,11 +328,23 @@ function renderGrid(container, data) {
 
   const rows = data.kanji.map((entry) => ({
     entry,
-    level: getEntryLevel(entry, data),
+    level: getEntryLevel(entry),
+    bucket: levelBucketOf(getEntryLevel(entry)),
     item: null,
   }));
 
-  const { wrap: levelWrap, buttons: levelButtons } = createLevelFilters(collectLevels(rows));
+  /* The chip row this view was once simply missing: without it, a reader
+     wanting one level had to read every card in the grid to find them,
+     while the two neighbouring views one row apart in the nav both had
+     one. Levels are peers here — each chip carries its own count, and a
+     level with a handful of characters is offered exactly like a level
+     with a hundred. */
+  const { wrap: levelWrap, buttons: levelButtons } = createFacetChips(
+    collectFacets(rows.map((row) => [row.bucket]), LEVEL_ORDER),
+    { className: 'kanji-filters__levels', ariaLabel: 'Filter by level' },
+  );
+
+  const levelLabel = describeLevelSpan(rows.map((row) => row.bucket));
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
@@ -390,7 +366,7 @@ function renderGrid(container, data) {
     // Unhidden first: renderDetail moves focus to the panel's heading, and
     // focus() on a `hidden` element is silently dropped.
     detailElements.wrap.hidden = false;
-    renderDetail(detailElements, entry, getEntryLevel(entry, data), data.kanji, openDetail);
+    renderDetail(detailElements, entry, getEntryLevel(entry), data.kanji, openDetail);
   }
 
   /* Focus goes back to the "View details" button that opened the panel, not
@@ -435,14 +411,15 @@ function renderGrid(container, data) {
     );
 
     const matched = rows.filter((row) =>
-      (selected.size === 0 || selected.has(row.level)) && matchesQuery(row.entry, query));
+      (selected.size === 0 || selected.has(row.bucket)) && matchesQuery(row.entry, query));
 
     grid.replaceChildren(...matched.map(cardFor));
 
     const total = formatCount(data.kanji.length);
-    summary.textContent = query || selected.size > 0
-      ? `${levelLabel} · ${formatCount(matched.length)} of ${total} kanji`
-      : `${levelLabel} · ${total} kanji`;
+    const count = query || selected.size > 0
+      ? `${formatCount(matched.length)} of ${total} kanji`
+      : `${total} kanji`;
+    summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
     empty.hidden = matched.length > 0;
   }
 

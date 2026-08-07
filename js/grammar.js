@@ -8,12 +8,19 @@
 
 import { createStudyControls } from './studyControls.js';
 import {
+  collectFacets,
   createContentLoader,
+  createFacetChips,
   createSearchField,
   debounce,
+  describeLevelSpan,
   formatCount,
   getViewContainer,
+  jlptLevelOf,
+  levelBucketOf,
   loadIntoView,
+  JLPT_LEVELS,
+  NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
 
@@ -74,11 +81,16 @@ function createCard(point, level) {
   const head = document.createElement('div');
   head.className = 'grammar-card__head';
 
-  const tag = document.createElement('span');
-  tag.className = 'jlpt-tag';
-  tag.textContent = level;
+  head.append(createPatternHeading(point));
 
-  head.append(createPatternHeading(point), tag);
+  /* No level, no badge. A pattern picked up outside the exam syllabus is
+     reachable through the unleveled chip above the list instead. */
+  if (level) {
+    const tag = document.createElement('span');
+    tag.className = 'jlpt-tag';
+    tag.textContent = level;
+    head.append(tag);
+  }
 
   const meaning = document.createElement('p');
   meaning.className = 'grammar-card__meaning';
@@ -111,88 +123,42 @@ function createCard(point, level) {
    against the pattern (kanji + kana reading) and the meaning.
    -------------------------------------------------------------------------------------- */
 
-/* JLPT level facet shown as a chip row above the list, same pattern as
-   vocabulary.js's chips. A point's tags come from an optional `tags` array
-   on the point itself; points that don't have one yet (all of today's data)
-   fall back to the dataset's own `level`, so nothing needs to change in
-   grammar.json for the existing N2 points to keep showing up.
+/* The chip row above the list, same shape as vocabulary.js's. A point's
+   facets are its own `tags` array; grammar.json no longer carries a
+   file-level `level` for them to fall back on, because a single string at
+   the top of a file can only describe a file that holds a single level,
+   and that is not a promise this catalogue keeps.
 
    Which chips appear is read out of the data, not written here. This row
-   used to be a fixed N5/N4/N3/N2 — and every point in the file is N2, so
-   three of the four chips existed only to empty the list. Same reasoning as
-   the facet row in vocabulary.js: a control that can only ever produce "no
-   results" isn't a filter, it's a trap. A single remaining level is a label
-   rather than a choice, so the row disappears entirely in that case. */
-const LEVEL_ORDER = ['N5', 'N4', 'N3', 'N2', 'N1'];
+   used to be a fixed N5/N4/N3/N2, three of which matched nothing and
+   existed only to empty the list. Same reasoning as the facet row in
+   vocabulary.js: a control that can only ever produce "no results" isn't a
+   filter, it's a trap. A single remaining facet is a label rather than a
+   choice, so the row disappears entirely in that case.
 
-function getPointTags(point, data) {
-  return point.tags && point.tags.length ? point.tags : [data.level];
+   The ladder itself is shared (content.js) rather than restated here; the
+   unleveled bucket sits after it, for patterns that belong to the language
+   without belonging to any exam level. */
+const LEVEL_ORDER = [...JLPT_LEVELS, NO_LEVEL];
+
+/* A point tagged with topics but no level still gets the unleveled bucket,
+   so it stays filterable instead of falling out of the chip row. */
+function getPointTags(point) {
+  const tags = point.tags ?? [];
+  return jlptLevelOf(tags) ? tags : [...tags, NO_LEVEL];
 }
 
-/* A point's own JLPT level, not the file's — the same correction
-   vocabulary.js and kanji.js already make. Today's file is single-level so
-   nothing changes on screen, but the moment an N3 point is added the card
-   would have claimed N2 and the reader would have had no way to tell. */
-function getPointLevel(point, data) {
-  const tags = getPointTags(point, data);
-  return LEVEL_ORDER.find((level) => tags.includes(level)) ?? data.level;
-}
-
-function getLevelLabel(data) {
-  const present = LEVEL_ORDER.filter((level) =>
-    data.points.some((point) => getPointLevel(point, data) === level));
-  if (present.length === 0) return data.level;
-  return present.length === 1 ? present[0] : `${present[0]}–${present[present.length - 1]}`;
+/* A point's own JLPT level, or null when it has none — which reaches the
+   card as "draw no level badge" rather than as a level the data never
+   claimed. */
+function getPointLevel(point) {
+  return jlptLevelOf(point.tags ?? []);
 }
 
 function matchesQuery(point, query) {
   if (!query) return true;
   const haystack = `${point.pattern} ${point.patternKana ?? ''} ${point.meaning}`.toLowerCase();
   return haystack.includes(query);
-}
-
-function collectFacets(rows) {
-  const counts = new Map();
-  for (const row of rows) {
-    for (const tag of row.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
-  }
-
-  const known = LEVEL_ORDER.filter((tag) => counts.has(tag));
-  const extra = [...counts.keys()].filter((tag) => !LEVEL_ORDER.includes(tag)).sort();
-  const tags = [...known, ...extra];
-  return tags.length > 1 ? tags.map((tag) => ({ tag, count: counts.get(tag) })) : [];
-}
-
-/* One chip per level present, multi-select, each carrying its own count.
-   Reuses the same .toggle-chip look and pressed/unpressed language as the
-   per-card memory button. */
-function createCategoryFilters(facets) {
-  const wrap = document.createElement('div');
-  wrap.className = 'grammar-filters__categories';
-  wrap.hidden = facets.length === 0;
-  wrap.setAttribute('role', 'group');
-  wrap.setAttribute('aria-label', 'Filter by level');
-
-  const buttons = facets.map(({ tag, count }) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'toggle-chip';
-    button.dataset.tag = tag;
-    button.setAttribute('aria-pressed', 'false');
-
-    const label = document.createElement('span');
-    label.textContent = tag;
-
-    const badge = document.createElement('span');
-    badge.className = 'toggle-chip__count';
-    badge.textContent = formatCount(count);
-
-    button.append(label, badge);
-    wrap.append(button);
-    return button;
-  });
-
-  return { wrap, buttons };
 }
 
 /* -- Rendering ------------------------------------------------------------------------- */
@@ -207,18 +173,23 @@ function renderList(container, data) {
   const summary = document.createElement('p');
   summary.className = 'grammar-meta meta';
   summary.setAttribute('aria-live', 'polite');
-  const levelLabel = getLevelLabel(data);
 
   const list = document.createElement('ul');
   list.className = 'grammar-list';
   const rows = data.points.map((point) => ({
     point,
-    tags: getPointTags(point, data),
-    item: createCard(point, getPointLevel(point, data)),
+    tags: getPointTags(point),
+    bucket: levelBucketOf(getPointLevel(point)),
+    item: createCard(point, getPointLevel(point)),
   }));
   list.append(...rows.map((row) => row.item));
 
-  const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters(collectFacets(rows));
+  const levelLabel = describeLevelSpan(rows.map((row) => row.bucket));
+
+  const { wrap: categoryWrap, buttons: categoryButtons } = createFacetChips(
+    collectFacets(rows.map((row) => row.tags), LEVEL_ORDER),
+    { className: 'grammar-filters__categories', ariaLabel: 'Filter by level' },
+  );
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
@@ -237,9 +208,10 @@ function renderList(container, data) {
       if (matches) visible += 1;
     }
     const total = formatCount(data.points.length);
-    summary.textContent = query || selectedTags.size > 0
-      ? `${levelLabel} · ${formatCount(visible)} of ${total} patterns`
-      : `${levelLabel} · ${total} patterns`;
+    const count = query || selectedTags.size > 0
+      ? `${formatCount(visible)} of ${total} patterns`
+      : `${total} patterns`;
+    summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
     empty.hidden = visible > 0;
   }
 

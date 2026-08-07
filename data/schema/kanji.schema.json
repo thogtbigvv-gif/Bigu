@@ -4,12 +4,8 @@
   "title": "Bigu kanji content",
   "description": "Shape of a data/kanji.json file, as loaded by kanji.js.",
   "type": "object",
-  "required": ["level", "updatedAt", "kanji"],
+  "required": ["updatedAt", "kanji"],
   "properties": {
-    "level": {
-      "type": "string",
-      "description": "Fallback JLPT level for entries that don't carry their own `level`. The file spans several levels now, so this is a default rather than a description of the whole set."
-    },
     "updatedAt": {
       "type": "string",
       "format": "date",
@@ -36,7 +32,7 @@
         "level": {
           "type": "string",
           "enum": ["N5", "N4", "N3", "N2", "N1"],
-          "description": "Optional JLPT level for this entry, shown as its .jlpt-tag chip. If omitted, kanji.js falls back to the file's own `level`."
+          "description": "This entry's own JLPT level, shown as its .jlpt-tag badge. Optional, and there is no file-level fallback — an entry without one is unleveled, which kanji.js files under its \"Outside JLPT\" chip and renders with no badge."
         },
         "meaning": {
           "type": "string",
@@ -75,12 +71,12 @@
   },
   "examples": [
     {
-      "level": "N2",
       "updatedAt": "2026-08-02",
       "kanji": [
         {
           "id": "kj-000",
           "character": "例",
+          "level": "N2",
           "meaning": "жишээ",
           "onyomi": "レイ",
           "kunyomi": "たと(える)",

@@ -4,12 +4,8 @@
   "title": "Bigu grammar content",
   "description": "Shape of a data/grammar.json file, as loaded by grammar.js.",
   "type": "object",
-  "required": ["level", "updatedAt", "points"],
+  "required": ["updatedAt", "points"],
   "properties": {
-    "level": {
-      "type": "string",
-      "description": "JLPT level this file covers, e.g. \"N2\"."
-    },
     "updatedAt": {
       "type": "string",
       "format": "date",
@@ -54,9 +50,9 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["N5", "N4", "N3", "N2"]
+            "enum": ["N5", "N4", "N3", "N2", "N1"]
           },
-          "description": "Optional JLPT-level facet tags for the grammar view's category chips. If omitted, grammar.js falls back to the file's own `level` as the point's only tag."
+          "description": "Facet tags for the grammar view's chip row — at most one JLPT level. Optional, and there is no file-level fallback — a point without a JLPT tag is unleveled, which grammar.js files under its \"Outside JLPT\" chip and renders with no badge."
         }
       }
     },
@@ -72,11 +68,11 @@
   },
   "examples": [
     {
-      "level": "N2",
       "updatedAt": "2026-08-02",
       "points": [
         {
           "id": "gr-000",
+          "tags": ["N2"],
           "pattern": "ざるを得ない",
           "patternKana": "ざるをえない",
           "meaning": "...хийхээс өөр аргагүй",

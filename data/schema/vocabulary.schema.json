@@ -4,12 +4,8 @@
   "title": "Bigu vocabulary content",
   "description": "Shape of a data/vocabulary.json file, as loaded by vocabulary.js.",
   "type": "object",
-  "required": ["level", "updatedAt", "words"],
+  "required": ["updatedAt", "words"],
   "properties": {
-    "level": {
-      "type": "string",
-      "description": "Fallback JLPT level for words that don't carry a JLPT tag of their own. The file spans several levels now, so this is a default rather than a description of the whole set."
-    },
     "updatedAt": {
       "type": "string",
       "format": "date",
@@ -50,9 +46,9 @@
           "type": "array",
           "items": {
             "type": "string",
-            "enum": ["N5", "N4", "N3", "N2", "Business", "Daily", "Travel", "Anime", "News"]
+            "enum": ["N5", "N4", "N3", "N2", "N1", "Business", "Daily", "Travel", "Anime", "News"]
           },
-          "description": "Optional facet tags for the vocabulary view's category chips. A word can carry both a JLPT level and topic tags, e.g. [\"N2\", \"Business\"]. The JLPT tag is also what the card's .jlpt-tag chip shows. If omitted, vocabulary.js falls back to the file's own `level` as the word's only tag."
+          "description": "Facet tags for the vocabulary view's chip row: at most one JLPT level, plus any number of topics, e.g. [\"N2\", \"Business\"]. The JLPT tag is also what the card's .jlpt-tag badge shows. There is no file-level fallback — a word with no JLPT tag is unleveled, which is a valid and expected state, since the catalogue includes Japanese the exam does not cover (slang, drama lines, words met in the wild). vocabulary.js files those words under its \"Outside JLPT\" chip and draws no level badge on the card."
         }
       }
     },
@@ -68,7 +64,6 @@
   },
   "examples": [
     {
-      "level": "N2",
       "updatedAt": "2026-08-02",
       "words": [
         {
@@ -77,10 +72,24 @@
           "kana": "みほん",
           "partOfSpeech": "noun",
           "meaning": "жишээ",
+          "tags": ["N2"],
           "example": {
             "jp": "これは見本です。",
             "reading": "これはみほんです。",
             "mn": "Энэ бол жишээ юм."
+          }
+        },
+        {
+          "id": "n2-001",
+          "kanji": "",
+          "kana": "ぶっちゃけ",
+          "partOfSpeech": "adverb",
+          "meaning": "үнэнийг хэлэхэд",
+          "tags": ["Daily"],
+          "example": {
+            "jp": "ぶっちゃけ、よく分からない。",
+            "reading": "ぶっちゃけ、よくわからない。",
+            "mn": "Үнэнийг хэлэхэд сайн ойлгохгүй байна."
           }
         }
       ]

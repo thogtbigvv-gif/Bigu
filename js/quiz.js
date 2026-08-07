@@ -143,8 +143,14 @@ const ADAPTERS = {
 };
 
 /* Lesson ids are l1-01, l2-14, … — tested first because "l" is a looser
-   match than the prefixes below it. Vocabulary spans every JLPT level
-   (n5-0001 … n1-…), not just the n3- the first N2-only dataset used. */
+   match than the prefixes below it. Vocabulary ids carry any level prefix
+   (n5-0001 … n1-…), so the pattern matches the whole ladder rather than
+   the one prefix the earliest word list happened to use.
+
+   The prefix in an id is history, not a level: an id is the key every
+   progress and review record in localStorage is stored under, so it never
+   changes once written, even when the entry's actual level says otherwise.
+   Read the entry's own level, never its id. */
 function deckKeyForItemId(id) {
   if (/^l\d+-/.test(id)) return 'lessons';
   if (/^n[1-5]-/.test(id)) return 'vocabulary';

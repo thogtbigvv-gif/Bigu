@@ -9,7 +9,8 @@
    and the full DOM for all of them built before a single one was on screen
    — including all 242 lesson word rows across 15 groups, 14 of which are
    collapsed. That was survivable at today's data size and would not have
-   stayed that way; the N5 set alone is four times the current lesson count.
+   stayed that way; the word list alone is several times the lesson count
+   and is the part of the catalogue that grows fastest.
    Now the Dashboard renders at boot (it's the default view) and everything
    else builds the first time the reader actually goes there.
    ========================================================================== */
