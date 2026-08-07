@@ -24,24 +24,32 @@
   gap: var(--space-md);
 }
 
-/* -- Progress --------------------------------------------------------------------------
-   A bar rather than "Card 3 of 10" alone: how far through a round you are
-   is the one thing worth knowing at a glance mid-question, and a filling
-   line says it without asking anyone to read.
-   ------------------------------------------------------------------------------------------ */
-.quiz__bar {
-  height: var(--space-2xs);
+/* -- Round progress -------------------------------------------------------------------
+   A hairline above the counter, filling as the round is worked through. A
+   rule, not a bar: it is the same "a line, not a spotlight" language the
+   header and footer dividers use, and it sits at the exact width of the
+   card below it so it reads as that card's own edge rather than as a gauge
+   bolted on above it.
+
+   Deliberately not a <progress>: the native element carries a UA appearance
+   that has to be undone in three engines to look like a hairline, and the
+   number is already announced in words by the counter beside it.
+   ------------------------------------------------------------------------------------ */
+.quiz__progress {
+  height: 2px;
+  border-radius: 999px;
   background-color: var(--color-stone);
-  border-radius: var(--radius-sm);
   overflow: hidden;
 }
 
-.quiz__bar-fill {
+.quiz__progress-bar {
+  display: block;
   height: 100%;
-  width: 0;
-  background-color: var(--color-moss);
-  border-radius: var(--radius-sm);
-  transition: width var(--transition-base);
+  border-radius: inherit;
+  background-color: var(--color-indigo);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition: transform var(--transition-base);
 }
 
 .quiz__head {
@@ -152,8 +160,9 @@
 }
 
 .quiz__option:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
+  box-shadow: var(--focus-halo);
 }
 
 /* The number is the keyboard shortcut made visible. Boxed so it reads as a

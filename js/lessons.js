@@ -5,26 +5,28 @@
    Sits alongside vocabulary/grammar/kanji as reference material, not part
    of the practice deck.
 
-   Each word has its own "Mark as learned" toggle, same shape and store as
-   vocabulary/grammar/kanji's mastery buttons (review.js over storage.js's
-   `progress` map, keyed by each word's `id`), so a lesson's progress
-   survives a reload. Each lesson group also has its own "Quiz" button: a
-   round scoped to that lesson's word list, shown in place of the list.
+   Each word has its own "Remember this" toggle, same shape and store as
+   vocabulary/grammar/kanji's (review.js over storage.js's `progress` map,
+   keyed by each word's `id`), so a lesson's progress survives a reload.
+   Each lesson group also has its own "Quiz" button: a round scoped to that
+   lesson's word list, shown in place of the list.
 
-   The quiz is js/quiz.js — the same panel, modes, and grading the Review
-   deck uses, rather than the separate implementation that used to live
-   here. It also grades into the shared schedule like every other grading
+   The quiz is js/quiz.js — the same panel, the same two study modes, and
+   the same grading the Review deck uses, rather than the separate
+   implementation that used to live here.
+
+   That quiz grades into the shared schedule like every other grading
    surface. It deliberately didn't, once — it was kept as a separate
-   quick-recall tool — but the result was that "known" meant two different
-   things depending on which screen you were on: passing a word in the quiz
-   left it unlearned while tapping the chip beside it marked it learned.
+   quick-recall tool — but the result was that "in memory" meant two
+   different things depending on which screen you were on: passing a word
+   in the quiz left it unheld while tapping the mark beside it held it.
    One progress model is worth more than the separation was.
    ========================================================================== */
 
 import { settings } from './storage.js';
-import { isLearned, setLearned, shuffled } from './review.js';
+import { isRemembered, setRemembered, shuffled } from './review.js';
 import { createQuiz, createModePicker } from './quiz.js';
-import { createContentLoader, loadIntoView, OFFLINE_HINT } from './content.js';
+import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/lessons.json';
 const VIEW_ID = 'lessons';
@@ -46,16 +48,17 @@ const loadLessons = createContentLoader(DATA_URL, 'lessons');
    lesson words join the review pool instead of being a dead end.
    -------------------------------------------------------------------------------------- */
 
-function countLearned(words) {
-  return words.filter((entry) => isLearned(entry.id)).length;
+function countRemembered(words) {
+  return words.filter((entry) => isRemembered(entry.id)).length;
 }
 
 /* -- Word rendering --------------------------------------------------------------------
    Furigana only where the word and reading actually differ (kanji terms);
    kana-only entries (アメリカ, ここ, いくら…) render as plain text, same
-   rule vocabulary.js uses for words with no kanji field. quiz.js's lessons
-   adapter follows the same rule for the quiz card front, so a word reads
-   identically in both places.
+   rule vocabulary.js uses for words with no kanji field. Shared by the
+   reference list (createWordRow). quiz.js's lessons adapter follows the
+   same rule for the quiz card front, so a word reads identically in both
+   places.
    -------------------------------------------------------------------------------------- */
 
 function createHeadword(entry) {
@@ -74,23 +77,50 @@ function createHeadword(entry) {
   return ruby;
 }
 
-/* Returns the button and its own sync(), so the row can be refreshed from
-   outside \u2014 the lesson quiz grades the same words this chip reflects, and
-   coming back from a round with the chips still showing the old state was
-   the visible half of the two-meanings-of-"known" problem. */
-function createProgressButton(entry, onChange) {
+/* -- The per-word control -----------------------------------------------------------
+   A lesson opens onto eighteen words, and every one of them used to carry a
+   full-width "Remember this" chip. Eighteen identical buttons, each wider
+   and heavier than the Japanese word above it, is a screen where the
+   loudest thing repeated eighteen times is the *action* and the quietest is
+   the vocabulary \u2014 exactly backwards for a page whose whole job is to let a
+   reader read a lesson's words.
+
+   Here it's a mark instead: an outlined circle that fills when the word is
+   held. Same state, same store, same aria-pressed semantics as the chip on
+   a vocabulary card \u2014 the label lives in .sr-only rather than on screen,
+   because on this screen the row's meaning is carried by the word and the
+   control only has to be reachable and legible at a glance. The full chip
+   stays everywhere it is one of two or three things on a card.
+
+   Returns its own sync() so the row can be refreshed from outside \u2014 the
+   lesson quiz grades the same words this reflects, and coming back from a
+   round with the marks showing the old state was the visible half of the
+   two-meanings-of-"known" problem.
+   ------------------------------------------------------------------------------------ */
+function createProgressMark(entry, onChange) {
   const button = document.createElement('button');
   button.type = 'button';
-  button.className = 'toggle-chip lesson-word__progress';
+  button.className = 'lesson-word__mark';
+
+  const icon = createIcon('lesson-word__mark-icon', [
+    ['circle', { cx: '8', cy: '8', r: '5.5' }],
+  ]);
+
+  const label = document.createElement('span');
+  label.className = 'sr-only';
+
+  button.append(icon, label);
 
   const sync = () => {
-    const learned = isLearned(entry.id);
-    button.setAttribute('aria-pressed', String(learned));
-    button.textContent = learned ? 'Learned \u2713' : 'Mark as learned';
+    const remembered = isRemembered(entry.id);
+    button.setAttribute('aria-pressed', String(remembered));
+    label.textContent = remembered
+      ? `${entry.word} is in memory \u2014 take it back out`
+      : `Keep ${entry.word} in memory`;
   };
 
   button.addEventListener('click', () => {
-    setLearned(entry.id, !isLearned(entry.id));
+    setRemembered(entry.id, !isRemembered(entry.id));
     sync();
     onChange();
   });
@@ -103,6 +133,11 @@ function createWordRow(entry, onProgressChange) {
   const item = document.createElement('li');
   item.className = 'lesson-word';
 
+  const { button, sync } = createProgressMark(entry, onProgressChange);
+
+  const body = document.createElement('div');
+  body.className = 'lesson-word__body';
+
   const head = document.createElement('div');
   head.className = 'lesson-word__head';
   head.append(createHeadword(entry));
@@ -111,8 +146,8 @@ function createWordRow(entry, onProgressChange) {
   meaning.className = 'lesson-word__meaning meta';
   meaning.textContent = entry.english;
 
-  const { button, sync } = createProgressButton(entry, onProgressChange);
-  item.append(head, meaning, button);
+  body.append(head, meaning);
+  item.append(button, body);
   return { item, sync };
 }
 
@@ -122,6 +157,13 @@ function createWordRow(entry, onProgressChange) {
    default so the view isn't a wall of 15 closed rows on first visit. The
    quiz trigger is a separate sibling button (not nested inside the
    disclosure button) so both stay independently clickable/focusable.
+
+   A group's word rows are built the first time it opens, not when the view
+   renders. Fifteen lessons of ~18 words each meant roughly 250 word rows
+   and their controls were constructed on arrival, of which fourteen
+   lessons' worth — around 93% — were inside collapsed regions the reader
+   might never open. The same argument app.js already makes for views ("a
+   view the reader never opens never builds its DOM"), one level down.
    -------------------------------------------------------------------------------------- */
 
 function createLessonGroup(lesson, index, onQuiz) {
@@ -139,7 +181,6 @@ function createLessonGroup(lesson, index, onQuiz) {
   button.type = 'button';
   button.id = headerId;
   button.className = 'lesson-group__header';
-  button.setAttribute('aria-expanded', String(expanded));
   button.setAttribute('aria-controls', bodyId);
 
   const title = document.createElement('span');
@@ -150,8 +191,8 @@ function createLessonGroup(lesson, index, onQuiz) {
   count.className = 'lesson-group__count meta';
 
   const updateCount = () => {
-    const learned = countLearned(lesson.words);
-    count.textContent = `${lesson.words.length} words \u00b7 ${learned} learned`;
+    const remembered = countRemembered(lesson.words);
+    count.textContent = `${lesson.words.length} words \u00b7 ${remembered} in memory`;
   };
   updateCount();
 
@@ -180,27 +221,42 @@ function createLessonGroup(lesson, index, onQuiz) {
   body.className = 'lesson-group__body';
   body.setAttribute('role', 'region');
   body.setAttribute('aria-labelledby', headerId);
-  body.hidden = !expanded;
 
   const list = document.createElement('ul');
   list.className = 'lesson-word-list';
-  const rows = lesson.words.map((entry) => createWordRow(entry, updateCount));
-  list.append(...rows.map((row) => row.item));
   body.append(list);
 
-  button.addEventListener('click', () => {
-    const next = button.getAttribute('aria-expanded') !== 'true';
+  let rows = null;
+
+  function buildRows() {
+    if (rows) return;
+    rows = lesson.words.map((entry) => createWordRow(entry, updateCount));
+    list.append(...rows.map((row) => row.item));
+  }
+
+  function setExpanded(next) {
+    if (next) buildRows();
     button.setAttribute('aria-expanded', String(next));
     body.hidden = !next;
+  }
+
+  button.addEventListener('click', () => {
+    setExpanded(button.getAttribute('aria-expanded') !== 'true');
   });
+
+  setExpanded(expanded);
 
   li.append(heading, body);
 
   return {
     element: li,
+    // Only what's on screen needs re-syncing; a group that has never been
+    // opened has no marks to correct, and will read the store when it does
+    // open. The count in the header always refreshes, because that is
+    // visible whether the group is open or not.
     refresh() {
       updateCount();
-      for (const row of rows) row.sync();
+      if (rows) for (const row of rows) row.sync();
     },
   };
 }
@@ -220,23 +276,18 @@ function createLessonGroup(lesson, index, onQuiz) {
 
 /* -- Rendering ------------------------------------------------------------------------- */
 
-function getContentContainer(view) {
-  let content = view.querySelector('.lessons-content');
-  if (!content) {
-    content = document.createElement('div');
-    content.className = 'lessons-content';
-    view.append(content);
-  }
-  return content;
-}
-
 function renderLessons(container, lessons) {
+  const wordCount = lessons.reduce((sum, lesson) => sum + lesson.words.length, 0);
+
   const intro = document.createElement('div');
   intro.className = 'lessons-intro';
 
   const count = document.createElement('p');
   count.className = 'lessons-meta meta';
-  count.textContent = `${lessons.length} lessons · ${lessons.reduce((n, l) => n + l.words.length, 0)} words`;
+  // The word total, not just the lesson count. "15 lessons" says nothing
+  // about the size of the commitment; the two numbers together are what a
+  // reader deciding whether to start actually wants.
+  count.textContent = `${lessons.length} lessons \u00b7 ${wordCount} words`;
 
   const list = document.createElement('ul');
   list.className = 'lessons-list';
@@ -298,7 +349,7 @@ async function initLessons() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  await loadIntoView(getContentContainer(view), {
+  await loadIntoView(getViewContainer(view, 'lessons-content'), {
     skeleton: 'rows',
     load: loadLessons,
     render: renderLessons,

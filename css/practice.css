@@ -1,17 +1,17 @@
 /* ==========================================================================
    practice.css
    The #practice (Review) view built by practice.js: the screen before a
-   round — deck picker, study-mode picker, what's waiting — and the log of
-   recent rounds beneath it. The quiz itself is the shared one in quiz.css.
+   round — deck picker, study-mode picker, what the schedule says is waiting
+   — and the log of recent rounds beneath it. The quiz itself is the shared
+   one in quiz.css.
 
    Narrower than the app's main container, like journal.css, so the whole
    view reads as a focused study surface rather than stretching across the
-   full page.
+   full page. The max-width matches .quiz's own, since the quiz renders
+   inside this wrapper and a narrower parent would make the same component
+   a different width here than in the lessons view.
    ========================================================================== */
 
-/* Matches .quiz's own max-width in quiz.css: the quiz panel renders inside
-   this wrapper, and a narrower parent would make the same component a
-   different width here than in the lessons view. */
 .practice {
   display: flex;
   flex-direction: column;
@@ -21,8 +21,7 @@
 
 /* -- Intro ---------------------------------------------------------------------------
    The screen before a round: which deck, how you want to study, and what
-   the schedule says is waiting. The quiz itself lives in quiz.css — this
-   file no longer carries a card, grade buttons, or a summary of its own.
+   the schedule says is waiting.
    ------------------------------------------------------------------------------------------ */
 .practice__intro {
   display: flex;

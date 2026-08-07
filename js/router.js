@@ -64,10 +64,28 @@ function updateDocumentTitle(viewId) {
   document.title = heading ? `${heading.textContent} — ${APP_NAME}` : APP_NAME;
 }
 
+/* Two things happen on every navigation, in this order.
+
+   Scroll first. Views are siblings in one document, so the scroll offset
+   survives the switch: leaving the vocabulary list 4,000px down and opening
+   Settings landed the reader below a two-card page, looking at the footer,
+   with no indication that anything had happened. `instant` rather than a
+   smooth scroll because this is a page change, not a jump within a page —
+   and reset.css's reduced-motion rule can't reach a scroll started from JS.
+
+   Focus second, on the new view's heading, so a keyboard or screen-reader
+   reader starts at the top of what they asked for. `preventScroll` keeps
+   that focus from undoing the scroll above; the heading is already at the
+   top of the page, and without it the browser would re-scroll to put the
+   heading flush against the viewport edge — underneath the sticky header.
+   (css/layout.css also gives headings a scroll-margin-top for the same
+   reason, for the anchor-link path this doesn't own.) */
 function focusView(view) {
+  window.scrollTo({ top: 0, behavior: 'instant' });
+
   const target = getHeading(view.id) || view;
   target.setAttribute('tabindex', '-1');
-  target.focus();
+  target.focus({ preventScroll: true });
 }
 
 function render({ moveFocus = false } = {}) {
@@ -105,12 +123,43 @@ function render({ moveFocus = false } = {}) {
 
   if (moveFocus && activeView) {
     focusView(activeView);
+    playEnter(activeView);
   }
 }
 
+/* A 160ms rise-and-fade on the incoming view. Switching views is the one
+   moment in this app where the entire screen is replaced at once, and
+   without a transition it reads as a flash rather than as an arrival. Kept
+   under the app's own motion ceiling and restarted the same way practice.js
+   restarts its card animation — class off, reflow, class on — so rapid
+   navigation doesn't leave a view stuck mid-animation. reset.css's
+   reduced-motion rule collapses it to nothing. */
+function playEnter(view) {
+  view.classList.remove('is-entering');
+  void view.offsetWidth;
+  view.classList.add('is-entering');
+  view.addEventListener('animationend', () => view.classList.remove('is-entering'), { once: true });
+}
+
 function initRouter() {
+  /* Every route here is a fragment, which means the browser's own anchor
+     handling fires before this module renders anything: loading #vocabulary
+     scrolls `#vocabulary` to the top of the viewport, underneath the sticky
+     header, so the view's heading was cut off above the fold on every
+     direct load and every bookmark. css/layout.css's scroll-margin softens
+     that; starting at the top of the page removes it. A hash here names a
+     view, not a position within one, so there is never a position to
+     preserve — including across a reload, which is what scrollRestoration
+     turns off. */
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+
   window.addEventListener('hashchange', () => render({ moveFocus: true }));
   render();
+
+  // Next frame, not this one: the view being routed to is `hidden` until
+  // render() above un-hides it, and the browser performs its own anchor
+  // scroll once that element finally has a box — which is after this tick.
+  requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 }
 
 export { initRouter, registerView };

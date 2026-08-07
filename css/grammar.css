@@ -88,7 +88,11 @@
 }
 
 /* Layout only — visual treatment now lives in the shared .toggle-chip
-   class in buttons.css. */
-.grammar-card__progress {
+   class in buttons.css. The chip and the bookmark share one row; see the
+   note on .vocab-card__controls for why they're paired but only one of them
+   carries a label. */
+/* Placement only — see the note on .vocab-card__controls. A grammar card is
+   a full-width row, so its controls sit at the start rather than stretching. */
+.grammar-card__controls {
   align-self: flex-start;
 }

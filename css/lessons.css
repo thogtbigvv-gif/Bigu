@@ -2,10 +2,10 @@
    lessons.css
    Styles for the #lessons view built by lessons.js: a stack of collapsible
    lesson groups, each opening onto a word list (headword, meaning, and a
-   mark-as-learned toggle per row). The per-lesson quiz that swaps in over
-   the list is the shared one in quiz.css. Card chrome, buttons, and the
-   progress toggle come from the global `.card`, `.button`, and
-   `.toggle-chip` treatments; only content layout lives here.
+   memory mark per row). The per-lesson quiz that swaps in over the list is
+   the shared one in quiz.css. Card chrome, buttons, and the progress toggle
+   come from the global `.card`, `.button`, and `.toggle-chip` treatments;
+   only content layout lives here.
    ========================================================================== */
 
 .lessons-meta {
@@ -60,7 +60,7 @@
    would clip an outward outline — so this one is drawn inside the header's own
    box (negative offset) rather than around it. */
 .lesson-group__header:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: -2px;
   box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
 }
@@ -111,10 +111,21 @@
   list-style: none;
 }
 
+/* The mark leads the row and the word follows it, so a column of words
+   reads down a single left edge and the state of each is a dot in the
+   margin — the shape of a checklist in a paper textbook rather than a
+   column of buttons. */
 .lesson-word {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2xs);
+}
+
+.lesson-word__body {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
+  min-width: 0;
 }
 
 .lesson-word__head {
@@ -127,17 +138,69 @@
   margin: 0;
 }
 
-/* Layout only — visual treatment (color, border, hover, pressed state)
-   lives in the shared .toggle-chip class in buttons.css. auto margin
-   pushes it to the bottom of the row when a neighboring word's meaning
-   wraps to two lines, so the buttons stay aligned across a row. */
-.lesson-word__progress {
-  align-self: flex-start;
-  margin-block-start: auto;
+/* -- The memory mark ------------------------------------------------------------------
+   An outlined ring that fills moss when the word is held — the same "on"
+   colour as the .toggle-chip it replaces here, at a fraction of the visual
+   weight. This is the only control in the app that repeats eighteen times
+   on one screen, which is exactly why it is the quietest one.
+
+   The box is a full 1.75rem (2.75rem on touch, below) even though the ring
+   inside it is 1rem: the target has to be comfortable, the mark does not
+   have to be large.
+   ------------------------------------------------------------------------------------ */
+.lesson-word__mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  /* Optical alignment with the first line of the headword beside it, which
+     sits on the display face at --text-base with loose Japanese leading. */
+  margin-block-start: 0.125rem;
+  border-radius: 50%;
+  color: var(--color-stone);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+.lesson-word__mark:hover {
+  color: var(--color-moss);
+}
+
+.lesson-word__mark:active {
+  transform: translateY(1px);
+}
+
+.lesson-word__mark:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.lesson-word__mark-icon {
+  width: 1rem;
+  height: 1rem;
+  fill: transparent;
+  transition: fill var(--transition-base), stroke var(--transition-base);
+}
+
+.lesson-word__mark[aria-pressed="true"] {
+  color: var(--color-moss);
+}
+
+.lesson-word__mark[aria-pressed="true"] .lesson-word__mark-icon {
+  fill: var(--color-moss);
 }
 
 /* The quiz that opens over this list is shared with the Review deck and
    lives in quiz.css — nothing about it is defined here. */
+
+/* The lesson count and the study-mode picker, above the list. */
+.lessons-intro {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  margin-block-end: var(--space-md);
+}
 
 /* -- Mobile spacing ---------------------------------------------------------------- */
 @media (max-width: 480px) {
@@ -152,5 +215,14 @@
   .lesson-word-list {
     grid-template-columns: 1fr;
     padding: var(--space-sm) var(--space-md) var(--space-md);
+  }
+
+  /* The 44px touch floor the rest of the app keeps below 768px. The ring
+     inside stays 1rem — only the reachable box grows. */
+  .lesson-word__mark {
+    width: 2.75rem;
+    height: 2.75rem;
+    margin-block-start: -0.5rem;
+    margin-inline-start: -0.5rem;
   }
 }

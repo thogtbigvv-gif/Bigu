@@ -143,10 +143,11 @@ const ADAPTERS = {
 };
 
 /* Lesson ids are l1-01, l2-14, … — tested first because "l" is a looser
-   match than the three-character prefixes below it. */
+   match than the prefixes below it. Vocabulary spans every JLPT level
+   (n5-0001 … n1-…), not just the n3- the first N2-only dataset used. */
 function deckKeyForItemId(id) {
   if (/^l\d+-/.test(id)) return 'lessons';
-  if (id.startsWith('n3-')) return 'vocabulary';
+  if (/^n[1-5]-/.test(id)) return 'vocabulary';
   if (id.startsWith('gr-')) return 'grammar';
   if (id.startsWith('kj-')) return 'kanji';
   return null;
@@ -202,15 +203,14 @@ function buildPanel() {
   panel.className = 'quiz';
   panel.hidden = true;
 
-  /* Progress */
+  /* Progress. aria-hidden because the counter beside it says the same thing
+     in words — announcing it again on every question is noise. */
   const bar = document.createElement('div');
-  bar.className = 'quiz__bar';
-  bar.setAttribute('role', 'progressbar');
-  bar.setAttribute('aria-valuemin', '0');
-  bar.setAttribute('aria-label', 'Round progress');
+  bar.className = 'quiz__progress';
+  bar.setAttribute('aria-hidden', 'true');
 
-  const barFill = document.createElement('div');
-  barFill.className = 'quiz__bar-fill';
+  const barFill = document.createElement('span');
+  barFill.className = 'quiz__progress-bar';
   bar.append(barFill);
 
   const head = document.createElement('div');
@@ -391,10 +391,8 @@ function createQuiz({
   function setProgress() {
     const total = state.queue.length;
     const done = state.index;
-    el.barFill.style.width = total === 0 ? '0%' : `${(done / total) * 100}%`;
-    el.bar.setAttribute('aria-valuemax', String(total));
-    el.bar.setAttribute('aria-valuenow', String(done));
-    el.count.textContent = `${Math.min(done + 1, total)} / ${total} · ${state.correct} correct`;
+    el.barFill.style.setProperty('--progress', total === 0 ? '0' : (done / total).toFixed(3));
+    el.count.textContent = `${Math.min(done + 1, total)} of ${total} · ${state.correct} correct`;
   }
 
   function currentItem() {
@@ -557,6 +555,7 @@ function createQuiz({
     const total = state.queue.length;
     onFinish({ total, correct: state.correct, missed: state.missed.slice(), mode: state.mode });
 
+    el.barFill.style.setProperty('--progress', '1');
     el.summaryScore.textContent = `${state.correct} / ${total}`;
     el.summaryScore.classList.toggle('is-perfect', total > 0 && state.missed.length === 0);
 

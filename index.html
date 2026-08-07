@@ -75,6 +75,7 @@
   <link rel="stylesheet" href="css/lessons.css" />
   <link rel="stylesheet" href="css/reading.css" />
   <link rel="stylesheet" href="css/settings.css" />
+  <link rel="stylesheet" href="css/memory.css" />
   <link rel="stylesheet" href="css/intro.css" />
 </head>
 <body>
@@ -139,6 +140,15 @@
 
           <li class="site-nav__item">
             <a class="site-nav__link" href="#practice" data-view="practice">Review</a>
+          </li>
+          <!-- Memory sits directly under Review because it is the other half
+               of the same loop: Review is the session, Memory is what the
+               session leaves behind and what it will ask for next. It is
+               also the one row a reader can open with nothing to do and
+               still get something from, which is what makes a daily habit
+               survivable on the days there's no time to study. -->
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#memory" data-view="memory">Memory</a>
           </li>
           <li class="site-nav__item">
             <a class="site-nav__link" href="#journal" data-view="journal">Journal</a>
@@ -296,6 +306,14 @@
              only the visible label changes to "Review". -->
         <section id="practice" class="view" hidden aria-labelledby="practice-heading">
           <h1 id="practice-heading">Review</h1>
+        </section>
+
+        <!-- Everything the reader has met, sorted by how much of it is left
+             rather than by whether it was ticked off. Built by js/memory.js;
+             the shelves, the week strip and the ink are all derived from the
+             same progress records the Review deck grades into. -->
+        <section id="memory" class="view" hidden aria-labelledby="memory-heading">
+          <h1 id="memory-heading">Memory</h1>
         </section>
 
         <section id="journal" class="view" hidden aria-labelledby="journal-heading">

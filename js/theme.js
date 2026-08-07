@@ -100,13 +100,14 @@ function bindToggleButton(button) {
   sync();
 }
 
+/* setTheme, toggleTheme and currentTheme drive bindToggleButton from
+   inside this module; the rest of the app talks to the *preference*
+   (setThemePreference / themePreference), which is the setting a reader
+   actually chose rather than whatever is applied right now. */
 export {
   initTheme,
-  setTheme,
   setThemePreference,
   themePreference,
-  toggleTheme,
-  currentTheme,
   bindToggleButton,
   THEME_CHANGE_EVENT,
 };

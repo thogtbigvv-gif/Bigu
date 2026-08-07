@@ -28,15 +28,14 @@
   cursor: not-allowed;
 }
 
-/* Two layers, and the order matters. The soft halo alone measures ~1.5:1
-   against the page — well under the 3:1 WCAG 2.2 SC 2.4.11 asks of a focus
-   indicator — so the solid outline is what actually carries the contrast and
-   the halo is decoration on top of it. Never replace the outline with only
-   the box-shadow; that is the state this rule was fixing. */
+/* --focus-ring and --focus-halo, in that pairing, wherever the app shows
+   focus — see the note on the two tokens in variables.css for why the
+   outline is load-bearing and the halo is not. Only the offset varies per
+   control. */
 .button:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 /* Pressed feedback, independent of :hover so touch input (mobile-first)
@@ -116,9 +115,9 @@
 /* Aligned to the same outline + halo pair as .button so the two button
    treatments that share the header row read as one consistent family. */
 .theme-toggle:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 .theme-toggle__icon {
@@ -144,7 +143,7 @@
 }
 
 /* -- Toggle chip -----------------------------------------------------------------
-   Shared "mark as known/mastered" control used by vocabulary, grammar, and
+   Shared "Remember this / In memory" control used by vocabulary, grammar, and
    kanji cards — the same quiet outline that fills solid on press, now
    defined once instead of three near-identical copies. Also brings the
    same focus ring and press feedback every other interactive element in
@@ -177,14 +176,14 @@
 }
 
 .toggle-chip:focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: var(--focus-ring);
   outline-offset: 2px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: var(--focus-halo);
 }
 
 /* The fill sweeps in from the left edge over 180ms rather than snapping.
-   Marking a word learned is the one moment the app says "you did it", and
-   it's worth a beat — a background-size transition on a gradient does it
+   Taking a word into memory is the one moment the app marks with a state
+   change on the spot, and it's worth a beat — a background-size transition on a gradient does it
    without a pseudo-element or a second animated property. reset.css's
    prefers-reduced-motion rule collapses it to an instant swap. */
 .toggle-chip[aria-pressed="true"] {
@@ -207,6 +206,86 @@
   background-size: 0% 100%;
 }
 
+/* -- Chip count ---------------------------------------------------------------------
+   How many items sit behind a filter chip, shown on the chip itself. A
+   facet whose size you can only learn by pressing it is a facet you press
+   to find out and then press again to undo; the number turns two taps into
+   none. Mono and a step down so it reads as data attached to the label
+   rather than as part of it, and it inherits the chip's colour in both
+   states so the pressed fill doesn't need a second rule.
+   ------------------------------------------------------------------------------------ */
+.toggle-chip__count {
+  margin-inline-start: var(--space-2xs);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* -- Study controls row ---------------------------------------------------------------
+   The "Remember this" chip and the 栞 bookmark side by side at the foot of
+   every study card — vocabulary, grammar, kanji. Built by
+   js/studyControls.js; the four views used to each define this row under
+   their own class name with the same two declarations.
+   ------------------------------------------------------------------------------------ */
+.study-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+/* -- Keep (favorite) --------------------------------------------------------------------
+   A 栞 (bookmark) beside the progress chip on every study card, and in the
+   foot of every slip on #memory. Icon-only and unfilled at rest so it never
+   competes with the labelled chip next to it; filled in hanko red when set,
+   which is the same "this one is marked" language the app uses everywhere
+   else it spends that colour.
+
+   No background and no border in either state — a kept word should feel
+   annotated, not tagged.
+   ------------------------------------------------------------------------------------------- */
+.favorite-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-md);
+  color: var(--color-ash);
+  transition:
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.favorite-button:hover {
+  color: var(--color-bengara);
+}
+
+.favorite-button:active {
+  transform: translateY(1px);
+}
+
+.favorite-button:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.favorite-button__icon {
+  width: 1rem;
+  height: 1rem;
+  transition: fill var(--transition-base);
+  fill: transparent;
+}
+
+.favorite-button[aria-pressed="true"] {
+  color: var(--color-bengara);
+}
+
+.favorite-button[aria-pressed="true"] .favorite-button__icon {
+  fill: color-mix(in srgb, var(--color-bengara) 22%, transparent);
+}
+
 /* -- Touch targets --------------------------------------------------------------------
    At and below 768px every button in the study loop gets a 44px minimum
    box. See the matching block in navigation.css for the reasoning; the
@@ -222,7 +301,8 @@
     min-height: 2.75rem;
   }
 
-  .theme-toggle {
+  .theme-toggle,
+  .favorite-button {
     width: 2.75rem;
     height: 2.75rem;
   }

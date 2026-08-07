@@ -2,12 +2,20 @@
    grammar.js
    Loads data/grammar.json and renders it as a list inside the #grammar
    view. Follows vocabulary.js's shape: same content.js loader and load/
-   skeleton/error cycle, same review.js mastery toggle, same createElement/
+   skeleton/error cycle, same review.js memory toggle, same createElement/
    append DOM building — only the card fields differ.
    ========================================================================== */
 
-import { isLearned as isMastered, setLearned as setMastered } from './review.js';
-import { createContentLoader, createSearchField, loadIntoView, OFFLINE_HINT } from './content.js';
+import { createStudyControls } from './studyControls.js';
+import {
+  createContentLoader,
+  createSearchField,
+  debounce,
+  formatCount,
+  getViewContainer,
+  loadIntoView,
+  OFFLINE_HINT,
+} from './content.js';
 
 const DATA_URL = 'data/grammar.json';
 const VIEW_ID = 'grammar';
@@ -58,26 +66,6 @@ function createExample(example) {
   return wrap;
 }
 
-function createMasteryButton(point) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'toggle-chip grammar-card__progress';
-
-  const sync = () => {
-    const mastered = isMastered(point.id);
-    button.setAttribute('aria-pressed', String(mastered));
-    button.textContent = mastered ? 'Mastered ✓' : 'Mark as mastered';
-  };
-
-  button.addEventListener('click', () => {
-    setMastered(point.id, !isMastered(point.id));
-    sync();
-  });
-
-  sync();
-  return button;
-}
-
 function createCard(point, level) {
   const item = document.createElement('li');
   item.className = 'card grammar-card';
@@ -109,7 +97,12 @@ function createCard(point, level) {
     item.append(notes);
   }
 
-  item.append(createMasteryButton(point));
+  /* Same two controls, same two questions, same words as every other study
+     card in the app — "Mastered ✓" used to be a third vocabulary for what
+     is one state, and a pattern you have "mastered" is an even bolder claim
+     than a word you have "learned". Built by studyControls.js now, so the
+     four views can't drift back apart. */
+  item.append(createStudyControls(point.id, { className: 'grammar-card__controls' }).row);
   return item;
 }
 
@@ -119,15 +112,37 @@ function createCard(point, level) {
    -------------------------------------------------------------------------------------- */
 
 /* JLPT level facet shown as a chip row above the list, same pattern as
-   vocabulary.js's category chips (just levels here, no topic tags). A
-   point's tags come from an optional `tags` array on the point itself;
-   points that don't have one yet (all of today's data) fall back to the
-   dataset's own `level`, so nothing needs to change in grammar.json for
-   the existing N2 points to keep showing up under their chip. */
-const CATEGORY_TAGS = ['N5', 'N4', 'N3', 'N2'];
+   vocabulary.js's chips. A point's tags come from an optional `tags` array
+   on the point itself; points that don't have one yet (all of today's data)
+   fall back to the dataset's own `level`, so nothing needs to change in
+   grammar.json for the existing N2 points to keep showing up.
+
+   Which chips appear is read out of the data, not written here. This row
+   used to be a fixed N5/N4/N3/N2 — and every point in the file is N2, so
+   three of the four chips existed only to empty the list. Same reasoning as
+   the facet row in vocabulary.js: a control that can only ever produce "no
+   results" isn't a filter, it's a trap. A single remaining level is a label
+   rather than a choice, so the row disappears entirely in that case. */
+const LEVEL_ORDER = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
 function getPointTags(point, data) {
   return point.tags && point.tags.length ? point.tags : [data.level];
+}
+
+/* A point's own JLPT level, not the file's — the same correction
+   vocabulary.js and kanji.js already make. Today's file is single-level so
+   nothing changes on screen, but the moment an N3 point is added the card
+   would have claimed N2 and the reader would have had no way to tell. */
+function getPointLevel(point, data) {
+  const tags = getPointTags(point, data);
+  return LEVEL_ORDER.find((level) => tags.includes(level)) ?? data.level;
+}
+
+function getLevelLabel(data) {
+  const present = LEVEL_ORDER.filter((level) =>
+    data.points.some((point) => getPointLevel(point, data) === level));
+  if (present.length === 0) return data.level;
+  return present.length === 1 ? present[0] : `${present[0]}–${present[present.length - 1]}`;
 }
 
 function matchesQuery(point, query) {
@@ -136,19 +151,43 @@ function matchesQuery(point, query) {
   return haystack.includes(query);
 }
 
-/* One chip per JLPT level, multi-select. Reuses the same .toggle-chip
-   look and pressed/unpressed language as the per-card mastery button. */
-function createCategoryFilters() {
+function collectFacets(rows) {
+  const counts = new Map();
+  for (const row of rows) {
+    for (const tag of row.tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+
+  const known = LEVEL_ORDER.filter((tag) => counts.has(tag));
+  const extra = [...counts.keys()].filter((tag) => !LEVEL_ORDER.includes(tag)).sort();
+  const tags = [...known, ...extra];
+  return tags.length > 1 ? tags.map((tag) => ({ tag, count: counts.get(tag) })) : [];
+}
+
+/* One chip per level present, multi-select, each carrying its own count.
+   Reuses the same .toggle-chip look and pressed/unpressed language as the
+   per-card memory button. */
+function createCategoryFilters(facets) {
   const wrap = document.createElement('div');
   wrap.className = 'grammar-filters__categories';
+  wrap.hidden = facets.length === 0;
+  wrap.setAttribute('role', 'group');
+  wrap.setAttribute('aria-label', 'Filter by level');
 
-  const buttons = CATEGORY_TAGS.map((tag) => {
+  const buttons = facets.map(({ tag, count }) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'toggle-chip';
     button.dataset.tag = tag;
     button.setAttribute('aria-pressed', 'false');
-    button.textContent = tag;
+
+    const label = document.createElement('span');
+    label.textContent = tag;
+
+    const badge = document.createElement('span');
+    badge.className = 'toggle-chip__count';
+    badge.textContent = formatCount(count);
+
+    button.append(label, badge);
     wrap.append(button);
     return button;
   });
@@ -158,39 +197,32 @@ function createCategoryFilters() {
 
 /* -- Rendering ------------------------------------------------------------------------- */
 
-function getContentContainer(view) {
-  let content = view.querySelector('.grammar-content');
-  if (!content) {
-    content = document.createElement('div');
-    content.className = 'grammar-content';
-    view.append(content);
-  }
-  return content;
-}
-
 function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField({
     id: 'grammar-search',
     label: 'Search grammar',
-    placeholder: 'Search by pattern or meaning',
+    placeholder: 'Pattern or meaning',
   });
-  const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters();
 
   const summary = document.createElement('p');
   summary.className = 'grammar-meta meta';
+  summary.setAttribute('aria-live', 'polite');
+  const levelLabel = getLevelLabel(data);
 
   const list = document.createElement('ul');
   list.className = 'grammar-list';
   const rows = data.points.map((point) => ({
     point,
     tags: getPointTags(point, data),
-    item: createCard(point, data.level),
+    item: createCard(point, getPointLevel(point, data)),
   }));
   list.append(...rows.map((row) => row.item));
 
+  const { wrap: categoryWrap, buttons: categoryButtons } = createCategoryFilters(collectFacets(rows));
+
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'No grammar points match your search.';
+  empty.textContent = 'No patterns match that. Try part of the pattern, or its meaning.';
   empty.hidden = true;
 
   const selectedTags = new Set();
@@ -204,13 +236,14 @@ function renderList(container, data) {
       row.item.hidden = !matches;
       if (matches) visible += 1;
     }
+    const total = formatCount(data.points.length);
     summary.textContent = query || selectedTags.size > 0
-      ? `${data.level} · ${visible} / ${data.points.length} grammar points`
-      : `${data.level} · ${data.points.length} grammar points`;
+      ? `${levelLabel} · ${formatCount(visible)} of ${total} patterns`
+      : `${levelLabel} · ${total} patterns`;
     empty.hidden = visible > 0;
   }
 
-  searchInput.addEventListener('input', applyFilter);
+  searchInput.addEventListener('input', debounce(applyFilter));
   categoryButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const tag = button.dataset.tag;
@@ -232,7 +265,7 @@ async function initGrammar() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  await loadIntoView(getContentContainer(view), {
+  await loadIntoView(getViewContainer(view, 'grammar-content'), {
     skeleton: 'list',
     load: loadGrammar,
     render: renderList,

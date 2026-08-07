@@ -48,8 +48,11 @@ That philosophy influences every design and development decision.
 - Word meanings
 - Readings
 - Example sentences
-- Search and filtering
-- Favorites
+- Search, and level/topic filters that are read out of the data — a chip only
+  appears when there are words behind it, and carries its own count
+- Rendered a page at a time. Eight hundred cards at once is not a list, it's a
+  wall; "Show more" is there for the days you want to browse
+- Keep a word (bookmark) — kept words get their own shelf in Memory
 
 ### 📝 Grammar
 
@@ -83,14 +86,47 @@ That philosophy influences every design and development decision.
   you haven't started
 - One deck per content type, plus "Due today" across all of them
 - Self-graded: reveal, then "I knew it" or "Still learning"
+- Round length is yours — 5, 10 or 20 cards, in Settings
+- Keyboard throughout: Space reveals, 1 and 2 grade, Escape ends the round
+
+### 🖌 Memory
+
+There is no "learned" in Bigu. A word is never finished — it is written in
+ink, and ink fades.
+
+- **Memory strength** — a continuous estimate of how much of each word you
+  still hold, halving over that word's own review interval. Drawn as a brush
+  stroke that shortens and pales as the memory does
+- **Shelves instead of a list** — Waiting for you, Fading, Newly met, Hard to
+  hold, Kept, Deep ink. Each one is a state of memory, not a category of
+  content, and each is capped so no shelf becomes a wall
+- **Review in place** — turn a slip over, answer, watch the ink darken. No
+  session to start or finish
+- **This week** — seven marks, one per day, and your review streak
+- Every shelf is derived from the schedule except Kept, which is yours
+- Shelves show a handful at a time and say how full they are; "Show more"
+  opens the rest when you want it
 
 ### 📊 Dashboard
 
 - What's due today, and one button to start it
-- Study streak — counts reviewing, marking a word learned, or writing a
+- Study streak — counts reviewing, taking a word into memory, or writing a
   journal entry, not just one of the three
-- Learned/total progress per deck
+- How much of what you hold has gone faint, and a door into Memory
 - Your last review session at a glance
+- On a first visit, none of the above: four cards reading zero are no way to
+  meet an app, so a first visit gets one card explaining the loop instead. It
+  leaves for good as soon as you've studied anything
+- An optional daily goal, off by default. A target helps some people and
+  quietly punishes others, so Bigu doesn't assume one — and when it's on, it
+  is one line of plain text, never a badge
+
+### ⚙️ Settings
+
+- Appearance: system, light, or dark
+- Studying: cards per round, and the daily goal
+- Backup: download everything as JSON, or restore from a file
+- Start over: erase everything in this browser, behind two confirmations
 
 ---
 
@@ -123,7 +159,27 @@ to build and no dependencies to install.
 
 Your progress lives in this browser's `localStorage` and never leaves the
 device. **Settings → Backup** downloads all of it as a JSON file, and restores
-from one.
+from one. If the browser won't allow storage at all — private browsing, or
+site data blocked — the app says so on the Dashboard and in Settings rather
+than silently forgetting everything at the end of the session.
+
+### Deployment
+
+`main` publishes to <https://thogtbigvv-gif.github.io/Bigu/> through
+`.github/workflows/deploy.yml` — the repository is uploaded as-is and handed
+to GitHub Pages. There is no build step, because there is nothing to build.
+
+This depends on one repository setting: **Settings → Pages → Source** must be
+**GitHub Actions**. If it is set to "Deploy from a branch" instead, GitHub runs
+its own Jekyll workflow and this one fails, because two workflows cannot both
+own the same Pages site.
+
+The deploy step waits up to 30 minutes rather than the action's default 10.
+That is not because deploying is slow — it normally takes seconds — but
+because GitHub's Pages queue occasionally stalls, and a queued deployment
+should mean a slow release, not a failed one. A stalled run can also be
+retried from the Actions tab (`Deploy to GitHub Pages` → `Run workflow`)
+without pushing an empty commit.
 
 ### Regenerating the app icons
 

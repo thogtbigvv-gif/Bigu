@@ -8,7 +8,7 @@
   "properties": {
     "level": {
       "type": "string",
-      "description": "JLPT level this file covers, e.g. \"N2\"."
+      "description": "Fallback JLPT level for words that don't carry a JLPT tag of their own. The file spans several levels now, so this is a default rather than a description of the whole set."
     },
     "updatedAt": {
       "type": "string",
@@ -52,7 +52,7 @@
             "type": "string",
             "enum": ["N5", "N4", "N3", "N2", "Business", "Daily", "Travel", "Anime", "News"]
           },
-          "description": "Optional facet tags for the vocabulary view's category chips. A word can carry both a JLPT level and topic tags, e.g. [\"N2\", \"Business\"]. If omitted, vocabulary.js falls back to the file's own `level` as the word's only tag."
+          "description": "Optional facet tags for the vocabulary view's category chips. A word can carry both a JLPT level and topic tags, e.g. [\"N2\", \"Business\"]. The JLPT tag is also what the card's .jlpt-tag chip shows. If omitted, vocabulary.js falls back to the file's own `level` as the word's only tag."
         }
       }
     },

@@ -10,30 +10,34 @@
    half of a second near-identical implementation in lessons.js.
 
    Session contents come from review.js: due items first, oldest due date
-   first, then items not yet started. That's the whole behavioural
-   difference from the shuffle this used to do — what you see is what the
-   schedule says is ready, not a random handful of whatever isn't ticked
-   off yet.
+   first, then items not yet met. That's the whole behavioural difference
+   from the shuffle this used to do — what you see is what the schedule says
+   is ready, not a random handful of whatever isn't ticked off yet.
+
+   Each finished round is logged to the practice store, tagged with its
+   deck, for dashboard.js. A small history block reads that same store back
+   to list the most recent rounds, refreshed after every one.
    ========================================================================== */
 
 import { practice, settings } from './storage.js';
+import { formatCount, getViewContainer } from './content.js';
 import { buildSession, countDue, getRecord } from './review.js';
 import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
+import { sessionSize } from './preferences.js';
 import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
 import { loadLessons } from './lessons.js';
 
 const VIEW_ID = 'practice';
-const SESSION_SIZE = 10;
 const DECK_SETTING_KEY = 'practiceMode';
 const QUIZ_MODE_SETTING_KEY = 'quizMode';
 const HISTORY_LIMIT = 5;
 
 /* "Due today" leads: it's the deck that answers the question the Dashboard
    just asked, and the one a reader should be in on most days. The four
-   content decks are the same four ADAPTERS in quiz.js; "mistakes" is a
-   live pool rather than a deck of its own. */
+   content decks are the same four ADAPTERS in quiz.js; "Due today" and
+   "Tricky ones" are live pools rather than decks of their own. */
 const DECK_KEYS = ['due', 'lessons', 'vocabulary', 'grammar', 'kanji', 'mistakes'];
 
 const DECK_LABELS = {
@@ -52,7 +56,7 @@ const DECK_LABELS = {
    screen — and the intro comes back when it ends.
    ---------------------------------------------------------------------------------------------- */
 
-function buildView(view) {
+function buildView(container) {
   const wrapper = document.createElement('div');
   wrapper.className = 'practice';
 
@@ -83,13 +87,16 @@ function buildView(view) {
 
   const status = document.createElement('p');
   status.className = 'practice__status';
+  status.setAttribute('aria-live', 'polite');
 
   const startButton = document.createElement('button');
   startButton.type = 'button';
   startButton.className = 'button button--primary practice__start';
   startButton.textContent = 'Start review';
 
-  intro.append(deckLabel, deckGroup, status);
+  // status and the start button are appended by the controller, after the
+  // mode picker, so the intro reads deck -> mode -> what you'll get -> go.
+  intro.append(deckLabel, deckGroup);
 
   /* History */
   const history = document.createElement('div');
@@ -109,7 +116,7 @@ function buildView(view) {
   history.append(historyHeading, historyList, historyEmpty);
 
   wrapper.append(intro, history);
-  view.append(wrapper);
+  container.replaceChildren(wrapper);
 
   return {
     wrapper, intro, deckGroup, deckButtons, status, startButton,
@@ -140,11 +147,13 @@ function initController(elements, decks) {
       renderHistory();
       updateStatus();
     },
-    onNewRound: () => buildSession(decks[state.deck].items, SESSION_SIZE),
+    // Read per round, not once at boot: changing the round length in
+    // Settings should apply to the next round, not the next page load.
+    onNewRound: () => buildSession(decks[state.deck].items, sessionSize()),
     onExit: showIntro,
   });
 
-  elements.intro.append(modePicker.wrap, elements.startButton);
+  elements.intro.append(modePicker.wrap, elements.status, elements.startButton);
   elements.wrapper.insertBefore(quiz.element, elements.history);
 
   /* -- Intro ---------------------------------------------------------------------------- */
@@ -164,7 +173,7 @@ function initController(elements, decks) {
 
     if (items.length === 0) {
       elements.status.textContent = state.deck === 'mistakes'
-        ? 'Nothing tricky right now — nothing you’ve seen is stuck at the bottom of the ladder.'
+        ? 'Nothing tricky right now — nothing you’ve met is stuck at the bottom of the ladder.'
         : `No ${DECK_LABELS[state.deck].toLowerCase()} available to review yet.`;
       elements.startButton.hidden = true;
       return;
@@ -172,24 +181,29 @@ function initController(elements, decks) {
 
     elements.startButton.hidden = false;
     const { due, new: fresh } = countDue(items);
+    const size = sessionSize();
 
     if (state.deck === 'mistakes') {
       elements.status.textContent =
-        `${items.length} item${items.length === 1 ? '' : 's'} you’ve been getting wrong, from every deck. A round covers up to ${SESSION_SIZE}.`;
+        `${formatCount(items.length)} item${items.length === 1 ? '' : 's'} you’ve been getting wrong, from every deck. A round covers up to ${size}.`;
       return;
     }
 
     if (due === 0 && fresh === 0) {
       elements.status.textContent =
-        `Nothing due — everything here is scheduled ahead. A round now reviews whatever comes back soonest.`;
+        'Nothing due — everything here is scheduled ahead. A round now reviews whatever comes back soonest.';
       return;
     }
 
+    /* Due first, and said in that order. The catalogue holds well over a
+       thousand items a reader has never met, and a four-figure number
+       attached to the word "not" is a debt notice, not a status line — so
+       what's due leads, and "not started" only appears alongside it. */
     const parts = [];
-    if (due > 0) parts.push(`${due} due`);
-    if (fresh > 0) parts.push(`${fresh} not started`);
+    if (due > 0) parts.push(`${formatCount(due)} due`);
+    if (fresh > 0) parts.push(`${formatCount(fresh)} not started`);
     elements.status.textContent =
-      `${parts.join(' · ')}. A round covers up to ${SESSION_SIZE}, due items first.`;
+      `${parts.join(' · ')}. A round covers up to ${size}, due items first.`;
   }
 
   function selectDeck(key) {
@@ -209,7 +223,7 @@ function initController(elements, decks) {
 
   function startSession() {
     const deck = decks[state.deck];
-    const queue = buildSession(deck.items, SESSION_SIZE);
+    const queue = buildSession(deck.items, sessionSize());
     if (queue.length === 0) {
       updateStatus();
       return;
@@ -232,8 +246,16 @@ function initController(elements, decks) {
     });
   }
 
+  /* Sorted by when they happened, not by where they sit in the array. The
+     store appends, so those agreed — right up until a restored backup or a
+     hand-merged file arrived in a different order, at which point a list
+     headed "Recent sessions" would quietly show the oldest five. */
   function renderHistory() {
-    const recent = practice.getAll().slice(-HISTORY_LIMIT).reverse();
+    const recent = practice
+      .getAll()
+      .slice()
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, HISTORY_LIMIT);
     elements.historyList.replaceChildren();
 
     elements.historyEmpty.hidden = recent.length > 0;
@@ -289,7 +311,7 @@ async function initPractice() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const elements = buildView(view);
+  const elements = buildView(getViewContainer(view, 'practice-content'));
 
   try {
     const [vocabData, grammarData, kanjiData, lessonData] = await Promise.all([
