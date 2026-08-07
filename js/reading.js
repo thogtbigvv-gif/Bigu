@@ -18,12 +18,33 @@
    an audio shadowing recorder.
    ========================================================================== */
 
-import { createContentLoader, loadIntoView, OFFLINE_HINT } from './content.js';
+import {
+  collectFacets,
+  createContentLoader,
+  createFacetChips,
+  describeLevelSpan,
+  levelBucketOf,
+  loadIntoView,
+  JLPT_LEVELS,
+  NO_LEVEL,
+  OFFLINE_HINT,
+} from './content.js';
 
 const DATA_URL = 'data/reading.json';
 const VIEW_ID = 'reading';
 
 const loadReading = createContentLoader(DATA_URL, 'reading');
+
+/* Each passage carries its own `level`, optional — reading.json used to
+   state one level for the whole file, which stopped being true the moment
+   a second one was wanted and gave the view no way to say so. Absent means
+   unleveled, which is a real answer for a passage lifted out of something
+   nobody wrote an exam about. */
+const LEVEL_ORDER = [...JLPT_LEVELS, NO_LEVEL];
+
+function getPassageLevel(passage) {
+  return passage.level ?? null;
+}
 
 const STAGES = [
   { id: 'article', label: 'Article' },
@@ -113,11 +134,14 @@ function createPassageCard(passage, level, onOpen) {
   title.lang = 'ja';
   title.textContent = passage.title;
 
-  const tag = document.createElement('span');
-  tag.className = 'jlpt-tag';
-  tag.textContent = level;
+  head.append(title);
 
-  head.append(title, tag);
+  if (level) {
+    const tag = document.createElement('span');
+    tag.className = 'jlpt-tag';
+    tag.textContent = level;
+    head.append(tag);
+  }
 
   const titleMn = document.createElement('p');
   titleMn.className = 'reading-card__title-mn meta';
@@ -219,7 +243,8 @@ function createStageController(elements, onExit) {
     currentPassage = passage;
     currentLevel = level;
     elements.title.textContent = passage.title;
-    elements.tag.textContent = currentLevel;
+    elements.tag.textContent = currentLevel ?? '';
+    elements.tag.hidden = !currentLevel;
     elements.wrap.hidden = false;
     selectStage(STAGES[0].id);
   }
@@ -244,31 +269,68 @@ function getContentContainer(view) {
 }
 
 function renderList(container, data) {
+  const rows = data.passages.map((passage) => ({
+    passage,
+    level: getPassageLevel(passage),
+    bucket: levelBucketOf(getPassageLevel(passage)),
+  }));
+
+  const levelLabel = describeLevelSpan(rows.map((row) => row.bucket));
+  const count = `${data.passages.length} passages`;
+
   const summary = document.createElement('p');
   summary.className = 'reading-meta meta';
-  summary.textContent = `${data.level} · ${data.passages.length} passages`;
+  summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
 
   const list = document.createElement('ul');
   list.className = 'reading-list';
 
+  /* The same data-driven chip row the other three views have. Two passages
+     at one level means no row today — a single facet is a label, not a
+     choice — and the row appears on its own the day a second level or an
+     unleveled passage is added. */
+  const { wrap: levelWrap, buttons: levelButtons } = createFacetChips(
+    collectFacets(rows.map((row) => [row.bucket]), LEVEL_ORDER),
+    { className: 'reading-filters__levels', ariaLabel: 'Filter by level' },
+  );
+
   const stageElements = buildStageFlow();
   const stageController = createStageController(stageElements, () => {
     stageController.close();
+    levelWrap.hidden = levelButtons.length === 0;
     summary.hidden = false;
     list.hidden = false;
   });
 
-  list.append(
-    ...data.passages.map((passage) =>
-      createPassageCard(passage, data.level, (chosenPassage) => {
-        summary.hidden = true;
-        list.hidden = true;
-        stageController.open(chosenPassage, data.level);
-      }),
-    ),
+  const cards = rows.map((row) =>
+    createPassageCard(row.passage, row.level, (chosenPassage) => {
+      levelWrap.hidden = true;
+      summary.hidden = true;
+      list.hidden = true;
+      stageController.open(chosenPassage, row.level);
+    }),
   );
 
-  container.replaceChildren(summary, list, stageElements.wrap);
+  function applyFilter() {
+    const selected = new Set(
+      levelButtons.filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.tag),
+    );
+    rows.forEach((row, index) => {
+      cards[index].hidden = selected.size > 0 && !selected.has(row.bucket);
+    });
+  }
+
+  levelButtons.forEach((button) => {
+    button.addEventListener('click', () => {
+      button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+      applyFilter();
+    });
+  });
+
+  list.append(...cards);
+  applyFilter();
+
+  container.replaceChildren(levelWrap, summary, list, stageElements.wrap);
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */

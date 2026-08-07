@@ -1,7 +1,7 @@
 {
-  "name": "Bigu — JLPT N2 Study",
+  "name": "Bigu — a place to learn Japanese",
   "short_name": "Bigu",
-  "description": "A calm, minimal companion for JLPT N2 study.",
+  "description": "A calm, personal Japanese environment: vocabulary, kanji, grammar, reading, review and a journal, from the foundation of the language upward. Built to be lived in daily, not aimed at one exam date.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

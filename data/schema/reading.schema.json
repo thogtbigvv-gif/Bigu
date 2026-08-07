@@ -4,12 +4,8 @@
   "title": "Bigu reading content",
   "description": "Shape of a data/reading.json file, as loaded by reading.js.",
   "type": "object",
-  "required": ["level", "updatedAt", "passages"],
+  "required": ["updatedAt", "passages"],
   "properties": {
-    "level": {
-      "type": "string",
-      "description": "JLPT level this file covers, e.g. \"N2\"."
-    },
     "updatedAt": {
       "type": "string",
       "format": "date",
@@ -28,6 +24,11 @@
         "id": {
           "type": "string",
           "description": "Unique id, e.g. \"read-001\"."
+        },
+        "level": {
+          "type": "string",
+          "enum": ["N5", "N4", "N3", "N2", "N1"],
+          "description": "This passage's own JLPT level, shown as its .jlpt-tag badge. Optional, and there is no file-level fallback — a passage without one is unleveled, which reading.js files under its \"Outside JLPT\" chip and renders with no badge."
         },
         "title": {
           "type": "string",
@@ -56,11 +57,11 @@
   },
   "examples": [
     {
-      "level": "N2",
       "updatedAt": "2026-08-02",
       "passages": [
         {
           "id": "read-000",
+          "level": "N2",
           "title": "今日の天気",
           "titleMn": "Өнөөдрийн цаг агаар",
           "sentences": [

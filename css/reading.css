@@ -10,6 +10,15 @@
 
 /* -- Passage list ---------------------------------------------------------------- */
 
+/* Level chips above the list, same row treatment as vocabulary, grammar and
+   kanji. Hidden by reading.js when the data offers fewer than two facets. */
+.reading-filters__levels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-end: var(--space-md);
+}
+
 .reading-meta {
   margin: 0 0 var(--space-md) 0;
 }

@@ -1,9 +1,9 @@
 {
-  "level": "N2",
   "updatedAt": "2026-08-02",
   "passages": [
     {
       "id": "read-001",
+      "level": "N2",
       "title": "日本の四季",
       "titleMn": "Японы дөрвөн улирал",
       "sentences": [
@@ -26,6 +26,7 @@
     },
     {
       "id": "read-002",
+      "level": "N2",
       "title": "週末の図書館",
       "titleMn": "Амралтын өдрийн номын сан",
       "sentences": [

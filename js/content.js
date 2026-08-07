@@ -49,6 +49,65 @@ function getViewContainer(view, className) {
   return content;
 }
 
+/* -- JLPT levels ------------------------------------------------------------------------
+   The ladder, easiest first — the order a learner meets it in, and the
+   order every chip row and every range label reads it in. It lives here
+   once because vocabulary, kanji, grammar and reading all sort by it, and
+   three private copies of the same five strings is three chances for one
+   view to quietly know about a level the others don't.
+
+   No level is special. N5 is not the default and N1 is not the goal; a
+   level holding two entries is offered exactly like a level holding eight
+   hundred, with a smaller number beside it.
+
+   NO_LEVEL is the bucket for Japanese the exam has no opinion about —
+   slang, a line out of a drama, a word picked up in the wild. Content
+   files are allowed to carry entries with no JLPT level, and those entries
+   belong somewhere reachable rather than being dropped from the chip row
+   or silently filed under a level nobody chose for them.
+   ------------------------------------------------------------------------------------ */
+
+const JLPT_LEVELS = ['N5', 'N4', 'N3', 'N2', 'N1'];
+
+const NO_LEVEL = 'Outside JLPT';
+
+/* The same bucket said mid-sentence, for the summary line — "N5–N2 +
+   outside JLPT" rather than a second capital in the middle of a phrase.
+   The acronym keeps its capitals; only the ordinary word loses one. */
+const NO_LEVEL_INLINE = 'outside JLPT';
+
+/* The first JLPT level found among an entry's tags, or null when it has
+   none. Null is a real answer here, not a missing one. */
+function jlptLevelOf(tags) {
+  return JLPT_LEVELS.find((level) => tags.includes(level)) ?? null;
+}
+
+/* An entry's facet bucket: its own level, or the unleveled one. */
+function levelBucketOf(level) {
+  return level ?? NO_LEVEL;
+}
+
+/* The span a set of entries actually covers, for a view's summary line:
+   "N5" for one level, "N5–N2" across several, "N5–N2 + outside JLPT" when
+   some entries sit outside the ladder, and just "Outside JLPT" when none
+   of them have a level at all. Derived from the entries every time — there
+   is no file-level field to read it off, and there hasn't been one since
+   the day a file first held two levels and kept claiming one.
+
+   Returns null when there is nothing to say, so a caller can leave the
+   prefix off its summary rather than print an empty separator. */
+function describeLevelSpan(buckets) {
+  const present = new Set(buckets);
+  const levels = JLPT_LEVELS.filter((level) => present.has(level));
+
+  const parts = [];
+  if (levels.length === 1) parts.push(levels[0]);
+  else if (levels.length > 1) parts.push(`${levels[0]}–${levels[levels.length - 1]}`);
+  if (present.has(NO_LEVEL)) parts.push(levels.length ? NO_LEVEL_INLINE : NO_LEVEL);
+
+  return parts.length ? parts.join(' + ') : null;
+}
+
 /* -- Small utilities -------------------------------------------------------------------
    Counts are read, not just seen. "1132" is a string of digits a reader has
    to parse; "1,132" is a number. Used anywhere the app shows a catalogue
@@ -59,6 +118,65 @@ const countFormatter = new Intl.NumberFormat('en');
 
 function formatCount(value) {
   return countFormatter.format(value);
+}
+
+/* -- Facet chips ---------------------------------------------------------------------
+   The chip row above a list. Which chips exist is read out of the data, not
+   written down in a view: a chip appears when there are entries behind it
+   and carries how many, so a control can never be pressed to produce an
+   empty list. A row that would offer exactly one choice isn't a filter,
+   it's a label, and it doesn't render at all.
+
+   `order` is the preferred reading order; anything the data carries that
+   the caller has never heard of still gets a chip, appended after the
+   known ones, so a new topic tag doesn't have to be registered in two
+   places to become usable.
+   ------------------------------------------------------------------------------------ */
+
+function collectFacets(tagLists, order) {
+  const counts = new Map();
+  for (const tags of tagLists) {
+    for (const tag of tags) counts.set(tag, (counts.get(tag) ?? 0) + 1);
+  }
+
+  const known = order.filter((tag) => counts.has(tag));
+  const extra = [...counts.keys()].filter((tag) => !order.includes(tag)).sort();
+  const tags = [...known, ...extra];
+
+  return tags.length > 1 ? tags.map((tag) => ({ tag, count: counts.get(tag) })) : [];
+}
+
+/* Multi-select, nothing pressed to begin with — pressing nothing means
+   everything, which is how no level ends up being the default one. Reuses
+   the same .toggle-chip pressed/unpressed language as the per-card memory
+   button. */
+function createFacetChips(facets, { className, ariaLabel }) {
+  const wrap = document.createElement('div');
+  wrap.className = className;
+  wrap.hidden = facets.length === 0;
+  wrap.setAttribute('role', 'group');
+  wrap.setAttribute('aria-label', ariaLabel);
+
+  const buttons = facets.map(({ tag, count }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toggle-chip';
+    button.dataset.tag = tag;
+    button.setAttribute('aria-pressed', 'false');
+
+    const label = document.createElement('span');
+    label.textContent = tag;
+
+    const badge = document.createElement('span');
+    badge.className = 'toggle-chip__count';
+    badge.textContent = formatCount(count);
+
+    button.append(label, badge);
+    wrap.append(button);
+    return button;
+  });
+
+  return { wrap, buttons };
 }
 
 /* Trailing-edge debounce. Filtering used to run on every keystroke over
@@ -302,13 +420,20 @@ const OFFLINE_HINT =
    the kind of surface that quietly grows a second, slightly different
    error state the first time someone reaches for it. */
 export {
+  collectFacets,
   createContentLoader,
+  createFacetChips,
   createIcon,
   createSearchField,
+  describeLevelSpan,
   getViewContainer,
   formatCount,
   debounce,
   createStorageNotice,
+  jlptLevelOf,
+  levelBucketOf,
   loadIntoView,
+  JLPT_LEVELS,
+  NO_LEVEL,
   OFFLINE_HINT,
 };

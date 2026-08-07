@@ -1,6 +1,19 @@
 # Bigu 🇯🇵
 
-> A modern Japanese learning platform built around clarity, consistency, and real progress.
+> A personal environment for learning Japanese — vocabulary, kanji, grammar,
+> reading, review, and a journal, in one place you can live in daily.
+
+Bigu is not exam-prep software. It is somewhere to read, study, look things up,
+and write, from the foundation of the language upward — the whole of it, in the
+order a learner actually meets it, not one slice of it aimed at one date on a
+calendar.
+
+The catalogue spans levels because the language does. JLPT levels are one axis
+for sorting and filtering what's here — useful when you want to drill a
+particular band, invisible when you don't — and none of them is what the app is
+about. Material the exam has no opinion about (slang, a line out of a drama, a
+word picked up in the wild) has its own place in every view rather than being
+squeezed into a level it doesn't belong to.
 
 ## Why Bigu?
 
@@ -44,38 +57,35 @@ That philosophy influences every design and development decision.
 
 ### 📖 Vocabulary
 
-- JLPT-organized vocabulary
-- Word meanings
-- Readings
-- Example sentences
-- Search, and level/topic filters that are read out of the data — a chip only
-  appears when there are words behind it, and carries its own count
+- Word meanings, readings, and an example sentence for every entry
+- Search, and level/topic filters read out of the data — a chip only appears
+  when there are words behind it, and carries its own count. Nothing is
+  pre-selected, so the whole list is the default view
+- Words the exam doesn't cover keep their topic tags and file under their own
+  chip instead of being given a level they never had
 - Rendered a page at a time. Eight hundred cards at once is not a list, it's a
   wall; "Show more" is there for the days you want to browse
 - Keep a word (bookmark) — kept words get their own shelf in Memory
 
 ### 📝 Grammar
 
-- JLPT grammar lessons
-- Clear explanations
-- Usage examples
-- Common mistakes
-- Practice exercises
+- Pattern, meaning, formation rule, and a worked example
+- Usage notes where a pattern needs one
+- The same data-driven level chips as the other views
 
 ### 漢字 Kanji
 
-- Stroke order
-- Onyomi & Kunyomi
-- Meanings
-- Example vocabulary
-- JLPT organization
+- Meanings, on'yomi and kun'yomi, and example vocabulary
+- A detail panel per character — meaning, readings, examples, related
+  characters — with stroke order and animation still to come
+- Level chips and search over the whole grid
 
 ### 📚 Reading
 
-- Reading passages
-- Vocabulary support
-- Grammar references
-- Progressive difficulty
+- Passages with per-sentence readings, and a translation view beside the
+  article view
+- Vocabulary, grammar, comprehension questions and shadowing are stages that
+  exist and say so plainly while they're still being built
 
 ### 🎯 Review
 
