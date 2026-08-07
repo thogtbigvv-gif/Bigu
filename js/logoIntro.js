@@ -49,39 +49,63 @@ function prefersReducedMotion() {
 
 /* -- Playback -------------------------------------------------------------------- */
 
+/* The run currently in flight, so a replay that interrupts one can retire it.
+   Only ever one: the mark carries a single class, so two live runs would be
+   two owners of the same piece of state. */
+let activeRun = null;
+
 /* Runs the sequence once, resolving when it ends.
 
    Removing the class first and forcing a reflow is what makes a replay
    possible: re-adding a class the element already carries does not restart a
    CSS animation, and without the reflow the browser coalesces the removal and
-   the addition into no change at all.
+   the addition into no change at all. getBoundingClientRect() rather than
+   offsetWidth for that flush: offsetWidth belongs to HTMLElement, and on an
+   <svg> it is a non-standard extension some engines simply do not have, so
+   reading it there can flush nothing at all.
+
+   Any run already in flight is retired first. Its backstop timer runs on its
+   own schedule, and left armed it would fire partway through this sequence and
+   strip the class mid-animation.
 
    `animationend` fires once per animated element, so it is filtered down to
    the last track rather than the first to finish. The timer is a backstop for
    the case where no animation runs at all — an unsupported property, or a
    reduced-motion rule zeroing them — so the promise can never hang. */
 function play(mark) {
+  // Retire the previous run before touching the class, so it cannot clear the
+  // class this call is about to set.
+  activeRun?.stop(false);
+
   mark.classList.remove(PLAYING_CLASS);
-  void mark.offsetWidth; // force reflow so the restart is seen as a change
+  mark.getBoundingClientRect(); // force reflow so the restart is seen as a change
   mark.classList.add(PLAYING_CLASS);
 
   return new Promise((resolve) => {
-    let done = false;
-    const finish = () => {
-      if (done) return;
-      done = true;
-      mark.removeEventListener('animationend', onEnd);
-      clearTimeout(timer);
-      mark.classList.remove(PLAYING_CLASS);
-      resolve();
+    /* `settle` is false when a newer run has taken over: that run owns the
+       class now, so this one only disarms itself and resolves. Its awaiting
+       caller still gets its `.then`, which is what records the session flag. */
+    const run = {
+      done: false,
+      timer: 0,
+      stop(settle) {
+        if (run.done) return;
+        run.done = true;
+        mark.removeEventListener('animationend', onEnd);
+        clearTimeout(run.timer);
+        if (activeRun === run) activeRun = null;
+        if (settle) mark.classList.remove(PLAYING_CLASS);
+        resolve();
+      },
     };
 
     const onEnd = (event) => {
-      if (event.target.classList.contains('brand__mark-sparkle--trail')) finish();
+      if (event.target.classList.contains('brand__mark-sparkle--trail')) run.stop(true);
     };
 
     mark.addEventListener('animationend', onEnd);
-    const timer = setTimeout(finish, SEQUENCE_MS);
+    run.timer = setTimeout(() => run.stop(true), SEQUENCE_MS);
+    activeRun = run;
   });
 }
 
