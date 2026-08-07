@@ -68,20 +68,18 @@
 }
 
 /* The mark doubles as the replay control for its own intro animation, so it
-   lives in a button — stripped of every button default, since it must read as
-   a logo and not as a control. Only the focus ring survives, matching the one
-   every other interactive element in the app already uses. */
+   lives in a button. reset.css already strips background, border and the
+   default cursor from every button, and typography.css already gives every
+   button the app's focus ring — so all that is left here is dropping the
+   padding, making the box wrap the SVG exactly, and pushing the ring out a
+   little further so it clears the artwork rather than cutting across it. */
 .brand__replay {
   display: flex;
   padding: 0;
-  border: none;
-  background: none;
   border-radius: var(--radius-sm);
-  cursor: pointer;
 }
 
 .brand__replay:focus-visible {
-  outline: var(--focus-ring);
   outline-offset: 3px;
 }
 
