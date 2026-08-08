@@ -199,7 +199,7 @@ function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField({
     id: 'vocabulary-search',
     label: 'Search vocabulary',
-    placeholder: 'Kanji, kana, or meaning',
+    placeholder: 'Ханз, кана, эсвэл утга',
   });
   const rememberedToggle = createRememberedToggle();
 
@@ -280,12 +280,12 @@ function renderList(container, data) {
 
     if (!filtering) {
       return withSpan(matched.length > shown
-        ? `showing ${formatCount(shown)} of ${total} words`
-        : `${total} words`);
+        ? `${total} үгээс ${formatCount(shown)}-ыг харуулж байна`
+        : `${total} үг`);
     }
 
-    const found = `${formatCount(matched.length)} of ${total} words`;
-    return withSpan(matched.length > shown ? `${found} — showing ${formatCount(shown)}` : found);
+    const found = `${total} үгээс ${formatCount(matched.length)}`;
+    return withSpan(matched.length > shown ? `${found} — ${formatCount(shown)}-ыг харуулж байна` : found);
   }
 
   /* Recomputes the match set and starts the list again from the first page.
@@ -309,8 +309,8 @@ function renderList(container, data) {
 
     empty.hidden = matched.length > 0;
     empty.textContent = hideRemembered && !query && selectedTags.size === 0
-      ? 'Everything here is already in memory. Clear the filter to see the whole list.'
-      : 'No words match that. Try a different reading, or fewer filters.';
+      ? 'Эндэх бүхэн аль хэдийн санах ойд орсон байна. Бүтэн жагсаалтыг харахын тулд шүүлтүүрээ цэвэрлэ.'
+      : 'Тохирох үг олдсонгүй. Өөр дуудлагаар, эсвэл цөөн шүүлтүүрээр оролдоод үз.';
   }
 
   searchInput.addEventListener('input', debounce(applyFilter));
@@ -346,8 +346,8 @@ async function initVocabulary() {
     skeleton: 'card-grid',
     load: loadVocabulary,
     render: renderList,
-    errorTitle: 'Vocabulary didn’t load.',
-    errorDetail: `The word list is in data/vocabulary.json. ${OFFLINE_HINT}`,
+    errorTitle: 'Vocabulary ачаалагдсангүй.',
+    errorDetail: `Үгийн жагсаалт data/vocabulary.json дотор байгаа. ${OFFLINE_HINT}`,
   });
 }
 

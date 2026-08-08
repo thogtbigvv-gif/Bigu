@@ -141,16 +141,16 @@ const SHELVES = [
     key: 'waiting',
     label: 'Waiting for you',
     jp: '待っている',
-    note: 'Ready to come back. Their ink is still readable — a look now keeps it that way.',
-    empty: 'Nothing is waiting right now.',
+    note: 'Эргэж ирэхэд бэлэн. Бэх нь уншигдсаар байна — одоо нэг харвал ийм хэвээр үлдэнэ.',
+    empty: 'Одоогоор хүлээж буй юм алга.',
     icon: [['circle', { cx: '8', cy: '8', r: '5.5' }], ['path', { d: 'M8 5v3.2l2 1.4' }]],
   },
   {
     key: 'fading',
     label: 'Fading',
     jp: '薄れゆく',
-    note: 'These have gone faint. One minute here is worth an hour of new words.',
-    empty: 'Nothing has gone faint. Rare, and worth noticing.',
+    note: 'Эдгээр нь бүдгэрчээ. Энд нэг минут зарцуулах нь шинэ үг цээжлэх нэг цагтай дүйнэ.',
+    empty: 'Бүдгэрсэн юм алга. Ховор тохиолдол, анзаарах нь зүйтэй.',
     // Three strokes losing their length, left to right: the shelf's own
     // subject drawn in the page's own visual language.
     icon: [['path', { d: 'M3 2.5v11' }], ['path', { d: 'M8 5.5v8' }], ['path', { d: 'M13 9v4.5' }]],
@@ -159,32 +159,32 @@ const SHELVES = [
     key: 'newlyMet',
     label: 'Newly met',
     jp: 'はじめまして',
-    note: 'From the last seven days. Still strangers — they need you again soon.',
-    empty: 'You haven’t met anything new this week.',
+    note: 'Сүүлийн долоо хоногийнх. Одоо ч танихгүй хэвээр — удахгүй чамайг дахин хэрэгтэй болно.',
+    empty: 'Энэ долоо хоногт шинэ юмтай танилцаагүй байна.',
     icon: [['path', { d: 'M8 13.5V6' }], ['path', { d: 'M8 6C6 6 4.5 4.5 4.5 2.5 6.5 2.5 8 4 8 6z' }], ['path', { d: 'M8 7.5c0-1.8 1.4-3 3.2-3 0 1.8-1.4 3-3.2 3z' }]],
   },
   {
     key: 'hardToHold',
     label: 'Hard to hold',
     jp: '手ごわい',
-    note: 'The ones that keep slipping. Nothing is wrong — they simply need shorter gaps.',
-    empty: 'Nothing is fighting you at the moment.',
+    note: 'Байнга мултарч байгаа нь. Буруу юм алга — зүгээр л богино завсартай давтах хэрэгтэй.',
+    empty: 'Одоогоор чамтай зүтгэлдэж байгаа юм алга.',
     icon: [['path', { d: 'M2.5 6.5c1.8-2 3.6-2 5.5 0s3.7 2 5.5 0' }], ['path', { d: 'M2.5 10.5c1.8-2 3.6-2 5.5 0s3.7 2 5.5 0' }]],
   },
   {
     key: 'kept',
     label: 'Kept',
     jp: '大切',
-    note: 'The ones you chose. Not because they were due — because you liked them.',
-    empty: 'Nothing kept yet. The bookmark on any card puts it here.',
+    note: 'Чиний өөрөө сонгосон нь. Давтах цаг нь болсон учраас биш — чамд таалагдсан учраас.',
+    empty: 'Хадгалсан юм хараахан алга. Аль ч картын хавчуургыг дарвал энд орно.',
     icon: [['path', { d: 'M4 2.5h8v11l-4-3-4 3z' }]],
   },
   {
     key: 'deepInk',
     label: 'Deep ink',
     jp: '深い',
-    note: 'Held for weeks at a time. They come back rarely now, just to stay dark.',
-    empty: 'Nothing has reached this depth yet. It takes weeks, by design.',
+    note: 'Долоо хоногоор тогтсон нь. Одоо ховорхон эргэж ирнэ — зөвхөн бараан хэвээр үлдэхийн тулд.',
+    empty: 'Хараахан ийм гүнд хүрсэн юм алга. Санаатайгаар долоо хоногууд шаарддаг.',
     icon: [['path', { d: 'M8 2.5c2.6 3 4 5 4 6.6a4 4 0 0 1-8 0c0-1.6 1.4-3.6 4-6.6z' }]],
   },
 ];
@@ -375,7 +375,7 @@ function createSlip(entry, onGraded, onKeptChange) {
   if (shape.reading) body.append(japanese('span', 'memory-slip__reading', shape.reading));
 
   const state = element('span', 'memory-slip__state');
-  state.textContent = record.seen ? `${band.label} · ${describeTiming(record)}` : 'not studied yet';
+  state.textContent = record.seen ? `${band.label} · ${describeTiming(record)}` : 'хараахан судлаагүй';
 
   face.append(ink, body, state);
 
@@ -472,8 +472,8 @@ function createSlip(entry, onGraded, onKeptChange) {
     slip.classList.add('is-graded');
 
     note.textContent = knewIt
-      ? `Darker. ${describeTiming(next).replace(/^back /, 'Back ')}.`
-      : 'Noted — this one comes back today.';
+      ? `Улам бараан боллоо. ${describeTiming(next)}.`
+      : 'Тэмдэглэлээ — энэ өнөөдөр эргэж ирнэ.';
 
     actions.hidden = true;
 
@@ -578,19 +578,18 @@ function heroLines({ waiting, fading, seenCount }) {
 
   if (due === 0) {
     return {
-      line: 'Nothing is fading today.',
+      line: 'Өнөөдөр бүдгэрч буй юм алга.',
       sub: seenCount > 0
-        ? 'The ink is dark all the way across. Rest is part of remembering.'
-        : 'Meet a few words and they’ll start appearing here.',
+        ? 'Бэх нь бүхэлдээ бараан байна. Амрах нь ч бас цээжлэхийн нэг хэсэг.'
+        : 'Хэдэн үгтэй танилцвал эндээс харагдаж эхэлнэ.',
     };
   }
 
-  const noun = due === 1 ? 'word is' : 'words are';
-  const line = `${due} ${noun} waiting for you.`;
+  const line = `${due} үг чамайг хүлээж байна.`;
 
-  if (fading === 0) return { line, sub: 'None of them have gone faint yet. A few minutes keeps it that way.' };
-  if (fading === due) return { line, sub: `All ${fading === 1 ? 'of it has' : 'of them have'} gone faint. Start here and the rest is easy.` };
-  return { line, sub: `${fading} ${fading === 1 ? 'has' : 'have'} gone faint — those first.` };
+  if (fading === 0) return { line, sub: 'Тэдний нэг нь ч хараахан бүдгэрээгүй. Хэдхэн минут л ийм хэвээр байлгана.' };
+  if (fading === due) return { line, sub: 'Бүгд нь бүдгэрчээ. Эндээс эхэлбэл үлдсэн нь амархан.' };
+  return { line, sub: `${fading} нь бүдгэрчээ — эхлээд тэднийг.` };
 }
 
 function createHero(summary) {
@@ -613,7 +612,7 @@ function createHero(summary) {
     wash.setAttribute('role', 'img');
     wash.setAttribute(
       'aria-label',
-      `Average memory strength across ${summary.seenCount} items you have met: ${Math.round(summary.averageStrength * 100)} percent.`,
+      `Таны танилцсан ${summary.seenCount} зүйлийн санамжийн дундаж хүч: ${Math.round(summary.averageStrength * 100)} хувь.`,
     );
     const stroke = element('span', 'memory-hero__stroke');
     stroke.setAttribute('aria-hidden', 'true');
@@ -626,7 +625,7 @@ function createHero(summary) {
       element(
         'p',
         'memory-hero__wash-note',
-        `${summary.seenCount} ${summary.seenCount === 1 ? 'word' : 'words'} written so far — the ink is ${band.label}.`,
+        `Одоогоор ${summary.seenCount} үг бичигдсэн — бэх нь ${band.label} байна.`,
       ),
     );
   }
@@ -669,7 +668,7 @@ function createWeek(week, streak) {
     const initial = element('span', 'memory-week__initial', day.initial);
     initial.setAttribute('aria-hidden', 'true');
 
-    const reader = element('span', 'sr-only', `${day.name}: ${day.count === 0 ? 'nothing reviewed' : `${day.count} reviewed`}`);
+    const reader = element('span', 'sr-only', `${day.name}: ${day.count === 0 ? 'юу ч давтаагүй' : `${day.count} зүйл давтсан`}`);
 
     cell.append(dot, initial, reader);
     list.append(cell);
@@ -677,11 +676,11 @@ function createWeek(week, streak) {
 
   const note = element('p', 'memory-week__note');
   if (streak === 0) {
-    note.textContent = 'No run going. One word today starts one.';
+    note.textContent = 'Одоогоор цуваа алга. Өнөөдөр нэг үг л шинээр эхлүүлнэ.';
   } else {
     note.append(
       element('span', 'memory-week__streak', String(streak)),
-      document.createTextNode(` ${streak === 1 ? 'day' : 'days'} in a row.`),
+      document.createTextNode(' өдөр дараалан.'),
     );
   }
 
@@ -704,11 +703,11 @@ function createEmptyState() {
 
   empty.append(
     mark,
-    element('p', 'memory-empty__line', 'Nothing is written yet.'),
+    element('p', 'memory-empty__line', 'Хараахан юу ч бичигдээгүй байна.'),
     element(
       'p',
       'memory-empty__body',
-      'Every word you meet is written here in ink. Ink fades on its own — coming back darkens it again. That is the whole of it.',
+      'Танилцсан үг бүр чинь энд бэхээр бичигдэнэ. Бэх нь өөрөө бүдгэрдэг — эргэж ирэх бүрд дахин барааждаг. Бүх учир нь тэр.',
     ),
   );
 
@@ -817,7 +816,7 @@ function renderMemory(container, datasets) {
 
       const emptyNote = shelf.querySelector('.memory-shelf__empty');
       if (!emptyNote) return;
-      emptyNote.textContent = 'Cleared for today. These come back when they need you.';
+      emptyNote.textContent = 'Өнөөдрийнх нь дууслаа. Хэрэгтэй болохоороо эргэж ирнэ.';
       emptyNote.hidden = false;
     },
     // Keeping or un-keeping only matters to the Kept shelf, and moving a
@@ -849,8 +848,8 @@ async function initMemory() {
       skeleton: 'memory',
       load: () => Promise.all([loadVocabulary(), loadGrammar(), loadKanji(), loadLessons()]),
       render: renderMemory,
-      errorTitle: 'Your memory didn’t load.',
-      errorDetail: `This page reads the four content files in data/ to know what your saved progress refers to, and at least one of them didn’t arrive. ${OFFLINE_HINT}`,
+      errorTitle: 'Memory ачаалагдсангүй.',
+      errorDetail: `Энэ хуудас таны хадгалсан ахиц юуг заасныг мэдэхийн тулд data/ доторх дөрвөн агуулгын файлыг уншдаг бөгөөд тэдгээрийн ядаж нэг нь ирсэнгүй. ${OFFLINE_HINT}`,
     });
   }
 

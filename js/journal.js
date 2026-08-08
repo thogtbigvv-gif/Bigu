@@ -51,18 +51,18 @@ function computeStats(text) {
 
 /** Verbose feedback for the composer, where there's room to name the markers. */
 function describeStats({ length, politeHits }) {
-  if (length === 0) return 'Nothing written yet';
-  const countLabel = `${length} character${length === 1 ? '' : 's'}`;
-  if (politeHits.length === 0) return `${countLabel} · all plain form ◎`;
+  if (length === 0) return 'Хараахан юу ч бичээгүй';
+  const countLabel = `${length} тэмдэгт`;
+  if (politeHits.length === 0) return `${countLabel} · бүгд энгийн хэлбэр ◎`;
   const unique = [...new Set(politeHits)];
-  const markerLabel = `${politeHits.length} polite marker${politeHits.length === 1 ? '' : 's'} (${unique.join('、')})`;
+  const markerLabel = `${politeHits.length} эелдэг хэлбэр (${unique.join('、')})`;
   return `${countLabel} · ${markerLabel}`;
 }
 
 /** Compact feedback for the history list, where row space is tight. */
 function summarizeStats({ length, politeHits }) {
-  const countLabel = `${length} char${length === 1 ? '' : 's'}`;
-  const markerLabel = politeHits.length === 0 ? 'plain ◎' : `${politeHits.length} polite`;
+  const countLabel = `${length} тэмдэгт`;
+  const markerLabel = politeHits.length === 0 ? 'энгийн ◎' : `${politeHits.length} эелдэг`;
   return `${countLabel} · ${markerLabel}`;
 }
 
@@ -356,7 +356,7 @@ function createHistory() {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Entries you save will appear here.';
+  empty.textContent = 'Хадгалсан тэмдэглэлүүд чинь энд харагдана.';
 
   const list = document.createElement('ul');
   list.className = 'journal__entry-list';
@@ -504,7 +504,7 @@ function initJournalView(view) {
     renderHeader();
     refreshStats();
     syncSaveButton();
-    status.textContent = entry ? `Saved · ${formatTimeLabel(entry.updatedAt ?? entry.createdAt)}` : '';
+    status.textContent = entry ? `Хадгалсан · ${formatTimeLabel(entry.updatedAt ?? entry.createdAt)}` : '';
   }
 
   function openEntry(entry) {
@@ -542,7 +542,7 @@ function initJournalView(view) {
       : journal.add({ text, date: state.date });
 
     if (!record) {
-      status.textContent = 'Could not save — check your browser storage settings.';
+      status.textContent = 'Хадгалж чадсангүй — хөтчийнхөө сангийн тохиргоог шалгана уу.';
       return;
     }
 
@@ -553,7 +553,7 @@ function initJournalView(view) {
     // isn't there — leaving Save enabled on an already-saved entry, and
     // flipping the status to "Unsaved changes" on the next keystroke.
     textarea.value = record.text;
-    status.textContent = `Saved · ${formatTimeLabel(record.updatedAt ?? record.createdAt)}`;
+    status.textContent = `Хадгалсан · ${formatTimeLabel(record.updatedAt ?? record.createdAt)}`;
     refreshStats();
     syncSaveButton();
     renderHistory();
@@ -563,7 +563,7 @@ function initJournalView(view) {
   textarea.addEventListener('input', () => {
     refreshStats();
     syncSaveButton();
-    if (textarea.value !== state.savedText) status.textContent = 'Unsaved changes';
+    if (textarea.value !== state.savedText) status.textContent = 'Хадгалаагүй өөрчлөлт';
   });
 
   textarea.addEventListener('keydown', (event) => {
@@ -608,7 +608,7 @@ function initJournal() {
     console.error('[Bigu] journal view failed to initialize', error);
     const message = document.createElement('p');
     message.className = 'empty-state';
-    message.textContent = 'Journal could not be loaded right now.';
+    message.textContent = 'Journal-ыг одоохондоо ачаалж чадсангүй.';
     // Everything except the view's own <h1>: router.js reads that heading for
     // the document title and focuses it on navigation, so replacing the whole
     // section would break routing into this view on top of the failure here.
