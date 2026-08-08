@@ -15,6 +15,7 @@
   gap: var(--space-md);
 }
 
+
 /* -- Level facets ---------------------------------------------------------------------
    The chip row above the grid, matching the one vocabulary and grammar
    already had. Layout only; the chip's look is .toggle-chip in buttons.css.
@@ -35,8 +36,11 @@
   text-align: center;
   /* See .card--deferred in cards.css. Measured resting height of a card
      carrying the character, its tag, meaning, readings, one example and the
-     two control rows. */
-  contain-intrinsic-size: auto 26rem;
+     two control rows. `none` for the inline axis — see the long note on the
+     same property in vocabulary.css; a single value applies to both axes and
+     made every skipped card claim a 26rem width, which is what pushed this
+     grid past the right edge of a phone. */
+  contain-intrinsic-size: none auto 26rem;
 }
 
 .kanji-card__head {
@@ -187,8 +191,60 @@
   cursor: default;
 }
 
-/* -- Mobile spacing ---------------------------------------------------------------- */
+/* -- Mobile spacing ------------------------------------------------------------------
+   Last block in the file on purpose: it turns off .kanji-card__example, which
+   is declared above it at the same specificity, and a media query carries no
+   weight of its own — only document order decides that one.
+
+   The grid is the substantial change here. A 14rem minimum resolves to exactly
+   one column inside a 358px page, which turned the densest browsing surface in
+   the app into a flip-book: one character per screen, 132 of them, and no way
+   to scan. Browsing kanji *is* scanning — the character is the index and
+   everything under it is detail — so the phone gets two columns, and the card
+   gives up the example sentence that was paying for a third of its height.
+
+   Hidden, not removed. kanji.js still builds the example, the detail panel
+   behind "View details" still shows it in full, and at 481px and up the card
+   is exactly as it was. What a two-up card has room to carry is the character,
+   its level, what it means, and how it is read.
+   ------------------------------------------------------------------------------------ */
 @media (max-width: 480px) {
+  .kanji-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .kanji-card {
+    padding: var(--space-sm) var(--space-2xs);
+    gap: var(--space-3xs);
+    /* Re-measured for the shorter card. A placeholder that is wrong by more
+       than a card's height is worse than none: the scrollbar lies and the
+       page jumps as rows resolve. */
+    contain-intrinsic-size: none auto 13rem;
+  }
+
+  .kanji-card__example {
+    display: none;
+  }
+
+  /* "Remember this" is wider than half a phone, so the row stacks instead of
+     hyphenating the chip. The bookmark keeps its own line and stays centred
+     under it, matching the card's centred axis. */
+  .kanji-card__controls {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: var(--space-3xs);
+  }
+
+  .kanji-card__controls .toggle-chip {
+    width: 100%;
+  }
+
+  .kanji-card__detail-button {
+    width: 100%;
+  }
+
   .kanji-detail__section {
     padding: var(--space-sm) var(--space-md);
   }

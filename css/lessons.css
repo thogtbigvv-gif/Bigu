@@ -235,8 +235,36 @@
     padding-inline-end: var(--space-md);
   }
 
+  /* Three things share this row — the lesson's title, its "18 words · 0 in
+     memory" count, and the chevron — and a fourth, the Quiz button, sits
+     beside them in the same heading. At 358px that left the title about 70px
+     to live in, and a Japanese title with no spaces in it broke one character
+     per line: an eight-line column of kana with the count and the button
+     overlapping it.
+
+     So the count takes its own line. `order` moves it after the chevron, and
+     a 100% flex-basis is what pushes it onto the next row — the title and the
+     chevron keep the first, which is the pairing that reads as a disclosure.
+     Nothing changes at 481px and up, where all three fit as they always did. */
   .lesson-group__header {
     padding: var(--space-sm) var(--space-md);
+    flex-wrap: wrap;
+    gap: var(--space-3xs) var(--space-2xs);
+  }
+
+  /* Basis 0, not auto. On `auto` the title's flex base size is its max-content
+     width — the whole title on one line — so the chevron never fits beside it
+     and wraps to a line of its own, floating under the text with nothing to
+     belong to. From 0 the title takes what is left after the chevron and wraps
+     inside itself, which is what a disclosure row should look like. */
+  .lesson-group__title {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .lesson-group__count {
+    order: 1;
+    flex: 1 1 100%;
   }
 
   .lesson-word-list {

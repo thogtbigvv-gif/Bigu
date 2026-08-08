@@ -301,6 +301,22 @@
   text-align: center;
 }
 
+/* "Press 1–4 to answer" is instructions for hardware the reader does not have.
+   On a phone it was a line of permanent, unactionable text sitting directly
+   under the answer options — the last thing on the card, in the position a
+   reader looks to next.
+
+   Keyed on the input the hint describes, not on width: a tablet with a
+   keyboard case is a coarse pointer at a desktop width and still wants the
+   hint, and a 1400px touchscreen never does. js/quiz.js still writes the text,
+   so the shortcuts keep working for anyone who has a keyboard attached to a
+   device that reports as touch-only. */
+@media (hover: none) and (pointer: coarse) {
+  .quiz__shortcuts {
+    display: none;
+  }
+}
+
 /* -- Card motion ---------------------------------------------------------------------------
    One animated thing per moment, all under 250ms, none looping. A round is
    a card every few seconds: anything that reads as decoration the first
