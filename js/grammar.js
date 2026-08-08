@@ -193,7 +193,7 @@ function renderList(container, data) {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Тохирох хэлбэр олдсонгүй. Хэлбэрийн хэсгээр, эсвэл утгаар нь оролдоод үз.';
+  empty.textContent = 'Тохирох хэлбэр олдсонгүй. Хэлбэрийн хэсэг, эсвэл утгаар нь хайж үзнэ үү.';
   empty.hidden = true;
 
   const selectedTags = new Set();
@@ -209,7 +209,7 @@ function renderList(container, data) {
     }
     const total = formatCount(data.points.length);
     const count = query || selectedTags.size > 0
-      ? `${total} хэлбэрээс ${formatCount(visible)}`
+      ? `${total} хэлбэрээс ${formatCount(visible)} нь тохирлоо`
       : `${total} хэлбэр`;
     summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
     empty.hidden = visible > 0;

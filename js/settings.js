@@ -132,7 +132,7 @@ function createStudyCard() {
   const sizeNote = document.createElement('p');
   sizeNote.className = 'meta';
   sizeNote.textContent =
-    'Нэг давталтад хэдэн карт багтахыг заана. Богино давталт эхлэхэд амархан бөгөөд сарын хугацаанд урт эсэхээс илүү чухал.';
+    'Нэг давталтад хэдэн карт багтахыг заана. Богино давталтыг эхлүүлэхэд амархан бөгөөд сарын туршид энэ нь урт байхаас илүү чухал.';
 
   const { group: sizeGroup } = createChoiceRow({
     options: SESSION_SIZES.map((value) => ({ value, label: String(value) })),
@@ -149,7 +149,7 @@ function createStudyCard() {
   const goalNote = document.createElement('p');
   goalNote.className = 'meta';
   goalNote.textContent =
-    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Dashboard дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu өөрөө таамаглахгүй.';
+    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Dashboard дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu үүнийг өөрөө тогтоохгүй.';
 
   const { group: goalGroup } = createChoiceRow({
     options: DAILY_GOALS.map((value) => ({ value, label: value === 0 ? 'No goal' : String(value) })),
@@ -259,7 +259,7 @@ function handleRestoreFile(file, statusEl, fileInput) {
     }
 
     if (!isValidBackupPayload(payload)) {
-      setRestoreStatus(statusEl, 'Энэ нь Bigu-гийн нөөц файл шиг харагдахгүй байна.', true);
+      setRestoreStatus(statusEl, 'Энэ нь Bigu-гийн нөөц файл биш бололтой.', true);
       fileInput.value = '';
       return;
     }
@@ -280,7 +280,7 @@ function handleRestoreFile(file, statusEl, fileInput) {
   };
 
   reader.onerror = () => {
-    setRestoreStatus(statusEl, 'Тэр файлыг уншиж чадсангүй.', true);
+    setRestoreStatus(statusEl, 'Файлыг уншиж чадсангүй.', true);
     fileInput.value = '';
   };
 
@@ -356,7 +356,7 @@ function createResetCard() {
   const description = document.createElement('p');
   description.className = 'meta';
   description.textContent =
-    'Энэ хөтөчид хадгалагдсан бүхнийг устгана: давтах хуваарь, санах ой, хадгалсан үгс, тэмдэглэл, хичээллэлтийн түүх, эдгээр тохиргоо. Буцаах боломжгүй бөгөөд өөр хаана ч хуулбар байхгүй — хэрэгтэй болох магадлал байвал эхлээд нөөцөө татаж авна уу.';
+    'Энэ хөтөчид хадгалагдсан бүхнийг устгана: давтах хуваарь, санах ой, хадгалсан үгс, тэмдэглэл, давталтын түүх, эдгээр тохиргоо. Буцаах боломжгүй бөгөөд өөр хаана ч хуулбар байхгүй — хэрэгтэй болох магадлал байвал эхлээд нөөцөө татаж авна уу.';
 
   const button = document.createElement('button');
   button.type = 'button';

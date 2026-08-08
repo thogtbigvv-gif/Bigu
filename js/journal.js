@@ -356,7 +356,7 @@ function createHistory() {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Хадгалсан тэмдэглэлүүд чинь энд харагдана.';
+  empty.textContent = 'Хадгалсан тэмдэглэлүүд тань энд харагдана.';
 
   const list = document.createElement('ul');
   list.className = 'journal__entry-list';
@@ -542,7 +542,7 @@ function initJournalView(view) {
       : journal.add({ text, date: state.date });
 
     if (!record) {
-      status.textContent = 'Хадгалж чадсангүй — хөтчийнхөө сангийн тохиргоог шалгана уу.';
+      status.textContent = 'Хадгалж чадсангүй — хөтчийнхөө өгөгдөл хадгалах тохиргоог шалгана уу.';
       return;
     }
 
@@ -608,7 +608,7 @@ function initJournal() {
     console.error('[Bigu] journal view failed to initialize', error);
     const message = document.createElement('p');
     message.className = 'empty-state';
-    message.textContent = 'Journal-ыг одоохондоо ачаалж чадсангүй.';
+    message.textContent = 'Journal-ыг одоогоор ачаалж чадсангүй.';
     // Everything except the view's own <h1>: router.js reads that heading for
     // the document title and focuses it on navigation, so replacing the whole
     // section would break routing into this view on top of the failure here.

@@ -39,7 +39,7 @@ const CORRECT_PAUSE_MS = 650;
 
 const MODES = [
   { id: 'choose', label: 'Choose', hint: 'Дөрвөн хариулт, шалгаж өгнө' },
-  { id: 'flip', label: 'Flip', hint: 'Санаад үзээд, өөрөө өөрийгөө дүгнэ' },
+  { id: 'flip', label: 'Flip', hint: 'Картыг эргүүлж хариултыг нь харна' },
 ];
 
 /* -- Item adapters ---------------------------------------------------------------------
@@ -236,20 +236,62 @@ function buildPanel() {
 
   head.append(title, count, exitButton);
 
-  /* Card */
-  const card = document.createElement('div');
-  card.className = 'card quiz__card';
+  /* Card. Two faces of one object rather than a question with an answer
+     printed underneath it: the front asks, and in Flip mode the whole card
+     turns over to show the back. That is the physical thing a paper flashcard
+     is, and it is the reason Flip is a separate mode at all — before this, its
+     "reveal" was a button that made more text appear below the card, which is
+     what Choose mode already does.
 
-  const prompt = document.createElement('p');
+     The front is a <button>, so the card itself is the control that turns it:
+     tappable, focusable, and announced as pressable without a second control
+     underneath doing the same job. Choose mode disables it, which also takes
+     it out of the tab order.
+
+     Its children are <span>s, not <p>s — a <button> may only contain phrasing
+     content, and they are flex items here so they lay out as blocks anyway. */
+  const scene = document.createElement('div');
+  scene.className = 'quiz__scene';
+
+  const cardInner = document.createElement('div');
+  cardInner.className = 'quiz__card-inner';
+
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'card quiz__card quiz__card--front';
+
+  const prompt = document.createElement('span');
   prompt.className = 'quiz__prompt';
 
-  const front = document.createElement('p');
+  const front = document.createElement('span');
   front.className = 'quiz__front';
 
-  const hint = document.createElement('p');
+  const hint = document.createElement('span');
   hint.className = 'quiz__hint';
 
-  card.append(prompt, front, hint);
+  // Shown in Flip mode only. The card looks like every other card in the app,
+  // so nothing about it says "turn me over" until this line does.
+  const flipHint = document.createElement('span');
+  flipHint.className = 'quiz__flip-hint';
+  flipHint.textContent = 'Дарж эргүүлнэ үү';
+
+  card.append(prompt, front, hint, flipHint);
+
+  const cardBack = document.createElement('div');
+  cardBack.className = 'card quiz__card quiz__card--back';
+  // Focused when the card turns, so a screen reader hears the answer rather
+  // than only the grade buttons that appear with it.
+  cardBack.tabIndex = -1;
+
+  const answer = document.createElement('p');
+  answer.className = 'quiz__answer';
+
+  const answerDetail = document.createElement('div');
+  answerDetail.className = 'quiz__answer-detail';
+
+  cardBack.append(answer, answerDetail);
+  cardInner.append(card, cardBack);
+  scene.append(cardInner);
 
   /* Choose mode */
   const options = document.createElement('div');
@@ -257,12 +299,8 @@ function buildPanel() {
   options.setAttribute('role', 'group');
   options.setAttribute('aria-label', 'Answers');
 
-  /* Flip mode */
-  const revealButton = document.createElement('button');
-  revealButton.type = 'button';
-  revealButton.className = 'button button--primary quiz__reveal';
-  revealButton.textContent = 'Show answer';
-
+  /* Flip mode. No "Show answer" button any more — the card is the control,
+     and two things on one screen doing the same thing reads as a bug. */
   const grade = document.createElement('div');
   grade.className = 'quiz__grade';
   grade.hidden = true;
@@ -341,14 +379,15 @@ function buildPanel() {
 
   const round = document.createElement('div');
   round.className = 'quiz__round';
-  round.append(bar, head, card, options, revealButton, grade, feedback, shortcuts);
+  round.append(bar, head, scene, options, grade, feedback, shortcuts);
 
   panel.append(round, summary);
 
   return {
     panel, round, bar, barFill, title, count, exitButton,
-    card, prompt, front, hint,
-    options, revealButton, grade, missButton, knewButton,
+    scene, cardInner, card, prompt, front, hint, flipHint,
+    cardBack, answer, answerDetail,
+    options, grade, missButton, knewButton,
     feedback, verdict, detail, continueButton, shortcuts,
     summary, summaryScore, summaryText, missedHeading, missedList,
     retryMissedButton, againButton, doneButton,
@@ -389,6 +428,7 @@ function createQuiz({
     correct: 0,
     missed: [],
     answered: false,
+    flipped: false,
     title: '',
   };
 
@@ -431,41 +471,99 @@ function createQuiz({
     });
   }
 
+  /* Face the card front again with no animation at all.
+
+     The alternative — letting it turn back on its own — plays the reveal in
+     reverse with the *next* question's answer already printed on the back, so
+     the reader watches a meaning they haven't been asked about yet rotate
+     away. Killing the transition for one frame is the honest version: the
+     previous card is gone, and the new one arrives face up on its own
+     entrance animation.
+
+     Same class-off / reflow / class-on shape as the entrance restart below. */
+  function faceFront() {
+    state.flipped = false;
+    el.scene.classList.add('is-instant');
+    el.scene.classList.remove('is-flipped');
+    void el.cardInner.offsetWidth;
+    el.scene.classList.remove('is-instant');
+    syncFaces();
+  }
+
+  /* Only the face turned towards the reader is in the accessibility tree.
+     Both are always in the DOM — the card is sized to the taller of the two
+     so it doesn't resize mid-turn — and without this a screen reader would
+     read the answer straight out of the back of an unturned card.
+
+     The front is *disabled* once it has been turned away, not merely
+     aria-hidden. Two reasons, and they are the same reason twice: a focusable
+     element inside an aria-hidden subtree is a contradiction the spec
+     forbids, and a button a reader can Tab to but cannot see is the bug this
+     app already fixed once in the nav drawer. It also can't be turned twice. */
+  function syncFaces() {
+    const flipMode = state.mode === 'flip';
+    const showingBack = flipMode && state.flipped;
+    el.card.disabled = !flipMode || showingBack;
+    el.card.setAttribute('aria-hidden', String(showingBack));
+    el.cardBack.setAttribute('aria-hidden', String(!showingBack));
+  }
+
+  function flip() {
+    if (state.mode !== 'flip' || state.flipped || state.answered) return;
+    state.flipped = true;
+    el.scene.classList.add('is-flipped');
+    syncFaces();
+    el.grade.hidden = false;
+    // The answer, not the buttons: this is what the reader just asked for, and
+    // it is what a screen reader should say before offering a verdict on it.
+    el.cardBack.focus();
+  }
+
   function renderCard() {
     const item = currentItem();
     const adapter = adapterFor(item);
+    const flipMode = state.mode === 'flip';
     state.answered = false;
 
-    el.prompt.textContent = state.mode === 'choose' ? adapter.question : 'Үүнийг мэдэх үү?';
+    el.prompt.textContent = flipMode ? 'Үүнийг мэдэх үү?' : adapter.question;
     el.front.replaceChildren(adapter.front(item));
 
     const hintText = adapter.hint(item);
     el.hint.textContent = hintText;
     el.hint.hidden = !hintText;
 
+    /* The back is written on every render, in both modes, but only Flip mode
+       ever turns to it. In Choose mode it stays `hidden`, which also drops it
+       out of the grid that sizes the card — so a Choose card is exactly as
+       tall as its own question, as it always was. */
+    el.answer.textContent = adapter.meaning(item);
+    const back = flipMode ? adapter.detail(item) : null;
+    el.answerDetail.replaceChildren(...(back ? [back] : []));
+    el.cardBack.hidden = !flipMode;
+    el.flipHint.hidden = !flipMode;
+
     el.feedback.hidden = true;
     el.detail.replaceChildren();
-    el.card.classList.remove('is-correct', 'is-incorrect');
+    el.scene.classList.remove('is-correct', 'is-incorrect');
+    faceFront();
 
-    if (state.mode === 'choose') {
+    if (flipMode) {
+      el.options.hidden = true;
+      el.grade.hidden = true;
+      el.shortcuts.textContent = 'Space дарж эргүүлнэ · 1 сурч байна · 2 мэдсэн';
+    } else {
       renderOptions(item);
       el.options.hidden = false;
-      el.revealButton.hidden = true;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Хариулахын тулд 1–4 дар';
-    } else {
-      el.options.hidden = true;
-      el.revealButton.hidden = false;
-      el.grade.hidden = true;
-      el.shortcuts.textContent = 'Space дарж харуул · 1 сурч байна · 2 мэдсэн';
+      el.shortcuts.textContent = '1–4 дарж хариулна уу';
     }
 
     setProgress();
 
     // Restart the entrance animation: the class has to come off for a frame
     // before it can take effect again.
-    el.card.classList.remove('is-entering');
-    requestAnimationFrame(() => el.card.classList.add('is-entering'));
+    el.scene.classList.remove('is-entering');
+    requestAnimationFrame(() => el.scene.classList.add('is-entering'));
   }
 
   /* -- Answering ------------------------------------------------------------------------
@@ -479,20 +577,30 @@ function createQuiz({
     const item = currentItem();
     const adapter = adapterFor(item);
 
-    el.card.classList.add(knewIt ? 'is-correct' : 'is-incorrect');
+    el.scene.classList.add(knewIt ? 'is-correct' : 'is-incorrect');
 
-    /* The right answer is already highlighted among the options, so this
-       line's job on a miss isn't to repeat it — it's to say plainly that
-       the answer below is the one that was wanted, without the sting of
-       "wrong". In Flip mode there are no options to highlight, so naming
-       the meaning here is the only place it appears. */
+    /* Two different jobs, because the two modes leave the reader looking at
+       different things.
+
+       In Choose, the right answer is already highlighted among the options, so
+       this line only has to say plainly that the highlighted one is what was
+       wanted — without the sting of "wrong".
+
+       In Flip, the reader is looking at the answer: it is printed across the
+       face of the card they just turned. Repeating it here would be the third
+       time in two seconds, so the line reports the schedule instead, which is
+       the one thing the card cannot say. */
+    const flipMode = state.mode === 'flip';
     el.verdict.textContent = knewIt
       ? `Зөв · ${describeNextReview(record)}`
-      : `Хариулт нь “${adapter.meaning(item)}” байлаа`;
+      : flipMode
+        ? `Тэмдэглэлээ · ${describeNextReview(record)}`
+        : `Хариулт нь “${adapter.meaning(item)}” байлаа`;
     el.verdict.classList.toggle('is-correct', knewIt);
     el.verdict.classList.toggle('is-incorrect', !knewIt);
 
-    const detail = adapter.detail(item);
+    // Flip already carries the example on the back of the card.
+    const detail = flipMode ? null : adapter.detail(item);
     el.detail.replaceChildren(...(detail ? [detail] : []));
 
     el.feedback.hidden = false;
@@ -537,8 +645,10 @@ function createQuiz({
         if (button === chosenButton && !isAnswer) button.classList.add('is-wrong');
       }
     } else {
+      // The card stays turned: the answer is what the reader is grading
+      // themselves against, and it should still be there while they read the
+      // verdict underneath it.
       el.grade.hidden = true;
-      el.revealButton.hidden = true;
     }
 
     setProgress();
@@ -568,7 +678,7 @@ function createQuiz({
     const pct = total === 0 ? 0 : Math.round((state.correct / total) * 100);
     el.summaryText.textContent = state.missed.length === 0
       ? 'Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
-      : `Энэ давталтад ${pct}%. Доорхи нь бусдаасаа эрт эргэж ирнэ.`;
+      : `Энэ давталтад ${pct}%. Доорх зүйлс бусдаасаа эрт эргэж ирнэ.`;
 
     el.missedList.replaceChildren();
     for (const item of state.missed) {
@@ -625,11 +735,7 @@ function createQuiz({
     onExit();
   }
 
-  el.revealButton.addEventListener('click', () => {
-    el.revealButton.hidden = true;
-    el.grade.hidden = false;
-    el.missButton.focus();
-  });
+  el.card.addEventListener('click', flip);
 
   el.missButton.addEventListener('click', () => answer(false, null));
   el.knewButton.addEventListener('click', () => answer(true, null));
@@ -666,9 +772,14 @@ function createQuiz({
 
   el.doneButton.addEventListener('click', close);
 
-  /* Keyboard: 1–4 answer in Choose, Space reveals and 1/2 grade in Flip,
-     Enter continues past a wrong answer. Guarded by isActive() so the keys
-     never fire while another view is on screen. */
+  /* Keyboard: 1–4 answer in Choose, Space turns the card and 1/2 grade it in
+     Flip, Enter continues past a wrong answer. Guarded by isActive() so the
+     keys never fire while another view is on screen.
+
+     Space is handled here rather than left to the card button's own native
+     activation, because it has to work wherever focus happens to be — the
+     grade buttons, the End button, nothing at all. When the card *does* have
+     focus, preventDefault() stops the native click, so it only turns once. */
   function handleKeydown(event) {
     if (event.repeat) return;
     if (el.panel.hidden || !el.summary.hidden) return;
@@ -692,10 +803,10 @@ function createQuiz({
       return;
     }
 
-    if (el.grade.hidden) {
+    if (!state.flipped) {
       if (event.code === 'Space' || event.key === 'Enter') {
         event.preventDefault();
-        el.revealButton.click();
+        flip();
       }
       return;
     }

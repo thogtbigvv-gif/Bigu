@@ -107,9 +107,9 @@ function buildStagePanel(stageId, passage) {
     case 'translation':
       return createSentenceGroup(passage, { showTranslation: true });
     case 'vocabulary':
-      return createComingSoonPanel('Энэ эхийн үгийн задаргаа удахгүй нэмэгдэнэ.');
+      return createComingSoonPanel('Энэ бичвэрийн үгийн задаргаа удахгүй нэмэгдэнэ.');
     case 'grammar':
-      return createComingSoonPanel('Энэ эхийн хэл зүйн тайлбар удахгүй нэмэгдэнэ.');
+      return createComingSoonPanel('Энэ бичвэрийн хэл зүйн тайлбар удахгүй нэмэгдэнэ.');
     case 'questions':
       return createComingSoonPanel('Ойлголтын асуултууд удахгүй нэмэгдэнэ.');
     case 'shadowing':
@@ -276,7 +276,7 @@ function renderList(container, data) {
   }));
 
   const levelLabel = describeLevelSpan(rows.map((row) => row.bucket));
-  const count = `${data.passages.length} эх`;
+  const count = `${data.passages.length} бичвэр`;
 
   const summary = document.createElement('p');
   summary.className = 'reading-meta meta';
@@ -344,7 +344,7 @@ async function initReading() {
     load: loadReading,
     render: renderList,
     errorTitle: 'Reading ачаалагдсангүй.',
-    errorDetail: `Эхийн багц data/reading.json дотор байгаа. ${OFFLINE_HINT}`,
+    errorDetail: `Бичвэрийн багц data/reading.json дотор байгаа. ${OFFLINE_HINT}`,
   });
 }
 
