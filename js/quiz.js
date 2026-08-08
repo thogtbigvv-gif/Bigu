@@ -39,7 +39,7 @@ const CORRECT_PAUSE_MS = 650;
 
 const MODES = [
   { id: 'choose', label: 'Choose', hint: 'Дөрвөн хариулт, шалгаж өгнө' },
-  { id: 'flip', label: 'Flip', hint: 'Санаад үзээд, өөрөө өөрийгөө дүгнэ' },
+  { id: 'flip', label: 'Flip', hint: 'Санаж үзээд, өөрөө өөрийгөө дүгнэнэ' },
 ];
 
 /* -- Item adapters ---------------------------------------------------------------------
@@ -452,12 +452,12 @@ function createQuiz({
       el.options.hidden = false;
       el.revealButton.hidden = true;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Хариулахын тулд 1–4 дар';
+      el.shortcuts.textContent = '1–4 дарж хариулна уу';
     } else {
       el.options.hidden = true;
       el.revealButton.hidden = false;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Space дарж харуул · 1 сурч байна · 2 мэдсэн';
+      el.shortcuts.textContent = 'Space дарж харуулна · 1 сурч байна · 2 мэдсэн';
     }
 
     setProgress();
@@ -568,7 +568,7 @@ function createQuiz({
     const pct = total === 0 ? 0 : Math.round((state.correct / total) * 100);
     el.summaryText.textContent = state.missed.length === 0
       ? 'Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
-      : `Энэ давталтад ${pct}%. Доорхи нь бусдаасаа эрт эргэж ирнэ.`;
+      : `Энэ давталтад ${pct}%. Доорх зүйлс бусдаасаа эрт эргэж ирнэ.`;
 
     el.missedList.replaceChildren();
     for (const item of state.missed) {

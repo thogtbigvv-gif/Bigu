@@ -204,7 +204,7 @@ function createRelatedBlock(entry, allEntries, onJump) {
   const related = entry.related ?? [];
 
   if (related.length === 0) {
-    return createComingSoonBlock('Холбоотой ханзнууд удахгүй нэмэгдэнэ.');
+    return createComingSoonBlock('Холбоотой ханз удахгүй нэмэгдэнэ.');
   }
 
   const wrap = document.createElement('div');
@@ -279,7 +279,7 @@ function renderDetail(elements, entry, level, allEntries, onJump) {
     createDetailSection('Meaning', createTextBlock(entry.meaning)),
     createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
     createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
-    createDetailSection('Stroke Order', createComingSoonBlock('Зурлагын дарааллын схем удахгүй нэмэгдэнэ.')),
+    createDetailSection('Stroke Order', createComingSoonBlock('Зурлагын дарааллын зураг удахгүй нэмэгдэнэ.')),
     createDetailSection('Animation', createComingSoonBlock('Зурлагын дарааллын хөдөлгөөнт дүрслэл удахгүй нэмэгдэнэ.')),
     createDetailSection('Examples', createExamplesBlock(entry)),
     createDetailSection('Related Kanji', createRelatedBlock(entry, allEntries, onJump)),
@@ -348,7 +348,7 @@ function renderGrid(container, data) {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Тохирох ханз олдсонгүй. Тэмдэгтээр нь, дуудлагаар нь, эсвэл утгаар нь оролдоод үз.';
+  empty.textContent = 'Тохирох ханз олдсонгүй. Тэмдэгт, дуудлага, эсвэл утгаар нь хайж үзнэ үү.';
   empty.hidden = true;
 
   /* The grid, its search field and its facets are one thing — the browse
@@ -417,7 +417,7 @@ function renderGrid(container, data) {
 
     const total = formatCount(data.kanji.length);
     const count = query || selected.size > 0
-      ? `${total} ханзнаас ${formatCount(matched.length)}`
+      ? `${total} ханзаас ${formatCount(matched.length)} нь тохирлоо`
       : `${total} ханз`;
     summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
     empty.hidden = matched.length > 0;

@@ -398,12 +398,12 @@ function createStorageNotice() {
 
   const title = document.createElement('p');
   title.className = 'error-state__title';
-  title.textContent = 'Энэ хөтөч Bigu-д юу ч хадгалуулахгүй байна.';
+  title.textContent = 'Энэ хөтөч Bigu-д юу ч хадгалахыг зөвшөөрөхгүй байна.';
 
   const detail = document.createElement('p');
   detail.className = 'error-state__detail';
   detail.textContent =
-    'Та хэвийн сурч болно, гэхдээ таны давтах хуваарь, санах ой, тэмдэглэл нь табыг хаахад алга болно. Ихэвчлэн нууц горимоос болдог; энэ хуудсанд сайтын өгөгдөл хадгалахыг зөвшөөрвөл засагдана.';
+    'Та хэвийн сурч болно, гэхдээ давтах хуваарь, санах ой, тэмдэглэл тань таб хаагдахад алга болно. Ихэвчлэн нууц горимоос болдог; энэ хуудсанд сайтын өгөгдөл хадгалахыг зөвшөөрвөл засарна.';
 
   wrap.append(title, detail);
   return wrap;
@@ -412,7 +412,7 @@ function createStorageNotice() {
 /* The second half of every error message in the app. Named once so the six
    views can't describe the same failure six different ways. */
 const OFFLINE_HINT =
-  'Татаж чадсангүй. Хэрэв та энэ хуудсыг файлаар нээсэн бол локал сервер дээр ажиллах хэрэгтэй — README дотор нэг мөр тушаал бий.';
+  'Үүнийг татаж чадсангүй. Хэрэв та энэ хуудсыг файлаар нээсэн бол локал сервер дээр ажиллуулах хэрэгтэй — шаардлагатай нэг мөр тушаалыг README дотор бичсэн байгаа.';
 
 /* Only what another module actually imports. renderError and
    renderSkeleton are the two halves of loadIntoView and are called from

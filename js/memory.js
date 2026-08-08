@@ -150,7 +150,7 @@ const SHELVES = [
     label: 'Fading',
     jp: '薄れゆく',
     note: 'Эдгээр нь бүдгэрчээ. Энд нэг минут зарцуулах нь шинэ үг цээжлэх нэг цагтай дүйнэ.',
-    empty: 'Бүдгэрсэн юм алга. Ховор тохиолдол, анзаарах нь зүйтэй.',
+    empty: 'Бүдгэрсэн юм алга. Ховор тохиолдол — анзаарах нь зүйтэй.',
     // Three strokes losing their length, left to right: the shelf's own
     // subject drawn in the page's own visual language.
     icon: [['path', { d: 'M3 2.5v11' }], ['path', { d: 'M8 5.5v8' }], ['path', { d: 'M13 9v4.5' }]],
@@ -159,7 +159,7 @@ const SHELVES = [
     key: 'newlyMet',
     label: 'Newly met',
     jp: 'はじめまして',
-    note: 'Сүүлийн долоо хоногийнх. Одоо ч танихгүй хэвээр — удахгүй чамайг дахин хэрэгтэй болно.',
+    note: 'Сүүлийн долоо хоногийнх. Одоо ч танил бус хэвээр — удахгүй дахин эргэж ирэх хэрэгтэй.',
     empty: 'Энэ долоо хоногт шинэ юмтай танилцаагүй байна.',
     icon: [['path', { d: 'M8 13.5V6' }], ['path', { d: 'M8 6C6 6 4.5 4.5 4.5 2.5 6.5 2.5 8 4 8 6z' }], ['path', { d: 'M8 7.5c0-1.8 1.4-3 3.2-3 0 1.8-1.4 3-3.2 3z' }]],
   },
@@ -167,16 +167,16 @@ const SHELVES = [
     key: 'hardToHold',
     label: 'Hard to hold',
     jp: '手ごわい',
-    note: 'Байнга мултарч байгаа нь. Буруу юм алга — зүгээр л богино завсартай давтах хэрэгтэй.',
-    empty: 'Одоогоор чамтай зүтгэлдэж байгаа юм алга.',
+    note: 'Байнга мартагдаад байгаа нь. Буруу юм алга — зүгээр л богино завсартай давтах хэрэгтэй.',
+    empty: 'Одоогоор таныг зовоож байгаа юм алга.',
     icon: [['path', { d: 'M2.5 6.5c1.8-2 3.6-2 5.5 0s3.7 2 5.5 0' }], ['path', { d: 'M2.5 10.5c1.8-2 3.6-2 5.5 0s3.7 2 5.5 0' }]],
   },
   {
     key: 'kept',
     label: 'Kept',
     jp: '大切',
-    note: 'Чиний өөрөө сонгосон нь. Давтах цаг нь болсон учраас биш — чамд таалагдсан учраас.',
-    empty: 'Хадгалсан юм хараахан алга. Аль ч картын хавчуургыг дарвал энд орно.',
+    note: 'Таны өөрөө сонгосон нь. Давтах цаг нь болсон учраас биш — танд таалагдсан учраас.',
+    empty: 'Хадгалсан юм хараахан алга. Аль ч картын хавчуургыг дарахад энд орно.',
     icon: [['path', { d: 'M4 2.5h8v11l-4-3-4 3z' }]],
   },
   {
@@ -184,7 +184,7 @@ const SHELVES = [
     label: 'Deep ink',
     jp: '深い',
     note: 'Долоо хоногоор тогтсон нь. Одоо ховорхон эргэж ирнэ — зөвхөн бараан хэвээр үлдэхийн тулд.',
-    empty: 'Хараахан ийм гүнд хүрсэн юм алга. Санаатайгаар долоо хоногууд шаарддаг.',
+    empty: 'Хараахан ийм гүнд хүрсэн юм алга. Үүнд долоо хоног шаардагдана — санаатай ийм болгосон.',
     icon: [['path', { d: 'M8 2.5c2.6 3 4 5 4 6.6a4 4 0 0 1-8 0c0-1.6 1.4-3.6 4-6.6z' }]],
   },
 ];
@@ -472,8 +472,8 @@ function createSlip(entry, onGraded, onKeptChange) {
     slip.classList.add('is-graded');
 
     note.textContent = knewIt
-      ? `Улам бараан боллоо. ${describeTiming(next)}.`
-      : 'Тэмдэглэлээ — энэ өнөөдөр эргэж ирнэ.';
+      ? `Улам бараан боллоо — ${describeTiming(next)}.`
+      : 'Тэмдэглэлээ — энэ нь өнөөдөр эргэж ирнэ.';
 
     actions.hidden = true;
 
@@ -585,11 +585,11 @@ function heroLines({ waiting, fading, seenCount }) {
     };
   }
 
-  const line = `${due} үг чамайг хүлээж байна.`;
+  const line = `${due} үг таныг хүлээж байна.`;
 
-  if (fading === 0) return { line, sub: 'Тэдний нэг нь ч хараахан бүдгэрээгүй. Хэдхэн минут л ийм хэвээр байлгана.' };
+  if (fading === 0) return { line, sub: 'Тэдний нэг нь ч хараахан бүдгэрээгүй. Хэдхэн минут зарцуулахад ийм хэвээр үлдэнэ.' };
   if (fading === due) return { line, sub: 'Бүгд нь бүдгэрчээ. Эндээс эхэлбэл үлдсэн нь амархан.' };
-  return { line, sub: `${fading} нь бүдгэрчээ — эхлээд тэднийг.` };
+  return { line, sub: `${fading} нь бүдгэрчээ — эхлээд тэднийг харна уу.` };
 }
 
 function createHero(summary) {
@@ -612,7 +612,7 @@ function createHero(summary) {
     wash.setAttribute('role', 'img');
     wash.setAttribute(
       'aria-label',
-      `Таны танилцсан ${summary.seenCount} зүйлийн санамжийн дундаж хүч: ${Math.round(summary.averageStrength * 100)} хувь.`,
+      `Таны танилцсан ${summary.seenCount} зүйлийн санах ойн дундаж хүч: ${Math.round(summary.averageStrength * 100)} хувь.`,
     );
     const stroke = element('span', 'memory-hero__stroke');
     stroke.setAttribute('aria-hidden', 'true');
@@ -676,7 +676,7 @@ function createWeek(week, streak) {
 
   const note = element('p', 'memory-week__note');
   if (streak === 0) {
-    note.textContent = 'Одоогоор цуваа алга. Өнөөдөр нэг үг л шинээр эхлүүлнэ.';
+    note.textContent = 'Одоогоор цуваа алга. Өнөөдөр нэг үг ч гэсэн шинэ цуваа эхлүүлнэ.';
   } else {
     note.append(
       element('span', 'memory-week__streak', String(streak)),
@@ -707,7 +707,7 @@ function createEmptyState() {
     element(
       'p',
       'memory-empty__body',
-      'Танилцсан үг бүр чинь энд бэхээр бичигдэнэ. Бэх нь өөрөө бүдгэрдэг — эргэж ирэх бүрд дахин барааждаг. Бүх учир нь тэр.',
+      'Таны танилцсан үг бүр энд бэхээр бичигдэнэ. Бэх нь өөрөө бүдгэрдэг — эргэж ирэх бүрд дахин барааждаг. Бүх учир нь тэр.',
     ),
   );
 
@@ -849,7 +849,7 @@ async function initMemory() {
       load: () => Promise.all([loadVocabulary(), loadGrammar(), loadKanji(), loadLessons()]),
       render: renderMemory,
       errorTitle: 'Memory ачаалагдсангүй.',
-      errorDetail: `Энэ хуудас таны хадгалсан ахиц юуг заасныг мэдэхийн тулд data/ доторх дөрвөн агуулгын файлыг уншдаг бөгөөд тэдгээрийн ядаж нэг нь ирсэнгүй. ${OFFLINE_HINT}`,
+      errorDetail: `Энэ хуудас таны хадгалсан ахиц ямар зүйлд хамаарахыг мэдэхийн тулд data/ доторх дөрвөн агуулгын файлыг уншдаг бөгөөд тэдгээрийн ядаж нэг нь ирээгүй байна. ${OFFLINE_HINT}`,
     });
   }
 

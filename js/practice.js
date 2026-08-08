@@ -111,7 +111,7 @@ function buildView(container) {
 
   const historyEmpty = document.createElement('p');
   historyEmpty.className = 'empty-state';
-  historyEmpty.textContent = 'Хичээллэлт хараахан алга — нэг давталт дуусгавал энд харагдана.';
+  historyEmpty.textContent = 'Дуусгасан давталт хараахан алга — нэгийг дуусгавал энд харагдана.';
 
   history.append(historyHeading, historyList, historyEmpty);
 
@@ -185,13 +185,13 @@ function initController(elements, decks) {
 
     if (state.deck === 'mistakes') {
       elements.status.textContent =
-        `Бүх багцаас таны байнга буруу хариулж байсан ${formatCount(items.length)} зүйл. Нэг давталт хамгийн ихдээ ${size}-ыг хамарна.`;
+        `Бүх багцаас таны байнга буруу хариулж байсан ${formatCount(items.length)} зүйл. Нэг давталтад хамгийн ихдээ ${size} зүйл багтана.`;
       return;
     }
 
     if (due === 0 && fresh === 0) {
       elements.status.textContent =
-        'Давтах юм алга — эндэх бүхэн урьдчилан хуваарилагдсан. Одоо давтвал хамгийн ойрын хугацаанд эргэж ирэхийг нь үзнэ.';
+        'Давтах зүйл алга — энд байгаа бүхний хугацаа хараахан болоогүй байна. Одоо давтвал хамгийн ойрд эргэж ирэх зүйлсийг үзнэ.';
       return;
     }
 
@@ -200,10 +200,10 @@ function initController(elements, decks) {
        attached to the word "not" is a debt notice, not a status line — so
        what's due leads, and "not started" only appears alongside it. */
     const parts = [];
-    if (due > 0) parts.push(`${formatCount(due)} давтах`);
-    if (fresh > 0) parts.push(`${formatCount(fresh)} эхлээгүй`);
+    if (due > 0) parts.push(`${formatCount(due)} зүйл давтах цаг болсон`);
+    if (fresh > 0) parts.push(`${formatCount(fresh)} зүйл хараахан эхлээгүй`);
     elements.status.textContent =
-      `${parts.join(' · ')}. Нэг давталт хамгийн ихдээ ${size}-ыг, давтах ёстойг нь эхэлж хамарна.`;
+      `${parts.join(' · ')}. Нэг давталтад хамгийн ихдээ ${size} зүйл багтах ба цаг нь болсныг эхэлж үзнэ.`;
   }
 
   function selectDeck(key) {
@@ -351,7 +351,7 @@ async function initPractice() {
     console.error('[Bigu]', error);
     elements.deckGroup.hidden = true;
     elements.status.textContent =
-      'Давталтын багцууд ачаалагдсангүй. Тэдгээр нь data/ доторх дөрвөн JSON файлаас бүтдэг бөгөөд ядаж нэг нь ирсэнгүй — хэрэв та энэ хуудсыг файлаар нээсэн бол локал сервер дээр ажиллах хэрэгтэй.';
+      'Давталтын багцууд ачаалагдсангүй. Тэдгээр нь data/ доторх дөрвөн JSON файлаас бүтдэг бөгөөд ядаж нэг нь ирээгүй байна — хэрэв та энэ хуудсыг файлаар нээсэн бол локал сервер дээр ажиллуулах хэрэгтэй.';
     elements.startButton.hidden = true;
   }
 }

@@ -280,12 +280,12 @@ function renderList(container, data) {
 
     if (!filtering) {
       return withSpan(matched.length > shown
-        ? `${total} үгээс ${formatCount(shown)}-ыг харуулж байна`
+        ? `${total} үгээс ${formatCount(shown)} нь харагдаж байна`
         : `${total} үг`);
     }
 
-    const found = `${total} үгээс ${formatCount(matched.length)}`;
-    return withSpan(matched.length > shown ? `${found} — ${formatCount(shown)}-ыг харуулж байна` : found);
+    const found = `${total} үгээс ${formatCount(matched.length)} нь тохирлоо`;
+    return withSpan(matched.length > shown ? `${found}, ${formatCount(shown)} нь харагдаж байна` : found);
   }
 
   /* Recomputes the match set and starts the list again from the first page.
@@ -309,8 +309,8 @@ function renderList(container, data) {
 
     empty.hidden = matched.length > 0;
     empty.textContent = hideRemembered && !query && selectedTags.size === 0
-      ? 'Эндэх бүхэн аль хэдийн санах ойд орсон байна. Бүтэн жагсаалтыг харахын тулд шүүлтүүрээ цэвэрлэ.'
-      : 'Тохирох үг олдсонгүй. Өөр дуудлагаар, эсвэл цөөн шүүлтүүрээр оролдоод үз.';
+      ? 'Энд байгаа бүхэн аль хэдийн санах ойд орсон байна. Бүтэн жагсаалтыг харахын тулд шүүлтүүрээ цэвэрлэнэ үү.'
+      : 'Тохирох үг олдсонгүй. Өөр дуудлагаар, эсвэл цөөн шүүлтүүрээр хайж үзнэ үү.';
   }
 
   searchInput.addEventListener('input', debounce(applyFilter));
