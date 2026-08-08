@@ -107,15 +107,15 @@ function buildStagePanel(stageId, passage) {
     case 'translation':
       return createSentenceGroup(passage, { showTranslation: true });
     case 'vocabulary':
-      return createComingSoonPanel('Vocabulary breakdown for this passage is coming soon.');
+      return createComingSoonPanel('Энэ эхийн үгийн задаргаа удахгүй нэмэгдэнэ.');
     case 'grammar':
-      return createComingSoonPanel('Grammar notes for this passage are coming soon.');
+      return createComingSoonPanel('Энэ эхийн хэл зүйн тайлбар удахгүй нэмэгдэнэ.');
     case 'questions':
-      return createComingSoonPanel('Comprehension questions are coming soon.');
+      return createComingSoonPanel('Ойлголтын асуултууд удахгүй нэмэгдэнэ.');
     case 'shadowing':
-      return createComingSoonPanel('Shadowing practice is coming soon.');
+      return createComingSoonPanel('Давтан хэлэх дасгал удахгүй нэмэгдэнэ.');
     default:
-      return createComingSoonPanel('This stage is coming soon.');
+      return createComingSoonPanel('Энэ шат удахгүй нэмэгдэнэ.');
   }
 }
 
@@ -149,7 +149,7 @@ function createPassageCard(passage, level, onOpen) {
 
   const meta = document.createElement('p');
   meta.className = 'reading-card__meta meta';
-  meta.textContent = `${passage.sentences.length} sentences`;
+  meta.textContent = `${passage.sentences.length} өгүүлбэр`;
 
   const openButton = document.createElement('button');
   openButton.type = 'button';
@@ -276,7 +276,7 @@ function renderList(container, data) {
   }));
 
   const levelLabel = describeLevelSpan(rows.map((row) => row.bucket));
-  const count = `${data.passages.length} passages`;
+  const count = `${data.passages.length} эх`;
 
   const summary = document.createElement('p');
   summary.className = 'reading-meta meta';
@@ -343,8 +343,8 @@ async function initReading() {
     skeleton: 'card-grid',
     load: loadReading,
     render: renderList,
-    errorTitle: 'Reading passages didn’t load.',
-    errorDetail: `The passage set is in data/reading.json. ${OFFLINE_HINT}`,
+    errorTitle: 'Reading ачаалагдсангүй.',
+    errorDetail: `Эхийн багц data/reading.json дотор байгаа. ${OFFLINE_HINT}`,
   });
 }
 

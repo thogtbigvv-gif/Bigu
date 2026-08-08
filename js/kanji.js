@@ -204,7 +204,7 @@ function createRelatedBlock(entry, allEntries, onJump) {
   const related = entry.related ?? [];
 
   if (related.length === 0) {
-    return createComingSoonBlock('Related kanji are coming soon.');
+    return createComingSoonBlock('Холбоотой ханзнууд удахгүй нэмэгдэнэ.');
   }
 
   const wrap = document.createElement('div');
@@ -279,8 +279,8 @@ function renderDetail(elements, entry, level, allEntries, onJump) {
     createDetailSection('Meaning', createTextBlock(entry.meaning)),
     createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
     createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
-    createDetailSection('Stroke Order', createComingSoonBlock('Stroke order diagrams are coming soon.')),
-    createDetailSection('Animation', createComingSoonBlock('Stroke order animation is coming soon.')),
+    createDetailSection('Stroke Order', createComingSoonBlock('Зурлагын дарааллын схем удахгүй нэмэгдэнэ.')),
+    createDetailSection('Animation', createComingSoonBlock('Зурлагын дарааллын хөдөлгөөнт дүрслэл удахгүй нэмэгдэнэ.')),
     createDetailSection('Examples', createExamplesBlock(entry)),
     createDetailSection('Related Kanji', createRelatedBlock(entry, allEntries, onJump)),
   );
@@ -313,7 +313,7 @@ function renderGrid(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField({
     id: 'kanji-search',
     label: 'Search kanji',
-    placeholder: 'Character, reading, or meaning',
+    placeholder: 'Тэмдэгт, дуудлага, эсвэл утга',
   });
 
   const summary = document.createElement('p');
@@ -348,7 +348,7 @@ function renderGrid(container, data) {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'No kanji match that. Try the character itself, a reading, or a meaning.';
+  empty.textContent = 'Тохирох ханз олдсонгүй. Тэмдэгтээр нь, дуудлагаар нь, эсвэл утгаар нь оролдоод үз.';
   empty.hidden = true;
 
   /* The grid, its search field and its facets are one thing — the browse
@@ -417,8 +417,8 @@ function renderGrid(container, data) {
 
     const total = formatCount(data.kanji.length);
     const count = query || selected.size > 0
-      ? `${formatCount(matched.length)} of ${total} kanji`
-      : `${total} kanji`;
+      ? `${total} ханзнаас ${formatCount(matched.length)}`
+      : `${total} ханз`;
     summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
     empty.hidden = matched.length > 0;
   }
@@ -447,8 +447,8 @@ async function initKanji() {
     skeleton: 'compact-grid',
     load: loadKanji,
     render: renderGrid,
-    errorTitle: 'Kanji didn’t load.',
-    errorDetail: `The character set is in data/kanji.json. ${OFFLINE_HINT}`,
+    errorTitle: 'Kanji ачаалагдсангүй.',
+    errorDetail: `Тэмдэгтийн багц data/kanji.json дотор байгаа. ${OFFLINE_HINT}`,
   });
 }
 

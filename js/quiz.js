@@ -38,8 +38,8 @@ const CHOICE_COUNT = 4;
 const CORRECT_PAUSE_MS = 650;
 
 const MODES = [
-  { id: 'choose', label: 'Choose', hint: 'Four answers, checked for you' },
-  { id: 'flip', label: 'Flip', hint: 'Recall it, then grade yourself' },
+  { id: 'choose', label: 'Choose', hint: 'Дөрвөн хариулт, шалгаж өгнө' },
+  { id: 'flip', label: 'Flip', hint: 'Санаад үзээд, өөрөө өөрийгөө дүгнэ' },
 ];
 
 /* -- Item adapters ---------------------------------------------------------------------
@@ -102,7 +102,7 @@ function exampleBlock({ jp, reading, mn }) {
 const ADAPTERS = {
   lessons: {
     label: 'Lessons',
-    question: 'What does this word mean?',
+    question: 'Энэ үг ямар утгатай вэ?',
     front: (item) => furigana(item.word, item.reading),
     hint: () => '',
     meaning: (item) => item.english,
@@ -111,7 +111,7 @@ const ADAPTERS = {
 
   vocabulary: {
     label: 'Vocabulary',
-    question: 'What does this word mean?',
+    question: 'Энэ үг ямар утгатай вэ?',
     front: (item) => (item.kanji ? furigana(item.kanji, item.kana) : jpSpan(item.kana)),
     hint: (item) => item.partOfSpeech,
     meaning: (item) => item.meaning,
@@ -120,7 +120,7 @@ const ADAPTERS = {
 
   grammar: {
     label: 'Grammar',
-    question: 'What does this pattern mean?',
+    question: 'Энэ хэлбэр ямар утгатай вэ?',
     front: (item) => {
       const wrap = document.createElement('span');
       wrap.lang = 'ja';
@@ -134,7 +134,7 @@ const ADAPTERS = {
 
   kanji: {
     label: 'Kanji',
-    question: 'What does this kanji mean?',
+    question: 'Энэ ханз ямар утгатай вэ?',
     front: (item) => jpSpan(item.character),
     hint: (item) => [item.onyomi, item.kunyomi].filter(Boolean).join(' ・ '),
     meaning: (item) => item.meaning,
@@ -436,7 +436,7 @@ function createQuiz({
     const adapter = adapterFor(item);
     state.answered = false;
 
-    el.prompt.textContent = state.mode === 'choose' ? adapter.question : 'Do you know this one?';
+    el.prompt.textContent = state.mode === 'choose' ? adapter.question : 'Үүнийг мэдэх үү?';
     el.front.replaceChildren(adapter.front(item));
 
     const hintText = adapter.hint(item);
@@ -452,12 +452,12 @@ function createQuiz({
       el.options.hidden = false;
       el.revealButton.hidden = true;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Press 1–4 to answer';
+      el.shortcuts.textContent = 'Хариулахын тулд 1–4 дар';
     } else {
       el.options.hidden = true;
       el.revealButton.hidden = false;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Space to reveal · 1 still learning · 2 knew it';
+      el.shortcuts.textContent = 'Space дарж харуул · 1 сурч байна · 2 мэдсэн';
     }
 
     setProgress();
@@ -487,8 +487,8 @@ function createQuiz({
        "wrong". In Flip mode there are no options to highlight, so naming
        the meaning here is the only place it appears. */
     el.verdict.textContent = knewIt
-      ? `Correct · ${describeNextReview(record)}`
-      : `The answer was “${adapter.meaning(item)}”`;
+      ? `Зөв · ${describeNextReview(record)}`
+      : `Хариулт нь “${adapter.meaning(item)}” байлаа`;
     el.verdict.classList.toggle('is-correct', knewIt);
     el.verdict.classList.toggle('is-incorrect', !knewIt);
 
@@ -567,8 +567,8 @@ function createQuiz({
 
     const pct = total === 0 ? 0 : Math.round((state.correct / total) * 100);
     el.summaryText.textContent = state.missed.length === 0
-      ? 'Every one right. Nothing left over from this round.'
-      : `${pct}% this round. The ones below come back sooner than the rest.`;
+      ? 'Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
+      : `Энэ давталтад ${pct}%. Доорхи нь бусдаасаа эрт эргэж ирнэ.`;
 
     el.missedList.replaceChildren();
     for (const item of state.missed) {
@@ -741,7 +741,7 @@ function createModePicker(initialMode, onChange) {
   const label = document.createElement('p');
   label.className = 'quiz-modes__label';
   label.id = labelId;
-  label.textContent = 'How do you want to study?';
+  label.textContent = 'Хэрхэн сурмаар байна?';
 
   const group = document.createElement('div');
   group.className = 'quiz-modes__group';

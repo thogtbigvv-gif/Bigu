@@ -1,7 +1,7 @@
 {
   "name": "Bigu — a place to learn Japanese",
   "short_name": "Bigu",
-  "description": "A calm, personal Japanese environment: vocabulary, kanji, grammar, reading, review and a journal, from the foundation of the language upward. Built to be lived in daily, not aimed at one exam date.",
+  "description": "Тайван, хувийн япон хэлний орчин: үг, ханз, хэл зүй, унших, давтах, тэмдэглэл — хэлний үндсээс дээшээ. Нэг шалгалтын өдөрт биш, өдөр бүр амьдрахад зориулж хийсэн.",
   "id": "./",
   "start_url": "./",
   "scope": "./",

@@ -84,10 +84,10 @@ function collectStudyDays({ entries, sessions, records }) {
     days.get(key).add(kind);
   }
 
-  for (const entry of entries) mark(entry.date, 'journal');
-  for (const session of sessions) mark(toDateKey(new Date(session.createdAt)), 'review');
+  for (const entry of entries) mark(entry.date, 'тэмдэглэл');
+  for (const session of sessions) mark(toDateKey(new Date(session.createdAt)), 'давталт');
   for (const record of records) {
-    if (record && record.lastSeen) mark(toDateKey(new Date(record.lastSeen)), 'learning');
+    if (record && record.lastSeen) mark(toDateKey(new Date(record.lastSeen)), 'шинэ үг');
   }
 
   return days;
@@ -162,17 +162,17 @@ const FIRST_VISIT_STEPS = [
   {
     jp: '出会う',
     title: 'Meet a word',
-    body: 'Lessons are the on-ramp — fifteen of them, a handful of words each. Vocabulary, grammar and kanji are there when you want to browse instead.',
+    body: 'Lessons бол эхлэх зам — арван таван хичээл, тус бүр хэдхэн үгтэй. Харин зүгээр нэг эргэж харах юм бол Vocabulary, Grammar, Kanji гурав хүлээж байна.',
   },
   {
     jp: '思い出す',
     title: 'Try to recall it',
-    body: 'Review shows you the Japanese and asks before it shows you the meaning. Answer honestly; the schedule is built out of your answers, not out of a score.',
+    body: 'Review чамд япон талыг үзүүлээд, утгыг харуулахаасаа өмнө асууна. Үнэнээр хариул; давтах хуваарь чинь оноогоор биш, чиний хариултаас бүтдэг.',
   },
   {
     jp: '薄れる',
     title: 'Watch the ink fade',
-    body: 'Every word you meet starts fading the moment you meet it. Memory shows you which ones are going faint, so a short visit always has something worth doing.',
+    body: 'Танилцсан үг бүр чинь тэр агшнаасаа бүдгэрч эхэлдэг. Memory аль нь бүдгэрч байгааг харуулна — тиймээс богинохон орж ирэхэд ч хийх үнэ цэнэтэй зүйл үргэлж байна.',
   },
 ];
 
@@ -188,7 +188,7 @@ function createWelcome() {
   const heading = document.createElement('h2');
   heading.className = 'dashboard-welcome__heading';
   heading.id = 'dashboard-welcome-heading';
-  heading.textContent = 'Three things, and that’s the whole app.';
+  heading.textContent = 'Гурван зүйл, аппын бүхий л агуулга нь тэр.';
 
   const steps = document.createElement('ol');
   steps.className = 'dashboard-welcome__steps';
@@ -240,7 +240,7 @@ function createWelcome() {
   const note = document.createElement('p');
   note.className = 'dashboard-welcome__note meta';
   note.textContent =
-    'Everything you do stays in this browser and never leaves the device. Settings has a one-click backup when you want a copy.';
+    'Таны хийсэн бүхэн энэ хөтөч дотор үлдэж, төхөөрөмжөөс хэзээ ч гардаггүй. Хуулбар авмаар бол Settings дотор нэг товшилтоор нөөцлөх боломж бий.';
 
   foot.append(note);
   card.append(kicker, heading, steps, actions, foot);
@@ -285,12 +285,12 @@ function createCard(titleText) {
    backlog. */
 function describeToday({ due, new: fresh }) {
   if (due > 0) {
-    return 'Scheduled by how well you knew each one last time — the oldest come first.';
+    return 'Өнгөрсөн удаад хэр сайн мэдэж байснаар чинь хуваарилагдсан — хамгийн эртнийх нь эхэлнэ.';
   }
   if (fresh > 0) {
-    return 'Nothing is due. A good day to meet something new instead.';
+    return 'Давтах юм алга. Оронд нь шинэ зүйлтэй танилцах сайхан өдөр.';
   }
-  return 'Everything is scheduled ahead. Nothing needs you today.';
+  return 'Бүгд урьдчилан хуваарилагдсан. Өнөөдөр чамайг хүлээж буй зүйл алга.';
 }
 
 /* One line, only when the reader has asked for one. See the note on
@@ -307,8 +307,8 @@ function createGoalLine(reviewedToday, goal) {
   const label = document.createElement('p');
   label.className = 'dashboard-goal__label meta';
   label.textContent = reached
-    ? `Today’s goal met — ${reviewedToday} reviewed.`
-    : `${reviewedToday} of ${goal} reviewed today.`;
+    ? `Өнөөдрийн зорилго биеллээ — ${reviewedToday} зүйл давталаа.`
+    : `Өнөөдөр ${goal}-аас ${reviewedToday}-ыг давтлаа.`;
 
   const track = document.createElement('div');
   track.className = 'dashboard-goal__track';
@@ -346,7 +346,7 @@ function createTodayCard(counts, { reviewedToday, goal }) {
 
   const label = document.createElement('p');
   label.className = 'meta';
-  label.textContent = counts.due === 1 ? 'item due' : 'items due';
+  label.textContent = 'зүйл давтах';
 
   const detail = document.createElement('p');
   detail.className = 'dashboard-today__detail';
@@ -381,19 +381,19 @@ function createStreakCard(days, entries) {
 
   const label = document.createElement('p');
   label.className = 'meta';
-  label.textContent = streak === 1 ? 'day streak' : 'days streak';
+  label.textContent = 'өдрийн цуваа';
 
   // Names what today's activity actually was, so a streak counting three
   // kinds of study stays honest about which of them earned the day.
   const kinds = document.createElement('p');
   kinds.className = 'meta';
   kinds.textContent = days.has(today)
-    ? `Today: ${[...days.get(today)].sort().join(' · ')}`
-    : 'Reviewing, learning a word, or writing an entry all count.';
+    ? `Өнөөдөр: ${[...days.get(today)].sort().join(' · ')}`
+    : 'Давтах, шинэ үг сурах, тэмдэглэл бичих — бүгд тооцогдоно.';
 
   const best = document.createElement('p');
   best.className = 'meta';
-  best.textContent = `Best streak: ${longest} ${longest === 1 ? 'day' : 'days'}`;
+  best.textContent = `Хамгийн урт цуваа: ${longest} ${longest === 1 ? 'өдөр' : 'өдөр'}`;
 
   card.append(count, label, kinds, best);
 
@@ -406,7 +406,7 @@ function createStreakCard(days, entries) {
   } else {
     const done = document.createElement('p');
     done.className = 'dashboard-card__status';
-    done.textContent = 'Today’s entry is written ✓';
+    done.textContent = 'Өнөөдрийн тэмдэглэл бичигдсэн ✓';
     card.append(done);
   }
 
@@ -452,17 +452,17 @@ function createMemoryCard(entries) {
 
   const label = document.createElement('p');
   label.className = 'meta';
-  label.textContent = held === 1 ? 'word in memory' : 'words in memory';
+  label.textContent = 'үг санах ойд';
 
   const detail = document.createElement('p');
   detail.className = 'dashboard-today__detail';
   if (held === 0) {
-    detail.textContent = 'Nothing written yet. Every word you meet starts fading the moment you meet it — this is where you watch it.';
+    detail.textContent = 'Бичигдсэн юм хараахан алга. Танилцсан үг бүр чинь тэр агшнаасаа бүдгэрч эхэлдэг — түүнийг эндээс ажиглана.';
   } else {
     const band = bandFor(strengthTotal / held);
     detail.textContent = fading > 0
-      ? `The ink is ${band.label} overall, and ${fading} ${fading === 1 ? 'word has' : 'words have'} gone faint.`
-      : `The ink is ${band.label} across all of them. Nothing has gone faint.`;
+      ? `Бэх нийтдээ ${band.label} байна, ${fading} үг бүдгэрчээ.`
+      : `Бүгдийнх нь бэх ${band.label} байна. Бүдгэрсэн юм алга.`;
   }
 
   const cta = document.createElement('a');
@@ -495,7 +495,7 @@ function createPracticeCard(sessions) {
   if (!latest) {
     const empty = document.createElement('p');
     empty.className = 'meta';
-    empty.textContent = 'You haven’t reviewed yet.';
+    empty.textContent = 'Та хараахан давтаж эхлээгүй байна.';
     card.append(empty);
   } else {
     /* A step down from the other three figures, and its own class. A score
@@ -513,8 +513,8 @@ function createPracticeCard(sessions) {
     const label = document.createElement('p');
     label.className = 'meta';
     label.textContent = modeLabel
-      ? `marked "I knew it" · ${modeLabel} · ${formatSessionDate(latest.createdAt)}`
-      : `marked "I knew it" · ${formatSessionDate(latest.createdAt)}`;
+      ? `"I knew it" гэж тэмдэглэсэн · ${modeLabel} · ${formatSessionDate(latest.createdAt)}`
+      : `"I knew it" гэж тэмдэглэсэн · ${formatSessionDate(latest.createdAt)}`;
 
     card.append(score, label);
   }
@@ -551,13 +551,13 @@ function renderHeroStatus(counts, { firstVisit }) {
   if (!status) return;
 
   if (firstVisit) {
-    status.textContent = 'A quiet place to learn Japanese, a few words at a time.';
+    status.textContent = 'Япон хэлийг хэдхэн үгээр нь тайван сурах орон зай.';
   } else if (counts.due > 0) {
-    status.textContent = `${formatCount(counts.due)} item${counts.due === 1 ? '' : 's'} due today.`;
+    status.textContent = `Өнөөдөр ${formatCount(counts.due)} зүйл давтах ёстой.`;
   } else if (counts.new > 0) {
-    status.textContent = 'Nothing due today — a good day to start something new.';
+    status.textContent = 'Өнөөдөр давтах юм алга — шинэ зүйл эхлэх сайхан өдөр.';
   } else {
-    status.textContent = 'All caught up.';
+    status.textContent = 'Бүх зүйл гүйцсэн.';
   }
 }
 
@@ -642,8 +642,8 @@ async function initDashboard() {
       skeleton: 'dashboard',
       load: () => Promise.all([loadVocabulary(), loadGrammar(), loadKanji(), loadLessons()]),
       render: renderGrid,
-      errorTitle: 'The dashboard didn’t load.',
-      errorDetail: `It summarizes lessons, vocabulary, grammar, and kanji, and at least one of those didn’t arrive. ${OFFLINE_HINT}`,
+      errorTitle: 'Dashboard ачаалагдсангүй.',
+      errorDetail: `Энэ нь хичээл, үг, хэл зүй, ханзыг нэгтгэн харуулдаг бөгөөд эдгээрийн ядаж нэг нь ирсэнгүй. ${OFFLINE_HINT}`,
     });
   }
 

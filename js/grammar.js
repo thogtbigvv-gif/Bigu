@@ -167,7 +167,7 @@ function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField({
     id: 'grammar-search',
     label: 'Search grammar',
-    placeholder: 'Pattern or meaning',
+    placeholder: 'Хэлбэр эсвэл утга',
   });
 
   const summary = document.createElement('p');
@@ -193,7 +193,7 @@ function renderList(container, data) {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'No patterns match that. Try part of the pattern, or its meaning.';
+  empty.textContent = 'Тохирох хэлбэр олдсонгүй. Хэлбэрийн хэсгээр, эсвэл утгаар нь оролдоод үз.';
   empty.hidden = true;
 
   const selectedTags = new Set();
@@ -209,8 +209,8 @@ function renderList(container, data) {
     }
     const total = formatCount(data.points.length);
     const count = query || selectedTags.size > 0
-      ? `${formatCount(visible)} of ${total} patterns`
-      : `${total} patterns`;
+      ? `${total} хэлбэрээс ${formatCount(visible)}`
+      : `${total} хэлбэр`;
     summary.textContent = levelLabel ? `${levelLabel} · ${count}` : count;
     empty.hidden = visible > 0;
   }
@@ -241,8 +241,8 @@ async function initGrammar() {
     skeleton: 'list',
     load: loadGrammar,
     render: renderList,
-    errorTitle: 'Grammar points didn’t load.',
-    errorDetail: `The pattern list is in data/grammar.json. ${OFFLINE_HINT}`,
+    errorTitle: 'Grammar ачаалагдсангүй.',
+    errorDetail: `Хэлбэрийн жагсаалт data/grammar.json дотор байгаа. ${OFFLINE_HINT}`,
   });
 }
 

@@ -169,10 +169,10 @@ const FAINT_STRENGTH = 0.35;
    tone above faint, and labelling one of those tones "fading" put the word
    "fading" on items that were explicitly not on the Fading shelf. */
 const STRENGTH_BANDS = [
-  { key: 'deep', label: 'deep', min: 0.75 },
-  { key: 'steady', label: 'steady', min: 0.5 },
-  { key: 'pale', label: 'pale', min: FAINT_STRENGTH },
-  { key: 'faint', label: 'faint', min: 0 },
+  { key: 'deep', label: 'гүн', min: 0.75 },
+  { key: 'steady', label: 'тогтвортой', min: 0.5 },
+  { key: 'pale', label: 'цайвар', min: FAINT_STRENGTH },
+  { key: 'faint', label: 'бүдэг', min: 0 },
 ];
 
 function bandFor(strength) {
@@ -188,14 +188,14 @@ function bandFor(strength) {
    immediately by design (see the note on normalizeRecord), and that is
    exactly what this says instead. */
 function describeTiming(record, now = Date.now()) {
-  if (!record.dueAt) return 'ready now';
+  if (!record.dueAt) return 'одоо бэлэн';
 
   const days = Math.round((record.dueAt - now) / DAY);
-  if (days > 1) return `back in ${days} days`;
-  if (days === 1) return 'back tomorrow';
-  if (days === 0) return 'due today';
-  if (days === -1) return '1 day late';
-  return `${Math.abs(days)} days late`;
+  if (days > 1) return `${days} хоногийн дараа эргэж ирнэ`;
+  if (days === 1) return 'маргааш эргэж ирнэ';
+  if (days === 0) return 'өнөөдөр давтах';
+  if (days === -1) return '1 хоног хоцорсон';
+  return `${Math.abs(days)} хоног хоцорсон`;
 }
 
 /* -- Queries ------------------------------------------------------------------------------- */
@@ -336,9 +336,9 @@ function buildSession(items, size, now = Date.now()) {
 /* Human-readable interval for the grade feedback — "back in 3 days". */
 function describeNextReview(record, now = Date.now()) {
   const days = Math.round((record.dueAt - now) / DAY);
-  if (days <= 0) return 'again this round';
-  if (days === 1) return 'back tomorrow';
-  return `back in ${days} days`;
+  if (days <= 0) return 'энэ давталтад дахин';
+  if (days === 1) return 'маргааш эргэж ирнэ';
+  return `${days} хоногийн дараа эргэж ирнэ`;
 }
 
 /* The ladder's own machinery — the interval table, the band table, the

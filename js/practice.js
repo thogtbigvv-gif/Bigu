@@ -67,7 +67,7 @@ function buildView(container) {
   const deckLabel = document.createElement('p');
   deckLabel.className = 'practice__deck-label';
   deckLabel.id = 'practice-deck-label';
-  deckLabel.textContent = 'What do you want to review?';
+  deckLabel.textContent = 'Юуг давтмаар байна?';
 
   const deckGroup = document.createElement('div');
   deckGroup.className = 'practice__deck-group';
@@ -111,7 +111,7 @@ function buildView(container) {
 
   const historyEmpty = document.createElement('p');
   historyEmpty.className = 'empty-state';
-  historyEmpty.textContent = 'No sessions yet — finish a round to see it here.';
+  historyEmpty.textContent = 'Хичээллэлт хараахан алга — нэг давталт дуусгавал энд харагдана.';
 
   history.append(historyHeading, historyList, historyEmpty);
 
@@ -173,8 +173,8 @@ function initController(elements, decks) {
 
     if (items.length === 0) {
       elements.status.textContent = state.deck === 'mistakes'
-        ? 'Nothing tricky right now — nothing you’ve met is stuck at the bottom of the ladder.'
-        : `No ${DECK_LABELS[state.deck].toLowerCase()} available to review yet.`;
+        ? 'Одоогоор түвэгтэй юм алга — таны танилцсан зүйлсээс шатны ёроолд гацсан нь байхгүй.'
+        : `${DECK_LABELS[state.deck]} дотор давтах юм хараахан алга.`;
       elements.startButton.hidden = true;
       return;
     }
@@ -185,13 +185,13 @@ function initController(elements, decks) {
 
     if (state.deck === 'mistakes') {
       elements.status.textContent =
-        `${formatCount(items.length)} item${items.length === 1 ? '' : 's'} you’ve been getting wrong, from every deck. A round covers up to ${size}.`;
+        `Бүх багцаас таны байнга буруу хариулж байсан ${formatCount(items.length)} зүйл. Нэг давталт хамгийн ихдээ ${size}-ыг хамарна.`;
       return;
     }
 
     if (due === 0 && fresh === 0) {
       elements.status.textContent =
-        'Nothing due — everything here is scheduled ahead. A round now reviews whatever comes back soonest.';
+        'Давтах юм алга — эндэх бүхэн урьдчилан хуваарилагдсан. Одоо давтвал хамгийн ойрын хугацаанд эргэж ирэхийг нь үзнэ.';
       return;
     }
 
@@ -200,10 +200,10 @@ function initController(elements, decks) {
        attached to the word "not" is a debt notice, not a status line — so
        what's due leads, and "not started" only appears alongside it. */
     const parts = [];
-    if (due > 0) parts.push(`${formatCount(due)} due`);
-    if (fresh > 0) parts.push(`${formatCount(fresh)} not started`);
+    if (due > 0) parts.push(`${formatCount(due)} давтах`);
+    if (fresh > 0) parts.push(`${formatCount(fresh)} эхлээгүй`);
     elements.status.textContent =
-      `${parts.join(' · ')}. A round covers up to ${size}, due items first.`;
+      `${parts.join(' · ')}. Нэг давталт хамгийн ихдээ ${size}-ыг, давтах ёстойг нь эхэлж хамарна.`;
   }
 
   function selectDeck(key) {
@@ -351,7 +351,7 @@ async function initPractice() {
     console.error('[Bigu]', error);
     elements.deckGroup.hidden = true;
     elements.status.textContent =
-      'The review decks didn’t load. They’re built from the four JSON files in data/, and at least one didn’t arrive — if you opened this page as a file, it needs to run from a local server.';
+      'Давталтын багцууд ачаалагдсангүй. Тэдгээр нь data/ доторх дөрвөн JSON файлаас бүтдэг бөгөөд ядаж нэг нь ирсэнгүй — хэрэв та энэ хуудсыг файлаар нээсэн бол локал сервер дээр ажиллах хэрэгтэй.';
     elements.startButton.hidden = true;
   }
 }

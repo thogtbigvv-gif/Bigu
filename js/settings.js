@@ -94,7 +94,7 @@ function createAppearanceCard() {
   const description = document.createElement('p');
   description.className = 'meta';
   description.textContent =
-    'System follows your device’s light/dark setting and changes with it through the day.';
+    'System нь таны төхөөрөмжийн гэрэл/харанхуй тохиргоог дагаж, өдрийн турш түүнтэй хамт өөрчлөгдөнө.';
 
   const { group, sync } = createChoiceRow({
     options: THEME_OPTIONS,
@@ -132,7 +132,7 @@ function createStudyCard() {
   const sizeNote = document.createElement('p');
   sizeNote.className = 'meta';
   sizeNote.textContent =
-    'How many cards a review round covers. Shorter rounds are easier to start, which matters more than length over a month.';
+    'Нэг давталтад хэдэн карт багтахыг заана. Богино давталт эхлэхэд амархан бөгөөд сарын хугацаанд урт эсэхээс илүү чухал.';
 
   const { group: sizeGroup } = createChoiceRow({
     options: SESSION_SIZES.map((value) => ({ value, label: String(value) })),
@@ -149,7 +149,7 @@ function createStudyCard() {
   const goalNote = document.createElement('p');
   goalNote.className = 'meta';
   goalNote.textContent =
-    'Shows one line on the Dashboard tracking how many items you’ve reviewed today. Off by default — a target helps some people and quietly punishes others, so Bigu doesn’t assume one.';
+    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Dashboard дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu өөрөө таамаглахгүй.';
 
   const { group: goalGroup } = createChoiceRow({
     options: DAILY_GOALS.map((value) => ({ value, label: value === 0 ? 'No goal' : String(value) })),
@@ -253,34 +253,34 @@ function handleRestoreFile(file, statusEl, fileInput) {
     try {
       payload = JSON.parse(String(reader.result));
     } catch {
-      setRestoreStatus(statusEl, 'That file isn’t valid JSON.', true);
+      setRestoreStatus(statusEl, 'Энэ файл зөв JSON биш байна.', true);
       fileInput.value = '';
       return;
     }
 
     if (!isValidBackupPayload(payload)) {
-      setRestoreStatus(statusEl, 'That doesn’t look like a Bigu backup file.', true);
+      setRestoreStatus(statusEl, 'Энэ нь Bigu-гийн нөөц файл шиг харагдахгүй байна.', true);
       fileInput.value = '';
       return;
     }
 
     const confirmed = window.confirm(
-      'Restoring will overwrite all current progress, journal entries, and practice history in this browser. This can’t be undone. Continue?',
+      'Сэргээх нь энэ хөтөч дэх бүх ахиц, тэмдэглэл, давталтын түүхийг дарж бичнэ. Үүнийг буцаах боломжгүй. Үргэлжлүүлэх үү?',
     );
     if (!confirmed) {
-      setRestoreStatus(statusEl, 'Restore cancelled.', false);
+      setRestoreStatus(statusEl, 'Сэргээхийг цуцаллаа.', false);
       fileInput.value = '';
       return;
     }
 
     restoreBackup(payload);
-    setRestoreStatus(statusEl, 'Backup restored. Reloading…', false);
+    setRestoreStatus(statusEl, 'Нөөцөөс сэргээлээ. Дахин ачаалж байна…', false);
     fileInput.value = '';
     window.setTimeout(() => location.reload(), 700);
   };
 
   reader.onerror = () => {
-    setRestoreStatus(statusEl, 'Could not read that file.', true);
+    setRestoreStatus(statusEl, 'Тэр файлыг уншиж чадсангүй.', true);
     fileInput.value = '';
   };
 
@@ -293,7 +293,7 @@ function createBackupCard() {
   const description = document.createElement('p');
   description.className = 'meta';
   description.textContent =
-    'Your progress lives only in this browser. Download a copy so clearing your cache or switching devices doesn’t lose it.';
+    'Таны ахиц зөвхөн энэ хөтөч дотор байдаг. Кэшээ цэвэрлэх юм уу төхөөрөмжөө сольсон ч алдагдахгүйн тулд хуулбар татаж авна уу.';
 
   const downloadButton = document.createElement('button');
   downloadButton.type = 'button';
@@ -325,7 +325,7 @@ function createBackupCard() {
   const warning = document.createElement('p');
   warning.className = 'settings-backup__warning';
   warning.textContent =
-    'Restoring replaces everything already saved here — progress, journal, and review history — and can’t be undone.';
+    'Сэргээх нь энд хадгалагдсан бүхнийг — ахиц, тэмдэглэл, давталтын түүхийг — орлуулах бөгөөд буцаах боломжгүй.';
 
   const actions = document.createElement('div');
   actions.className = 'settings__actions';
@@ -356,7 +356,7 @@ function createResetCard() {
   const description = document.createElement('p');
   description.className = 'meta';
   description.textContent =
-    'Clears everything saved in this browser: review schedule, memory, kept words, journal entries, session history, and these settings. There is no undo and no copy anywhere else — download a backup first if there is any chance you’ll want it.';
+    'Энэ хөтөчид хадгалагдсан бүхнийг устгана: давтах хуваарь, санах ой, хадгалсан үгс, тэмдэглэл, хичээллэлтийн түүх, эдгээр тохиргоо. Буцаах боломжгүй бөгөөд өөр хаана ч хуулбар байхгүй — хэрэгтэй болох магадлал байвал эхлээд нөөцөө татаж авна уу.';
 
   const button = document.createElement('button');
   button.type = 'button';
@@ -390,18 +390,18 @@ function createResetCard() {
 
     window.clearTimeout(disarmTimer);
     const confirmed = window.confirm(
-      'Erase all Bigu data in this browser? Your schedule, memory, kept words, journal and history will be gone, and this cannot be undone.',
+      'Энэ хөтөч дэх Bigu-гийн бүх өгөгдлийг устгах уу? Таны хуваарь, санах ой, хадгалсан үгс, тэмдэглэл, түүх бүгд алга болох ба үүнийг буцаах боломжгүй.',
     );
 
     if (!confirmed) {
       disarm();
-      status.textContent = 'Nothing was erased.';
+      status.textContent = 'Юу ч устгаагүй.';
       status.hidden = false;
       return;
     }
 
     clearAll();
-    status.textContent = 'Everything erased. Starting fresh…';
+    status.textContent = 'Бүгдийг устгалаа. Шинээр эхэлж байна…';
     status.hidden = false;
     button.disabled = true;
     // Reload rather than re-render: every view holds its own already-built

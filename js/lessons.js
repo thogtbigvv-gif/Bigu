@@ -192,7 +192,7 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   const updateCount = () => {
     const remembered = countRemembered(lesson.words);
-    count.textContent = `${lesson.words.length} words \u00b7 ${remembered} in memory`;
+    count.textContent = `${lesson.words.length} үг \u00b7 ${remembered} санах ойд`;
   };
   updateCount();
 
@@ -287,7 +287,7 @@ function renderLessons(container, lessons) {
   // The word total, not just the lesson count. "15 lessons" says nothing
   // about the size of the commitment; the two numbers together are what a
   // reader deciding whether to start actually wants.
-  count.textContent = `${lessons.length} lessons \u00b7 ${wordCount} words`;
+  count.textContent = `${lessons.length} хичээл \u00b7 ${wordCount} үг`;
 
   const list = document.createElement('ul');
   list.className = 'lessons-list';
@@ -353,8 +353,8 @@ async function initLessons() {
     skeleton: 'rows',
     load: loadLessons,
     render: renderLessons,
-    errorTitle: 'Lessons didn’t load.',
-    errorDetail: `The lesson list is in data/lessons.json. ${OFFLINE_HINT}`,
+    errorTitle: 'Lessons ачаалагдсангүй.',
+    errorDetail: `Хичээлийн жагсаалт data/lessons.json дотор байгаа. ${OFFLINE_HINT}`,
   });
 }
 
