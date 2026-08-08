@@ -336,7 +336,10 @@ function buildSession(items, size, now = Date.now()) {
 /* Human-readable interval for the grade feedback — "back in 3 days". */
 function describeNextReview(record, now = Date.now()) {
   const days = Math.round((record.dueAt - now) / DAY);
-  if (days <= 0) return 'энэ давталтад дахин';
+  // A clause, like the two below it, because both callers set it after a
+  // separator — "Тэмдэглэлээ · энэ давталтад дахин" was a sentence that
+  // stopped halfway.
+  if (days <= 0) return 'энэ давталтад дахин эргэж ирнэ';
   if (days === 1) return 'маргааш эргэж ирнэ';
   return `${days} хоногийн дараа эргэж ирнэ`;
 }

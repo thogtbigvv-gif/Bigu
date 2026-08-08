@@ -83,7 +83,54 @@
    Surface comes from .card. What's here is the question's own layout: the
    instruction line small and quiet above, the Japanese large and alone in
    the middle, the reading or structure line quiet below it.
+
+   In Flip mode the card is a real two-sided object: the question is printed on
+   the front and the answer on the back, and turning it over is the reveal.
+   That is what a flashcard *is*, and it is the whole difference between the
+   two modes — Flip used to reveal by making more text appear underneath the
+   card, which is exactly what Choose already does.
+
+   Three nested elements, because a 3D turn needs all three and each does one
+   job: .quiz__scene holds the perspective and never itself turns (so the
+   entrance and the grading animations can use its transform freely),
+   .quiz__card-inner is the thing that rotates, and the two faces sit inside
+   it back to back.
    ------------------------------------------------------------------------------------------ */
+.quiz__scene {
+  /* Distance from the viewer to the page. Large relative to the card's own
+     width: at a short perspective the near edge of a turning card swells
+     towards the reader like a door swinging open, which on a surface holding
+     a single large glyph reads as a fairground effect. This is a page turning
+     over, seen from across a desk. */
+  perspective: 1400px;
+}
+
+.quiz__card-inner {
+  /* Both faces occupy one grid cell, so the card is always as tall as the
+     taller of them and never resizes halfway through its own turn. In Choose
+     mode the back is `hidden`, drops out of the grid, and the card is sized by
+     its question alone exactly as it was before. */
+  display: grid;
+  transform-style: preserve-3d;
+  /* --ease-turn, not the app's usual entrance curve: see the note beside the
+     token in variables.css. The short version is that a card pivoting about
+     its own centre is the one motion here that should have weight at both
+     ends, and --ease-entrance spends four fifths of its duration on a turn
+     that is already over. */
+  transition: transform var(--duration-slow) var(--ease-turn);
+}
+
+.quiz__scene.is-flipped .quiz__card-inner {
+  transform: rotateY(180deg);
+}
+
+/* Facing the card front again between questions is not an animation — see
+   faceFront() in js/quiz.js for why turning back would show the reader the
+   next question's answer. */
+.quiz__scene.is-instant .quiz__card-inner {
+  transition: none;
+}
+
 /* A fixed minimum height with the content centred in it, rather than a
    card that shrinks to whatever this particular item happens to carry. A
    lesson word has no hint line and a grammar pattern has a long one, so
@@ -98,6 +145,96 @@
   min-height: 11rem;
   padding: var(--space-lg);
   text-align: center;
+}
+
+.quiz__card--front,
+.quiz__card--back {
+  grid-area: 1 / 1;
+  /* Without this the reader sees the *mirror image* of the other face
+     through the card for the whole turn — the Japanese reversed, then the
+     answer reversed — instead of one face replacing the other. */
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* Pre-turned, so it comes to face the reader exactly when the inner reaches
+   180deg and is hidden behind the front for every degree before that. */
+.quiz__card--back {
+  transform: rotateY(180deg);
+}
+
+.quiz__card--back:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* -- The front, as a control -----------------------------------------------------------
+   The card is the button that turns it. Everything a pressable surface needs
+   is inherited from .card and reset.css; what is left is saying so.
+
+   Choose mode disables it — the card is not a control there, and `:disabled`
+   also takes it out of the tab order without a second attribute to keep in
+   sync. No opacity change: a disabled control that dims is telling the reader
+   something is unavailable, and in Choose mode nothing is.
+   ---------------------------------------------------------------------------------------- */
+.quiz__card--front {
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.quiz__card--front:disabled {
+  cursor: default;
+}
+
+@media (hover: hover) {
+  .quiz__card--front:not(:disabled):hover {
+    border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* The press: a couple of degrees of the turn it is about to make, so the card
+   answers the finger with the same motion the tap starts. */
+.quiz__card--front:not(:disabled):active {
+  transform: rotateY(-6deg);
+  transition: transform var(--transition-fast);
+}
+
+/* Nothing about a card in this app says "turn me over" — every other surface
+   here is something you read, not something you handle. One quiet line does
+   the whole job, and it is the only part of the front that isn't the
+   question. Hidden outright in Choose mode rather than left as furniture. */
+.quiz__flip-hint {
+  margin-block-start: var(--space-2xs);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* -- The back --------------------------------------------------------------------------
+   The meaning, at the size the question was, because on this face it *is* the
+   content. The example under it is the same recessed block Choose shows in its
+   feedback — the answer arrives with its evidence rather than as a bare gloss.
+   ---------------------------------------------------------------------------------------- */
+/* One step below the Japanese on the front, not two. The answer is the whole
+   reason the card turns, and at --text-lg it read as a caption on an empty
+   card rather than as the other half of the question. It stays under the
+   front's --text-2xl because a Mongolian gloss is a phrase where the Japanese
+   is a glyph — "Асуултын хуудсыг хараахан бүү хараарай" at 39px is four lines
+   of shouting. */
+.quiz__answer {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  max-width: none;
+}
+
+.quiz__answer-detail:not(:empty) {
+  margin-block-start: var(--space-md);
 }
 
 .quiz__prompt {
@@ -240,10 +377,6 @@
 }
 
 /* -- Flip mode --------------------------------------------------------------------------- */
-.quiz__reveal {
-  align-self: center;
-}
-
 .quiz__grade {
   display: flex;
   justify-content: center;
@@ -327,17 +460,26 @@
    way, because it is also the most repeated one — but 140ms of symmetrical
    `ease-out` was short enough that the card read as popping rather than
    arriving, and the extra 40ms all goes into the settle. */
-.quiz__card.is-entering {
+/* These three moved from the card to the scene around it when the card became
+   a two-sided object. The card's own transform is now the turn — anything else
+   written on it would either replace that transform or, on the face that
+   happens to be turned away, animate where nobody can see it. The scene never
+   rotates, so it is free to carry the arrival and the two graded reactions for
+   whichever face is showing. */
+.quiz__scene.is-entering {
   animation: quiz-card-enter 180ms var(--ease-entrance);
 }
 
-.quiz__card.is-correct {
+/* The ring is a property of the surface, so it goes on the faces rather than
+   on the scene. Only the one facing the reader is visible; drawing it on both
+   costs nothing and means the class doesn't have to know which that is. */
+.quiz__scene.is-correct .quiz__card {
   animation: quiz-card-correct 260ms var(--ease-exit);
 }
 
 /* A settle, not a shake — the reader got something wrong, which deserves a
    nudge, not a scolding. */
-.quiz__card.is-incorrect {
+.quiz__scene.is-incorrect {
   animation: quiz-card-incorrect 180ms var(--ease-exit);
 }
 
