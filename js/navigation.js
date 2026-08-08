@@ -40,6 +40,68 @@ function initStudyToggle(nav) {
   syncWithActiveRoute();
 }
 
+/* -- Swipe the drawer shut ----------------------------------------------------------
+   The gesture every phone reader already has in their hands. Without it the
+   only ways out of an open drawer are a tap on the backdrop — a strip on the
+   right of the screen — or the X back up in the corner the drawer exists to
+   avoid, which is a strange place to send someone to undo opening a menu.
+
+   Threshold, not a live drag. Following the finger would mean writing
+   transforms onto the same element whose transform CSS animates, and the two
+   fight over the frame the finger lifts: the panel snaps to the CSS value,
+   then transitions from it. A drawer is a binary — open or shut — so the
+   gesture only has to decide which, and it decides at 56px of leftward travel.
+
+   The direction test is what keeps it from stealing scrolls. The drawer's own
+   list scrolls vertically, and a thumb travelling down a list drifts sideways
+   by tens of pixels on the way; requiring the horizontal component to be the
+   larger one means a swipe has to actually be a swipe. `touchmove` is passive,
+   so this never blocks or delays that scroll.
+   ------------------------------------------------------------------------------------ */
+const SWIPE_CLOSE_DISTANCE = 56;
+
+function initDrawerSwipe(nav, close) {
+  let startX = null;
+  let startY = null;
+
+  nav.addEventListener(
+    'touchstart',
+    (event) => {
+      if (event.touches.length !== 1) {
+        startX = null;
+        return;
+      }
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+    },
+    { passive: true },
+  );
+
+  nav.addEventListener(
+    'touchmove',
+    (event) => {
+      if (startX === null || !nav.classList.contains('is-open')) return;
+
+      const deltaX = event.touches[0].clientX - startX;
+      const deltaY = event.touches[0].clientY - startY;
+      if (deltaX > -SWIPE_CLOSE_DISTANCE || Math.abs(deltaX) <= Math.abs(deltaY)) return;
+
+      // One decision per gesture: null the origin so the rest of this swipe
+      // can't re-trigger a close on the drawer that is already shutting.
+      startX = null;
+      close();
+    },
+    { passive: true },
+  );
+
+  // A cancelled touch (an incoming call, the system's own back gesture) leaves
+  // no touchend, so the origin is cleared on both endings rather than only the
+  // tidy one.
+  for (const event of ['touchend', 'touchcancel']) {
+    nav.addEventListener(event, () => { startX = null; }, { passive: true });
+  }
+}
+
 /* -- Mobile drawer -----------------------------------------------------------------------
    Open/close plus the focus handling an off-canvas drawer needs to be
    usable without a mouse:
@@ -53,13 +115,13 @@ function initStudyToggle(nav) {
        into the content behind it. One attribute, and it's the whole focus
        trap — no keydown cycling of first/last focusable elements.
 
-   Inert is applied to the main region and the footer, *not* to
-   .app-shell__content. The header is inside that wrapper, and the header
-   holds the toggle — so inerting the wrapper inerted the very button the
-   drawer turns into an X, and the one control a reader would reach for to
+   Inert is applied to the main region, the footer and the phone thumb bar,
+   *not* to .app-shell__content. The header is inside that wrapper, and the
+   header holds the toggle — so inerting the wrapper inerted the very button
+   the drawer turns into an X, and the one control a reader would reach for to
    close it did nothing at all. The backdrop and Escape still worked, which
    is why this survived: it failed silently, on touch, on the obvious
-   affordance. Two named regions instead of their parent keeps the intent
+   affordance. Naming the regions instead of their parent keeps the intent
    (page unreachable, header reachable) and makes it true.
 
    Being visually off-screen is handled in CSS (visibility:hidden on the
@@ -69,14 +131,30 @@ function initStudyToggle(nav) {
 function initMobileDrawer(nav) {
   const toggleBtn = document.getElementById('site-nav-mobile-toggle');
   const backdrop = document.getElementById('site-nav-backdrop');
+  const thumbNav = document.getElementById('thumb-nav');
+  // The thumb bar's "More" row is a second opener for the same drawer, and
+  // the one a thumb can actually reach — see the note on .thumb-nav in
+  // index.html. It is not a second *control*: both buttons carry
+  // aria-expanded and both are kept in sync by setExpanded below.
+  const moreBtn = document.getElementById('thumb-nav-more');
+  const openers = [toggleBtn, moreBtn].filter(Boolean);
   const behindDrawer = [
     document.getElementById('main-content'),
     document.querySelector('.site-footer'),
+    // The bar slides off the bottom of the screen while the drawer is open
+    // (CSS), so inerting it takes five rows out of the tab order that a
+    // reader can no longer see — rather than stranding a visible dead
+    // control, which is the trap the header toggle fell into above.
+    thumbNav,
   ].filter(Boolean);
   if (!toggleBtn || !backdrop) return;
 
   function setBehindInert(inert) {
     for (const region of behindDrawer) region.inert = inert;
+  }
+
+  function setExpanded(expanded) {
+    for (const opener of openers) opener.setAttribute('aria-expanded', String(expanded));
   }
 
   function isOpen() {
@@ -86,7 +164,7 @@ function initMobileDrawer(nav) {
   function open() {
     nav.classList.add('is-open');
     backdrop.hidden = false;
-    toggleBtn.setAttribute('aria-expanded', 'true');
+    setExpanded(true);
     setBehindInert(true);
 
     // visibility flips to visible on the same frame the class lands, but
@@ -101,19 +179,26 @@ function initMobileDrawer(nav) {
     const wasOpen = isOpen();
     nav.classList.remove('is-open');
     backdrop.hidden = true;
-    toggleBtn.setAttribute('aria-expanded', 'false');
+    setExpanded(false);
     setBehindInert(false);
 
     // Only when the drawer was actually open and the close came from a
     // keyboard/Escape path: pulling focus back on an ordinary link click
     // would fight the router, which moves focus to the new view's heading.
+    //
+    // Always the header toggle, never "More": by the time this runs the
+    // thumb bar is inert and has slid off screen, so focusing a row inside
+    // it would drop focus somewhere the reader cannot see.
     if (wasOpen && restoreFocus) toggleBtn.focus();
   }
 
-  toggleBtn.addEventListener('click', () => {
-    isOpen() ? close({ restoreFocus: true }) : open();
-  });
+  for (const opener of openers) {
+    opener.addEventListener('click', () => {
+      isOpen() ? close({ restoreFocus: true }) : open();
+    });
+  }
   backdrop.addEventListener('click', () => close());
+  initDrawerSwipe(nav, close);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && isOpen()) close({ restoreFocus: true });
   });

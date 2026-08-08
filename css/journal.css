@@ -352,4 +352,28 @@ button.journal__calendar-day:hover {
   .journal__entry-date {
     width: 100%;
   }
+
+  /* `height`, not `min-height`. journal.js sets rows=12 on this element, and
+     twelve rows of --text-md Japanese at --leading-loose is ~440px — taller
+     than the clamp above ever was, so tuning a minimum here would have changed
+     nothing. On a 844px screen that put the writing surface, the character
+     count and the Save button below the fold together, and the keyboard then
+     took the bottom 40% of what was left. You could write, but you could not
+     see that you had saved.
+
+     `vh` is the second half of the problem and is why the value is stated
+     twice: it resolves against the viewport with the browser chrome hidden, so
+     it always over-measures a phone. `dvh` tracks what is actually on screen;
+     the plain-vh line above it is the fallback for engines that don't know the
+     dynamic units, and is close enough at these sizes.
+
+     ~14rem is still eight or nine lines. The field is still resizable by hand,
+     and a long entry scrolls inside it exactly as a twelve-row one did once it
+     passed twelve rows. What it no longer does is claim the whole screen
+     before a single character is in it. */
+  .journal__textarea {
+    min-height: 8rem;
+    height: clamp(8rem, 30vh, 14rem);
+    height: clamp(8rem, 30dvh, 14rem);
+  }
 }

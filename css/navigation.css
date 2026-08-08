@@ -34,6 +34,14 @@
   background-color: var(--color-washi);
 }
 
+/* The thumb bar is a phone-only surface; above 768px the sidebar or the drawer
+   is the navigation and this must not generate a box at all. Declared here
+   rather than only inside the media query below so the bar can never flash in
+   at desktop width before the query is evaluated. */
+.thumb-nav {
+  display: none;
+}
+
 /* 100dvh, with 100vh as the fallback line above it for browsers that don't
    know the dynamic unit. On mobile Safari and Chrome Android, 100vh is the
    viewport height with the browser chrome *hidden* — always taller than
@@ -45,7 +53,16 @@
   height: 100vh;
   height: 100dvh;
   overflow-y: auto;
+  /* Flicking this list to its end must not hand the rest of the gesture to the
+     page behind it — as a drawer that means the reader scrolls the view they
+     are trying to navigate away from, under a panel that is covering it. See
+     the note in reset.css for why this is scoped here and not on the body. */
+  overscroll-behavior: contain;
   padding: var(--space-md) var(--space-sm);
+  /* The drawer runs the full height of the phone, so its last row sits on the
+     home indicator and its first sits under the status bar. */
+  padding-block: max(var(--space-md), env(safe-area-inset-top))
+                 max(var(--space-md), env(safe-area-inset-bottom));
 }
 
 /* -- List / items ------------------------------------------------------------------- */
@@ -304,6 +321,12 @@
   position: fixed;
   inset: 0;
   z-index: 40;
+  /* A scrim is not a scroll surface. Without this, dragging on the dimmed
+     part of the screen scrolls the view underneath the open drawer — the one
+     the reader is in the middle of navigating away from — and the drawer is
+     left hanging over a page that has moved. Taps still land, so tap-to-
+     dismiss is unaffected. */
+  touch-action: none;
   background: rgba(0, 0, 0, 0.35);
   -webkit-backdrop-filter: blur(2px);
   backdrop-filter: blur(2px);
@@ -367,6 +390,12 @@
     height: 100dvh;
     visibility: hidden;
     transform: translateX(-100%);
+    /* A drawer flush against the left edge of a phone sits under the rounded
+       corner and, in landscape, under the notch — so its rows start inside the
+       inset instead of at zero. max() rather than a bare env(): the inset is
+       0px on every device without one, and the drawer still needs its own
+       padding there. */
+    padding-inline-start: max(0px, env(safe-area-inset-left));
     /* The one panel in the app that floats over the page rather than sitting
        in it, so it gets the raised shadow rather than the emphasised one. */
     box-shadow: var(--shadow-lg);
@@ -421,5 +450,155 @@
       opacity: 0;
       transform: translateX(-8px);
     }
+  }
+}
+
+/* -- Thumb bar (phones) --------------------------------------------------------------
+   The bottom of a phone screen is the only part of it a thumb reaches without
+   the hand moving, and until now this app put its entire navigation in the
+   opposite corner. The drawer is still the full map — this is the daily loop,
+   permanently in reach, so opening Review or Memory costs one tap instead of
+   three and a reach.
+
+   Only at and below 768px. Between 768 and 1024 the drawer is still the
+   navigation: that band is a tablet held in two hands, where a bottom bar
+   stretched across ten inches is further from either thumb than the hamburger
+   is, not closer.
+
+   The bar is `position: fixed` and therefore outside flow, so .app-main pays
+   for the space it covers (see the scroll-padding block in layout.css). It
+   carries the same washi ground and hairline as the header — the top and
+   bottom edges of a phone should read as the same piece of chrome — and the
+   same glass treatment, since content passes underneath both.
+   -------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .thumb-nav {
+    position: fixed;
+    inset-inline: 0;
+    bottom: 0;
+    /* Under the drawer (50) and under its backdrop (40): a bar floating over
+       the dimmed page would be the one bright thing on a screen whose whole
+       point is that the drawer is what you are looking at. */
+    z-index: 35;
+    display: block;
+    background-color: var(--glass-surface);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+    border-top: var(--border-width) solid var(--color-stone);
+    /* The home indicator on a gesture-navigation phone overlaps the bottom
+       ~34px of the screen. Padding rather than a taller bar, so the labels
+       stay put and only the ground extends underneath it. */
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-inline: max(0px, env(safe-area-inset-left)) max(0px, env(safe-area-inset-right));
+    transition: transform var(--duration-slow) var(--ease-entrance);
+  }
+
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .thumb-nav {
+      background-color: var(--color-washi);
+    }
+  }
+
+  /* Out of the way while the drawer is open, rather than dimmed behind the
+     backdrop and inert. "More" is the control that opened the drawer; leaving
+     it on screen but dead is the exact failure the header toggle already had
+     once (see the inert note in js/navigation.js). Gone is honest. */
+  .site-nav.is-open ~ .thumb-nav {
+    transform: translateY(100%);
+  }
+
+  .thumb-nav__list {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .thumb-nav__list > li {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  /* 3.25rem of content plus the bar's own padding clears the 44px touch
+     floor the rest of the app uses at this width, and the whole cell is the
+     target — not just the label. */
+  .thumb-nav__link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+    width: 100%;
+    min-height: 3.25rem;
+    padding: var(--space-3xs) var(--space-3xs) var(--space-2xs);
+    border: none;
+    background: none;
+    color: var(--color-ink-soft);
+    font: inherit;
+    font-size: var(--text-xs);
+    letter-spacing: var(--tracking-wide);
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      color var(--transition-fast),
+      transform var(--transition-fast);
+  }
+
+  .thumb-nav__link > span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.2;
+  }
+
+  .thumb-nav__icon {
+    width: 1.375rem;
+    height: 1.375rem;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: transform var(--transition-fast);
+  }
+
+  /* The "More" glyph is three dots, so it is the one icon in the set that is
+     drawn rather than outlined. */
+  .thumb-nav__icon circle {
+    fill: currentColor;
+    stroke: none;
+  }
+
+  /* No hover rule. This bar only exists on a touch screen, and a :hover style
+     on touch is a state that sticks to whatever was tapped last. The press is
+     the whole feedback, and it is instant. */
+  .thumb-nav__link:active {
+    transform: translateY(var(--lift-press));
+    transition-timing-function: var(--ease-spring);
+  }
+
+  .thumb-nav__link[aria-current="page"] {
+    color: var(--color-indigo);
+    font-weight: var(--weight-medium);
+  }
+
+  .thumb-nav__link[aria-current="page"] .thumb-nav__icon {
+    stroke-width: 2;
+  }
+
+  .thumb-nav__link:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: -2px;
+    border-radius: var(--radius-sm);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumb-nav,
+  .thumb-nav__link,
+  .thumb-nav__icon {
+    transition: none;
   }
 }

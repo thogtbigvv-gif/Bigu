@@ -176,10 +176,41 @@
   --container-max: 72rem;  /* 1152px */
   --border-width: 1px;
 
+  /* The phone thumb bar's content height, before its own safe-area padding.
+     Written once because two files have to agree on it exactly: navigation.css
+     sizes the bar with it, and layout.css reserves the same space at the foot
+     of the page so the bar never covers the last row of a view. It is inert
+     above 768px, where the bar doesn't render. */
+  --thumb-nav-height: 3.25rem;
+
   /* Not a token — a native-UI hint so browser-drawn controls (checkboxes,
      scrollbars, date pickers) pick a light or dark rendering to match the
      surrounding page instead of always defaulting to light. */
   color-scheme: light;
+}
+
+/* -- Type scale on a phone ------------------------------------------------------------
+   Still tokens, still no selectors — the same names, three steps shorter at
+   the top end. A modular scale is built for a column of a given width, and
+   this one was built for 1152px: at 390px the ratio between --text-base and
+   --text-2xl is unchanged but the *page* is a third as wide, so a heading that
+   read as a heading on a laptop reads as a banner on a phone. "Vocabulary" at
+   39px filled a third of the screen above the fold before a single word of
+   content.
+
+   Only the display sizes move. --text-base stays at 1rem, and so does
+   everything below it: reading copy is the one thing on a small screen that
+   must not shrink, form controls at 16px are what stops iOS zooming the page
+   on focus, and --text-xs is already at the floor of what a body face is
+   legible at. Each of the three lands exactly one step down the existing
+   scale, so the rhythm between them is the scale's, not a new one.
+   ------------------------------------------------------------------------------------ */
+@media (max-width: 480px) {
+  :root {
+    --text-lg: 1.375rem;   /* 22px, from 25 */
+    --text-xl: 1.563rem;   /* 25px, from 31 */
+    --text-2xl: 1.953rem;  /* 31px, from 39 */
+  }
 }
 
 /* -- Breakpoints -------------------------------------------------------------------

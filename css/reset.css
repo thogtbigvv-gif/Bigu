@@ -26,6 +26,42 @@ html {
   height: 100%;
 }
 
+/* -- Touch behaviour ----------------------------------------------------------------
+   Two defaults that only ever show up on a phone, and both are the browser
+   guessing wrong about an app whose own states are already defined. A third
+   one that everybody reaches for at the same time is deliberately left alone;
+   the note at the end of this block says why.
+
+   The grey flash: WebKit paints a translucent block over any tapped element
+   for ~150ms. Every control in this app has its own :active — a one-pixel
+   settle, sometimes a spring — and the system flash lands on top of it in a
+   colour from no palette here, squaring off rounded corners as it goes.
+   Removing it is only safe *because* those :active states exist; a control
+   with no press feedback at all should keep the flash rather than lose both.
+
+   The 300ms wait: legacy double-tap-to-zoom detection. `manipulation` keeps
+   pinch zoom (never disable that — it is how a reader with low vision uses a
+   phone) and drops only the double-tap gesture, which nothing here wants.
+
+   Scroll chaining is deliberately NOT handled here. `overscroll-behavior` on
+   the body is the usual reflex and it is the wrong scope: on Chrome Android
+   it also takes pull-to-refresh with it, which is a gesture the reader owns,
+   not one this app should quietly remove. The one place chaining actually
+   causes a problem — flicking the open drawer's list and scrolling the page
+   underneath it — is contained on the drawer's own panel, in navigation.css.
+   ------------------------------------------------------------------------------------ */
+a,
+button,
+[role="button"],
+input,
+label,
+select,
+textarea,
+summary {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
 /* In-page jumps glide rather than teleport — the skip link, and any anchor
    inside a long passage or a settings page. Deliberately *not* a blanket
    `scroll-behavior: smooth` on its own: router.js scrolls with

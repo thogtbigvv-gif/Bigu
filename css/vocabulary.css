@@ -51,6 +51,12 @@
   margin: 0 0 var(--space-md) 0;
 }
 
+/* minmax(20rem, 1fr) below the auto-fill, and minmax(0, 1fr) in the phone
+   block at the foot of this file. A bare `1fr` is minmax(auto, 1fr), whose
+   floor is the widest min-content in the column — so one card holding an
+   unbreakable string is enough to push the whole track past the page. The
+   0 floor makes the track the container's width and lets the card wrap
+   inside it, which is what the reader wants on a 358px column. */
 .vocab-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
@@ -76,9 +82,20 @@
   gap: 0;
   padding: var(--space-lg);
   /* See .card--deferred in cards.css. Measured resting height of a card
-     carrying a headword, a meaning, a three-line example and the control
-     row. */
-  contain-intrinsic-size: auto 21rem;
+     carrying a headword, a meaning, a three-line example and the control row.
+
+     Two values, and the `none` is load-bearing. `contain-intrinsic-size` with
+     a single value applies it to *both* axes, so every skipped card was also
+     claiming to be 21rem wide — and since a skipped element's placeholder size
+     is what the grid measures, `1fr` (which is minmax(auto, 1fr), and so has a
+     min-content floor) resolved its track to 21rem + padding = 386px inside a
+     358px column. That is the horizontal overflow this list had on every phone:
+     the right edge of each card sat past the screen, cropped. Desktop never
+     showed it because the column there is wider than 386px anyway.
+
+     `none` means "no assumed width, size me normally"; the height is what the
+     property was wanted for and is the only part that should be guessed. */
+  contain-intrinsic-size: none auto 21rem;
 }
 
 .vocab-card__head {
@@ -182,13 +199,27 @@
 }
 
 /* -- Mobile spacing ---------------------------------------------------------------- */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .vocab-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-sm);
   }
 
   .vocab-card {
     padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .vocab-card {
+    padding: var(--space-sm);
+  }
+
+  /* The headword and its part-of-speech tag share a row, and `margin-inline-
+     start: auto` pins the tag to the far right of it — fine at 20rem, a tag
+     stranded across the page from a two-character word at 358px. Below the
+     phone line the row simply reads left to right in the order it is written. */
+  .vocab-card__pos {
+    margin-inline-start: 0;
   }
 }

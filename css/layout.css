@@ -32,14 +32,29 @@
    Every structural region shares the same max-width and horizontal
    padding, so content lines up consistently without repeating the
    same three declarations in each block below.
+
+   The gutter is a local custom property rather than a literal, because the
+   two small-screen blocks at the foot of this file used to restate the whole
+   `padding-inline` line to change one value — and now that each side is a
+   max() against a safe-area inset, restating it would mean maintaining the
+   same two-argument expression in three places. They set --gutter instead.
+
+   max(gutter, inset) rather than gutter + inset: the insets are 0px on every
+   device without a notch or rounded corners, and on the phones that do have
+   them the inset is only ever *replacing* padding the page already wanted, not
+   adding to it. Landscape on a notched phone is where this earns itself — the
+   inset there is ~44px, far past any gutter on the scale.
    ------------------------------------------------------------------------------- */
 .site-header,
 .app-main,
 .site-footer {
+  --gutter: var(--space-lg);
   width: 100%;
   max-width: var(--container-max);
   margin-inline: auto;
-  padding-inline: var(--space-lg);
+  padding-inline:
+    max(var(--gutter), env(safe-area-inset-left))
+    max(var(--gutter), env(safe-area-inset-right));
 }
 
 /* -- Header ---------------------------------------------------------------------
@@ -395,7 +410,7 @@
   .site-header,
   .app-main,
   .site-footer {
-    padding-inline: var(--space-md);
+    --gutter: var(--space-md);
   }
 
   .app-main {
@@ -405,16 +420,74 @@
   .view {
     gap: var(--space-md);
   }
+
+  /* Room for the thumb bar, which is fixed and therefore covers whatever the
+     page ends with. On .app-shell__content rather than on .app-main, so the
+     footer clears it too — the copyright line was the first thing the bar hid.
+     The scroll-padding keeps in-page anchors and focus scrolls from landing
+     their target underneath it for the same reason the header has its own
+     scroll-margin further up this file. */
+  .app-shell__content {
+    padding-block-end: calc(var(--thumb-nav-height) + env(safe-area-inset-bottom));
+  }
+
+  html {
+    scroll-padding-bottom: calc(var(--thumb-nav-height) + env(safe-area-inset-bottom));
+  }
 }
 
 @media (max-width: 480px) {
   .site-header,
   .app-main,
   .site-footer {
-    padding-inline: var(--space-sm);
+    --gutter: var(--space-sm);
   }
 
   .app-main {
     padding-block: var(--space-lg);
+  }
+}
+
+/* -- Short viewports ------------------------------------------------------------------
+   Every block above this one asks how *wide* the screen is, and a phone held
+   sideways answers 844px — a laptop's width, with a laptop's chrome, on 390px
+   of height. Measured on that screen, the header, the view's heading and the
+   search row filled all 390px and the first card of the list began below the
+   fold: the page was entirely furniture.
+
+   So this asks the other question. 480px is the same number as the phone
+   breakpoint, applied to the axis that is actually short, which keeps the
+   scale at three values rather than inventing a fourth (see the breakpoint
+   block in variables.css).
+
+   Only vertical rhythm changes here — the gutters, the grids and the type are
+   the width blocks' business and a landscape phone genuinely has the width
+   they assume. The thumb bar deliberately does *not* appear at this size: a
+   fixed 53px bar is an eighth of a 390px screen, and the drawer is already
+   the navigation at this width.
+   ------------------------------------------------------------------------------------ */
+@media (max-width: 768px), (max-height: 480px) {
+  /* The sticky header is the tax every view pays on a small screen: 24px of
+     padding above and below a 36px control bought nothing but a shorter page.
+     The touch floor is untouched — the toggles inside it are 44px in their own
+     right — and this gives back ~32px, which on the Review card is the
+     difference between the fourth answer being on screen and being scrolled
+     to. */
+  .site-header {
+    padding-block: var(--space-2xs);
+  }
+}
+
+@media (max-height: 480px) {
+  .app-main {
+    padding-block: var(--space-md);
+  }
+
+  .view {
+    gap: var(--space-md);
+  }
+
+  .site-footer {
+    padding-block: var(--space-2xs);
   }
 }

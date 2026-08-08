@@ -45,8 +45,33 @@ function getViews() {
   return Array.from(document.querySelectorAll('#main-content > .view'));
 }
 
-function getNavLink(viewId) {
-  return document.querySelector(`.site-nav__link[data-view="${viewId}"]`);
+/* Every navigation control in the document, sidebar and phone thumb bar
+   alike, marked in one pass keyed off `data-view`.
+
+   This used to be a single querySelector scoped to `.site-nav__link`, called
+   once per view inside the render loop. Two things made that no longer enough.
+   There is now more than one nav — the thumb bar in index.html points at the
+   same routes — and one of its rows stands for a *set* of them: "Study" is the
+   way into five views, and a tab bar that goes blank the moment you open
+   Vocabulary has lost the thing a tab bar is for.
+
+   `data-view-group` is that set, space-separated, and it wins over `data-view`
+   where both are present — the group says which routes light the row, while
+   `data-view` stays the one the row actually navigates to. A row with no group
+   behaves exactly as before. */
+function markActiveNavLinks(activeId) {
+  for (const link of document.querySelectorAll('[data-view]')) {
+    const group = link.dataset.viewGroup;
+    const isActive = group
+      ? group.split(/\s+/).includes(activeId)
+      : link.dataset.view === activeId;
+
+    if (isActive) {
+      link.setAttribute('aria-current', 'page');
+    } else {
+      link.removeAttribute('aria-current');
+    }
+  }
 }
 
 function getHeading(viewId) {
@@ -105,16 +130,9 @@ function render({ moveFocus = false } = {}) {
     const isActive = view.id === activeId;
     view.hidden = !isActive;
     if (isActive) activeView = view;
-
-    const link = getNavLink(view.id);
-    if (!link) continue;
-    if (isActive) {
-      link.setAttribute('aria-current', 'page');
-    } else {
-      link.removeAttribute('aria-current');
-    }
   }
 
+  markActiveNavLinks(activeId);
   updateDocumentTitle(activeId);
 
   // After the view is visible, so a module that measures or focuses
