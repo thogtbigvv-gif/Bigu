@@ -336,10 +336,12 @@ function buildSession(items, size, now = Date.now()) {
 /* Human-readable interval for the grade feedback — "back in 3 days". */
 function describeNextReview(record, now = Date.now()) {
   const days = Math.round((record.dueAt - now) / DAY);
-  // A clause, like the two below it, because both callers set it after a
+  // A clause, like the two below it, because the caller sets it after a
   // separator — "Тэмдэглэлээ · энэ давталтад дахин" was a sentence that
-  // stopped halfway.
-  if (days <= 0) return 'энэ давталтад дахин эргэж ирнэ';
+  // stopped halfway. Kept to four words so the whole verdict line still fits
+  // on one line of a 390px phone; at five it wrapped, and a two-line verdict
+  // pushes the Continue button that much further down.
+  if (days <= 0) return 'энэ давталтад эргэж ирнэ';
   if (days === 1) return 'маргааш эргэж ирнэ';
   return `${days} хоногийн дараа эргэж ирнэ`;
 }

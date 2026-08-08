@@ -197,6 +197,35 @@ function buildChoices(item, pool) {
   return shuffled([answer, ...distractors]).map((text) => ({ text, correct: text === answer }));
 }
 
+/* How far a card has to travel before letting go grades it. 72px is about a
+   thumb's width: far enough that a stray drag while scrolling the page can't
+   answer a question, short enough to flick without lifting the wrist. */
+const SWIPE_GRADE_DISTANCE = 72;
+
+/* How long the graded card takes to leave. Deliberately shorter than its
+   arrival: a card being discarded is the reader's own decision already made,
+   and every millisecond here is paid forty times a round. */
+const EXIT_MS = 180;
+
+function arrowGlyph(direction) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'quiz__grade-arrow');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  line.setAttribute('d', direction === 'left' ? 'M15 5 8 12l7 7' : 'M9 5l7 7-7 7');
+  svg.append(line);
+  return svg;
+}
+
+function gradeLabel(text) {
+  const span = document.createElement('span');
+  span.className = 'quiz__grade-label';
+  span.textContent = text;
+  return span;
+}
+
 /* -- Markup -------------------------------------------------------------------------------
    One panel covering both modes; the parts a mode doesn't use are hidden
    rather than rebuilt, so switching modes between rounds never rebuilds
@@ -237,19 +266,23 @@ function buildPanel() {
   head.append(title, count, exitButton);
 
   /* Card. Two faces of one object rather than a question with an answer
-     printed underneath it: the front asks, and in Flip mode the whole card
-     turns over to show the back. That is the physical thing a paper flashcard
-     is, and it is the reason Flip is a separate mode at all — before this, its
-     "reveal" was a button that made more text appear below the card, which is
-     what Choose mode already does.
+     printed underneath it: the front asks and the back answers, in both modes.
 
-     The front is a <button>, so the card itself is the control that turns it:
-     tappable, focusable, and announced as pressable without a second control
-     underneath doing the same job. Choose mode disables it, which also takes
-     it out of the tab order.
+     What differs is who turns it. In Flip the reader does, before grading
+     themselves — the front is a <button>, so the card is its own control,
+     tappable and focusable without a second button underneath doing the same
+     job. In Choose the app turns it the moment an option is picked, which is
+     why the front is disabled there.
 
-     Its children are <span>s, not <p>s — a <button> may only contain phrasing
-     content, and they are flex items here so they lay out as blocks anyway. */
+     Unifying the two is what let the feedback area below shrink to a verdict
+     and a button. It used to carry the example sentence as well, so answering
+     grew the page by a block and a half under the reader's thumb, pushing
+     Continue towards the fold exactly when they wanted it. The answer belongs
+     on the answer side of the card; there was never a second place for it.
+
+     The front's children are <span>s, not <p>s — a <button> may only contain
+     phrasing content, and they are flex items here so they lay out as blocks
+     anyway. */
   const scene = document.createElement('div');
   scene.className = 'quiz__scene';
 
@@ -283,13 +316,22 @@ function buildPanel() {
   // than only the grade buttons that appear with it.
   cardBack.tabIndex = -1;
 
+  /* The question, restated small above its own answer. A flashcard's back
+     usually carries the answer alone, and for a card you are *drilling* that
+     is right — but this is a language, and the one instant worth putting the
+     two sides in the same eyeline is the instant the reader has just
+     committed to a guess. In Choose it is also the only place the Japanese
+     survives the turn at all. */
+  const answerJp = document.createElement('p');
+  answerJp.className = 'quiz__answer-jp';
+
   const answer = document.createElement('p');
   answer.className = 'quiz__answer';
 
   const answerDetail = document.createElement('div');
   answerDetail.className = 'quiz__answer-detail';
 
-  cardBack.append(answer, answerDetail);
+  cardBack.append(answerJp, answer, answerDetail);
   cardInner.append(card, cardBack);
   scene.append(cardInner);
 
@@ -305,15 +347,21 @@ function buildPanel() {
   grade.className = 'quiz__grade';
   grade.hidden = true;
 
+  /* The two verdicts have directions now — left for "still learning", right
+     for "I knew it" — and the card travels that way whether it was flicked or
+     the button was pressed. The arrows are how the buttons teach the gesture:
+     a swipe nobody knows about is a feature nobody has. They stay on the outer
+     edge of each button and the row never stacks, so the button's own position
+     on screen agrees with the direction it means. */
   const missButton = document.createElement('button');
   missButton.type = 'button';
-  missButton.className = 'button button--secondary quiz__grade-button';
-  missButton.textContent = 'Still learning';
+  missButton.className = 'button button--secondary quiz__grade-button quiz__grade-button--left';
+  missButton.append(arrowGlyph('left'), gradeLabel('Still learning'));
 
   const knewButton = document.createElement('button');
   knewButton.type = 'button';
-  knewButton.className = 'button button--primary quiz__grade-button';
-  knewButton.textContent = 'I knew it';
+  knewButton.className = 'button button--primary quiz__grade-button quiz__grade-button--right';
+  knewButton.append(gradeLabel('I knew it'), arrowGlyph('right'));
 
   grade.append(missButton, knewButton);
 
@@ -326,6 +374,8 @@ function buildPanel() {
   verdict.className = 'quiz__verdict';
   verdict.setAttribute('role', 'status');
 
+  /* Choose keeps its example here rather than on the card — see the note in
+     renderCard on why the answer face has to stay short in that mode. */
   const detail = document.createElement('div');
   detail.className = 'quiz__detail';
 
@@ -386,7 +436,7 @@ function buildPanel() {
   return {
     panel, round, bar, barFill, title, count, exitButton,
     scene, cardInner, card, prompt, front, hint, flipHint,
-    cardBack, answer, answerDetail,
+    cardBack, answerJp, answer, answerDetail,
     options, grade, missButton, knewButton,
     feedback, verdict, detail, continueButton, shortcuts,
     summary, summaryScore, summaryText, missedHeading, missedList,
@@ -429,6 +479,10 @@ function createQuiz({
     missed: [],
     answered: false,
     flipped: false,
+    // 'left' | 'right' | null — which way the last answer sent the card. Set
+    // at grading time and read again at advance time, so the flick, the lean
+    // it settles into, and the exit are all one continuous movement.
+    direction: null,
     title: '',
   };
 
@@ -501,23 +555,136 @@ function createQuiz({
      forbids, and a button a reader can Tab to but cannot see is the bug this
      app already fixed once in the nav drawer. It also can't be turned twice. */
   function syncFaces() {
-    const flipMode = state.mode === 'flip';
-    const showingBack = flipMode && state.flipped;
-    el.card.disabled = !flipMode || showingBack;
-    el.card.setAttribute('aria-hidden', String(showingBack));
-    el.cardBack.setAttribute('aria-hidden', String(!showingBack));
+    el.card.disabled = state.mode !== 'flip' || state.flipped;
+    el.card.setAttribute('aria-hidden', String(state.flipped));
+    el.cardBack.setAttribute('aria-hidden', String(!state.flipped));
   }
 
   function flip() {
     if (state.mode !== 'flip' || state.flipped || state.answered) return;
-    state.flipped = true;
-    el.scene.classList.add('is-flipped');
-    syncFaces();
+    turnToAnswer();
     el.grade.hidden = false;
     // The answer, not the buttons: this is what the reader just asked for, and
     // it is what a screen reader should say before offering a verdict on it.
     el.cardBack.focus();
   }
+
+  /* The turn itself, with no opinion about who asked for it — the reader in
+     Flip, the act of answering in Choose. */
+  function turnToAnswer() {
+    if (state.flipped) return;
+    state.flipped = true;
+    el.scene.classList.add('is-flipped');
+    syncFaces();
+  }
+
+  /* -- Dragging ---------------------------------------------------------------------------
+     Left is "still learning", right is "I knew it", and the card goes where it
+     is thrown. This is the one screen in the app a reader touches dozens of
+     times in a sitting, and reaching for one of two buttons every time is the
+     kind of small tax that decides whether a review habit survives the month.
+
+     Only in Flip, and only after the card has been turned: a swipe is a
+     *grade*, and grading a card whose answer you haven't seen is not a
+     shortcut, it is a mis-tap with consequences for the schedule.
+
+     The direction test is what stops it stealing scrolls — a thumb travelling
+     down a page drifts sideways by tens of pixels, so the horizontal component
+     has to be the larger one before this claims the gesture. Once it has, it
+     calls preventDefault(), which is why the move listener cannot be passive:
+     without it the page scrolls under a card the reader is trying to throw.
+     ---------------------------------------------------------------------------------------- */
+  function setDrag(dx) {
+    el.scene.style.setProperty('--drag', `${dx}px`);
+    // A hair over 2 degrees at the grading threshold: enough that the card
+    // reads as pivoting about a point below the screen rather than sliding
+    // flat, which is what makes it feel like an object and not a panel.
+    el.scene.style.setProperty('--drag-tilt', `${(dx / SWIPE_GRADE_DISTANCE) * 2.2}deg`);
+    el.scene.style.setProperty('--drag-progress', String(Math.min(Math.abs(dx) / SWIPE_GRADE_DISTANCE, 1)));
+    if (dx !== 0) el.scene.dataset.toward = dx > 0 ? 'right' : 'left';
+  }
+
+  /* The two halves of a throw, separated because they end at different times.
+     `--drag` and `--drag-tilt` are the card following the finger and stop
+     mattering the moment the throw is graded — the lean takes the transform
+     from there. `data-toward` and `--drag-progress` are the *mark*: the edge
+     of the card in the colour of the verdict it went to, which stays until
+     the card leaves. A card graded from the buttons gets the mark without
+     ever having had the drag. */
+  function clearDrag() {
+    el.scene.style.removeProperty('--drag');
+    el.scene.style.removeProperty('--drag-tilt');
+    el.scene.classList.remove('is-dragging');
+  }
+
+  function clearMark() {
+    el.scene.style.removeProperty('--drag-progress');
+    delete el.scene.dataset.toward;
+  }
+
+  function initDrag() {
+    let startX = null;
+    let startY = null;
+    let claimed = false;
+
+    const canDrag = () => state.mode === 'flip' && state.flipped && !state.answered;
+
+    el.scene.addEventListener('touchstart', (event) => {
+      if (!canDrag() || event.touches.length !== 1) {
+        startX = null;
+        return;
+      }
+      startX = event.touches[0].clientX;
+      startY = event.touches[0].clientY;
+      claimed = false;
+    }, { passive: true });
+
+    el.scene.addEventListener('touchmove', (event) => {
+      if (startX === null || !canDrag()) return;
+
+      const dx = event.touches[0].clientX - startX;
+      const dy = event.touches[0].clientY - startY;
+
+      if (!claimed) {
+        // Undecided until the gesture has committed to an axis. 10px of slop
+        // keeps a tap that wobbles from registering as a throw.
+        if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
+        claimed = true;
+        el.scene.classList.add('is-dragging');
+      }
+
+      event.preventDefault();
+      setDrag(dx);
+    }, { passive: false });
+
+    const release = (event) => {
+      if (startX === null) return;
+      const dx = claimed ? (event.changedTouches?.[0]?.clientX ?? startX) - startX : 0;
+      startX = null;
+
+      // The class comes off first so the card animates home rather than
+      // teleporting, and the custom properties go with it.
+      el.scene.classList.remove('is-dragging');
+
+      if (claimed && Math.abs(dx) >= SWIPE_GRADE_DISTANCE) {
+        // Left the custom properties in place on purpose: the card is where
+        // the reader left it, and the lean below takes over from there rather
+        // than snapping back through centre first.
+        answer(dx > 0, null);
+        return;
+      }
+      clearDrag();
+    };
+
+    el.scene.addEventListener('touchend', release, { passive: true });
+    el.scene.addEventListener('touchcancel', () => {
+      startX = null;
+      el.scene.classList.remove('is-dragging');
+      clearDrag();
+    }, { passive: true });
+  }
+
+  initDrag();
 
   function renderCard() {
     const item = currentItem();
@@ -532,19 +699,32 @@ function createQuiz({
     el.hint.textContent = hintText;
     el.hint.hidden = !hintText;
 
-    /* The back is written on every render, in both modes, but only Flip mode
-       ever turns to it. In Choose mode it stays `hidden`, which also drops it
-       out of the grid that sizes the card — so a Choose card is exactly as
-       tall as its own question, as it always was. */
+    /* The back, in both modes. It always carries the question restated over
+       its own meaning — the one moment worth putting the two sides of a word
+       in the same eyeline is the moment the reader has just committed to a
+       guess, and in Choose it is the only thing that survives the turn.
+
+       The example is Flip's alone, and the reason is height, measured on a
+       390x844 phone. Both faces share one grid cell, so whatever the back
+       carries sets the card's height *for the whole round* — and an example
+       block takes the card from 176px to 294px. In Flip that is free: nothing
+       is below the card but two buttons. In Choose it pushes four options and
+       the Continue button under the fold, so a reader would have to scroll to
+       finish answering a question they can currently answer without moving.
+       Choose keeps its example in the feedback area below, where it costs
+       nothing until there is something to say. */
+    el.answerJp.replaceChildren(adapter.front(item));
     el.answer.textContent = adapter.meaning(item);
     const back = flipMode ? adapter.detail(item) : null;
     el.answerDetail.replaceChildren(...(back ? [back] : []));
-    el.cardBack.hidden = !flipMode;
     el.flipHint.hidden = !flipMode;
 
     el.feedback.hidden = true;
     el.detail.replaceChildren();
-    el.scene.classList.remove('is-correct', 'is-incorrect');
+    el.scene.classList.remove('is-correct', 'is-leaning-left', 'is-leaning-right');
+    state.direction = null;
+    clearDrag();
+    clearMark();
     faceFront();
 
     if (flipMode) {
@@ -574,33 +754,39 @@ function createQuiz({
      -------------------------------------------------------------------------------------- */
 
   function showFeedback(knewIt, record) {
-    const item = currentItem();
-    const adapter = adapterFor(item);
+    /* Where the card has come to rest, and where it will leave from. A flicked
+       card is already off-centre and the lean simply takes over its position;
+       a card graded from the buttons travels there now, so the button press
+       and the flick end in exactly the same place.
 
-    el.scene.classList.add(knewIt ? 'is-correct' : 'is-incorrect');
+       This replaces the shake a wrong answer used to get. The shake said
+       "wrong" — which the verdict, the colour and the highlighted option all
+       say already — where a lean says *which way it went*, which nothing else
+       on screen does. It is also the gentler of the two, and forty times a
+       session that matters. */
+    state.direction = knewIt ? 'right' : 'left';
+    clearDrag();
+    el.scene.dataset.toward = state.direction;
+    el.scene.style.setProperty('--drag-progress', '1');
+    el.scene.classList.add(`is-leaning-${state.direction}`);
+    if (knewIt) el.scene.classList.add('is-correct');
 
     /* Two different jobs, because the two modes leave the reader looking at
        different things.
 
-       In Choose, the right answer is already highlighted among the options, so
-       this line only has to say plainly that the highlighted one is what was
-       wanted — without the sting of "wrong".
-
-       In Flip, the reader is looking at the answer: it is printed across the
-       face of the card they just turned. Repeating it here would be the third
-       time in two seconds, so the line reports the schedule instead, which is
-       the one thing the card cannot say. */
-    const flipMode = state.mode === 'flip';
+       Both modes now show the answer on the card's own back, so neither of
+       them needs this line to name it. What is left is the schedule, which is
+       the one thing the card cannot say — and it is worth saying, because
+       "back in three days" is the only visible evidence that answering
+       honestly does anything at all. */
     el.verdict.textContent = knewIt
       ? `Зөв · ${describeNextReview(record)}`
-      : flipMode
-        ? `Тэмдэглэлээ · ${describeNextReview(record)}`
-        : `Хариулт нь “${adapter.meaning(item)}” байлаа`;
+      : `Тэмдэглэлээ · ${describeNextReview(record)}`;
     el.verdict.classList.toggle('is-correct', knewIt);
     el.verdict.classList.toggle('is-incorrect', !knewIt);
 
-    // Flip already carries the example on the back of the card.
-    const detail = flipMode ? null : adapter.detail(item);
+    // Flip already carries it on the back of the card.
+    const detail = state.mode === 'flip' ? null : adapterFor(currentItem()).detail(currentItem());
     el.detail.replaceChildren(...(detail ? [detail] : []));
 
     el.feedback.hidden = false;
@@ -617,7 +803,13 @@ function createQuiz({
       }, CORRECT_PAUSE_MS);
     } else {
       el.continueButton.hidden = false;
-      el.continueButton.focus();
+      /* preventScroll, and it is load-bearing. Focusing a button below the
+         fold scrolls it into view, and on a phone that means the card — which
+         has just turned to show the answer — is pushed off the top of the
+         screen at the exact moment it became worth reading. Focus still moves,
+         so a keyboard reader is on the right control and Enter advances; the
+         page simply stays where the reader was looking. */
+      el.continueButton.focus({ preventScroll: true });
     }
   }
 
@@ -644,6 +836,12 @@ function createQuiz({
         if (isAnswer) button.classList.add('is-answer');
         if (button === chosenButton && !isAnswer) button.classList.add('is-wrong');
       }
+      /* And the card turns, the same turn Flip makes — this is the moment
+         Choose has an answer to show, and showing it on the card's own back
+         is what stops the page from growing a block underneath the options
+         at the exact moment the reader is reading them. The highlighted
+         option says which one; the card says what it means. */
+      turnToAnswer();
     } else {
       // The card stays turned: the answer is what the reader is grading
       // themselves against, and it should still be there while they read the
@@ -656,7 +854,54 @@ function createQuiz({
     showFeedback(knewIt, record);
   }
 
+  /* The graded card leaves the way it was thrown, and the next one arrives
+     face up on its own entrance. A deck: you discard to one side or the other,
+     and you draw from the top.
+
+     Driven by `animationend` rather than a timer, because reset.css collapses
+     every animation in the app to 0.01ms under prefers-reduced-motion — a
+     fixed setTimeout would hold a reader who asked for less motion at a blank
+     card for the full 180ms. The timer that is here is a safety net for the
+     case where the animation never runs at all (an off-screen panel, a tab in
+     the background) and would otherwise strand the round.
+
+     Guarded against firing twice: `once` on the listener, and a flag the
+     timeout checks, so a late animationend can't advance a second time. */
   function advance() {
+    const direction = state.direction;
+    if (!direction) {
+      step();
+      return;
+    }
+
+    /* Off first. It is the same property as the exit animation and is
+       declared later in quiz.css, so leaving it on meant the card never
+       actually left — `advance` fell through to its safety timeout every
+       time and the discard was invisible. A class that has outlived its own
+       animation is a lie either way. */
+    el.scene.classList.remove('is-entering');
+
+    let stepped = false;
+    const go = () => {
+      if (stepped) return;
+      stepped = true;
+      step();
+    };
+
+    el.scene.addEventListener('animationend', function onEnd(event) {
+      // Animation events bubble, and the correct-answer ring runs on a face
+      // inside this element.
+      if (event.target !== el.scene) return;
+      el.scene.removeEventListener('animationend', onEnd);
+      go();
+    });
+    window.setTimeout(go, EXIT_MS + 120);
+
+    el.scene.classList.add(`is-leaving-${direction}`);
+  }
+
+  function step() {
+    el.scene.classList.remove('is-leaving-left', 'is-leaving-right');
     state.index += 1;
     if (state.index >= state.queue.length) {
       finish();

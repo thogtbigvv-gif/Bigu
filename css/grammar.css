@@ -68,9 +68,16 @@
   transition: border-color var(--transition-base);
 }
 
-.grammar-card:hover .grammar-card__pattern,
 .grammar-card:focus-within .grammar-card__pattern {
   border-inline-start-color: color-mix(in srgb, var(--color-bengara) 50%, transparent);
+}
+
+/* Gated like the vocabulary and kanji cards' own hover treatments — a mark
+   left behind on the last card a thumb touched is worse than no mark. */
+@media (hover: hover) {
+  .grammar-card:hover .grammar-card__pattern {
+    border-inline-start-color: color-mix(in srgb, var(--color-bengara) 50%, transparent);
+  }
 }
 
 .grammar-card__meaning {

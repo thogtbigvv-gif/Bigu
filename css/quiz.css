@@ -84,17 +84,17 @@
    instruction line small and quiet above, the Japanese large and alone in
    the middle, the reading or structure line quiet below it.
 
-   In Flip mode the card is a real two-sided object: the question is printed on
-   the front and the answer on the back, and turning it over is the reveal.
-   That is what a flashcard *is*, and it is the whole difference between the
-   two modes — Flip used to reveal by making more text appear underneath the
-   card, which is exactly what Choose already does.
+   The card is a real two-sided object in both modes: the question is printed
+   on the front and the answer on the back, and turning it over is the reveal.
+   That is what a flashcard *is*. Flip lets the reader turn it before grading
+   themselves; Choose turns it for them the moment an option is picked, which
+   is the only place its answer was ever going to fit without the page growing
+   a block underneath the options as they read them.
 
    Three nested elements, because a 3D turn needs all three and each does one
-   job: .quiz__scene holds the perspective and never itself turns (so the
-   entrance and the grading animations can use its transform freely),
-   .quiz__card-inner is the thing that rotates, and the two faces sit inside
-   it back to back.
+   job: .quiz__scene holds the perspective and every movement that is *not*
+   the turn (drag, lean, exit), .quiz__card-inner is the thing that rotates,
+   and the two faces sit inside it back to back.
    ------------------------------------------------------------------------------------------ */
 .quiz__scene {
   /* Distance from the viewer to the page. Large relative to the card's own
@@ -103,13 +103,92 @@
      a single large glyph reads as a fairground effect. This is a page turning
      over, seen from across a desk. */
   perspective: 1400px;
+
+  /* Where the card is on the desk. The turn lives on .quiz__card-inner and
+     this is everything else that moves it — the drag, the lean it settles
+     into, the exit — so the two never fight over one transform.
+
+     js/quiz.js writes --drag and --drag-tilt during a swipe and leaves them in
+     place when the swipe grades the card, which is what lets the lean below
+     pick the card up exactly where the thumb dropped it rather than snapping
+     it back through centre first. */
+  transform: translateX(var(--drag, 0px)) rotate(var(--drag-tilt, 0deg));
+  transition: transform var(--transition-base);
 }
+
+/* Following a finger is not a transition — a card that eases towards where the
+   thumb was 250ms ago is a card with lag, which is the one thing a direct
+   manipulation gesture cannot have. */
+.quiz__scene.is-dragging {
+  transition: none;
+}
+
+/* -- Which way it went -------------------------------------------------------------------
+   Left is "still learning", right is "I knew it" — the same two directions as
+   the buttons, the same two as the swipe, and the same two the card leaves in.
+   The lean is where a graded card comes to rest while the verdict is read, so
+   a card graded by button ends up exactly where a flicked one would.
+
+   These replace the shake a wrong answer used to get: a shake says "wrong",
+   which the verdict and the highlighted option already say, where a lean says
+   which way it went, which nothing else on screen does.
+   ------------------------------------------------------------------------------------------ */
+.quiz__scene.is-leaning-left,
+.quiz__scene.is-leaning-right {
+  transition: transform var(--duration-base) var(--ease-exit);
+}
+
+.quiz__scene.is-leaning-left { transform: translateX(-14px) rotate(-1.6deg); }
+.quiz__scene.is-leaning-right { transform: translateX(14px) rotate(1.6deg); }
+
+/* Off the desk, in the direction it was already leaning. Shorter than its
+   arrival on purpose: a discard is a decision the reader has already made, and
+   this runs forty times a round. */
+.quiz__scene.is-leaving-left {
+  animation: quiz-card-exit-left 180ms var(--ease-exit) forwards;
+}
+
+.quiz__scene.is-leaving-right {
+  animation: quiz-card-exit-right 180ms var(--ease-exit) forwards;
+}
+
+@keyframes quiz-card-exit-left {
+  to { transform: translateX(-64%) rotate(-7deg); opacity: 0; }
+}
+
+@keyframes quiz-card-exit-right {
+  to { transform: translateX(64%) rotate(7deg); opacity: 0; }
+}
+
+/* -- The throw, while it is happening ------------------------------------------------
+   The edge of the card takes the colour of the verdict it is heading towards,
+   fading up with the distance travelled so the reader can see the grade land
+   before they let go — and can back out by returning to centre, which is what
+   makes a destructive-feeling gesture safe to try.
+
+   --drag-progress is 0 at rest and 1 at the point the throw would count, so
+   the cue reaching full strength *is* the threshold being met. No separate
+   number to keep in sync with SWIPE_GRADE_DISTANCE.
+
+   It outlives the gesture. Once a card is graded — flicked or by button —
+   js/quiz.js pins the progress at 1 and leaves data-toward in place, so the
+   edge the card is leaning towards stays lit while the verdict is read. The
+   correct-answer ring below blooms above this and settles back onto it.
+   ------------------------------------------------------------------------------------------ */
+.quiz__scene[data-toward] .quiz__card--back {
+  border-color: color-mix(in srgb, var(--cue, var(--color-stone)) calc(var(--drag-progress, 0) * 100%), var(--color-stone));
+  box-shadow: 0 0 0 calc(var(--drag-progress, 0) * 3px)
+    color-mix(in srgb, var(--cue, transparent) 22%, transparent);
+}
+
+.quiz__scene[data-toward="left"] { --cue: var(--color-error); }
+.quiz__scene[data-toward="right"] { --cue: var(--color-moss); }
 
 .quiz__card-inner {
   /* Both faces occupy one grid cell, so the card is always as tall as the
-     taller of them and never resizes halfway through its own turn. In Choose
-     mode the back is `hidden`, drops out of the grid, and the card is sized by
-     its question alone exactly as it was before. */
+     taller of them and never resizes halfway through its own turn — and, more
+     importantly, never resizes *between* questions either. A card whose height
+     tracked its own content would move every option below it on every card. */
   display: grid;
   transform-style: preserve-3d;
   /* --ease-turn, not the app's usual entrance curve: see the note beside the
@@ -126,7 +205,13 @@
 
 /* Facing the card front again between questions is not an animation — see
    faceFront() in js/quiz.js for why turning back would show the reader the
-   next question's answer. */
+   next question's answer.
+
+   It covers the scene as well as the inner, because the scene is where the
+   discarded card's position lives: without it, dropping the exit transform
+   would transition the new card back in from wherever the old one was thrown,
+   which is the one direction a fresh card must never arrive from. */
+.quiz__scene.is-instant,
 .quiz__scene.is-instant .quiz__card-inner {
   transition: none;
 }
@@ -218,6 +303,18 @@
    content. The example under it is the same recessed block Choose shows in its
    feedback — the answer arrives with its evidence rather than as a bare gloss.
    ---------------------------------------------------------------------------------------- */
+/* The question, restated. Quiet and small — it is context for the answer
+   below it, not a second headline — but at --text-md it is still large enough
+   to read the kanji, which is the whole reason it is here. */
+.quiz__answer-jp {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-ash);
+  max-width: none;
+}
+
 /* One step below the Japanese on the front, not two. The answer is the whole
    reason the card turns, and at --text-lg it read as a caption on an empty
    card rather than as the other half of the question. It stays under the
@@ -291,10 +388,24 @@
 /* The row tints as well as outlining. Four options that only change their
    1px edge on hover give the pointer almost nothing to land on, and this is
    the control the reader hits most often in the entire app — the tint is what
-   makes the target feel like a target without adding a single moving part. */
-.quiz__option:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
-  border-color: var(--color-indigo);
+   makes the target feel like a target without adding a single moving part.
+
+   Behind (hover: hover), and this one is not a nicety. On a touch screen
+   :hover latches onto whatever was tapped last and never lets go — and these
+   four buttons are *rebuilt* under a stationary thumb on every question, so
+   the tint landed on whichever option happened to occupy that spot on the
+   next card. The reader was shown the app pre-highlighting an answer it had
+   no opinion about, once per question, for the whole round. */
+@media (hover: hover) {
+  .quiz__option:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
+    border-color: var(--color-indigo);
+  }
+
+  .quiz__option:hover:not(:disabled) .quiz__option-key {
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+  }
 }
 
 .quiz__option:active:not(:disabled) {
@@ -302,11 +413,11 @@
   transition-timing-function: var(--ease-spring);
 }
 
-/* The keyed box follows its own row into hover and focus. It is the shortcut
-   made visible, so it should look live exactly when the row it belongs to
-   does — otherwise a keyboard reader watching the numbers sees them stay grey
-   while everything around them responds. */
-.quiz__option:hover:not(:disabled) .quiz__option-key,
+/* The keyed box follows its own row into focus, and (above, where hover is
+   real) into hover. It is the shortcut made visible, so it should look live
+   exactly when the row it belongs to does — otherwise a keyboard reader
+   watching the numbers sees them stay grey while everything around them
+   responds. */
 .quiz__option:focus-visible .quiz__option-key {
   border-color: var(--color-indigo);
   color: var(--color-indigo);
@@ -376,7 +487,16 @@
   opacity: 0.55;
 }
 
-/* -- Flip mode --------------------------------------------------------------------------- */
+/* -- Grading ------------------------------------------------------------------------------
+   Two buttons that are also two directions. The row never stacks and never
+   reverses, at any width: "still learning" is the left-hand button because
+   left is where the card goes when you say it, and the arrow on its outer edge
+   is how a reader who has never flicked a card finds out they can.
+
+   This is why the small-screen block at the foot of this file no longer turns
+   the pair into a column. A stacked pair puts "still learning" *above* "I knew
+   it", which contradicts the only thing the arrows are there to teach.
+   ------------------------------------------------------------------------------------------ */
 .quiz__grade {
   display: flex;
   justify-content: center;
@@ -384,8 +504,36 @@
 }
 
 .quiz__grade-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
   flex: 1 1 0;
   max-width: 12rem;
+  padding-inline: var(--space-sm);
+}
+
+.quiz__grade-arrow {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  /* Quieter than the label it points away from: the arrow is a direction, not
+     a second word. */
+  opacity: 0.55;
+  transition: transform var(--transition-fast);
+}
+
+/* The arrow leads on press, the way the card is about to. */
+.quiz__grade-button--left:active .quiz__grade-arrow { transform: translateX(-2px); }
+.quiz__grade-button--right:active .quiz__grade-arrow { transform: translateX(2px); }
+
+.quiz__grade-label {
+  min-width: 0;
 }
 
 /* -- Feedback ------------------------------------------------------------------------------ */
@@ -477,11 +625,9 @@
   animation: quiz-card-correct 260ms var(--ease-exit);
 }
 
-/* A settle, not a shake — the reader got something wrong, which deserves a
-   nudge, not a scolding. */
-.quiz__scene.is-incorrect {
-  animation: quiz-card-incorrect 180ms var(--ease-exit);
-}
+/* The wrong-answer shake is gone: the lean at the top of this file says which
+   way the card went, which is more than "wrong" and gentler than being buzzed
+   at forty times a session. Its keyframes went with it. */
 
 .quiz__feedback:not([hidden]) {
   animation: quiz-card-enter 180ms var(--ease-entrance);
@@ -506,16 +652,6 @@
     border-color: var(--color-moss);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-moss) 30%, transparent);
   }
-}
-
-/* Damped: the second swing is half the first. An even shake reads as a buzzer,
-   a decaying one reads as something being set back down — which is the
-   difference between being corrected and being buzzed at, forty times a
-   session. */
-@keyframes quiz-card-incorrect {
-  20% { transform: translateX(-5px); }
-  55% { transform: translateX(3px); }
-  80% { transform: translateX(-1px); }
 }
 
 /* -- Summary --------------------------------------------------------------------------------
@@ -652,16 +788,23 @@
     padding: var(--space-lg) var(--space-md);
   }
 
-  .quiz__grade,
   .quiz__summary-actions {
     flex-direction: column;
     width: 100%;
   }
 
-  .quiz__grade-button,
   .quiz__summary-actions .button {
     max-width: none;
     width: 100%;
+  }
+
+  /* The pair stays side by side and splits the width — left is left. The
+     label wraps inside its own button before the row ever gives up its
+     direction. */
+  .quiz__grade-button {
+    max-width: none;
+    padding-inline: var(--space-2xs);
+    font-size: var(--text-sm);
   }
 
   .quiz__missed-item {

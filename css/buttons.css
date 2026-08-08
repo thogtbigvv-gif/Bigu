@@ -71,30 +71,35 @@
    The one filled control on a screen, so it is the one that carries weight:
    a resting shadow tied to its own colour rather than to neutral ink, which
    keeps a coloured button from looking like it is sitting in grey smoke.
+
+   Painted in --fill-primary rather than --color-indigo. The two are the same
+   colour in light and deliberately different in dark: see the note beside the
+   fill tokens in variables.css for why a slab and a mark need opposite
+   adjustments on a dark ground.
    ------------------------------------------------------------------------------ */
 
 .button--primary {
-  background-color: var(--color-indigo);
-  border-color: var(--color-indigo);
-  color: var(--color-washi);
-  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-indigo) 24%, transparent);
+  background-color: var(--fill-primary);
+  border-color: var(--fill-primary);
+  color: var(--fill-ink);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--fill-primary) 24%, transparent);
 }
 
 /* Rise and deepen together. The travel is the same --lift-card the cards use,
    so "this is raised" means one distance everywhere in the app. */
 .button--primary:hover:not(:disabled) {
-  background-color: var(--color-indigo-deep);
-  border-color: var(--color-indigo-deep);
+  background-color: var(--fill-primary-strong);
+  border-color: var(--fill-primary-strong);
   transform: translateY(var(--lift-card));
-  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--color-indigo) 55%, transparent);
+  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--fill-primary) 55%, transparent);
 }
 
 /* Pressed: back to the page, and the shadow collapses with it. A button that
    keeps its elevation while travelling downward reads as a sticker rather
    than as something being pushed. */
 .button--primary:active:not(:disabled) {
-  background-color: var(--color-indigo-deep);
-  border-color: var(--color-indigo-deep);
+  background-color: var(--fill-primary-strong);
+  border-color: var(--fill-primary-strong);
   transform: translateY(var(--lift-press));
   box-shadow: 0 0 0 0 transparent;
 }
@@ -260,10 +265,10 @@
    without a pseudo-element or a second animated property. reset.css's
    prefers-reduced-motion rule collapses it to an instant swap. */
 .toggle-chip[aria-pressed="true"] {
-  border-color: var(--color-moss);
-  color: var(--color-washi);
+  border-color: var(--fill-accent);
+  color: var(--fill-ink);
   background-color: transparent;
-  background-image: linear-gradient(var(--color-moss), var(--color-moss));
+  background-image: linear-gradient(var(--fill-accent), var(--fill-accent));
   background-repeat: no-repeat;
   background-size: 100% 100%;
   transition:
@@ -274,7 +279,7 @@
 }
 
 .toggle-chip:not([aria-pressed="true"]) {
-  background-image: linear-gradient(var(--color-moss), var(--color-moss));
+  background-image: linear-gradient(var(--fill-accent), var(--fill-accent));
   background-repeat: no-repeat;
   background-size: 0% 100%;
 }
