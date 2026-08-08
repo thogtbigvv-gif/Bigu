@@ -179,8 +179,14 @@
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
 
-.lesson-word__mark:hover {
-  color: var(--color-moss);
+/* (hover: hover). This ring's colour *is* the word's state — moss means held
+   — so a hover tint that latches on after a tap leaves a released word looking
+   exactly like a kept one, on the one control that repeats eighteen times on
+   a screen. */
+@media (hover: hover) {
+  .lesson-word__mark:hover {
+    color: var(--color-moss);
+  }
 }
 
 .lesson-word__mark:active {

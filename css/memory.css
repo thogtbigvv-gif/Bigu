@@ -461,8 +461,13 @@
   transition: background-color var(--transition-fast);
 }
 
-.memory-slip__face:hover {
-  background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
+/* (hover: hover), because a graded slip is removed and the one below it
+   slides up into the same place — on touch the wash would land on whichever
+   slip inherited the position, marking a card the reader never touched. */
+@media (hover: hover) {
+  .memory-slip__face:hover {
+    background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
+  }
 }
 
 .memory-slip__face:focus-visible {

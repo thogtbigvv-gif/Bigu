@@ -26,6 +26,22 @@
   min-width: 0;
   display: flex;
   flex-direction: column;
+  /* A quiz card thrown off the desk travels most of its own width past the
+     side of the page, and anything sticking out to the *right* widens the
+     document — a horizontal scrollbar appearing and vanishing once per card.
+
+     Clipped here rather than around the card itself, and that is the whole
+     point: this box is the width of the screen, so the card is cut off at the
+     edge of the screen, which is where a thing leaving is supposed to
+     disappear. Clipping it at its own 358px column instead sliced it flat in
+     the middle of the page, mid-throw.
+
+     `clip`, not `hidden`: hidden would make this a scroll container, and a
+     scroll container can be scrolled — by a focus() call, by an anchor — and
+     then the whole app sits at an offset nothing put it at. clip has no
+     scroll position to get wrong, and it leaves the sticky header and the
+     fixed drawer alone. */
+  overflow-x: clip;
 }
 
 /* -- Shared container treatment -------------------------------------------------

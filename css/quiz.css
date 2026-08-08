@@ -22,18 +22,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  /* A discarded card travels 64% of its own width off to one side, which on a
-     phone is a couple of hundred pixels past the edge of the page — and an
-     element sticking out to the right widens the document, which is a
-     horizontal scrollbar appearing and vanishing forty times a round.
-
-     `clip`, not `hidden`: hidden makes this a scroll container, which would
-     also mean the browser could scroll it programmatically (focusing the
-     grade buttons, say) and leave the round sitting at an offset. clip has no
-     scroll position to get wrong. The margin is there so the card's own
-     shadow and focus ring aren't shaved off at rest. */
-  overflow-x: clip;
-  overflow-clip-margin: 8px;
 }
 
 /* -- Round progress -------------------------------------------------------------------
@@ -400,10 +388,24 @@
 /* The row tints as well as outlining. Four options that only change their
    1px edge on hover give the pointer almost nothing to land on, and this is
    the control the reader hits most often in the entire app — the tint is what
-   makes the target feel like a target without adding a single moving part. */
-.quiz__option:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
-  border-color: var(--color-indigo);
+   makes the target feel like a target without adding a single moving part.
+
+   Behind (hover: hover), and this one is not a nicety. On a touch screen
+   :hover latches onto whatever was tapped last and never lets go — and these
+   four buttons are *rebuilt* under a stationary thumb on every question, so
+   the tint landed on whichever option happened to occupy that spot on the
+   next card. The reader was shown the app pre-highlighting an answer it had
+   no opinion about, once per question, for the whole round. */
+@media (hover: hover) {
+  .quiz__option:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
+    border-color: var(--color-indigo);
+  }
+
+  .quiz__option:hover:not(:disabled) .quiz__option-key {
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+  }
 }
 
 .quiz__option:active:not(:disabled) {
@@ -411,11 +413,11 @@
   transition-timing-function: var(--ease-spring);
 }
 
-/* The keyed box follows its own row into hover and focus. It is the shortcut
-   made visible, so it should look live exactly when the row it belongs to
-   does — otherwise a keyboard reader watching the numbers sees them stay grey
-   while everything around them responds. */
-.quiz__option:hover:not(:disabled) .quiz__option-key,
+/* The keyed box follows its own row into focus, and (above, where hover is
+   real) into hover. It is the shortcut made visible, so it should look live
+   exactly when the row it belongs to does — otherwise a keyboard reader
+   watching the numbers sees them stay grey while everything around them
+   responds. */
 .quiz__option:focus-visible .quiz__option-key {
   border-color: var(--color-indigo);
   color: var(--color-indigo);

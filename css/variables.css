@@ -29,6 +29,32 @@
   --color-success: var(--color-moss);
   --color-focus: var(--color-indigo);
 
+  /* -- Color: filled controls ------------------------------------------------
+     The accents above are tuned for *marks on the page* — link text, a
+     border, a verdict line — and the dark theme brightens them so they stay
+     legible against a dark ground. That is the right adjustment for a mark
+     and precisely the wrong one for a *slab*: brightening the colour a
+     primary button is painted in turns it into the lightest object on a night
+     page, so the loudest thing on screen ends up being a single button. On a
+     dark ground a raised control should read as ink lit from the page, not as
+     a lamp sitting on it.
+
+     So filled controls take their own tokens, and only the fills move between
+     themes. In light they are exactly the accents they always were — a deep
+     indigo slab on paper is ink, which is the whole language of this app. In
+     dark they are darkened until they sit a step or two *above* the card they
+     are on rather than a leap above the page, and the text on them flips to
+     --color-ink instead of --color-washi.
+
+     Meters are deliberately not on this list. A progress bar has no text and
+     is supposed to be the lit part; --color-indigo stays right for those.
+     -------------------------------------------------------------------------- */
+  --fill-primary: var(--color-indigo);
+  --fill-primary-strong: var(--color-indigo-deep);
+  --fill-accent: var(--color-moss);
+  --fill-danger: var(--color-error);
+  --fill-ink: var(--color-washi);
+
   /* -- Typography: families -------------------------------------------------- */
   --font-display: 'Shippori Mincho', serif;                        /* headings, brand mark */
   --font-jp: 'Noto Sans JP', sans-serif;                            /* kana / kanji content */
@@ -276,6 +302,16 @@
 
   /* -- Color: feedback -------------------------------------------------------- */
   --color-error: #E08170;
+
+  /* Filled controls, darkened rather than brightened — see the long note in
+     the light block. Each sits about 2:1 above the page and 1.8:1 above a
+     card, which is enough to read as raised without becoming the brightest
+     thing in the room, and each carries --color-ink at better than 6:1. */
+  --fill-primary: #2F5468;
+  --fill-primary-strong: #3E6A82;
+  --fill-accent: #3E5535;
+  --fill-danger: #7A3229;
+  --fill-ink: var(--color-ink);
 
   /* -- Elevation (deeper, since a dark ground swallows a light shadow) ------- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);

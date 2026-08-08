@@ -115,10 +115,21 @@
   gap: var(--space-sm);
 }
 
+/* The save button never shrinks and never wraps. It shares its row with the
+   character count and the save status, and both of those are longer in
+   Mongolian than the English they replaced — long enough that the flex row
+   started taking the width out of the button instead, breaking "Save entry"
+   across two lines. A label is what a button is; the sentence beside it is
+   the part that can afford to wrap. */
 .journal__actions {
   display: flex;
   align-items: center;
   gap: var(--space-sm);
+  flex-shrink: 0;
+}
+
+.journal__save {
+  white-space: nowrap;
 }
 
 /* -- Calendar (heat-map) ----------------------------------------------------------------
@@ -220,23 +231,28 @@ button.journal__calendar-day:active {
 }
 
 .journal__calendar-day[data-intensity="1"] {
-  background-color: color-mix(in srgb, var(--color-moss) 25%, transparent);
+  background-color: color-mix(in srgb, var(--fill-accent) 25%, transparent);
   color: var(--color-ink);
 }
 
 .journal__calendar-day[data-intensity="2"] {
-  background-color: color-mix(in srgb, var(--color-moss) 50%, transparent);
+  background-color: color-mix(in srgb, var(--fill-accent) 50%, transparent);
   color: var(--color-ink);
 }
 
 .journal__calendar-day[data-intensity="3"] {
-  background-color: var(--color-moss);
-  color: var(--color-washi);
+  background-color: var(--fill-accent);
+  color: var(--fill-ink);
 }
 
-button.journal__calendar-day:hover {
-  background-color: var(--color-indigo-deep);
-  color: var(--color-washi);
+/* (hover: hover): a solid fill left on the last day tapped reads as "this is
+   the open entry", which is a claim the calendar makes elsewhere and would
+   then be making twice, about two different days. */
+@media (hover: hover) {
+  button.journal__calendar-day:hover {
+    background-color: var(--fill-primary-strong);
+    color: var(--fill-ink);
+  }
 }
 
 .journal__calendar-day--today {
@@ -339,8 +355,8 @@ button.journal__calendar-day:hover {
 }
 
 .journal__entry-delete[data-confirming="true"] {
-  color: var(--color-washi);
-  background-color: var(--color-error);
+  color: var(--fill-ink);
+  background-color: var(--fill-danger);
 }
 
 /* -- Small screens ------------------------------------------------------------------------ */
