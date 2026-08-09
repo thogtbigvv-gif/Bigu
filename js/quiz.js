@@ -393,6 +393,12 @@ function buildPanel() {
   const summary = document.createElement('div');
   summary.className = 'quiz__summary';
   summary.hidden = true;
+  /* Focusable by script only, so finish() can move focus here when the round
+     ends. Without it the summary is not a focus target at all and the focus
+     call is silently a no-op, which leaves a keyboard or screen-reader user
+     standing on a button that has just been hidden. -1 rather than 0: it is
+     a landing place, not a tab stop. */
+  summary.tabIndex = -1;
 
   const summaryScore = document.createElement('p');
   summaryScore.className = 'quiz__summary-score';
@@ -485,6 +491,15 @@ function createQuiz({
     direction: null,
     title: '',
   };
+
+  /* A round ends exactly once. "End" pressed inside the 650ms a correct
+     answer waits before advancing used to finish twice: the button truncates
+     the queue and calls finish(), then the pending timer fires advance() ->
+     step(), the index is now past the shortened queue, and finish() runs
+     again. Two onFinish calls means two session records in the practice
+     store for one round. Reset in run(), not here, so a second round through
+     the same panel can finish on its own account. */
+  let finished = false;
 
   /* -- Rendering ------------------------------------------------------------------------ */
 
@@ -888,13 +903,12 @@ function createQuiz({
       step();
     };
 
-    el.scene.addEventListener('animationend', function onEnd(event) {
+    el.scene.addEventListener('animationend', (event) => {
       // Animation events bubble, and the correct-answer ring runs on a face
       // inside this element.
       if (event.target !== el.scene) return;
-      el.scene.removeEventListener('animationend', onEnd);
       go();
-    });
+    }, { once: true });
     window.setTimeout(go, EXIT_MS + 120);
 
     el.scene.classList.add(`is-leaving-${direction}`);
@@ -913,6 +927,9 @@ function createQuiz({
   /* -- Summary --------------------------------------------------------------------------- */
 
   function finish() {
+    if (finished) return;
+    finished = true;
+
     const total = state.queue.length;
     onFinish({ total, correct: state.correct, missed: state.missed.slice(), mode: state.mode });
 
@@ -965,6 +982,7 @@ function createQuiz({
     state.correct = 0;
     state.missed = [];
     state.title = title;
+    finished = false;
 
     el.title.textContent = title;
     el.title.hidden = !title;

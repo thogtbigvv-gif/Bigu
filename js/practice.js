@@ -21,7 +21,7 @@
 
 import { practice, settings } from './storage.js';
 import { formatCount, getViewContainer } from './content.js';
-import { buildSession, countDue, getRecord } from './review.js';
+import { buildSession, countDue, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
 import { sessionSize } from './preferences.js';
 import { loadVocabulary } from './vocabulary.js';
@@ -40,6 +40,10 @@ const HISTORY_LIMIT = 5;
    "Tricky ones" are live pools rather than decks of their own. */
 const DECK_KEYS = ['due', 'lessons', 'vocabulary', 'grammar', 'kanji', 'mistakes'];
 
+/* Exported: dashboard.js labels saved sessions with the deck they were
+   drawn from, and it kept its own copy of this table. Two copies meant one
+   deck under two names — "Tricky ones" on this screen, "Review mistakes" on
+   the Dashboard — for the same round. */
 const DECK_LABELS = {
   due: 'Due today',
   lessons: ADAPTERS.lessons.label,
@@ -332,16 +336,28 @@ async function initPractice() {
       kanji: { items: kanjiData.kanji },
     };
 
-    // Getters, not static arrays: what's due and what's still being missed
-    // both change as the reader grades cards here and elsewhere, so each is
-    // read fresh every time rather than computed once at load.
-    decks.due = { get items() { return everything; } };
+    // "Due today" is the whole pool, not a filtered one: buildSession() does
+    // the filtering, and it re-reads the schedule every round, so what the
+    // reader actually gets is due-first whatever this array holds. It was
+    // written as a getter that returned `everything` unchanged, which read
+    // as if it recomputed something — and made updateStatus's
+    // `items.length === 0` branch unreachable for this deck, since the
+    // catalogue is never empty.
+    decks.due = { items: everything };
 
     decks.mistakes = {
       get items() {
+        // One read of the store per call, not one per item: this getter is
+        // wired to onGrade, so it re-runs after every card of every round
+        // over the whole catalogue.
+        const records = snapshotRecords();
         return everything.filter((item) => {
-          const record = getRecord(item.id);
-          return record.seen && record.level === 0;
+          const record = records.get(item.id);
+          // An actual miss, not merely level 0. Taking a word back out of
+          // memory with the mark on its card also parks it at level 0, and
+          // a deck of things the reader deliberately un-marked is not a
+          // deck of things they keep getting wrong.
+          return Boolean(record?.seen) && record.level === 0 && record.lapses >= 1;
         });
       },
     };
@@ -356,4 +372,4 @@ async function initPractice() {
   }
 }
 
-export { initPractice };
+export { initPractice, DECK_LABELS };

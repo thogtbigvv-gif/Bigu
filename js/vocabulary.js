@@ -245,8 +245,18 @@ function renderList(container, data) {
   let matched = [];
   let shown = 0;
 
+  /* Marking a word only re-filters when the filter is actually watching for
+     it. Handing applyFilter() straight to every card meant pressing
+     "Remember this" on the 200th word emptied the list and rebuilt it from
+     page one — the reader was thrown back to the top for doing the one thing
+     the card asks of them. With the toggle off, the word's own state is the
+     only thing that changed, and the card has already redrawn itself. */
+  function onCardProgressChange() {
+    if (rememberedToggle.getAttribute('aria-pressed') === 'true') applyFilter();
+  }
+
   function cardFor(row) {
-    if (!row.item) row.item = createCard(row.word, row.level, applyFilter);
+    if (!row.item) row.item = createCard(row.word, row.level, onCardProgressChange);
     return row.item;
   }
 

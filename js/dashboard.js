@@ -36,6 +36,7 @@ import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
 import { loadLessons } from './lessons.js';
+import { DECK_LABELS } from './practice.js';
 
 const VIEW_ID = 'dashboard';
 
@@ -478,15 +479,12 @@ function createMemoryCard(entries) {
    practice.js tags each saved session with the deck it was drawn from;
    older sessions saved before that existed simply have no `mode` field, so
    the label is omitted for those.
+
+   The names come from practice.js's own DECK_LABELS rather than a copy kept
+   here. The copy had drifted: the deck the Review screen calls "Tricky ones"
+   was labelled "Review mistakes" on this card, so one round appeared under
+   two names depending on which screen the reader was looking at.
    -------------------------------------------------------------------------------------- */
-const PRACTICE_MODE_LABELS = {
-  due: 'Due today',
-  vocabulary: 'Vocabulary',
-  grammar: 'Grammar',
-  kanji: 'Kanji',
-  lessons: 'Lessons',
-  mistakes: 'Review mistakes',
-};
 
 function createPracticeCard(sessions) {
   const card = createCard('Last review');
@@ -509,7 +507,7 @@ function createPracticeCard(sessions) {
     score.className = 'dashboard-streak__count dashboard-streak__count--score';
     score.textContent = `${latest.correct}/${latest.total}`;
 
-    const modeLabel = PRACTICE_MODE_LABELS[latest.mode];
+    const modeLabel = DECK_LABELS[latest.mode];
     const label = document.createElement('p');
     label.className = 'meta';
     label.textContent = modeLabel

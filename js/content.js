@@ -10,24 +10,37 @@
    ========================================================================== */
 
 /* Returns a load() function scoped to one JSON file: the first call
-   fetches and caches the parsed result, every call after that returns
-   the cached value. A failed or non-OK fetch throws a labeled error
-   (e.g. "Failed to load vocabulary (404)") so the caller's own
-   try/catch can show its own message. Only successful responses are
-   cached, so a retry after a failure really does re-fetch. */
+   fetches, every call after that gets the same result. A failed or non-OK
+   fetch throws a labeled error (e.g. "Failed to load vocabulary (404)") so
+   the caller's own try/catch can show its own message. The failed promise is
+   dropped, so a retry after a failure really does re-fetch.
+
+   The *promise* is what's cached, not the value it resolves to. Caching the
+   value only closes the window after the first fetch has finished, and the
+   app opens several of these at once — practice.js and dashboard.js each
+   load all four content files on init — so two views starting together both
+   found an empty cache and both fetched the same file. One request per file
+   now, whoever asks first. */
 function createContentLoader(url, label) {
-  let cached = null;
+  let pending = null;
 
-  return async function load() {
-    if (cached) return cached;
+  return function load() {
+    if (!pending) {
+      pending = (async () => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(`Failed to load ${label} (${response.status})`);
+        }
+        return response.json();
+      })();
 
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`Failed to load ${label} (${response.status})`);
+      // Cleared on failure only: a rejected promise handed to every later
+      // caller would turn one bad response into a permanently broken view,
+      // and the error states here all offer a retry button.
+      pending.catch(() => { pending = null; });
     }
 
-    cached = await response.json();
-    return cached;
+    return pending;
   };
 }
 

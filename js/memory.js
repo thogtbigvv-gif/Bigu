@@ -180,6 +180,15 @@ const SHELVES = [
     icon: [['path', { d: 'M4 2.5h8v11l-4-3-4 3z' }]],
   },
   {
+    key: 'settling',
+    label: 'Settling',
+    jp: '落ち着く',
+    note: 'Тогтож яваа нь. Хугацаа нь болоогүй, гүнд ч хараахан хүрээгүй — өөрийн хэмнэлээр бэхжсээр байна.',
+    empty: 'Одоогоор тогтож яваа юм алга.',
+    // Coming to rest: a stroke settling onto a line it will stay on.
+    icon: [['path', { d: 'M2.5 13h11' }], ['path', { d: 'M8 3v6.5' }], ['path', { d: 'M5.5 7 8 9.5 10.5 7' }]],
+  },
+  {
     key: 'deepInk',
     label: 'Deep ink',
     jp: '深い',
@@ -197,9 +206,16 @@ const SHELVES = [
 
    The automatic shelves are exclusive in this priority order, so the same
    word never appears twice in the derived half of the page and the most
-   urgent reading of it always wins. */
+   urgent reading of it always wins.
+
+   The cascade is also *total*: every seen item lands somewhere. It wasn't,
+   and the gap was the largest group in any mature store — not due, rarely
+   lost, met more than a week ago, sitting at level 1-3. Those items matched
+   no branch and appeared on no shelf, so a page whose whole claim is "here
+   is what is in your head" was silently leaving out most of it. `settling`
+   is that band, and it is the final else so the gap cannot come back. */
 function assignShelves(entries, now) {
-  const buckets = { waiting: [], fading: [], newlyMet: [], hardToHold: [], kept: [], deepInk: [] };
+  const buckets = { waiting: [], fading: [], newlyMet: [], hardToHold: [], kept: [], settling: [], deepInk: [] };
 
   for (const entry of entries) {
     const { record, strength } = entry;
@@ -216,16 +232,18 @@ function assignShelves(entries, now) {
     else if (due) buckets.waiting.push(entry);
     else if (record.lapses >= 2) buckets.hardToHold.push(entry);
     else if (record.firstSeen && now - record.firstSeen <= NEWLY_MET_DAYS * DAY) buckets.newlyMet.push(entry);
-    else if (record.level >= 4) buckets.deepInk.push(entry);
+    else if (record.level <= 3) buckets.settling.push(entry);
+    else buckets.deepInk.push(entry);
   }
 
   // Faintest first where the point is rescue, freshest first where the point
-  // is momentum, and strongest first on Deep ink so the shelf opens on the
-  // reader's best work.
+  // is momentum, and strongest first on Settling and Deep ink so those
+  // shelves open on the reader's best work.
   buckets.fading.sort((a, b) => a.strength - b.strength);
   buckets.waiting.sort((a, b) => a.record.dueAt - b.record.dueAt);
   buckets.newlyMet.sort((a, b) => b.record.firstSeen - a.record.firstSeen);
   buckets.hardToHold.sort((a, b) => b.record.lapses - a.record.lapses);
+  buckets.settling.sort((a, b) => b.strength - a.strength);
   buckets.deepInk.sort((a, b) => b.strength - a.strength);
   buckets.kept.sort((a, b) => a.strength - b.strength);
 
@@ -262,8 +280,24 @@ function collectReviewDays(records) {
   for (const record of records.values()) {
     if (record.lastSeen) add(toDateKey(new Date(record.lastSeen)), 1);
   }
+
+  /* Finished rounds, counted for what they were. The loop above can only
+     see each item's *last* touch, so a day whose items have since been
+     reviewed again leaves no trace in the records at all — the session log
+     is the only memory of it, and this view's own subject is that memory
+     fades. It used to add those days with a count of zero, which marked
+     them present for the streak and drew them as blank: a day the strip
+     said the reader had come back, and also that nothing happened.
+
+     A round's items are counted twice on a day the records still remember
+     — once each. That is accepted: the mark has no axis and no number on
+     it, it is sized against the busiest day of the same week, and an
+     overweighted day reads truer than an erased one. */
   for (const session of practice.getAll()) {
-    if (session.createdAt) add(toDateKey(new Date(session.createdAt)), 0);
+    // Falls back to 1, not 0: a session with no usable total is still
+    // evidence the reader came back that day, and zero is the one count
+    // that marks a day present and draws it as if it were empty.
+    if (session.createdAt) add(toDateKey(new Date(session.createdAt)), Number(session.total) || 1);
   }
 
   return days;

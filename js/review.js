@@ -204,27 +204,38 @@ function isRemembered(itemId) {
   return getRecord(itemId).remembered;
 }
 
-/* An item with no record at all is *new*, not due. The difference matters:
-   on an 800-word deck, counting untouched words as "due today" would put a
-   number on the dashboard that no amount of studying could ever bring down,
-   which is the opposite of what a due count is for. */
-function isNew(itemId) {
-  return !getRecord(itemId).seen;
-}
+/* One snapshot, shared. Both of these used to run a per-item predicate that
+   re-parsed the whole store, once for the filter and again for the sort key;
+   over a four-figure catalogue that is the single most expensive thing the
+   Review view does. The snapshot is a parameter rather than a local so
+   buildSession can take one read and hand the same map to both.
 
-function isDue(itemId, now = Date.now()) {
-  const record = getRecord(itemId);
-  return record.seen && record.dueAt <= now;
-}
-
-function dueItems(items, now = Date.now()) {
+   Note what each asks for: an item with no record at all is *new*, not due.
+   The difference matters — on an 800-word deck, counting untouched words as
+   "due today" would put a number on the dashboard that no amount of studying
+   could ever bring down, which is the opposite of what a due count is for. */
+function dueItems(items, now = Date.now(), records = snapshotRecords()) {
   return items
-    .filter((item) => isDue(item.id, now))
-    .sort((a, b) => getRecord(a.id).dueAt - getRecord(b.id).dueAt);
+    .filter((item) => {
+      const record = records.get(item.id);
+      return record?.seen && record.dueAt <= now;
+    })
+    .sort((a, b) => records.get(a.id).dueAt - records.get(b.id).dueAt);
 }
 
-function newItems(items) {
-  return items.filter((item) => isNew(item.id));
+function newItems(items, records = snapshotRecords()) {
+  return items.filter((item) => !records.get(item.id)?.seen);
+}
+
+/* How many of these the reader holds, in one read of the store. The per-item
+   isRemembered() is right for a single card and wrong for a lesson header or
+   a deck count, where it turns one question into hundreds of full parses. */
+function rememberedCount(items, records = snapshotRecords()) {
+  let count = 0;
+  for (const item of items) {
+    if (records.get(item.id)?.remembered) count += 1;
+  }
+  return count;
 }
 
 /* What the Dashboard's Today card counts. Kept here rather than in
@@ -316,10 +327,15 @@ function shuffled(items) {
 }
 
 function buildSession(items, size, now = Date.now()) {
-  const due = dueItems(items, now).slice(0, size);
+  // One read of the store for the whole round: the three passes below all
+  // ask about the same records, and re-reading between them would only give
+  // them a chance to disagree.
+  const records = snapshotRecords();
+
+  const due = dueItems(items, now, records).slice(0, size);
   if (due.length >= size) return due;
 
-  const fresh = shuffled(newItems(items)).slice(0, size - due.length);
+  const fresh = shuffled(newItems(items, records)).slice(0, size - due.length);
   const session = [...due, ...fresh];
   if (session.length > 0) return session;
 
@@ -329,7 +345,7 @@ function buildSession(items, size, now = Date.now()) {
   // they expected a study session costs them the habit.
   return items
     .slice()
-    .sort((a, b) => getRecord(a.id).dueAt - getRecord(b.id).dueAt)
+    .sort((a, b) => (records.get(a.id)?.dueAt ?? 0) - (records.get(b.id)?.dueAt ?? 0))
     .slice(0, size);
 }
 
@@ -347,11 +363,11 @@ function describeNextReview(record, now = Date.now()) {
 }
 
 /* The ladder's own machinery — the interval table, the band table, the
-   record normalizer, and the four per-item predicates buildSession and
-   countDue are built out of — stays inside this module. What the rest of
-   the app needs is the *answers*: what a record says, how strong it is,
-   what's due, and how to grade it. Eight fewer names on the way out, and
-   no caller can reach past countDue() to re-derive "due" its own way. */
+   record normalizer, and the due/new filters buildSession is built out of —
+   stays inside this module. What the rest of the app needs is the
+   *answers*: what a record says, how strong it is, what's due, and how to
+   grade it. A much smaller surface on the way out, and no caller can reach
+   past countDue() to re-derive "due" its own way. */
 export {
   FAINT_STRENGTH,
   getRecord,
@@ -360,6 +376,7 @@ export {
   bandFor,
   describeTiming,
   isRemembered,
+  rememberedCount,
   countDue,
   grade,
   setRemembered,
