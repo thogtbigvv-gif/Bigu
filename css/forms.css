@@ -33,8 +33,15 @@
   opacity: 0.55;
 }
 
-.field:hover {
-  border-color: var(--color-ash);
+/* The last ungated hover in the app. Mild compared with the rest — tapping a
+   field focuses it, and the focus treatment below outranks this — but the
+   search box at the top of vocabulary, grammar and kanji keeps a darkened edge
+   after any tap that *dismisses* it, which is the reader being shown a field
+   still paying attention when it is not. */
+@media (hover: hover) {
+  .field:hover {
+    border-color: var(--color-ash);
+  }
 }
 
 /* Outline first, halo second — see the note on .button:focus-visible in

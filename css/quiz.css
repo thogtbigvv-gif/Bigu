@@ -280,6 +280,22 @@
   }
 }
 
+/* The same on focus, which it did not have. .quiz__card is on cards.css's
+   exclusion list — correctly, a panel you read must not shift two pixels
+   because a cursor crossed it — but the exclusion took the *focus* answer with
+   it, and in Flip mode this panel is also the button that turns the card. So a
+   reader working the round from the keyboard tabbed onto the single most
+   important control on screen and got the browser outline and nothing else,
+   while the mouse reader got an edge that picked up the interactive colour.
+
+   Only the surface treatment is borrowed; the exclusion still holds and
+   nothing moves. The outline from typography.css's `button:focus-visible`
+   stays on top of it. */
+.quiz__card--front:not(:disabled):focus-visible {
+  border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+  box-shadow: var(--shadow-md);
+}
+
 /* The press: a couple of degrees of the turn it is about to make, so the card
    answers the finger with the same motion the tap starts. */
 .quiz__card--front:not(:disabled):active {

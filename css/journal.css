@@ -58,8 +58,10 @@
   transition: text-decoration-color var(--transition-fast);
 }
 
-.journal__back:hover {
-  text-decoration-color: currentColor;
+@media (hover: hover) {
+  .journal__back:hover {
+    text-decoration-color: currentColor;
+  }
 }
 
 .journal__hint {
@@ -165,12 +167,26 @@
   line-height: 1;
   color: var(--color-ash);
   border-radius: var(--radius-sm);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.journal__calendar-nav:hover:not(:disabled) {
-  color: var(--color-ink);
-  background-color: var(--color-washi-raised);
+/* Gated, and given the press it never had. These two arrows are how a reader
+   moves through months, so they are tapped repeatedly and in a row — the one
+   pattern where a stuck hover is most obvious, because the reader watches the
+   previous arrow stay lit while they reach for the next one. */
+@media (hover: hover) {
+  .journal__calendar-nav:hover:not(:disabled) {
+    color: var(--color-ink);
+    background-color: var(--color-washi-raised);
+  }
+}
+
+.journal__calendar-nav:active:not(:disabled) {
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
 }
 
 .journal__calendar-nav:disabled {
@@ -211,8 +227,20 @@
    a ring that would crowd its neighbours.
 
    Only on the button cells: a day with no entry is not interactive and must
-   not pretend to be. */
-button.journal__calendar-day:hover,
+   not pretend to be.
+
+   The hover half is gated and the focus half is not — the split this app makes
+   everywhere. It matters more here than the colour change further down, which
+   was already gated: a cell left permanently 12% larger than the six around it
+   visibly breaks the grid's rhythm, where a stuck fill only miscolours one
+   square. Both were landing on the last day a thumb touched. */
+@media (hover: hover) {
+  button.journal__calendar-day:hover {
+    transform: scale(1.12);
+    transition-timing-function: var(--ease-spring);
+  }
+}
+
 button.journal__calendar-day:focus-visible {
   transform: scale(1.12);
   transition-timing-function: var(--ease-spring);
@@ -306,10 +334,27 @@ button.journal__calendar-day:active {
 
 /* The same 2px nudge the nav rows use, for the same reason: a list of plain
    text rows needs one cue that they are objects and not paragraphs, and the
-   smallest possible movement is the one that says it without decorating. */
-.journal__entry-row:hover {
+   smallest possible movement is the one that says it without decorating.
+
+   Gated for the same reason the nav rows are, and the consequence here is
+   worse than a misplaced highlight. .journal__entry--active gives the open
+   entry exactly this background, so a stuck hover on a touch screen is the
+   list claiming two different entries are the one being read — and the false
+   one is offset two pixels, which is the only thing distinguishing them. */
+@media (hover: hover) {
+  .journal__entry-row:hover {
+    background-color: var(--color-washi-raised);
+    transform: translateX(2px);
+  }
+}
+
+/* Rows travel sideways, so they settle sideways: the nudge completes rather
+   than reversing into the app's vertical --lift-press, which on a row that is
+   already 2px to the right would read as a stumble. Same distance, same axis,
+   one step further. */
+.journal__entry-row:active {
   background-color: var(--color-washi-raised);
-  transform: translateX(2px);
+  transform: translateX(4px);
 }
 
 .journal__entry--active .journal__entry-row {
@@ -349,9 +394,18 @@ button.journal__calendar-day:active {
   transition: color var(--transition-fast), background-color var(--transition-fast);
 }
 
-.journal__entry-delete:hover {
-  color: var(--color-error);
-  background-color: color-mix(in srgb, var(--color-error) 8%, transparent);
+/* Gated, and this is the one on this page that was closest to a real hazard.
+   The control is a two-step confirm: the first press arms it and
+   [data-confirming="true"] fills it solid red, the second deletes. On a touch
+   screen the ungated hover left the *unarmed* button wearing an error-tinted
+   wash after any tap in the list — a delete control that looks part-way armed
+   when it is not, sitting beside one that means it. The two states have to be
+   told apart at a glance, and only one of them should ever be red. */
+@media (hover: hover) {
+  .journal__entry-delete:hover {
+    color: var(--color-error);
+    background-color: color-mix(in srgb, var(--color-error) 8%, transparent);
+  }
 }
 
 .journal__entry-delete[data-confirming="true"] {

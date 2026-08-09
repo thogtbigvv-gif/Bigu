@@ -361,12 +361,32 @@
   text-decoration: underline;
   text-decoration-color: var(--color-stone);
   text-underline-offset: 0.3em;
-  transition: color var(--transition-fast), text-decoration-color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
-.memory-shelf__more:hover {
+/* Gated. This control removes itself the moment it is used — the shelf expands
+   and the line is replaced by the slips it revealed — so on a touch screen the
+   stuck hover landed on whatever inherited its position, colouring a *different*
+   shelf's link indigo for an action the reader took somewhere else. */
+@media (hover: hover) {
+  .memory-shelf__more:hover {
+    color: var(--color-indigo);
+    text-decoration-color: currentColor;
+  }
+}
+
+/* And a press, which it had none of. Styled as text rather than as a button
+   (see above), it was still the one control on this page that took a tap and
+   answered with nothing at all — the slips beside it settle, the chips in
+   every other view settle. transform is in its transition list now for the
+   same reason. */
+.memory-shelf__more:active {
   color: var(--color-indigo);
-  text-decoration-color: currentColor;
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
 }
 
 .memory-shelf__more:focus-visible {
@@ -458,7 +478,9 @@
   padding: var(--space-sm) var(--space-md);
   text-align: start;
   border-radius: inherit;
-  transition: background-color var(--transition-fast);
+  transition:
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 /* (hover: hover), because a graded slip is removed and the one below it
@@ -468,6 +490,19 @@
   .memory-slip__face:hover {
     background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
   }
+}
+
+/* The press. A slip's face is a button — it opens the slip — and it was the
+   largest untouched tap target left on this page: the wash above only runs on
+   a pointer, so on a phone a tapped slip changed nothing until its detail had
+   already expanded underneath. The settle is what fills that gap, and it is
+   the same one every chip and row in the app makes.
+
+   No spring here, unlike the chips. A slip is a card-sized object and
+   variables.css draws that line: at this width a few percent of overshoot
+   reads as the shelf wobbling rather than as paper being pressed. */
+.memory-slip__face:active {
+  transform: translateY(var(--lift-press));
 }
 
 .memory-slip__face:focus-visible {
@@ -573,13 +608,26 @@
    like studying and does very little. One tap enforces retrieval.
    ------------------------------------------------------------------------------------------------ */
 
+/* --duration-base on --ease-entrance, where these three were 200ms of the
+   browser's `ease-out`. Two reasons beyond tidiness.
+   The curve: `ease-out` is the generic one, and this app has a named curve for
+   something arriving on screen. An opened slip is the clearest case of it —
+   the detail is what the reader is waiting for, and the settle is the part
+   they watch.
+   The duration: layout.css spells out a constraint for anything that can
+   animate inside a .view. router.js drops .is-entering on the first
+   animationend it receives and those events bubble, so a descendant that
+   finishes before the view's own 220ms strips the class mid-flight and snaps
+   the whole view to full opacity. 200ms sat under that line. Every other
+   reveal in the app is at --duration-base or longer precisely so the clash is
+   impossible rather than unlikely; these were the exception. */
 .memory-slip__detail {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-sm);
   padding: 0 var(--space-md) var(--space-md);
-  animation: memory-detail-in 200ms ease-out both;
+  animation: memory-detail-in var(--duration-base) var(--ease-entrance) both;
 }
 
 @keyframes memory-detail-in {
@@ -593,7 +641,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-2xs);
-  animation: memory-detail-in 200ms ease-out both;
+  animation: memory-detail-in var(--duration-base) var(--ease-entrance) both;
 }
 
 .memory-slip__meaning {
@@ -665,7 +713,11 @@
   line-height: 1;
   color: var(--color-ink);
   opacity: 0.12;
-  animation: memory-detail-in 600ms ease-out both;
+  /* --duration-slow, the app's ceiling, which is what 600ms was reaching for.
+     This is a 5rem glyph at 12% opacity on an otherwise empty page and it is
+     allowed to take the long end of the scale — but the long end of the scale
+     is a token, and nothing else in Bigu runs past --duration-slow. */
+  animation: memory-detail-in var(--duration-slow) var(--ease-entrance) both;
 }
 
 .memory-empty__line {
