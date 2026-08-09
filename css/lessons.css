@@ -52,8 +52,25 @@
   transition: background-color var(--transition-fast);
 }
 
-.lesson-group__header:hover {
-  background-color: var(--color-washi);
+/* Gated, like every other hover in the app. This one is the whole width of a
+   card and the full height of a row, so a wash left behind by the last tap is
+   the largest stuck hover Bigu could produce — a lesson group that looks open
+   on a page where nothing is. */
+@media (hover: hover) {
+  .lesson-group__header:hover {
+    background-color: var(--color-washi);
+  }
+}
+
+/* The row's own half of the press. .card--interactive already settles the whole
+   group a pixel under a finger (cards.css), which is the movement; this is the
+   surface under the finger confirming it took the touch, one step past the
+   hover wash. Both halves are needed on a disclosure this size: the card says
+   "something was pushed", the row says "it was this one" — and on a phone,
+   where the hover above never runs, this is the only colour the header ever
+   changes. */
+.lesson-group__header:active {
+  background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi));
 }
 
 /* .lesson-group sets overflow:hidden to keep the body's corners rounded, which

@@ -643,7 +643,15 @@
     stroke-width: 1.6;
     stroke-linecap: round;
     stroke-linejoin: round;
-    transition: transform var(--transition-fast);
+    /* stroke-width, not transform. The transform in this list had no caller —
+       nothing has ever moved this icon on its own; the whole cell travels on
+       press and takes the glyph with it. What *does* change is the weight of
+       the stroke, which goes 1.6 -> 2 the moment its tab becomes the current
+       page (below), and with no entry in any transition list it snapped.
+       Navigating is the one time the reader is looking straight at this bar,
+       so the mark for where they landed is worth drawing rather than
+       switching. */
+    transition: stroke-width var(--transition-base) var(--ease-entrance);
   }
 
   /* The "More" glyph is three dots, so it is the one icon in the set that is

@@ -73,6 +73,15 @@
   }
 }
 
+/* The same while the card holds focus. The card is already raised by
+   cards.css's :focus-within for exactly this reason — a grid of 132 near
+   identical surfaces gives a keyboard reader no sense of place otherwise — and
+   the character is the part of a kanji card that says *which* one. Leaving it
+   pointer-only meant tabbing raised the card and left its subject behind. */
+.kanji-card:focus-within .kanji-card__character {
+  transform: scale(1.03);
+}
+
 .kanji-card__meaning {
   margin: 0;
   font-weight: var(--weight-medium);
@@ -84,7 +93,12 @@
 }
 
 /* Same recessed example block as vocabulary and grammar — see the note in
-   vocabulary.css for why one inset hairline reads as an impression. */
+   vocabulary.css for why one inset hairline reads as an impression.
+   "Same" was only true at rest: vocabulary's recess deepens while its card is
+   raised so the card reads as one object coming forward, and this copy stayed
+   flat through the whole lift. Two cards built from the same note behaving
+   differently under the same pointer is the drift those shared notes exist to
+   prevent, so it deepens here too — same values, same transition. */
 .kanji-card__example {
   display: flex;
   flex-direction: column;
@@ -94,6 +108,17 @@
   background-color: var(--color-washi);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
+  transition: box-shadow var(--transition-base);
+}
+
+@media (hover: hover) {
+  .kanji-card:hover .kanji-card__example {
+    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  }
+}
+
+.kanji-card:focus-within .kanji-card__example {
+  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
 }
 
 .kanji-card__example ruby {
@@ -186,9 +211,30 @@
   gap: var(--space-2xs);
 }
 
+/* A related character the dataset doesn't hold yet. It is a <span> carrying
+   .toggle-chip purely for the shape — there is nowhere for it to jump to — so
+   it is dimmed and given the default cursor.
+
+   That was not enough on its own. .toggle-chip's :hover and :active are written
+   against the class, and a class matches a span exactly as happily as a button:
+   pointing at a chip the app had just declared unavailable washed it indigo and
+   moved its border, and holding the mouse down settled it a pixel like a real
+   control. Dimming something and then having it answer to the pointer is worse
+   than not dimming it — the reader believes the hover over the opacity, tries
+   it, and nothing happens.
+   Both states are turned off at 0-3-0, which clears .toggle-chip's own 0-2-0
+   rules. Focus needs no rule: a span is not focusable. */
 .kanji-detail__related [aria-disabled="true"] {
   opacity: 0.5;
   cursor: default;
+}
+
+.kanji-detail__related [aria-disabled="true"]:hover,
+.kanji-detail__related [aria-disabled="true"]:active {
+  background-color: transparent;
+  border-color: var(--color-stone);
+  color: var(--color-ink-soft);
+  transform: none;
 }
 
 /* -- Mobile spacing ------------------------------------------------------------------
