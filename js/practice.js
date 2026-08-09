@@ -21,7 +21,7 @@
 
 import { practice, settings } from './storage.js';
 import { formatCount, getViewContainer } from './content.js';
-import { buildSession, countDue, getRecord } from './review.js';
+import { buildSession, countDue, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
 import { sessionSize } from './preferences.js';
 import { loadVocabulary } from './vocabulary.js';
@@ -339,9 +339,17 @@ async function initPractice() {
 
     decks.mistakes = {
       get items() {
+        // One read of the store per call, not one per item: this getter is
+        // wired to onGrade, so it re-runs after every card of every round
+        // over the whole catalogue.
+        const records = snapshotRecords();
         return everything.filter((item) => {
-          const record = getRecord(item.id);
-          return record.seen && record.level === 0;
+          const record = records.get(item.id);
+          // An actual miss, not merely level 0. Taking a word back out of
+          // memory with the mark on its card also parks it at level 0, and
+          // a deck of things the reader deliberately un-marked is not a
+          // deck of things they keep getting wrong.
+          return Boolean(record?.seen) && record.level === 0 && record.lapses >= 1;
         });
       },
     };

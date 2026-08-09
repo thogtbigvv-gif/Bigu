@@ -24,7 +24,7 @@
    ========================================================================== */
 
 import { settings } from './storage.js';
-import { isRemembered, setRemembered, shuffled } from './review.js';
+import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker } from './quiz.js';
 import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
 
@@ -46,10 +46,15 @@ const loadLessons = createContentLoader(DATA_URL, 'lessons');
    with vocabulary/grammar/kanji's n3-/gr-/kj- ids in the same store — and
    practice.js routes that `l` prefix back to this module's card layout, so
    lesson words join the review pool instead of being a dead end.
+
+   The header counts go through review.js's bulk rememberedCount() rather
+   than a per-word isRemembered(): one graded card refreshes all fifteen
+   groups, and the per-word form turned that into a few hundred full reads
+   of the progress store between one card and the next.
    -------------------------------------------------------------------------------------- */
 
-function countRemembered(words) {
-  return words.filter((entry) => isRemembered(entry.id)).length;
+function countRemembered(words, records) {
+  return rememberedCount(words, records);
 }
 
 /* -- Word rendering --------------------------------------------------------------------
@@ -190,8 +195,8 @@ function createLessonGroup(lesson, index, onQuiz) {
   const count = document.createElement('span');
   count.className = 'lesson-group__count meta';
 
-  const updateCount = () => {
-    const remembered = countRemembered(lesson.words);
+  const updateCount = (records) => {
+    const remembered = countRemembered(lesson.words, records);
     count.textContent = `${lesson.words.length} үг \u00b7 ${remembered} санах ойд`;
   };
   updateCount();
@@ -254,8 +259,12 @@ function createLessonGroup(lesson, index, onQuiz) {
     // opened has no marks to correct, and will read the store when it does
     // open. The count in the header always refreshes, because that is
     // visible whether the group is open or not.
-    refresh() {
-      updateCount();
+    //
+    // `records` is optional: a caller refreshing every group at once passes
+    // one snapshot in, and a single word's own mark calls it with nothing
+    // and lets updateCount read the store itself.
+    refresh(records) {
+      updateCount(records);
       if (rows) for (const row of rows) row.sync();
     },
   };
@@ -313,7 +322,11 @@ function renderLessons(container, lessons) {
     // behind the panel is brought back into agreement as it happens rather
     // than being left showing what was true before the round.
     onGrade() {
-      for (const group of groups) group.refresh();
+      // One snapshot for all fifteen groups. This fires after every card,
+      // and each group's count walks its own word list — read per word, that
+      // is a few hundred parses of the progress store per graded card.
+      const records = snapshotRecords();
+      for (const group of groups) group.refresh(records);
     },
     onNewRound: () => (activeLesson ? shuffled(activeLesson.words) : null),
     onExit() {
