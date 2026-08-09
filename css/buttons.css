@@ -40,10 +40,12 @@
    outline is load-bearing and the halo is not. Only the offset varies per
    control.
 
-   The focused control also lifts, on the same 1px it uses under a pointer.
-   Keyboard focus and hover are the same fact about a button — "this is the
-   one you are about to press" — and there is no reason the reader who tabbed
-   to it should be told less than the one who pointed at it. */
+   The focused control also lifts, on the same --lift-card it travels under a
+   pointer. Keyboard focus and hover are the same fact about a button — "this
+   is the one you are about to press" — and there is no reason the reader who
+   tabbed to it should be told less than the one who pointed at it. It matters
+   more now than it did: the hover states below are gated behind (hover: hover),
+   so on a touch screen this is the *only* pre-press state a button has. */
 .button:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;
@@ -86,12 +88,23 @@
 }
 
 /* Rise and deepen together. The travel is the same --lift-card the cards use,
-   so "this is raised" means one distance everywhere in the app. */
-.button--primary:hover:not(:disabled) {
-  background-color: var(--fill-primary-strong);
-  border-color: var(--fill-primary-strong);
-  transform: translateY(var(--lift-card));
-  box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--fill-primary) 55%, transparent);
+   so "this is raised" means one distance everywhere in the app.
+
+   Gated behind (hover: hover) for the same reason cards.css gates its lift and
+   grammar, kanji, vocabulary and memory gate theirs: on a touch screen :hover
+   latches onto the last thing tapped and never lets go, so the button the
+   reader just pressed stays darkened and two pixels off the page for the rest
+   of the session. That was the one family of controls in the app still missing
+   the gate, which is why a tapped "Start review" kept looking pressed while
+   every card around it behaved. The press below is not gated and is what a
+   thumb actually gets. */
+@media (hover: hover) {
+  .button--primary:hover:not(:disabled) {
+    background-color: var(--fill-primary-strong);
+    border-color: var(--fill-primary-strong);
+    transform: translateY(var(--lift-card));
+    box-shadow: 0 6px 16px -6px color-mix(in srgb, var(--fill-primary) 55%, transparent);
+  }
 }
 
 /* Pressed: back to the page, and the shadow collapses with it. A button that
@@ -118,18 +131,30 @@
   color: var(--color-ink-soft);
 }
 
-.button--secondary:hover:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
-  transform: translateY(var(--lift-card));
+@media (hover: hover) {
+  .button--secondary:hover:not(:disabled) {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+    transform: translateY(var(--lift-card));
+    /* The smallest shadow on the scale, and it is doing structural work rather
+       than decoration: the secondary was already travelling the full
+       --lift-card with nothing underneath it, which reads as the label
+       drifting rather than as the control rising. One hairline of ground is
+       enough to attach the movement to an object. Deliberately --shadow-sm and
+       not the primary's coloured glow — a quiet button stays quiet. */
+    box-shadow: var(--shadow-sm);
+  }
 }
 
+/* Back to the page, shadow gone with it — the same collapse the primary does,
+   so both treatments describe the same physical event. */
 .button--secondary:active:not(:disabled) {
   background-color: color-mix(in srgb, var(--color-indigo) 12%, transparent);
   border-color: var(--color-indigo);
   color: var(--color-indigo);
   transform: translateY(var(--lift-press));
+  box-shadow: none;
 }
 
 /* -- Theme toggle -----------------------------------------------------------------
@@ -147,17 +172,24 @@
   border: var(--border-width) solid var(--color-stone);
   border-radius: var(--radius-md);
   color: var(--color-ink-soft);
+  /* box-shadow joins the list so the focus halo fades in rather than snapping.
+     .button has always had it; these three icon-and-chip controls did not, so
+     tabbing across the header row produced a ring that eased onto one control
+     and appeared instantly on the next. */
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.theme-toggle:hover {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
+@media (hover: hover) {
+  .theme-toggle:hover {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+  }
 }
 
 .theme-toggle:active {
@@ -235,17 +267,29 @@
   color: var(--color-ink-soft);
   border: var(--border-width) solid var(--color-stone);
   border-radius: var(--radius-md);
+  /* background-size is here as well as on the pressed rule below, and the two
+     durations differ on purpose. The fill sweeping *in* is the app
+     acknowledging a decision and gets --transition-base; the fill leaving is
+     an undo, and an undo should be over before you have finished thinking
+     about it. Without this line the release had no entry in any transition
+     list at all, so a solid green chip blinked back to an outline in one
+     frame — the one ungoverned state change on the most-pressed control in
+     Bigu. */
   transition:
     background-color var(--transition-fast),
+    background-size var(--transition-fast),
     border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.toggle-chip:hover {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
+@media (hover: hover) {
+  .toggle-chip:hover {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+  }
 }
 
 .toggle-chip:active {
@@ -259,11 +303,18 @@
   box-shadow: var(--focus-halo);
 }
 
-/* The fill sweeps in from the left edge over 180ms rather than snapping.
-   Taking a word into memory is the one moment the app marks with a state
-   change on the spot, and it's worth a beat — a background-size transition on a gradient does it
+/* The fill sweeps in from the left edge rather than snapping. Taking a word
+   into memory is the one moment the app marks with a state change on the spot,
+   and it's worth a beat — a background-size transition on a gradient does it
    without a pseudo-element or a second animated property. reset.css's
-   prefers-reduced-motion rule collapses it to an instant swap. */
+   prefers-reduced-motion rule collapses it to an instant swap.
+
+   Now on the tokens: it was 180ms of the browser's `ease-out`, the last
+   hand-written duration-and-curve pair left on an interactive control here.
+   --duration-base is the nearest step on the scale and --ease-exit is the
+   curve every other state change in the app moves on, so the sweep now shares
+   its timing with the border and colour changing beside it instead of running
+   a hair ahead of them on a different curve. */
 .toggle-chip[aria-pressed="true"] {
   border-color: var(--fill-accent);
   color: var(--fill-ink);
@@ -272,8 +323,9 @@
   background-repeat: no-repeat;
   background-size: 100% 100%;
   transition:
-    background-size 180ms ease-out,
+    background-size var(--transition-base),
     border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
@@ -332,12 +384,15 @@
   border-radius: var(--radius-md);
   color: var(--color-ash);
   transition:
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.favorite-button:hover {
-  color: var(--color-bengara);
+@media (hover: hover) {
+  .favorite-button:hover {
+    color: var(--color-bengara);
+  }
 }
 
 .favorite-button:active {
@@ -345,9 +400,14 @@
   transition-timing-function: var(--ease-spring);
 }
 
+/* The halo was missing here and on nothing else — every other focusable
+   control in the app pairs it with the outline. A 栞 sitting next to a chip
+   that halos and inside a card that lifts was the one stop on a tab run where
+   the indicator got quieter for no reason. */
 .favorite-button:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;
+  box-shadow: var(--focus-halo);
 }
 
 .favorite-button__icon {
