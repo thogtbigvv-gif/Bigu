@@ -23,7 +23,7 @@
    One progress model is worth more than the separation was.
    ========================================================================== */
 
-import { settings } from './storage.js';
+import { practice, settings } from './storage.js';
 import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker } from './quiz.js';
 import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
@@ -327,6 +327,16 @@ function renderLessons(container, lessons) {
       // is a few hundred parses of the progress store per graded card.
       const records = snapshotRecords();
       for (const group of groups) group.refresh(records);
+    },
+    /* Logged to the same store practice.js writes, tagged `lessons`. A
+       lesson round grades into the shared schedule like every other surface,
+       but it was the one that left no trace of having happened — the
+       Dashboard's "Last review" card and the Review view's recent list both
+       read this store, so a reader who only ever quizzed from Lessons was
+       told they had never reviewed. A round ended early still counts what
+       was graded, same rule as practice.js. */
+    onFinish({ total, correct }) {
+      if (total > 0) practice.add({ total, correct, mode: 'lessons' });
     },
     onNewRound: () => (activeLesson ? shuffled(activeLesson.words) : null),
     onExit() {

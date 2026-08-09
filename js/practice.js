@@ -40,6 +40,10 @@ const HISTORY_LIMIT = 5;
    "Tricky ones" are live pools rather than decks of their own. */
 const DECK_KEYS = ['due', 'lessons', 'vocabulary', 'grammar', 'kanji', 'mistakes'];
 
+/* Exported: dashboard.js labels saved sessions with the deck they were
+   drawn from, and it kept its own copy of this table. Two copies meant one
+   deck under two names — "Tricky ones" on this screen, "Review mistakes" on
+   the Dashboard — for the same round. */
 const DECK_LABELS = {
   due: 'Due today',
   lessons: ADAPTERS.lessons.label,
@@ -332,10 +336,14 @@ async function initPractice() {
       kanji: { items: kanjiData.kanji },
     };
 
-    // Getters, not static arrays: what's due and what's still being missed
-    // both change as the reader grades cards here and elsewhere, so each is
-    // read fresh every time rather than computed once at load.
-    decks.due = { get items() { return everything; } };
+    // "Due today" is the whole pool, not a filtered one: buildSession() does
+    // the filtering, and it re-reads the schedule every round, so what the
+    // reader actually gets is due-first whatever this array holds. It was
+    // written as a getter that returned `everything` unchanged, which read
+    // as if it recomputed something — and made updateStatus's
+    // `items.length === 0` branch unreachable for this deck, since the
+    // catalogue is never empty.
+    decks.due = { items: everything };
 
     decks.mistakes = {
       get items() {
@@ -364,4 +372,4 @@ async function initPractice() {
   }
 }
 
-export { initPractice };
+export { initPractice, DECK_LABELS };
