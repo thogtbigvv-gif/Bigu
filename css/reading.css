@@ -29,9 +29,22 @@
    somebody sits with a column of Japanese for longer than a glance. At the
    article's --text-md it comes to roughly 32 characters a line, inside the
    30-40 a Japanese page is traditionally set to.
+
+   Centred, and the view's own <h1> is centred with it. A 42rem column pinned
+   to the left of a 72rem container left 480px of nothing down the right-hand
+   side of the one page in Bigu that is supposed to feel composed — which
+   reads as a layout that ran out rather than as deliberate space. Centring
+   makes the column the subject of the page instead of a thing sitting in the
+   corner of one, and it is what quiz.css already does with its own 38rem.
+
+   The h1 has to come along or the heading floats away from the text it
+   heads. #reading > * rather than a class, because the heading is in
+   index.html and this file has no business adding markup to it.
    ------------------------------------------------------------------------------------ */
-.reading-content {
+#reading > * {
+  width: 100%;
   max-width: 42rem;
+  margin-inline: auto;
 }
 
 /* -- Passage list ---------------------------------------------------------------- */
@@ -156,8 +169,43 @@
   gap: var(--space-md);
 }
 
+/* Quiet by design — see the note in reading.js. It is the way out, not one of
+   the three things to do, and as a .button--secondary it was indistinguishable
+   from Previous and Next at the foot of the same column.
+
+   Still a real button, still keyboard-reachable, still on the app's 44px
+   touch floor at phone widths (below): what it gives up is the box, not the
+   target. The arrow is part of the label rather than a pseudo-element so it
+   is read out with it. */
 .reading-stage__exit {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-3xs) 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast), transform var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .reading-stage__exit:hover {
+    color: var(--color-indigo);
+    transform: translateX(-2px);
+  }
+}
+
+/* It travels the way it points, the same 2px the nav rows use — and its press
+   completes that movement rather than reversing into the app's vertical
+   settle, exactly as the journal's entry rows do. */
+.reading-stage__exit:active {
+  color: var(--color-indigo);
+  transform: translateX(-4px);
+}
+
+.reading-stage__exit:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
 }
 
 /* -- The heading block --------------------------------------------------------------
@@ -262,13 +310,53 @@
   background-color: var(--color-moss);
 }
 
-.reading-progress__label {
+/* Set by reading.js for the single frame in which a new passage zeroes the
+   bar. Without it the rule slides the full width of the column backwards on
+   every press of Next — an animation of something un-happening. */
+.reading-progress__fill.is-instant {
+  transition: none;
+}
+
+/* -- The rail ---------------------------------------------------------------------
+   One line under the progress hairline holding everything that is not the
+   passage: what it costs and how far in the reader is, on the left; the one
+   control that changes how it is displayed, on the right. Three stacked grey
+   lines became this.
+   ------------------------------------------------------------------------------------ */
+.reading-stage__rail {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-sm);
+  min-height: 2rem;
+}
+
+.reading-stage__facts {
   margin: 0;
+  min-width: 0;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-wide);
   color: var(--color-ash);
+}
+
+/* The separator lives here rather than in the text, so the live region on the
+   progress half announces "2 / 3 үзсэн" and not "· 2 / 3 үзсэн". */
+.reading-stage__facts-progress::before {
+  content: '·';
+  margin-inline: 0.5em;
+}
+
+/* A step smaller than a stock chip. It sits on a line of --text-xs mono and
+   would otherwise be the tallest thing in the header block — a 30px control
+   next to 15px of text, for an option most readers will never touch. */
+.reading-stage__reveal {
+  flex-shrink: 0;
+  padding: 0 var(--space-2xs);
+  min-height: 1.75rem;
+  font-size: var(--text-xs);
 }
 
 /* -- Tabs -------------------------------------------------------------------------- */
@@ -374,23 +462,13 @@
   gap: var(--space-md);
 }
 
-/* The reveal control and the one line explaining the surface. The hint is
-   there because a passage that responds to being touched has to say so
-   once — there is no other affordance on a page whose whole design is to
-   look like paper. */
-.reading-article__tools {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2xs) var(--space-sm);
-  padding-block-end: var(--space-sm);
-  border-block-end: var(--border-width) solid var(--color-stone);
-}
-
+/* The one line explaining the surface, and now the only thing between the top
+   of the panel and the passage. It is there because a page designed to look
+   like paper has no other way of saying that it answers to being touched.
+   No rule under it and no control beside it any more — both were furniture
+   the reader had to read past on the way to the Japanese, every time. */
 .reading-article__hint {
   margin: 0;
-  flex: 1 1 12rem;
-  min-width: 0;
   font-size: var(--text-xs);
   color: var(--color-ash);
 }
@@ -604,6 +682,11 @@
   border-block-start: var(--border-width) solid var(--color-stone);
 }
 
+/* Previous stays quiet and Next is promoted to the filled treatment by
+   reading.js the moment the passage is finished — the only weight change on
+   the page, at the only moment the page has an opinion about what to do
+   next. Everything .button--primary needs is already in buttons.css, so
+   nothing about that state is restated here. */
 .reading-pager__button {
   flex: 0 1 auto;
   min-width: 0;
@@ -695,12 +778,11 @@
   }
 
   /* Everything between the view heading and the first line of Japanese is
-     furniture, and on a 780px-tall phone it was pushing that line to y=592 —
-     about two lines of the passage above the fold. These four trims are all
-     the room there was to find without touching the text itself: the
-     Mongolian title drops one step (it is a gloss on the Japanese title, not
-     a second heading), and the tools row gives up the air around its rule.
-     The Japanese does not move: --text-md holds at every width. */
+     furniture, and on a 780px-tall phone every line of it is a line of the
+     passage pushed below the fold. The Mongolian title drops one step — it is
+     a gloss on the Japanese title, not a second heading — and the article
+     closes up around its one remaining hint line. The Japanese itself does
+     not move: --text-md holds at every width down to 320px. */
   .reading-stage__subtitle {
     font-size: var(--text-base);
   }
@@ -709,13 +791,20 @@
     gap: var(--space-sm);
   }
 
-  .reading-article__tools {
-    gap: var(--space-2xs);
-    padding-block-end: var(--space-2xs);
+  /* The touch floor the rest of the app keeps, on a control that no longer
+     looks like a button. Losing the box must not mean losing the target —
+     the padding grows, the type does not. */
+  .reading-stage__exit {
+    min-height: 2.75rem;
+    padding-inline-end: var(--space-2xs);
   }
 
-  .reading-article__hint {
-    flex-basis: 100%;
+  /* The figures and the chip stop sharing a line at this width: pushed apart
+     by space-between on a 320px screen they read as two unrelated things at
+     opposite edges. Left-aligned, in order, one under the other. */
+  .reading-stage__rail {
+    justify-content: flex-start;
+    gap: var(--space-2xs) var(--space-sm);
   }
 
   /* The number moves out of the margin and the text takes the width back.

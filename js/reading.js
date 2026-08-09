@@ -208,26 +208,21 @@ function createSentence(sentence, index, onToggle) {
    still reads as finished after they close the lines they opened.
    ---------------------------------------------------------------------------------------- */
 
-function createArticlePanel(passage, state, onChange) {
+function createArticlePanel(passage, state, showAll, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'reading-article';
 
-  const tools = document.createElement('div');
-  tools.className = 'reading-article__tools';
-
-  const showAll = document.createElement('button');
-  showAll.type = 'button';
-  showAll.className = 'toggle-chip reading-article__reveal';
-
   const hint = document.createElement('p');
   hint.className = 'reading-article__hint';
-  /* Short on purpose. It is the only thing telling the reader that the
-     passage answers to being touched, so it cannot go — but at 390px the
-     longer version it replaces wrapped onto a second line, and every line
-     here is a line of Japanese pushed below the fold. */
+  /* One line, no rule, no control beside it. This used to head a bordered
+     tools row carrying the reveal chip as well, which put about a hundred
+     pixels of interface between the reader and the first line of Japanese —
+     on a page whose entire argument is that the Japanese is the hero, and on
+     every passage and every re-entry, not just the first. The chip belongs
+     with the progress rail above (it is a view mode, not part of the text);
+     what is left here is the one sentence that has to be here, because it is
+     the only thing saying the passage answers to being touched. */
   hint.textContent = 'Өгүүлбэр дээр дарвал орчуулга нээгдэнэ.';
-
-  tools.append(showAll, hint);
 
   const list = document.createElement('ol');
   list.className = 'reading-article__sentences';
@@ -273,11 +268,15 @@ function createArticlePanel(passage, state, onChange) {
 
   done.append(mark, doneText);
 
-  showAll.addEventListener('click', () => {
+  /* The chip is the stage's, not the article's — it has to outlive the panel
+     being rebuilt on a tab switch, and it is drawn up beside the progress.
+     Assigned rather than added, so rebuilding the article replaces the
+     handler instead of stacking a second one on top of the first. */
+  showAll.onclick = () => {
     if (state.allOpen) state.open.clear();
     else passage.sentences.forEach((_, i) => open(i));
     sync();
-  });
+  };
 
   /* One place that reads the state and writes the DOM, called after every
      change. Cheaper than it looks — it touches two attributes per sentence
@@ -295,7 +294,7 @@ function createArticlePanel(passage, state, onChange) {
     onChange();
   }
 
-  wrap.append(tools, list, done);
+  wrap.append(hint, list, done);
   sync();
 
   return wrap;
@@ -344,10 +343,10 @@ function createComingSoonPanel(message) {
   return p;
 }
 
-function buildStagePanel(stageId, passage, state, onChange) {
+function buildStagePanel(stageId, passage, state, showAll, onChange) {
   switch (stageId) {
     case 'article':
-      return createArticlePanel(passage, state, onChange);
+      return createArticlePanel(passage, state, showAll, onChange);
     case 'translation':
       return createTranslationPanel(passage);
     case 'vocabulary':
@@ -429,9 +428,15 @@ function buildStageFlow() {
   wrap.className = 'reading-stage';
   wrap.hidden = true;
 
+  /* A quiet text control, not a button-shaped one. Going back is the escape
+     hatch on this screen, not an action anybody came here to take — and as a
+     full .button--secondary it carried exactly the same weight as Previous
+     and Next at the foot, so the page offered three identical grey doors and
+     no opinion about which one mattered. reading.css keeps it at the app's
+     44px touch floor on a phone; only the chrome goes. */
   const exit = document.createElement('button');
   exit.type = 'button';
-  exit.className = 'button button--secondary reading-stage__exit';
+  exit.className = 'reading-stage__exit';
   exit.textContent = '← Back to passages';
 
   const head = document.createElement('div');
@@ -452,17 +457,23 @@ function buildStageFlow() {
   const subtitle = document.createElement('p');
   subtitle.className = 'reading-stage__subtitle';
 
-  const meta = document.createElement('p');
-  meta.className = 'reading-stage__meta';
-
-  head.append(titleRow, subtitle, meta);
+  head.append(titleRow, subtitle);
 
   /* -- Progress ---------------------------------------------------------------
      The same hairline the quiz and the daily goal use, so "how far through
      something am I" looks like one idea across the app. It sits directly
      above the reading surface and is 2px tall: present when looked for,
      invisible when not, which is the only register a progress indicator is
-     welcome in on a page meant for reading. */
+     welcome in on a page meant for reading.
+
+     Under it is one rail carrying everything else the reader might want to
+     know or set. There used to be three separate lines here — a mono grey
+     figures line, a mono grey progress line, and a bordered tools row inside
+     the panel — all the same colour, all the same size, stacked between the
+     title and the first word of Japanese. They are one line now: what the
+     passage costs and how far in you are on the left, the one control that
+     changes how the passage is displayed on the right. Same information,
+     a third of the furniture. */
   const progress = document.createElement('div');
   progress.className = 'reading-progress';
 
@@ -474,11 +485,29 @@ function buildStageFlow() {
   fill.className = 'reading-progress__fill';
   track.append(fill);
 
-  const progressLabel = document.createElement('p');
-  progressLabel.className = 'reading-progress__label';
+  const rail = document.createElement('div');
+  rail.className = 'reading-stage__rail';
+
+  const facts = document.createElement('p');
+  facts.className = 'reading-stage__facts';
+
+  const meta = document.createElement('span');
+  meta.className = 'reading-stage__facts-cost';
+
+  /* The separator between the two halves is drawn by CSS, so the live region
+     announces "2 / 3 үзсэн" and not "· 2 / 3 үзсэн" every time a line opens. */
+  const progressLabel = document.createElement('span');
+  progressLabel.className = 'reading-stage__facts-progress';
   progressLabel.setAttribute('aria-live', 'polite');
 
-  progress.append(track, progressLabel);
+  facts.append(meta, progressLabel);
+
+  const reveal = document.createElement('button');
+  reveal.type = 'button';
+  reveal.className = 'toggle-chip reading-stage__reveal';
+
+  rail.append(facts, reveal);
+  progress.append(track, rail);
 
   const tabs = document.createElement('div');
   tabs.className = 'reading-stage__tabs';
@@ -541,7 +570,7 @@ function buildStageFlow() {
   wrap.append(exit, head, progress, tabs, panel, pager);
 
   return {
-    wrap, exit, title, tag, subtitle, meta,
+    wrap, exit, title, tag, subtitle, meta, reveal,
     fill, progressLabel, tabButtons, panel,
     pager, prev, position, next,
   };
@@ -568,10 +597,36 @@ function createStageController(elements, rows, onExit) {
     const total = passage.sentences.length;
     const seen = state.seen.size;
     const ratio = total > 0 ? Math.min(seen / total, 1) : 0;
+    const complete = total > 0 && seen >= total;
 
     elements.fill.style.setProperty('--progress', ratio.toFixed(3));
-    elements.fill.classList.toggle('is-complete', total > 0 && seen >= total);
-    elements.progressLabel.textContent = `${seen} / ${total} өгүүлбэр үзсэн`;
+    elements.fill.classList.toggle('is-complete', complete);
+    elements.progressLabel.textContent = `${seen} / ${total} үзсэн`;
+
+    /* Finishing a passage is the one moment this screen has an opinion about
+       what to do next, so that is the one moment a control changes weight.
+       Next becomes the filled button and stays filled; nothing else on the
+       page moves. If there is no next passage there is nothing to promote —
+       the completed line in the article is the whole ending, and the reader
+       leaves the way they came. */
+    const hasNext = Boolean(rows[index + 1]);
+    elements.next.classList.toggle('button--primary', complete && hasNext);
+    elements.next.classList.toggle('button--secondary', !(complete && hasNext));
+  }
+
+  /* Moving to another passage sets progress back to zero, and a plain write
+     would send the rule sliding the full width of the page backwards — an
+     animation of something un-happening, on the one screen where motion is
+     supposed to be almost invisible. The class suppresses the transition, the
+     offsetWidth read makes the browser adopt the zero while it is suppressed,
+     and only then does the transition come back for the reader's own
+     progress. Same is-instant idea quiz.css uses to face a card front. */
+  function resetProgress() {
+    elements.fill.classList.add('is-instant');
+    elements.fill.classList.remove('is-complete');
+    elements.fill.style.setProperty('--progress', '0');
+    void elements.fill.offsetWidth;
+    elements.fill.classList.remove('is-instant');
   }
 
   /* The panel is rebuilt only when the *stage* changes — a tab press, or the
@@ -583,8 +638,16 @@ function createStageController(elements, rows, onExit) {
     if (!passage) return;
 
     elements.panel.replaceChildren(
-      buildStagePanel(stageId, passage, state, renderProgress),
+      buildStagePanel(stageId, passage, state, elements.reveal, renderProgress),
     );
+
+    /* The reveal chip lives on the rail above, so it has to be put away when
+       a stage that has nothing to reveal is showing. Cleared rather than
+       hidden alone: a stale handler on a hidden control is the sort of thing
+       that comes back the day somebody makes it visible again. */
+    const isArticle = stageId === 'article';
+    elements.reveal.hidden = !isArticle;
+    if (!isArticle) elements.reveal.onclick = null;
   }
 
   function selectStage(nextStageId) {
@@ -626,6 +689,7 @@ function createStageController(elements, rows, onExit) {
     elements.meta.textContent = describeStats(stats);
     elements.wrap.hidden = false;
 
+    resetProgress();
     renderPager();
     renderProgress();
     selectStage(STAGES[0].id);
