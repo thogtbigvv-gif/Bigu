@@ -115,6 +115,94 @@
   }
 }
 
+/* …and the same on focus-within, which it did not have. cards.css raises every
+   collection card on both hover and focus-within precisely so that tabbing
+   through a grid is wayfinding and not just pointing — but only the hover half
+   of that was ever given the hanko colour here, so a reader who tabbed to the
+   hero's button lifted it in grey while a reader who pointed at it lifted it in
+   red. The keyboard reader was being told less about the same card.
+
+   Same 0-3-0 as the rule above and for the same reason: it has to tie
+   cards.css's `.card:not(…):focus-within` and win on source order. */
+.card.dashboard-card--hero:focus-within {
+  box-shadow:
+    0 12px 30px -16px color-mix(in srgb, var(--color-bengara) 60%, transparent),
+    var(--shadow-md);
+}
+
+/* -- The lift, resolved ---------------------------------------------------------------
+   Every card in this grid rises under the pointer, and not one of them is a
+   click target: each is a summary with a single door out of it at the foot,
+   and the door is the only part that does anything. A whole card lifting to
+   advertise a 40px strip is a promise the card cannot keep — the reader aims
+   at the surface that moved and lands on a paragraph.
+
+   So the lift now resolves. Pointing anywhere on a card warms that card's one
+   action, which turns the movement into an answer: this card is live, and this
+   is where it goes. Colour only, no travel — see below for why.
+
+   Scoped to .dashboard-grid, so the welcome card's two buttons are untouched:
+   that card is excluded from the lift in cards.css (it is a panel you read,
+   not an item in a collection), so there is no movement there to resolve and
+   its buttons behave like buttons everywhere else in the app.
+   -------------------------------------------------------------------------------------- */
+@media (hover: hover) {
+  /* 0-5-0, which beats buttons.css's `.button--primary:hover:not(:disabled)`
+     at 0-4-0 — so this is also what runs when the pointer is on the button
+     itself, and the two cases are deliberately identical. A CTA that looked
+     one way from across its card and another way under the cursor would put a
+     seam down the middle of a single object.
+
+     The shadow is restated at the primary's *resting* value rather than left
+     to inherit its hover glow. That glow is shaped for a button rising two
+     pixels off a page, and this one is not rising. */
+  .dashboard-grid .card:hover .dashboard-card__cta.button--primary {
+    background-color: var(--fill-primary-strong);
+    border-color: var(--fill-primary-strong);
+    box-shadow: 0 1px 2px color-mix(in srgb, var(--fill-primary) 24%, transparent);
+    transform: none;
+  }
+
+  .dashboard-grid .card:hover .dashboard-card__cta.button--secondary {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+/* The card owns the travel; the button owns the colour. Without this the two
+   compound: the card rises --lift-card and the button inside it rises another
+   --lift-card of its own, so the CTA climbs two pixels clear of the divider it
+   is supposed to sit under and visibly comes unstuck from its own card. This
+   grid is the only place in Bigu where a lifting control sits inside a lifting
+   surface, which is why the rule lives here and not in buttons.css.
+
+   Focus is the same fact as hover and gets the same answer — the card is
+   already raised by :focus-within, and the ring is what marks the button.
+
+   The halo is restated here, and it is not redundant. Across the app a
+   hovered-and-focused button loses its halo to whichever hover rule outscores
+   `.button:focus-visible` (0-2-0), leaving the outline to carry the indicator
+   alone; the relay above would do the same. Tying that rule at 0-5-0 and
+   winning on source order gives the CTA back its full two-layer indicator for
+   the very common case of a reader who tabs with a hand still on the mouse. */
+.dashboard-grid .card .dashboard-card__cta:focus-visible:not(:disabled) {
+  transform: none;
+  box-shadow: var(--focus-halo);
+}
+
+/* The press survives all of it, and is the one movement the button keeps. It
+   has to be stated at this specificity and last in the file, or the hover
+   relay above — which is a longer selector than buttons.css's `:active` rule —
+   would hold the CTA still at the exact moment it is being pushed, on the only
+   controls this view has. */
+.dashboard-grid .card .dashboard-card__cta:active:not(:disabled) {
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
+}
+
 /* Figure and sentence on the left, the day's one action on the right,
    bottom-aligned so the button sits on the baseline of the block it
    belongs to rather than floating in the middle of it. */
