@@ -1,12 +1,38 @@
 /* ==========================================================================
    reading.css
    Styles for the #reading view built by reading.js: a passage list
-   (title, then a "Read" button opening the passage) and the per-passage
-   stage flow it opens onto — a tab row (Article/Vocabulary/Grammar/
-   Questions/Translation/Shadowing) over one swapped panel. Card and panel
-   chrome intentionally match (same padding/background/border/shadow),
-   since the panel is just what a card's content grows into once opened.
+   (title, opening line, what it costs to read, and a "Read" button) and the
+   per-passage stage flow it opens onto — a tab row (Article/Vocabulary/
+   Grammar/Questions/Translation/Shadowing) over one swapped panel.
+
+   The organising idea of this file is that a reading surface is not a card.
+   Everywhere else in Bigu a .card is an *item in a collection* — one of
+   forty things you are scanning — and it is sized, padded and shadowed to
+   be one of forty. A passage is the opposite: it is the only thing on the
+   screen, it is read rather than scanned, and the measure of a page of
+   Japanese is set by the reader's eye and not by the width of the browser.
+   So the panel keeps the app's paper, border and hairline vocabulary and
+   drops the card's proportions: a fixed column, deep margins, and type at a
+   size somebody could sit with.
    ========================================================================== */
+
+/* -- The column ---------------------------------------------------------------------
+   One measure for the whole view, list and passage alike. The list used to
+   run the full 72rem container and the stage is capped at 42rem, so opening
+   a passage collapsed the page to half its width and closing it threw the
+   page back open — a jump of 480px on the one view where the reader is meant
+   to settle. Capping the container instead means the passage is simply what
+   was already in that column, and the skeleton and the error state inherit
+   the same width for free.
+
+   42rem is the journal's writing measure, which is the other place in Bigu
+   somebody sits with a column of Japanese for longer than a glance. At the
+   article's --text-md it comes to roughly 32 characters a line, inside the
+   30-40 a Japanese page is traditionally set to.
+   ------------------------------------------------------------------------------------ */
+.reading-content {
+  max-width: 42rem;
+}
 
 /* -- Passage list ---------------------------------------------------------------- */
 
@@ -23,16 +49,24 @@
   margin: 0 0 var(--space-md) 0;
 }
 
+/* A table of contents, not a grid. Passages are read in order and there are
+   a handful of them, so they stay one full-width column — a two-up grid of
+   passage cards would say "pick one of these" where a column says "here is
+   what there is". */
 .reading-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-lg);
+  gap: var(--space-md);
   list-style: none;
   margin: 0;
   padding: 0;
 }
 
 .reading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3xs);
   padding: var(--space-lg);
 }
 
@@ -41,30 +75,79 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: var(--space-xs);
-  margin-block-end: var(--space-3xs);
 }
 
 .reading-card__title {
   margin: 0;
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-lg);
+  line-height: var(--leading-tight);
   color: var(--color-ink);
 }
 
 .reading-card__title-mn {
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0;
+  color: var(--color-ink-soft);
 }
 
+/* The passage's first line, clipped to one. It is set in the Japanese face
+   at reading size but greyed well back, so the card shows the *texture* of
+   what is inside without competing with the title above it — the way the
+   first line of a chapter shows through a table of contents. */
+.reading-card__lede {
+  margin: var(--space-3xs) 0 0;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--color-ash);
+}
+
+/* The figures, in the app's data face. Tabular so a column of cards lines
+   its numbers up, and at --text-xs so the line reads as an annotation on the
+   passage rather than as a second subtitle. */
 .reading-card__meta {
-  margin: 0 0 var(--space-md) 0;
+  margin: var(--space-2xs) 0 var(--space-md);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* The card is .card--interactive, so cards.css gives it an indigo edge under
+   the pointer and a press — but only the button actually opens anything, so
+   the lift resolves to it the same way the Dashboard's cards resolve to
+   theirs. Colour only: the card is already carrying the movement, and a
+   button travelling inside a travelling card comes unstuck from it. */
+@media (hover: hover) {
+  .reading-card:hover .reading-card__open {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+    box-shadow: none;
+    transform: none;
+  }
+}
+
+.reading-card .reading-card__open:focus-visible:not(:disabled) {
+  transform: none;
+  box-shadow: var(--focus-halo);
+}
+
+.reading-card .reading-card__open:active:not(:disabled) {
+  transform: translateY(var(--lift-press));
 }
 
 /* -- Stage flow -----------------------------------------------------------------
    Opens in place of the list (same list-hidden/detail-shown swap
-   lessons.js uses for its quiz). The tab row reuses .toggle-chip for its
-   base look; [aria-selected="true"] here mirrors .toggle-chip's own
-   [aria-pressed="true"] treatment so a selected tab and a pressed toggle
-   read as the same kind of "active" state everywhere in the app.
+   lessons.js uses for its quiz).
+
+   No width of its own — it inherits the column capped on .reading-content
+   above, so the heading, the progress rule, the tabs, the passage and the
+   pager all share one left edge with each other and with the list the reader
+   arrived from. A reading page with its furniture hanging off the sides of
+   the text column is a dashboard again.
    ------------------------------------------------------------------------------------ */
 
 .reading-stage {
@@ -77,19 +160,118 @@
   align-self: flex-start;
 }
 
+/* -- The heading block --------------------------------------------------------------
+   Four facts in descending order of what the reader asks first: what is this
+   called, what level is it, what is it about, and what will it cost me. The
+   gaps between them are deliberately uneven — the title and its level are
+   one object, the Mongolian line sits close under it, and the figures are
+   pushed a full step away because they are an annotation and not part of the
+   title.
+   ------------------------------------------------------------------------------------ */
+
+/* No rule of its own at the foot. The progress track sits directly beneath
+   this block and is already a full-width hairline in the same stone colour,
+   so a border here drew the divider twice, four pixels apart. The progress
+   rule *is* the line under the title. */
 .reading-stage__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding-block-end: var(--space-2xs);
+}
+
+.reading-stage__title-row {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
   gap: var(--space-xs);
 }
 
+/* An <h2> now, not a <p>. It is the title of the thing filling the screen,
+   it is what the pager moves focus to, and it was previously a paragraph
+   styled to look like a heading — which meant a screen-reader user browsing
+   by heading could not find the passage they were reading. One step down
+   from the view's own h1, per the scale in typography.css. */
 .reading-stage__title {
   margin: 0;
   font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-lg);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
   color: var(--color-ink);
 }
+
+.reading-stage__title:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+}
+
+.reading-stage__subtitle {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--color-ink-soft);
+}
+
+.reading-stage__meta {
+  margin: var(--space-3xs) 0 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* -- Progress -----------------------------------------------------------------------
+   The same 2px hairline the quiz round and the daily goal use, so "how far
+   through this am I" is one shape everywhere in the app. It fills as the
+   reader works down the passage and turns moss at the end — the app's
+   established "held" colour, and the only reward on offer.
+
+   scaleX from a left origin rather than a width, so the fill is a compositor
+   transform and the bar never lays out. --transition-base, because the jump
+   from one sentence to the next is a real distance on a short passage and
+   snapping it would be the loudest thing on a page built to be quiet.
+   ------------------------------------------------------------------------------------ */
+
+.reading-progress {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.reading-progress__track {
+  height: 2px;
+  border-radius: 999px;
+  background-color: var(--color-stone);
+  overflow: hidden;
+}
+
+.reading-progress__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background-color: var(--color-indigo);
+  transform-origin: left center;
+  transform: scaleX(var(--progress, 0));
+  transition:
+    transform var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.reading-progress__fill.is-complete {
+  background-color: var(--color-moss);
+}
+
+.reading-progress__label {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* -- Tabs -------------------------------------------------------------------------- */
 
 .reading-stage__tabs {
   display: flex;
@@ -97,10 +279,20 @@
   gap: var(--space-2xs);
 }
 
+/* A step narrower than a stock .toggle-chip. Six labels plus their gaps came
+   to a few pixels over the stage's 42rem column and wrapped "Shadowing" onto
+   a line of its own — a second tab row above the passage, to hold one tab.
+   --space-xs across six chips buys back the 48px that costs, and the chips
+   are a tab strip here rather than free-standing filters, so reading them as
+   a slightly tighter set is right anyway. */
+.reading-stage__tab {
+  padding-inline: var(--space-xs);
+}
+
 /* Mirrors .toggle-chip's own [aria-pressed="true"] treatment — including the
-   gradient it fills with, so a tab being selected sweeps in from the left over
-   180ms exactly as a memory chip does. Before this, the tab set the fill as a
-   flat background-color, which meant the app's two "this one is active" states
+   gradient it fills with, so a tab being selected sweeps in from the left
+   exactly as a memory chip does. Before this, the tab set the fill as a flat
+   background-color, which meant the app's two "this one is active" states
    looked identical at rest and behaved differently the moment you touched
    them. The base .toggle-chip class already declares the gradient and the
    transition; all that is needed here is to let it through instead of
@@ -113,16 +305,44 @@
   border-color: var(--fill-accent);
   color: var(--fill-ink);
   transition:
-    background-size 180ms var(--ease-exit),
+    background-size var(--transition-base),
     border-color var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-/* The panel is on the .card exclusion list in cards.css — a wall of Japanese
-   prose must not move two pixels because a pointer crossed it. */
+/* A stage with nothing behind it yet. Four of the six are stubs, and all six
+   used to look like working tabs — so a reader met the same four "coming
+   soon" notes one at a time, and the tab row promised five times more than
+   the view could do.
+
+   A dot, not a disabled state. The tabs still open, still say what is coming,
+   and still take focus; they are simply marked, the way a menu marks a dish
+   that is off. Drawn as a pseudo-element so the label text is untouched, and
+   the same fact is on the button as aria-description for anyone who cannot
+   see a 4px circle. */
+.reading-stage__tab--pending {
+  color: var(--color-ash);
+}
+
+.reading-stage__tab--pending::after {
+  content: '';
+  width: 4px;
+  height: 4px;
+  margin-inline-start: var(--space-3xs);
+  border-radius: 50%;
+  background-color: currentColor;
+  opacity: 0.5;
+}
+
+/* -- The reading surface --------------------------------------------------------------
+   Still a .card — it keeps the app's paper, hairline and radius — but padded
+   like a page rather than like a tile, and on the .card exclusion list in
+   cards.css so a wall of Japanese prose never moves two pixels because a
+   pointer crossed it.
+   ------------------------------------------------------------------------------------ */
 .reading-stage__panel {
-  padding: var(--space-lg);
+  padding: var(--space-xl) var(--space-lg);
 }
 
 .reading-stage__panel:focus-visible {
@@ -131,42 +351,420 @@
   box-shadow: var(--focus-halo);
 }
 
-/* The contents fade in when a tab is chosen. The animation goes on the panel's
-   *child* and not on the panel itself, which is the whole trick: reading.js
-   keeps one persistent panel element and calls replaceChildren() on it, so the
-   panel never re-enters the document and an animation declared there would
-   play once on open and never again on a tab switch. The child is new every
-   time, so it animates every time.
-
-   Written as `> *` rather than against .reading-stage__body, because that
-   class is only what the Article and Translation tabs return — the vocabulary,
-   grammar, questions and shadowing panels are each a different element, and
-   all six should arrive the same way.
+/* The contents fade in when a tab is chosen. The animation goes on the
+   panel's *child* and not on the panel itself, which is the whole trick:
+   reading.js keeps one persistent panel element and calls replaceChildren()
+   on it, so the panel never re-enters the document and an animation declared
+   there would play once on open and never again on a tab switch. The child
+   is new every time, so it animates every time — which also means it covers
+   the pager moving to a new passage, since that rebuilds the panel too.
 
    Fade only, no travel. The reader's eye is already fixed on this rectangle
-   when the swap happens; sliding the replacement in would drag it off the line
-   they were about to read. */
+   when the swap happens; sliding the replacement in would drag it off the
+   line they were about to read. */
 .reading-stage__panel > * {
   animation: fade-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
-.reading-stage__body {
+/* -- Article -------------------------------------------------------------------------- */
+
+.reading-article {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
 }
 
-.reading-stage__sentence p {
-  margin: 0;
+/* The reveal control and the one line explaining the surface. The hint is
+   there because a passage that responds to being touched has to say so
+   once — there is no other affordance on a page whose whole design is to
+   look like paper. */
+.reading-article__tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2xs) var(--space-sm);
+  padding-block-end: var(--space-sm);
+  border-block-end: var(--border-width) solid var(--color-stone);
 }
 
-/* -- Mobile spacing ---------------------------------------------------------------- */
-@media (max-width: 480px) {
+.reading-article__hint {
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: var(--text-xs);
+  color: var(--color-ash);
+}
+
+.reading-article__sentences {
+  display: flex;
+  flex-direction: column;
+  /* The gap between sentences is the largest piece of whitespace inside the
+     panel and is doing the work paragraph spacing does on a printed page: it
+     is what lets the eye find the start of the next line without re-reading
+     the end of the last one. A full --space-lg, which is more than the app
+     gives any other list, because no other list is meant to be read straight
+     through. */
+  gap: var(--space-lg);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reading-sentence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+}
+
+/* The whole line is the target. `user-select: text` is load-bearing: this is
+   a surface whose entire point is Japanese somebody may want to copy into a
+   dictionary, and a plain <button> would make the passage unselectable.
+   reading.js drops the click when the release left a selection, so dragging
+   across a line to copy it does not also toggle the gloss. */
+.reading-sentence__face {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  width: 100%;
+  padding: var(--space-2xs) var(--space-2xs) var(--space-2xs) 0;
+  margin-inline-start: calc(var(--space-2xs) * -1);
+  padding-inline-start: var(--space-2xs);
+  text-align: start;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  -webkit-user-select: text;
+  user-select: text;
+  transition:
+    background-color var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+/* A number in the margin, the way a textbook numbers the lines of a passage
+   — it is the reader's place in the text, and it is also the visual handle
+   that says the row is a thing you can press. Mono and small so it stays a
+   marginal mark; it never grows with the sentence beside it. */
+.reading-sentence__index {
+  flex-shrink: 0;
+  width: 1.25rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  color: var(--color-stone);
+  transition: color var(--transition-fast);
+}
+
+/* The passage itself, and the one piece of type on this page that everything
+   else is arranged around. --text-md rather than the app's --text-base:
+   16px is a size for interface copy, and Japanese at 16px asks a learner to
+   resolve a twelve-stroke kanji inside a 16px box. The loose leading comes
+   from typography.css's :lang(ja) rule and is what keeps stacked kanji from
+   closing up at this size. */
+.reading-sentence__jp {
+  font-size: var(--text-md);
+  line-height: var(--leading-loose);
+  color: var(--color-ink);
+}
+
+@media (hover: hover) {
+  .reading-sentence__face:hover {
+    background-color: color-mix(in srgb, var(--color-indigo) 4%, transparent);
+  }
+
+  .reading-sentence__face:hover .reading-sentence__index {
+    color: var(--color-indigo);
+  }
+}
+
+.reading-sentence__face:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* No travel on press. Every other control in Bigu settles a pixel, and this
+   one deliberately does not: the thing under the finger is a line of running
+   text, and text that drops a pixel when touched is text you lose your place
+   in. The ground darkening a step is the press. */
+.reading-sentence__face:active {
+  background-color: color-mix(in srgb, var(--color-indigo) 8%, transparent);
+}
+
+/* An open line keeps a mark in the margin — the index turns from stone to
+   indigo and stays there, so a reader scanning back up the passage can see
+   which lines they have already opened without reading any of them. */
+.reading-sentence__face[aria-expanded="true"] .reading-sentence__index {
+  color: var(--color-indigo);
+}
+
+/* -- The gloss --------------------------------------------------------------------
+   What the sentence gives back: its reading, then its meaning, indented to
+   the text column and hung off a rule in the margin. The rule is what makes
+   this read as an annotation on the line above rather than as more passage —
+   the same left-border language memory.css uses for a slip's example.
+
+   It rises as it arrives. The distance is small and the direction is down
+   from the sentence it belongs to, which is the direction the reader's eye
+   is already travelling; --duration-base and the entrance curve, like every
+   other reveal in the app.
+   ------------------------------------------------------------------------------------ */
+.reading-sentence__gloss {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  margin-inline-start: calc(1.25rem + var(--space-sm));
+  padding-inline-start: var(--space-sm);
+  border-inline-start: 2px solid color-mix(in srgb, var(--color-indigo) 30%, transparent);
+  --rise: -4px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
+}
+
+.reading-sentence__reading {
+  margin: 0;
+  max-width: none;
+  color: var(--color-ink-soft);
+}
+
+.reading-sentence__mn {
+  margin: 0;
+  max-width: none;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+/* -- Completed ------------------------------------------------------------------------
+   One Japanese word and one sentence over a hairline. It is the end of a
+   passage, not the end of a level: no score, no streak, no button, and
+   nothing that moves except the line fading up with the rest of the panel.
+   ------------------------------------------------------------------------------------ */
+.reading-article__done {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  margin: 0;
+  padding-block-start: var(--space-md);
+  border-block-start: var(--border-width) solid var(--color-stone);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+  /* It arrives rather than appearing. reading.js builds it hidden and
+     un-hides it on the frame the last line is opened, which is where the
+     animation starts — so it plays exactly once per passage, on the event
+     worth marking, and never again while the reader tidies up behind
+     themselves. The rise is the app's smallest. */
+  --rise: 4px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
+}
+
+.reading-article__done-mark {
+  flex-shrink: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: 1;
+  color: var(--color-moss);
+}
+
+/* -- Translation ---------------------------------------------------------------------
+   The reference view: every sentence with everything it has. Blocks are
+   separated by space rather than by rules, and the Japanese keeps the
+   article's reading size so switching tabs does not resize the passage
+   under the reader.
+   ------------------------------------------------------------------------------------ */
+.reading-stage__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.reading-stage__sentence {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+.reading-stage__sentence p {
+  margin: 0;
+  max-width: none;
+}
+
+.reading-stage__sentence-jp {
+  font-size: var(--text-md);
+  line-height: var(--leading-loose);
+  color: var(--color-ink);
+}
+
+/* -- Pager ------------------------------------------------------------------------------
+   Previous, position, next. It is hidden by reading.js when there is only
+   one passage, so it never renders as a pair of dead buttons.
+   ------------------------------------------------------------------------------------ */
+.reading-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-md);
+  border-block-start: var(--border-width) solid var(--color-stone);
+}
+
+.reading-pager__button {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.reading-pager__position {
+  margin: 0;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* -- Small screens ----------------------------------------------------------------------
+   The article has to win the screen here, and on a 320px phone almost every
+   pixel it wins comes off something else. So: the panel's side padding steps
+   down twice while its *vertical* padding does not (a page needs a head and
+   a foot margin more than it needs side margins), the tab row stops wrapping
+   into three stacked rows and becomes one scrollable strip, and the level
+   badge, the figures line and the pager all shrink or reflow rather than
+   pushing the first line of Japanese below the fold.
+
+   The one thing that does not move is the Japanese. --text-md holds at every
+   width down to 320px: a phone is where most reading actually happens, and
+   shrinking the text there to buy back furniture would be optimising the
+   page against its own purpose.
+   ------------------------------------------------------------------------------------ */
+
+@media (max-width: 768px) {
+  .reading-stage__panel {
+    padding: var(--space-lg) var(--space-md);
+  }
+
   .reading-card {
     padding: var(--space-md);
   }
 
+  /* Six chips wrapped into three rows put ~130px of tab row above the first
+     line of the passage. One strip that scrolls keeps them all reachable and
+     costs one row. `scrollbar-width: none` hides the bar and not the
+     scrolling; the row is still swipeable, still keyboard-reachable (focus
+     scrolls a chip into view by itself), and the negative margin lets the
+     strip bleed to the page gutter so a half-visible chip at the edge is
+     what tells the reader it moves. */
+  /* The pull has to be exactly the page gutter, and the gutter is not one
+     number: layout.css steps it from --space-lg to --space-md at 768 and to
+     --space-sm at 480. A single hard-coded pull overshoots at the narrower
+     step and takes the first and last chip off the side of the screen —
+     which is what a --space-md pull did at 390px, where the gutter is 16.
+     So the strip reads --reading-bleed, and the 480 block below re-states it
+     to match its own gutter. */
+  .reading-stage__tabs {
+    --reading-bleed: var(--space-md);
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    margin-inline: calc(var(--reading-bleed) * -1);
+    padding-inline: var(--reading-bleed);
+    /* Room for the chips' own focus ring, which would otherwise be clipped
+       by the scroll container. */
+    padding-block: var(--space-3xs);
+  }
+
+  .reading-stage__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .reading-stage__tab {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+}
+
+@media (max-width: 480px) {
+  .reading-stage {
+    gap: var(--space-sm);
+  }
+
+  .reading-stage__tabs {
+    --reading-bleed: var(--space-sm);
+  }
+
   .reading-stage__panel {
-    padding: var(--space-md);
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  /* Everything between the view heading and the first line of Japanese is
+     furniture, and on a 780px-tall phone it was pushing that line to y=592 —
+     about two lines of the passage above the fold. These four trims are all
+     the room there was to find without touching the text itself: the
+     Mongolian title drops one step (it is a gloss on the Japanese title, not
+     a second heading), and the tools row gives up the air around its rule.
+     The Japanese does not move: --text-md holds at every width. */
+  .reading-stage__subtitle {
+    font-size: var(--text-base);
+  }
+
+  .reading-article {
+    gap: var(--space-sm);
+  }
+
+  .reading-article__tools {
+    gap: var(--space-2xs);
+    padding-block-end: var(--space-2xs);
+  }
+
+  .reading-article__hint {
+    flex-basis: 100%;
+  }
+
+  /* The number moves out of the margin and the text takes the width back.
+     A 1.25rem gutter plus a --space-sm gap is 32px off a 320px line, which
+     is two Japanese characters — worth it on a laptop, not worth it here. */
+  .reading-sentence__face {
+    gap: var(--space-2xs);
+  }
+
+  .reading-sentence__index {
+    width: auto;
+  }
+
+  .reading-sentence__gloss {
+    margin-inline-start: 0;
+  }
+
+  .reading-article__sentences {
+    gap: var(--space-md);
+  }
+
+  .reading-card {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  /* Full-width, like the Review view's own start button at this size: a
+     button the width of its label at the foot of a card reads as an
+     afterthought on a phone. */
+  .reading-card__open {
+    width: 100%;
+  }
+
+  /* The pair splits the row and the count moves under it, rather than three
+     things fighting over 320px and the labels hyphenating. */
+  .reading-pager {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2xs);
+  }
+
+  .reading-pager__button {
+    flex: 1 1 0;
+    padding-inline: var(--space-2xs);
+    font-size: var(--text-sm);
+  }
+
+  .reading-pager__position {
+    order: 1;
+    width: 100%;
+    text-align: center;
   }
 }
