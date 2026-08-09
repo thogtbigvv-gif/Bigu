@@ -9,21 +9,37 @@
    js/navigation.js.
    ========================================================================== */
 
-/* -- Skip link (revealed only on keyboard focus) --------------------------------- */
+/* -- Skip link (revealed only on keyboard focus) -----------------------------------
+   Parked at its resting position and held off-screen by a transform, rather
+   than animated from `top: -100%` to `top: var(--space-sm)`. It is the first
+   moving thing a keyboard reader ever sees in this app and it was the only
+   piece of motion left that animated a layout property — `top` is laid out and
+   painted on every frame where a translate is handed to the compositor, and
+   the app's own rule is transform and opacity.
+
+   The offset is its own height plus the gutter plus a little air, so the
+   parked chip clears the top of the page completely instead of resting flush
+   against it where a descender or a focus ring could peek.
+
+   It arrives on --ease-entrance over --duration-base and leaves on the faster
+   default: this is a thing coming *onto* the screen, and the settle is the
+   part worth watching. Same asymmetry as the drawer further down. */
 .skip-link {
   position: absolute;
-  top: -100%;
+  top: var(--space-sm);
   left: var(--space-sm);
   z-index: 100;
   padding: var(--space-2xs) var(--space-sm);
   background-color: var(--color-ink);
   color: var(--color-washi);
   border-radius: var(--radius-sm);
-  transition: top var(--transition-fast);
+  transform: translateY(calc(-100% - var(--space-sm) - var(--space-2xs)));
+  transition: transform var(--transition-fast);
 }
 
 .skip-link:focus {
-  top: var(--space-sm);
+  transform: translateY(0);
+  transition: transform var(--duration-base) var(--ease-entrance);
 }
 
 /* -- Sidebar shell ----------------------------------------------------------------- */
@@ -113,11 +129,20 @@
 
    transform, not padding or margin: shifting the box would reflow the row and
    drag the 2px state border along with it, which is the one thing on this
-   element that must not move. */
-.site-nav__link:hover {
-  background-color: color-mix(in srgb, var(--color-indigo) 7%, transparent);
-  color: var(--color-indigo);
-  transform: translateX(2px);
+   element that must not move.
+
+   Gated behind (hover: hover), which matters more on this element than on any
+   other in the app: below 1024px these rows *are* the drawer, so on a phone an
+   ungated :hover left the last row the reader tapped nudged and washed indigo
+   underneath the view they had just navigated to — a second, false "you are
+   here" competing with the real one two rows away. The active row's own border
+   is the state; a hover is a pointer thing and now says so. */
+@media (hover: hover) {
+  .site-nav__link:hover {
+    background-color: color-mix(in srgb, var(--color-indigo) 7%, transparent);
+    color: var(--color-indigo);
+    transform: translateX(2px);
+  }
 }
 
 /* The active row does not travel. It is where you already are, not somewhere
@@ -158,6 +183,13 @@
   color: var(--color-indigo);
 }
 
+/* Opening and closing are not the same event, so they do not share a curve.
+   The resting rule governs the collapse — --ease-exit, quick off the mark,
+   because a submenu being put away is something the reader has already
+   finished with. The open state overrides only the timing function, so the
+   expansion rides --ease-entrance's long tail and settles into its height
+   instead of stopping dead at it. Duration is --transition-base either way:
+   the distance is a few rows, not a drawer. */
 .site-nav__submenu-wrapper {
   display: grid;
   grid-template-rows: 0fr;
@@ -166,6 +198,7 @@
 
 .site-nav__item--parent.is-open .site-nav__submenu-wrapper {
   grid-template-rows: 1fr;
+  transition-timing-function: var(--ease-entrance);
 }
 
 /* overflow:hidden clips the collapsed submenu out of sight, but clipped links
@@ -203,7 +236,21 @@
   border-top: var(--border-width) solid var(--color-stone);
 }
 
+/* reset.css already collapses every duration in the app to 0.01ms, so this
+   block is belt-and-braces rather than the only line of defence — it states
+   the intent per element for the ones where a half-applied transition would be
+   visibly wrong. .skip-link joins the list because it now travels on a
+   transform rather than on `top`: a reader who has asked for less motion
+   should find the link simply *there* the instant it takes focus, which is the
+   one piece of chrome where arriving late is an accessibility failure and not
+   just a style.
+
+   .skip-link:focus is listed alongside it and not covered by it: that rule
+   re-declares `transition` in full to get the entrance curve, so only a
+   selector of equal specificity later in the file can take it back. */
 @media (prefers-reduced-motion: reduce) {
+  .skip-link,
+  .skip-link:focus,
   .site-nav__submenu-wrapper,
   .site-nav__submenu,
   .site-nav__chevron,
@@ -234,14 +281,20 @@
   transition:
     background-color var(--transition-fast),
     border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
     transform var(--transition-fast);
 }
 
-.site-nav__mobile-toggle:hover {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
+/* Gated like .theme-toggle, the button it is the twin of — and this one is
+   only ever on screen below 1024px, so it is the control most likely to be
+   touched rather than pointed at. */
+@media (hover: hover) {
+  .site-nav__mobile-toggle:hover {
+    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
+    border-color: var(--color-indigo);
+    color: var(--color-indigo);
+  }
 }
 
 .site-nav__mobile-toggle:active {
@@ -399,24 +452,38 @@
     /* The one panel in the app that floats over the page rather than sitting
        in it, so it gets the raised shadow rather than the emphasised one. */
     box-shadow: var(--shadow-lg);
-    /* Slower than the app's base, on the entrance curve. A drawer travels most
-       of the width of a phone — an order of magnitude further than anything
-       else that moves here — and at 250ms on a symmetrical curve that distance
-       reads as a panel being snapped into place. The extra 170ms is spent
-       almost entirely in the deceleration, so it arrives at the same moment
-       and simply stops shoving.
+    /* Closing. --duration-base on --ease-exit: a drawer being dismissed is a
+       decision the reader has already made, and the app's slowest duration
+       spent watching it leave is the reader waiting on their own tap. It goes
+       quickly off the mark and is gone.
 
-       The visibility duration has to stay identical: because visibility
-       transitions discretely at the end of its interval, any shorter value
-       would blank the panel partway through its own slide-out. */
+       This rule and the .is-open rule below now carry different timings on
+       purpose — the resting declaration governs the transition *away* from
+       open, and the open declaration governs the transition into it. Opening
+       and closing a drawer are not the same event and the app's own curve
+       names say so: one arrives, one leaves.
+
+       The visibility duration has to stay identical to the transform's in each
+       direction: because visibility transitions discretely at the end of its
+       interval, any shorter value would blank the panel partway through its
+       own slide-out. */
     transition:
-      transform var(--duration-slow) var(--ease-entrance),
-      visibility var(--duration-slow) var(--ease-entrance);
+      transform var(--duration-base) var(--ease-exit),
+      visibility var(--duration-base) var(--ease-exit);
   }
 
+  /* Opening. Slower than the app's base, on the entrance curve. A drawer
+     travels most of the width of a phone — an order of magnitude further than
+     anything else that moves here — and at 250ms on a symmetrical curve that
+     distance reads as a panel being snapped into place. The extra 170ms is
+     spent almost entirely in the deceleration, so it arrives at the same
+     moment and simply stops shoving. */
   .site-nav.is-open {
     visibility: visible;
     transform: translateX(0);
+    transition:
+      transform var(--duration-slow) var(--ease-entrance),
+      visibility var(--duration-slow) var(--ease-entrance);
   }
 
   /* The rows arrive after the panel does. The drawer's own slide carries the
@@ -434,16 +501,23 @@
      transform at its final computed value — which would silently win over
      :hover for as long as the drawer stayed open, leaving every row in the
      mobile menu dead to the touch. `backwards` applies the start state during
-     the delay and then gets out of the way entirely. */
+     the delay and then gets out of the way entirely.
+
+     The beat is --stagger-step, the same one layout.css's roster uses for
+     every list and grid in the app. It was five hand-written multiples of
+     30ms — close enough to the token that nobody would notice, and different
+     enough that the drawer was the one cascade in Bigu running to its own
+     clock. Written as a multiplication so it can never drift again. */
   .site-nav.is-open .site-nav__link {
     animation: nav-row-in var(--duration-base) var(--ease-entrance) backwards;
+    animation-delay: calc(var(--stagger-step) * var(--stagger-index, 0));
   }
 
-  .site-nav.is-open .site-nav__item:nth-child(2) .site-nav__link { animation-delay: 30ms; }
-  .site-nav.is-open .site-nav__item:nth-child(3) .site-nav__link { animation-delay: 60ms; }
-  .site-nav.is-open .site-nav__item:nth-child(4) .site-nav__link { animation-delay: 90ms; }
-  .site-nav.is-open .site-nav__item:nth-child(5) .site-nav__link { animation-delay: 120ms; }
-  .site-nav.is-open .site-nav__item:nth-child(6) .site-nav__link { animation-delay: 150ms; }
+  .site-nav.is-open .site-nav__item:nth-child(2) .site-nav__link { --stagger-index: 1; }
+  .site-nav.is-open .site-nav__item:nth-child(3) .site-nav__link { --stagger-index: 2; }
+  .site-nav.is-open .site-nav__item:nth-child(4) .site-nav__link { --stagger-index: 3; }
+  .site-nav.is-open .site-nav__item:nth-child(5) .site-nav__link { --stagger-index: 4; }
+  .site-nav.is-open .site-nav__item:nth-child(6) .site-nav__link { --stagger-index: 5; }
 
   @keyframes nav-row-in {
     from {
@@ -490,7 +564,13 @@
        stay put and only the ground extends underneath it. */
     padding-bottom: env(safe-area-inset-bottom);
     padding-inline: max(0px, env(safe-area-inset-left)) max(0px, env(safe-area-inset-right));
-    transition: transform var(--duration-slow) var(--ease-entrance);
+    /* The bar's return, which happens as the drawer closes — so it is timed to
+       the drawer's close, not to its open. The two surfaces move in opposite
+       directions during one gesture and should take exactly as long as each
+       other doing it; before this the bar came back on --duration-slow while
+       the drawer it was following left on --duration-base, and the phone
+       briefly had neither navigation nor drawer on screen. */
+    transition: transform var(--duration-base) var(--ease-exit);
   }
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -505,6 +585,8 @@
      once (see the inert note in js/navigation.js). Gone is honest. */
   .site-nav.is-open ~ .thumb-nav {
     transform: translateY(100%);
+    /* …and its exit, timed to the drawer's entrance for the same reason. */
+    transition: transform var(--duration-slow) var(--ease-entrance);
   }
 
   .thumb-nav__list {

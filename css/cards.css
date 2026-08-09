@@ -101,10 +101,48 @@
    here would have meant the app's most obviously pressable card rose *less*
    than the ones around it. What is left is the part that was always specific
    to being a target: the edge picks up the interactive colour, so the surface
-   says "press me" in the same language the buttons and chips do. */
-.card--interactive:hover,
+   says "press me" in the same language the buttons and chips do.
+
+   Hover is gated and focus-within is not, on exactly the reasoning the lift
+   above is gated by: the edge is a "you are about to press this" cue, and on a
+   touch screen it would instead be left painted on whichever group was opened
+   last. */
+@media (hover: hover) {
+  .card--interactive:hover {
+    border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+  }
+}
+
 .card--interactive:focus-within {
   border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+}
+
+/* -- Pressed ---------------------------------------------------------------------
+   The half of the interaction that was missing. A card that rises on approach
+   and then does nothing at all under the finger is the one place in Bigu where
+   a control accepted a press without acknowledging it — every button, chip and
+   thumb-bar row already settles a pixel, and the app's largest tap target did
+   not.
+
+   Down to --lift-press and back to --shadow-md, which is the whole gesture: the
+   card gives up the elevation it was holding under the pointer and meets the
+   page. Written as `.card.card--interactive` to score 0-3-0 and tie the generic
+   `.card:not(…):hover` lift above, then win on source order — the same
+   specificity arithmetic dashboard.css spells out for its hero card, and the
+   honest fix rather than an !important.
+
+   No spring. The note in variables.css draws the line at chip scale, and this
+   is the one element in the app big enough for an overshoot to read as a wobble
+   in the page rather than as a control being pushed.
+
+   The duration drops to --duration-fast for the press alone. A press is the
+   one moment in a card's life that has to feel immediate; --transition-base is
+   right for a lift you glide into and half a beat too slow for a finger.
+   ------------------------------------------------------------------------------- */
+.card.card--interactive:active {
+  transform: translateY(var(--lift-press));
+  box-shadow: var(--shadow-md);
+  transition-duration: var(--duration-fast);
 }
 
 .card__header {
