@@ -11,7 +11,7 @@
 
    The ladder is SM-2 shaped but deliberately simpler: five levels with fixed
    intervals, up one on a pass, down two on a miss. No per-item ease factor —
-   grading here is a self-reported binary ("I knew it" / "Still learning"),
+   grading here is a self-reported binary ("Мэдсэн" / "Сурч байна"),
    which doesn't carry enough signal to fit a per-item difficulty curve, and
    pretending otherwise would just add numbers nobody could act on.
 

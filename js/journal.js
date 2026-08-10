@@ -439,8 +439,24 @@ function initJournalView(view) {
   view.append(wrapper);
 
   const state = { date: todayKey(), entryId: null, savedText: '' };
-  const today = new Date();
-  const calendarState = { year: today.getFullYear(), month: today.getMonth() };
+
+  /* Which month the calendar is showing. The current date is read here for
+     the opening month and nowhere else is it held: this view initialises
+     once and never re-runs, so a captured `new Date()` is simply wrong for
+     every reader who leaves the tab open past midnight. Everything below
+     that needs today asks for it at the moment it needs it. */
+  const openedOn = new Date();
+  const calendarState = { year: openedOn.getFullYear(), month: openedOn.getMonth() };
+
+  /* The date the composer is writing to. A composer with no entryId is the
+     blank one for today — every other way in (the history list, a calendar
+     day) opens a saved entry and carries its id — so it follows the clock
+     rather than the date it happened to be opened on. Left as it was, a tab
+     open past midnight kept filing new entries under yesterday, onto a date
+     that may already have an entry of its own. */
+  function composerDate() {
+    return state.entryId === null ? todayKey() : state.date;
+  }
 
   function refreshStats() {
     stats.textContent = describeStats(computeStats(textarea.value));
@@ -485,8 +501,9 @@ function initJournalView(view) {
     // The calendar is a log of what's already been written, not a planner —
     // once it's showing the current month there's nothing ahead to see, so
     // "next" is disabled rather than silently landing on an empty future one.
+    const now = new Date();
     calendarNext.disabled =
-      calendarState.year === today.getFullYear() && calendarState.month === today.getMonth();
+      calendarState.year === now.getFullYear() && calendarState.month === now.getMonth();
   }
 
   /** Jumps the calendar to whichever month `dateKey` falls in. */
@@ -537,9 +554,10 @@ function initJournalView(view) {
     const text = textarea.value.trim();
     if (!text || text === state.savedText) return;
 
+    const date = composerDate();
     const record = state.entryId
-      ? journal.update(state.entryId, { text, date: state.date })
-      : journal.add({ text, date: state.date });
+      ? journal.update(state.entryId, { text, date })
+      : journal.add({ text, date });
 
     if (!record) {
       status.textContent = 'Хадгалж чадсангүй — хөтчийнхөө өгөгдөл хадгалах тохиргоог шалгана уу.';
@@ -547,6 +565,11 @@ function initJournalView(view) {
     }
 
     state.entryId = record.id;
+    // Not always the date the composer was opened on — see composerDate().
+    // The header is redrawn from it so a rollover shows up in the one place
+    // that names the date, rather than saving under today and still reading
+    // yesterday.
+    state.date = record.date ?? date;
     state.savedText = record.text;
     // What's stored is the trimmed text, so the composer has to match it or
     // every later comparison against state.savedText sees a difference that
@@ -554,6 +577,7 @@ function initJournalView(view) {
     // flipping the status to "Unsaved changes" on the next keystroke.
     textarea.value = record.text;
     status.textContent = `Хадгалсан · ${formatTimeLabel(record.updatedAt ?? record.createdAt)}`;
+    renderHeader();
     refreshStats();
     syncSaveButton();
     renderHistory();

@@ -31,7 +31,7 @@ function createMemoryChip(itemId, { onChange, className } = {}) {
   function sync() {
     const remembered = isRemembered(itemId);
     button.setAttribute('aria-pressed', String(remembered));
-    button.textContent = remembered ? 'In memory' : 'Remember this';
+    button.textContent = remembered ? 'Санах ойд байна' : 'Санах ойд нэмэх';
   }
 
   button.addEventListener('click', () => {

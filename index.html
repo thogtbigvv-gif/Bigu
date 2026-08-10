@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<!-- lang="mn": nearly everything a reader reads here is Mongolian, and a
+     screen reader takes its pronunciation rules from this attribute — set to
+     English it read Mongolian aloud with English phonetics, which is closer
+     to noise than to speech. The parts that stay English (the navigation,
+     the header controls, the view headings) carry lang="en" of their own,
+     and Japanese carries lang="ja" as it already did. -->
+<html lang="mn">
 <head>
   <meta charset="UTF-8" />
   <!-- viewport-fit=cover lets the page paint into the rounded corners and the
@@ -85,7 +91,7 @@
   <link rel="stylesheet" href="css/intro.css" />
 </head>
 <body>
-  <a class="skip-link" href="#main-content">Skip to main content</a>
+  <a class="skip-link" href="#main-content" lang="en">Skip to main content</a>
 
   <div class="app-shell">
     <!-- Drawer backdrop. A sibling of the nav, not a child of it: below the
@@ -101,18 +107,21 @@
          collapses its own submenu. Behavior lives in js/navigation.js;
          active-link highlighting (aria-current) is set by js/router.js.
 
-         Every row here goes somewhere real. Six of the previous thirteen
-         (Listening, Conversation, Shadowing, Search, Profile, Settings-as-
-         stub) led to a heading and a "coming soon" line — nearly half the
-         navigation was a promise the app didn't keep, and a nav where
-         clicking might do nothing teaches readers not to explore the parts
-         that work. Those sections still exist further down and are still
-         reachable by hash; they get their nav row back when they ship.
+         Every section has a row. Listening, Conversation, Shadowing, Search
+         and Profile were held back from here while they were stubs, on the
+         argument that a row leading to a "coming soon" line is a promise the
+         app doesn't keep — but the sections stayed in the document, so the
+         result was five views reachable only by typing their hash, which is
+         to say reachable by nobody. A stub a reader can find and read as
+         "not yet" is the smaller of the two problems; a room with no door is
+         the larger one.
 
          Order follows what the app actually rewards: Lessons first inside
          Study as the beginner on-ramp, Journal up next to Review because it
-         feeds the same streak, Settings last as the housekeeping drawer. -->
-    <nav class="site-nav" id="site-nav" aria-label="Primary">
+         feeds the same streak, the two personal rows after it, Settings last
+         as the housekeeping drawer. The three unbuilt study surfaces sit at
+         the end of the Study submenu, behind everything that works. -->
+    <nav class="site-nav" id="site-nav" aria-label="Primary" lang="en">
       <div class="site-nav__panel" id="site-nav-panel">
         <ul class="site-nav__list">
           <li class="site-nav__item">
@@ -140,6 +149,9 @@
                 <li><a class="site-nav__link site-nav__sublink" href="#grammar" data-view="grammar">Grammar</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#kanji" data-view="kanji">Kanji</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#reading" data-view="reading">Reading</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#listening" data-view="listening">Listening</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#conversation" data-view="conversation">Conversation</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#shadowing" data-view="shadowing">Shadowing</a></li>
               </ul>
             </div>
           </li>
@@ -159,6 +171,12 @@
           <li class="site-nav__item">
             <a class="site-nav__link" href="#journal" data-view="journal">Journal</a>
           </li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#search" data-view="search">Search</a>
+          </li>
+          <li class="site-nav__item">
+            <a class="site-nav__link" href="#profile" data-view="profile">Profile</a>
+          </li>
 
           <li class="site-nav__item site-nav__item--foot">
             <a class="site-nav__link" href="#settings" data-view="settings">Settings</a>
@@ -168,7 +186,7 @@
     </nav>
 
     <div class="app-shell__content">
-      <header class="site-header">
+      <header class="site-header" lang="en">
         <div class="brand">
           <!-- The Bigu mark: a speech bubble carrying ビ over an open book,
                with two sparkles off its upper right. Drawn inline like every
@@ -290,28 +308,28 @@
              block; dashboard.js fills the status line on every visit. -->
         <section id="dashboard" class="view" aria-labelledby="dashboard-heading">
           <div class="dashboard-hero">
-            <h1 id="dashboard-heading">Dashboard</h1>
+            <h1 id="dashboard-heading" lang="en">Dashboard</h1>
             <p class="dashboard-hero__status" id="dashboard-status" aria-live="polite"></p>
           </div>
         </section>
 
         <section id="vocabulary" class="view" hidden aria-labelledby="vocabulary-heading">
-          <h1 id="vocabulary-heading">Vocabulary</h1>
+          <h1 id="vocabulary-heading" lang="en">Vocabulary</h1>
         </section>
 
         <section id="grammar" class="view" hidden aria-labelledby="grammar-heading">
-          <h1 id="grammar-heading">Grammar</h1>
+          <h1 id="grammar-heading" lang="en">Grammar</h1>
         </section>
 
         <section id="kanji" class="view" hidden aria-labelledby="kanji-heading">
-          <h1 id="kanji-heading">Kanji</h1>
+          <h1 id="kanji-heading" lang="en">Kanji</h1>
         </section>
 
         <!-- id/heading-id stay "practice" (practice.js, dashboard.js, and
              every saved practice/progress record key off this exact id) —
              only the visible label changes to "Review". -->
         <section id="practice" class="view" hidden aria-labelledby="practice-heading">
-          <h1 id="practice-heading">Review</h1>
+          <h1 id="practice-heading" lang="en">Review</h1>
         </section>
 
         <!-- Everything the reader has met, sorted by how much of it is left
@@ -319,48 +337,49 @@
              the shelves, the week strip and the ink are all derived from the
              same progress records the Review deck grades into. -->
         <section id="memory" class="view" hidden aria-labelledby="memory-heading">
-          <h1 id="memory-heading">Memory</h1>
+          <h1 id="memory-heading" lang="en">Memory</h1>
         </section>
 
         <section id="journal" class="view" hidden aria-labelledby="journal-heading">
-          <h1 id="journal-heading">Journal</h1>
+          <h1 id="journal-heading" lang="en">Journal</h1>
         </section>
 
         <section id="lessons" class="view" hidden aria-labelledby="lessons-heading">
-          <h1 id="lessons-heading">Lessons</h1>
+          <h1 id="lessons-heading" lang="en">Lessons</h1>
         </section>
 
         <section id="reading" class="view" hidden aria-labelledby="reading-heading">
-          <h1 id="reading-heading">Reading</h1>
+          <h1 id="reading-heading" lang="en">Reading</h1>
         </section>
 
-        <!-- Not in the nav. Bare shells, matching how every other view
-             started out — each is a future initX() task away from real
-             content, and each gets its nav row back when it has some.
-             They stay in the document so the hash still resolves and so
-             the work needed to ship one is visible from here. -->
+        <!-- Bare shells, matching how every other view started out — each is
+             a future initX() task away from real content. They carry a nav
+             row like everything else (the three study surfaces at the end of
+             the Study submenu, Search and Profile as their own rows), so the
+             "coming soon" line is something a reader arrives at and reads
+             rather than a room with no door. -->
         <section id="listening" class="view" hidden aria-labelledby="listening-heading">
-          <h1 id="listening-heading">Listening</h1>
+          <h1 id="listening-heading" lang="en">Listening</h1>
           <p class="empty-state">Сонсголын дасгал удахгүй нэмэгдэнэ.</p>
         </section>
 
         <section id="conversation" class="view" hidden aria-labelledby="conversation-heading">
-          <h1 id="conversation-heading">Conversation</h1>
+          <h1 id="conversation-heading" lang="en">Conversation</h1>
           <p class="empty-state">Ярианы дасгал удахгүй нэмэгдэнэ.</p>
         </section>
 
         <section id="shadowing" class="view" hidden aria-labelledby="shadowing-heading">
-          <h1 id="shadowing-heading">Shadowing</h1>
+          <h1 id="shadowing-heading" lang="en">Shadowing</h1>
           <p class="empty-state">Давтан хэлэх дасгал удахгүй нэмэгдэнэ.</p>
         </section>
 
         <section id="search" class="view" hidden aria-labelledby="search-heading">
-          <h1 id="search-heading">Search</h1>
+          <h1 id="search-heading" lang="en">Search</h1>
           <p class="empty-state">Үг, хэл зүй, ханзыг нэгтгэсэн хайлт удахгүй нэмэгдэнэ.</p>
         </section>
 
         <section id="profile" class="view" hidden aria-labelledby="profile-heading">
-          <h1 id="profile-heading">Profile</h1>
+          <h1 id="profile-heading" lang="en">Profile</h1>
           <p class="empty-state">Профайлын тоо баримт удахгүй нэмэгдэнэ.</p>
         </section>
 
@@ -370,7 +389,7 @@
              and reloads the page does not belong in a grid of stat cards.
              Built by js/settings.js. -->
         <section id="settings" class="view" hidden aria-labelledby="settings-heading">
-          <h1 id="settings-heading">Settings</h1>
+          <h1 id="settings-heading" lang="en">Settings</h1>
         </section>
       </main>
 
@@ -386,8 +405,8 @@
 
          Four destinations and a way into the rest, chosen as the loop the app
          actually rewards rather than as the first four rows of the sidebar.
-         "Study" points at Lessons and lights up for any of the five study
-         views beneath it (see data-view-group, read by router.js); "More"
+         "Study" points at Lessons and lights up for any of the study views
+         beneath it (see data-view-group, read by router.js); "More"
          opens the same drawer, which stays the full map of the app.
 
          A sibling of .app-shell__content, not a child of it: js/navigation.js
@@ -399,7 +418,7 @@
          the nav chevron and the theme toggle. Labels are not optional here:
          five unlabelled glyphs is a guessing game, and this bar is the whole
          navigation on a phone. -->
-    <nav class="thumb-nav" id="thumb-nav" aria-label="Primary, compact">
+    <nav class="thumb-nav" id="thumb-nav" aria-label="Primary, compact" lang="en">
       <ul class="thumb-nav__list">
         <li>
           <a class="thumb-nav__link" href="#dashboard" data-view="dashboard">
@@ -414,7 +433,7 @@
             class="thumb-nav__link"
             href="#lessons"
             data-view="lessons"
-            data-view-group="lessons vocabulary grammar kanji reading"
+            data-view-group="lessons vocabulary grammar kanji reading listening conversation shadowing"
           >
             <svg class="thumb-nav__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 7c-2-1.6-4.4-2.3-8-2.4v12.6c3.6.1 6 .8 8 2.4 2-1.6 4.4-2.3 8-2.4V4.6c-3.6.1-6 .8-8 2.4z" />

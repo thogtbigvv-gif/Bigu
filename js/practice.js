@@ -96,7 +96,7 @@ function buildView(container) {
   const startButton = document.createElement('button');
   startButton.type = 'button';
   startButton.className = 'button button--primary practice__start';
-  startButton.textContent = 'Start review';
+  startButton.textContent = 'Давталт эхлэх';
 
   // status and the start button are appended by the controller, after the
   // mode picker, so the intro reads deck -> mode -> what you'll get -> go.
@@ -108,7 +108,7 @@ function buildView(container) {
 
   const historyHeading = document.createElement('h2');
   historyHeading.className = 'practice__history-heading';
-  historyHeading.textContent = 'Recent sessions';
+  historyHeading.textContent = 'Сүүлийн давталтууд';
 
   const historyList = document.createElement('ul');
   historyList.className = 'practice__history-list';

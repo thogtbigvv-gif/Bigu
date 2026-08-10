@@ -261,7 +261,7 @@ function buildPanel() {
   const exitButton = document.createElement('button');
   exitButton.type = 'button';
   exitButton.className = 'button button--secondary quiz__exit';
-  exitButton.textContent = 'End';
+  exitButton.textContent = 'Дуусгах';
 
   head.append(title, count, exitButton);
 
@@ -347,8 +347,8 @@ function buildPanel() {
   grade.className = 'quiz__grade';
   grade.hidden = true;
 
-  /* The two verdicts have directions now — left for "still learning", right
-     for "I knew it" — and the card travels that way whether it was flicked or
+  /* The two verdicts have directions now — left for "Сурч байна", right
+     for "Мэдсэн" — and the card travels that way whether it was flicked or
      the button was pressed. The arrows are how the buttons teach the gesture:
      a swipe nobody knows about is a feature nobody has. They stay on the outer
      edge of each button and the row never stacks, so the button's own position
@@ -356,12 +356,12 @@ function buildPanel() {
   const missButton = document.createElement('button');
   missButton.type = 'button';
   missButton.className = 'button button--secondary quiz__grade-button quiz__grade-button--left';
-  missButton.append(arrowGlyph('left'), gradeLabel('Still learning'));
+  missButton.append(arrowGlyph('left'), gradeLabel('Сурч байна'));
 
   const knewButton = document.createElement('button');
   knewButton.type = 'button';
   knewButton.className = 'button button--primary quiz__grade-button quiz__grade-button--right';
-  knewButton.append(gradeLabel('I knew it'), arrowGlyph('right'));
+  knewButton.append(gradeLabel('Мэдсэн'), arrowGlyph('right'));
 
   grade.append(missButton, knewButton);
 
@@ -382,7 +382,7 @@ function buildPanel() {
   const continueButton = document.createElement('button');
   continueButton.type = 'button';
   continueButton.className = 'button button--primary quiz__continue';
-  continueButton.textContent = 'Continue';
+  continueButton.textContent = 'Үргэлжлүүлэх';
 
   feedback.append(verdict, detail, continueButton);
 
@@ -408,7 +408,7 @@ function buildPanel() {
 
   const missedHeading = document.createElement('p');
   missedHeading.className = 'quiz__missed-heading';
-  missedHeading.textContent = 'Worth another look';
+  missedHeading.textContent = 'Дахин харах нь зүйтэй';
 
   const missedList = document.createElement('ul');
   missedList.className = 'quiz__missed-list';
@@ -423,12 +423,12 @@ function buildPanel() {
   const againButton = document.createElement('button');
   againButton.type = 'button';
   againButton.className = 'button button--secondary';
-  againButton.textContent = 'New round';
+  againButton.textContent = 'Дахин нэг давталт';
 
   const doneButton = document.createElement('button');
   doneButton.type = 'button';
   doneButton.className = 'button button--secondary';
-  doneButton.textContent = 'Done';
+  doneButton.textContent = 'Хаах';
 
   summaryActions.append(retryMissedButton, againButton, doneButton);
   summary.append(summaryScore, summaryText, missedHeading, missedList, summaryActions);
@@ -594,7 +594,7 @@ function createQuiz({
   }
 
   /* -- Dragging ---------------------------------------------------------------------------
-     Left is "still learning", right is "I knew it", and the card goes where it
+     Left is "Сурч байна", right is "Мэдсэн", and the card goes where it
      is thrown. This is the one screen in the app a reader touches dozens of
      times in a sitting, and reaching for one of two buttons every time is the
      kind of small tax that decides whether a review habit survives the month.
@@ -965,7 +965,7 @@ function createQuiz({
     el.missedList.hidden = !hasMissed;
     el.retryMissedButton.hidden = !hasMissed;
     el.retryMissedButton.textContent =
-      `Practise the ${state.missed.length} you missed`;
+      `Алдсан ${state.missed.length} зүйлээ давтах`;
 
     el.round.hidden = true;
     el.summary.hidden = false;

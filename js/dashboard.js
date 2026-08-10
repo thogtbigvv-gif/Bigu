@@ -453,7 +453,15 @@ function createMemoryCard(entries) {
 
   const label = document.createElement('p');
   label.className = 'meta';
-  label.textContent = 'санах ойд буй үг';
+  /* "Words you have met", not "words in memory". The loop above counts every
+     seen record, which includes items sitting at level 0 after a miss — the
+     opposite of held — and calling those a memory total made the one figure
+     on this card the one figure that wasn't true. Relabelled rather than
+     filtered: the average strength and the fading count below are taken over
+     the same set, and dropping the missed items would remove exactly the
+     words the "how much is fading" line exists to report. The detail line
+     underneath already says танилцсан. */
+  label.textContent = 'танилцсан үг';
 
   const detail = document.createElement('p');
   detail.className = 'dashboard-today__detail';
@@ -511,8 +519,8 @@ function createPracticeCard(sessions) {
     const label = document.createElement('p');
     label.className = 'meta';
     label.textContent = modeLabel
-      ? `"I knew it" гэж тэмдэглэсэн · ${modeLabel} · ${formatSessionDate(latest.createdAt)}`
-      : `"I knew it" гэж тэмдэглэсэн · ${formatSessionDate(latest.createdAt)}`;
+      ? `"Мэдсэн" гэж тэмдэглэсэн · ${modeLabel} · ${formatSessionDate(latest.createdAt)}`
+      : `"Мэдсэн" гэж тэмдэглэсэн · ${formatSessionDate(latest.createdAt)}`;
 
     card.append(score, label);
   }

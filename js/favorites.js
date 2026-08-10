@@ -61,7 +61,7 @@ function createFavoriteButton(itemId, onChange) {
   function sync() {
     const kept = isFavorite(itemId);
     button.setAttribute('aria-pressed', String(kept));
-    label.textContent = kept ? 'Kept — remove from Kept' : 'Keep this';
+    label.textContent = kept ? 'Хадгалсан байна — хасах' : 'Хадгалах';
   }
 
   button.addEventListener('click', (event) => {

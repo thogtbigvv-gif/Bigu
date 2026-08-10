@@ -5,20 +5,20 @@
    grammar.js; laid out as a grid instead of a list since a single character
    card carries far less content than a vocab or grammar card.
 
-   Each card also has a "View details" button opening a full-character
-   detail panel — Meaning, On, Kun, Stroke Order, Animation, Examples,
-   Related Kanji — in place of the grid, same list-hidden/detail-shown
+   Each card also has a "Дэлгэрэнгүй үзэх" button opening a full-character
+   detail panel — meaning, on and kun readings, stroke order, animation,
+   examples, related kanji — in place of the grid, same list-hidden/detail-shown
    swap reading.js uses for its passage flow. Unlike reading.js's stage
    tabs, these sections are NOT tabbed: for one kanji, meaning/readings/
    examples/related characters are usually wanted together at a glance
    (a dictionary entry, not alternate views of the same content), so the
    detail panel just stacks them and lets the page scroll.
 
-   Stroke Order and Animation need real per-character stroke-path data
+   The stroke order and animation sections need real per-character data
    (something like the KanjiVG dataset) that doesn't exist in kanji.json
    yet, so both render a "coming soon" note for every entry today — same
    empty-state language used elsewhere for not-yet-built stages. Examples
-   and Related Kanji are wired to real (optional) data fields now:
+   and related kanji are wired to real (optional) data fields now:
    `examples` (falls back to the existing single `example`) and `related`
    (an array of characters; each renders as a jump-to-that-kanji chip when
    the character is found in this same dataset, plain text otherwise).
@@ -104,7 +104,7 @@ function createExample(example) {
 
 /* -- Grid card -------------------------------------------------------------------------
    The compact overview: character, meaning, readings, one example
-   preview, memory controls, and now a "View details" button opening the
+   preview, memory controls, and now a "Дэлгэрэнгүй үзэх" button opening the
    full entry below. The card itself stays exactly as small as before —
    detail content only exists once the button is pressed.
    ------------------------------------------------------------------------------------------ */
@@ -140,7 +140,7 @@ function createCard(entry, level, onOpenDetail) {
   const detailButton = document.createElement('button');
   detailButton.type = 'button';
   detailButton.className = 'button button--secondary kanji-card__detail-button';
-  detailButton.textContent = 'View details';
+  detailButton.textContent = 'Дэлгэрэнгүй үзэх';
   detailButton.addEventListener('click', () => onOpenDetail(entry));
 
   /* One vocabulary across the app: a kanji is held in memory or it isn't,
@@ -160,7 +160,8 @@ function createCard(entry, level, onOpenDetail) {
 /* -- Detail panel ------------------------------------------------------------------------
    Opens in place of the grid (same swap reading.js uses for its passage
    flow). Sections render in the order the feature was specced in:
-   Meaning, On, Kun, Stroke Order, Animation, Examples, Related Kanji.
+   meaning, on reading, kun reading, stroke order, animation, examples,
+   related kanji.
    ------------------------------------------------------------------------------------------ */
 
 function createDetailSection(title, content) {
@@ -242,7 +243,7 @@ function buildDetailPanel() {
   const exit = document.createElement('button');
   exit.type = 'button';
   exit.className = 'button button--secondary kanji-detail__exit';
-  exit.textContent = '← Back to kanji';
+  exit.textContent = '← Ханзны жагсаалт руу буцах';
 
   const head = document.createElement('div');
   head.className = 'kanji-detail__head';
@@ -276,13 +277,13 @@ function renderDetail(elements, entry, level, allEntries, onJump) {
   elements.tag.hidden = !level;
 
   elements.sections.replaceChildren(
-    createDetailSection('Meaning', createTextBlock(entry.meaning)),
-    createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
-    createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
-    createDetailSection('Stroke Order', createComingSoonBlock('Зурлагын дарааллын зураг удахгүй нэмэгдэнэ.')),
-    createDetailSection('Animation', createComingSoonBlock('Зурлагын дарааллын хөдөлгөөнт дүрслэл удахгүй нэмэгдэнэ.')),
-    createDetailSection('Examples', createExamplesBlock(entry)),
-    createDetailSection('Related Kanji', createRelatedBlock(entry, allEntries, onJump)),
+    createDetailSection('Утга', createTextBlock(entry.meaning)),
+    createDetailSection('Он унших', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
+    createDetailSection('Кун унших', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
+    createDetailSection('Зурлагын дараалал', createComingSoonBlock('Зурлагын дарааллын зураг удахгүй нэмэгдэнэ.')),
+    createDetailSection('Хөдөлгөөнт дүрслэл', createComingSoonBlock('Зурлагын дарааллын хөдөлгөөнт дүрслэл удахгүй нэмэгдэнэ.')),
+    createDetailSection('Жишээ', createExamplesBlock(entry)),
+    createDetailSection('Холбоотой ханз', createRelatedBlock(entry, allEntries, onJump)),
   );
 
   /* The panel replaces the grid in place, so opening one from the bottom of
@@ -369,7 +370,7 @@ function renderGrid(container, data) {
     renderDetail(detailElements, entry, getEntryLevel(entry), data.kanji, openDetail);
   }
 
-  /* Focus goes back to the "View details" button that opened the panel, not
+  /* Focus goes back to the "Дэлгэрэнгүй үзэх" button that opened the panel, not
      to the top of the page: a reader who opened the 96th kanji and closed
      it again should be back at the 96th kanji, which is also where the
      browser leaves the scroll position. */
