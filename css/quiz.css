@@ -4,16 +4,35 @@
    and the per-lesson quiz. Replaces the two separate sets of quiz styles
    that used to live in practice.css and lessons.css.
 
-   The screen is deliberately narrow and deliberately empty. A question is
-   the only thing on it: no deck picker, no history, no filters. Everything
-   competing for attention during a round is a reason to answer wrong.
+   The screen is deliberately empty. A question is the only thing on it: no
+   deck picker, no history, no filters. Everything competing for attention
+   during a round is a reason to answer wrong.
+
+   It is not, however, deliberately *narrow*. The panel used to be a 38rem
+   column at every width, which on a laptop is a phone card stretched down
+   the middle of an empty page — the question small, the answers small, and
+   two thirds of the screen doing nothing. The composition below is one
+   layout with three settings of the same three dials: how much room the
+   question gets, how the four answers are arranged, and how much of the
+   feedback area is held open before there is anything in it.
    ========================================================================== */
 
 .quiz {
+  /* The measure of the whole round. One number per breakpoint rather than a
+     max-width on each part, so the progress rule, the card, the answers and
+     the feedback all share an edge — which is what makes the round read as
+     one object instead of four stacked panels. */
+  --quiz-measure: 38rem;
+  /* How much of the feedback area is held open while the question is still
+     unanswered. Zero on a phone, where vertical space is the scarce
+     resource; a fixed block on anything larger, so answering never moves
+     the options out from under the pointer. */
+  --quiz-feedback-reserve: 0px;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  max-width: 38rem;
+  max-width: var(--quiz-measure);
   margin-inline: auto;
   width: 100%;
 }
@@ -60,17 +79,37 @@
 
 .quiz__title {
   margin: 0;
+  min-width: 0;
   font-weight: var(--weight-medium);
   color: var(--color-ink);
+  overflow-wrap: anywhere;
 }
 
+/* "03 / 10". Tabular figures and a padded index, so the pair keeps exactly
+   the same width from the first question to the last — a counter that grows
+   a digit halfway through a round drags the End button sideways with it.
+   The slash is drawn rather than written, which keeps it quiet without
+   needing a third element to colour. */
 .quiz__count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
   margin: 0;
   margin-inline-start: auto;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   color: var(--color-ash);
+}
+
+.quiz__count-index {
+  color: var(--color-ink);
+}
+
+.quiz__count-total::before {
+  content: '/';
+  margin-inline-end: var(--space-3xs);
+  color: var(--color-stone);
 }
 
 .quiz__exit {
@@ -81,8 +120,8 @@
 
 /* -- The card ----------------------------------------------------------------------------
    Surface comes from .card. What's here is the question's own layout: the
-   instruction line small and quiet above, the Japanese large and alone in
-   the middle, the reading or structure line quiet below it.
+   instruction line small and quiet above, the question large and alone in
+   the middle, the supporting line quiet below it.
 
    The card is a real two-sided object in both modes: the question is printed
    on the front and the answer on the back, and turning it over is the reveal.
@@ -218,9 +257,10 @@
 
 /* A fixed minimum height with the content centred in it, rather than a
    card that shrinks to whatever this particular item happens to carry. A
-   lesson word has no hint line and a grammar pattern has a long one, so
-   without this the card — and every option below it — would jump up and
-   down the page between questions. */
+   lesson word has no hint line, a grammar pattern has a long one, and a
+   sentence question is three lines where a single kanji is one — so without
+   this the card, and every option below it, would jump up and down the page
+   between questions. */
 .quiz__card {
   display: flex;
   flex-direction: column;
@@ -314,12 +354,90 @@
   color: var(--color-ash);
 }
 
+.quiz__prompt {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ash);
+}
+
+/* -- The question itself -------------------------------------------------------------
+   Three shapes, set by js/quiz.js on the element, because the quiz no longer
+   asks only one kind of question. A single word is a specimen and is shown
+   at specimen size; a sentence is prose and has to be readable as prose; a
+   Mongolian gloss being asked back in Japanese is neither, and putting it at
+   39px in the display face turns a question into a headline.
+
+   One rule per shape, and the shapes are exhaustive — there is no
+   unclassified state, so a question type added later either picks one of
+   these or declares its own rather than silently inheriting a size meant for
+   something else.
+   -------------------------------------------------------------------------------------- */
+.quiz__front {
+  margin: 0;
+  max-width: 100%;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  color: var(--color-ink);
+  overflow-wrap: anywhere;
+}
+
+.quiz__front[data-shape="sentence"] {
+  font-family: var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-loose);
+  max-width: 28ch;
+}
+
+.quiz__front[data-shape="phrase"] {
+  font-family: inherit;
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  max-width: 22ch;
+}
+
+.quiz__front-text {
+  display: block;
+}
+
+/* The gap in a sentence-completion question. A rule the width of a couple of
+   characters rather than a run of underscores: it holds the line's rhythm,
+   it is obviously *waiting* for something, and it takes the interactive
+   colour so the eye lands on it first. */
+.quiz__blank {
+  display: inline-block;
+  width: 3.5ch;
+  margin-inline: 0.15em;
+  border-block-end: 2px solid var(--color-indigo);
+  vertical-align: baseline;
+}
+
+/* The word being asked about, inside its own sentence. <mark> is the right
+   element and the wrong default colours — a yellow highlighter in a paper
+   palette — so it takes the app's own accent as an underline instead of a
+   fill, which also survives being read in dark mode. */
+.quiz__target {
+  background-color: transparent;
+  color: var(--color-bengara);
+  text-decoration: underline;
+  text-decoration-color: color-mix(in srgb, var(--color-bengara) 45%, transparent);
+  text-underline-offset: 0.25em;
+  text-decoration-thickness: 2px;
+}
+
+.quiz__hint {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
 /* -- The back --------------------------------------------------------------------------
-   The meaning, at the size the question was, because on this face it *is* the
-   content. The example under it is the same recessed block Choose shows in its
-   feedback — the answer arrives with its evidence rather than as a bare gloss.
+   Always the item, never merely the answer to whatever was asked: the
+   Japanese, its reading, its meaning. A reader who has just missed a reading
+   question needs the word, not a corrected string.
    ---------------------------------------------------------------------------------------- */
-/* The question, restated. Quiet and small — it is context for the answer
+/* The Japanese, restated. Quiet and small — it is context for the meaning
    below it, not a second headline — but at --text-md it is still large enough
    to read the kanji, which is the whole reason it is here. */
 .quiz__answer-jp {
@@ -347,34 +465,22 @@
 }
 
 .quiz__answer-detail:not(:empty) {
+  width: 100%;
   margin-block-start: var(--space-md);
 }
 
-.quiz__prompt {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-ash);
-}
-
-.quiz__front {
-  margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-2xl);
-  line-height: var(--leading-tight);
-  color: var(--color-ink);
-}
-
-.quiz__hint {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
 /* -- Answers -----------------------------------------------------------------------------
-   Two columns on anything wider than a phone, one below it. Each option is
-   a full row rather than a chip: meanings run long, and a wrapped chip is
-   harder to scan than a wrapped line.
+   Answer cards, not chips. Each is a surface with a key, a comfortable click
+   target and its own resting/hover/focus/answered states — this is the
+   control the reader hits more often than anything else in the app, and it
+   is the one place where making the target obvious is worth more than making
+   it quiet.
+
+   Two columns everywhere but a phone, where the small-screen block at the
+   foot of this file drops them to one. Two columns is the arrangement the eye
+   can take in as a set of four rather than read as a list, which is what a
+   multiple-choice question wants; one column is what a 390px screen has room
+   for without truncating a meaning.
    ------------------------------------------------------------------------------------------ */
 .quiz__options {
   display: grid;
@@ -397,14 +503,16 @@
   transition:
     border-color var(--transition-fast),
     background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     color var(--transition-fast),
+    opacity var(--transition-fast),
     transform var(--transition-fast);
 }
 
 /* The row tints as well as outlining. Four options that only change their
-   1px edge on hover give the pointer almost nothing to land on, and this is
-   the control the reader hits most often in the entire app — the tint is what
-   makes the target feel like a target without adding a single moving part.
+   1px edge on hover give the pointer almost nothing to land on — the tint is
+   what makes the target feel like a target without adding a single moving
+   part.
 
    Behind (hover: hover), and this one is not a nicety. On a touch screen
    :hover latches onto whatever was tapped last and never lets go — and these
@@ -416,6 +524,7 @@
   .quiz__option:hover:not(:disabled) {
     background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
     border-color: var(--color-indigo);
+    box-shadow: var(--shadow-sm);
   }
 
   .quiz__option:hover:not(:disabled) .quiz__option-key {
@@ -460,8 +569,8 @@
   font-size: var(--text-xs);
   color: var(--color-ash);
   /* Declared on the base so the box eases back out of hover as smoothly as it
-     eases in, and so the answered states above (moss / error) fade into place
-     rather than snapping the instant a choice is graded. */
+     eases in, and so the answered states below fade into place rather than
+     snapping the instant a choice is graded. */
   transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
@@ -469,17 +578,51 @@
   min-width: 0;
 }
 
-/* Answered state. Both the chosen wrong option and the right one are
-   marked — a wrong guess should end with the reader having seen which one
-   it should have been, not just that theirs wasn't it. */
+/* Japanese answers — a word, a reading, a pattern — are content, not UI copy,
+   and they are unreadable at UI size. The kana in a reading question is the
+   whole question. */
+.quiz__option-text--jp {
+  font-family: var(--font-jp-stack);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+
+/* -- Answered ------------------------------------------------------------------------------
+   Both the chosen wrong option and the right one are marked — a wrong guess
+   should end with the reader having seen which one it should have been, not
+   just that theirs wasn't it.
+
+   Each state carries a glyph as well as a colour. The colour is the fast
+   read; the glyph is the one that still works in a palette a reader cannot
+   distinguish, and it costs a pseudo-element.
+   ------------------------------------------------------------------------------------------ */
 .quiz__option:disabled {
   cursor: default;
   opacity: 1;
 }
 
+.quiz__option.is-answer,
+.quiz__option.is-wrong {
+  /* Pushes the mark to the far edge without needing a spacer element. */
+  justify-content: flex-start;
+}
+
+.quiz__option.is-answer::after,
+.quiz__option.is-wrong::after {
+  margin-inline-start: auto;
+  padding-inline-start: var(--space-2xs);
+  font-size: var(--text-sm);
+  line-height: 1;
+}
+
 .quiz__option.is-answer {
   border-color: var(--color-moss);
   background-color: color-mix(in srgb, var(--color-moss) 14%, var(--color-washi-raised));
+}
+
+.quiz__option.is-answer::after {
+  content: '✓';
+  color: var(--color-moss);
 }
 
 .quiz__option.is-answer .quiz__option-key {
@@ -490,6 +633,11 @@
 .quiz__option.is-wrong {
   border-color: var(--color-error);
   background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-washi-raised));
+}
+
+.quiz__option.is-wrong::after {
+  content: '✕';
+  color: var(--color-error);
 }
 
 .quiz__option.is-wrong .quiz__option-key {
@@ -552,7 +700,20 @@
   min-width: 0;
 }
 
-/* -- Feedback ------------------------------------------------------------------------------ */
+/* -- Feedback ------------------------------------------------------------------------------
+   Feedback that teaches rather than only judges: the verdict, then the right
+   answer in words when it was missed, then what the item actually is — its
+   readings, its class or structure, and a sentence it lives in.
+
+   The slot is held open at a fixed minimum on anything wider than a phone.
+   Without it, answering a question grows the page by a block and a half and
+   every option jumps upward under the pointer at the exact moment the reader
+   is looking at them.
+   ------------------------------------------------------------------------------------------ */
+.quiz__feedback-slot {
+  min-height: var(--quiz-feedback-reserve);
+}
+
 .quiz__feedback {
   display: flex;
   flex-direction: column;
@@ -562,16 +723,118 @@
 }
 
 .quiz__verdict {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2xs);
   margin: 0;
   font-weight: var(--weight-medium);
 }
 
-.quiz__verdict.is-correct {
+/* The glyph, so the verdict is never carried by colour alone. */
+.quiz__verdict-mark {
+  font-size: var(--text-base);
+  line-height: 1;
+}
+
+.quiz__verdict.is-correct .quiz__verdict-mark,
+.quiz__verdict.is-correct .quiz__verdict-text {
   color: var(--color-moss);
 }
 
-.quiz__verdict.is-incorrect {
+.quiz__verdict.is-incorrect .quiz__verdict-mark,
+.quiz__verdict.is-incorrect .quiz__verdict-text {
   color: var(--color-error);
+}
+
+/* The schedule, which is the one thing neither the card nor the options can
+   say. Quiet: it is evidence, not a verdict. */
+.quiz__verdict-timing {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-regular);
+  color: var(--color-ash);
+}
+
+.quiz__verdict-timing::before {
+  content: '·';
+  margin-inline-end: var(--space-2xs);
+  color: var(--color-stone);
+}
+
+/* What it should have been, named. The green option says it too, but only to
+   a reader who can see green and is still looking at the options. */
+.quiz__answer-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: var(--space-2xs);
+  margin: 0;
+  max-width: none;
+}
+
+.quiz__answer-line-label {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-ash);
+}
+
+.quiz__answer-line-value {
+  font-weight: var(--weight-medium);
+  color: var(--color-ink);
+}
+
+.quiz__answer-line-value:lang(ja) {
+  font-family: var(--font-jp-stack);
+  font-size: var(--text-md);
+}
+
+/* -- The item, in its parts ---------------------------------------------------------------
+   Shared by the back of a flipped card and the checked-answer panel, so the
+   round teaches the same thing whichever mode it was studied in. Only rows
+   with something in them are built (see factsList in js/quiz.js), so this
+   never renders an empty label or a dash standing in for missing data.
+   ------------------------------------------------------------------------------------------ */
+.quiz__detail-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  width: 100%;
+  text-align: start;
+}
+
+.quiz__facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3xs) var(--space-md);
+  margin: 0;
+}
+
+.quiz__fact {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2xs);
+  min-width: 0;
+}
+
+.quiz__fact dt {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--color-ash);
+}
+
+.quiz__fact dd {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.quiz__fact dd:lang(ja) {
+  font-family: var(--font-jp-stack);
 }
 
 .quiz__example {
@@ -581,7 +844,9 @@
   padding: var(--space-sm) var(--space-md);
   background-color: var(--color-washi-raised);
   border: var(--border-width) solid var(--color-stone);
+  border-inline-start: 2px solid var(--color-stone);
   border-radius: var(--radius-md);
+  text-align: start;
 }
 
 .quiz__example p {
@@ -671,9 +936,11 @@
 }
 
 /* -- Summary --------------------------------------------------------------------------------
-   The score, then what to do about it. "Practise the N you missed" is the
-   button that matters: a round that ends by naming exactly what to fix is
-   worth more than one that ends with a percentage.
+   How it went, then what to do about it. The three figures are the honest
+   ones — a percentage, what was right, and what is coming back — and
+   "Practise the N you missed" is the button that matters: a round that ends
+   by naming exactly what to fix is worth more than one that ends with a
+   percentage.
    ---------------------------------------------------------------------------------------------- */
 /* The one screen in a round that is worth an arrival. Everything else here is
    deliberately abrupt because it repeats every few seconds; the summary
@@ -703,6 +970,37 @@
 
 .quiz__summary-score.is-perfect {
   color: var(--color-moss);
+}
+
+.quiz__summary-stats {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin: 0;
+  padding-block-start: var(--space-2xs);
+  border-block-start: var(--border-width) solid var(--color-stone);
+}
+
+.quiz__stat {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: var(--space-3xs);
+}
+
+.quiz__stat-value {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-md);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+  line-height: 1;
+}
+
+.quiz__stat-label {
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
 }
 
 .quiz__summary-text {
@@ -794,6 +1092,89 @@
   margin: 0;
 }
 
+/* -- Tablet and up ---------------------------------------------------------------------------
+   The same composition with more room in it: a wider measure, a taller
+   question, answer cards a pointer can hit without aiming, and the feedback
+   area held open from the first question so nothing moves when an answer
+   lands.
+   ---------------------------------------------------------------------------------------------- */
+@media (min-width: 768px) {
+  .quiz {
+    --quiz-measure: 44rem;
+    /* Roughly a verdict line, an answer line and an example block. The area
+       stops the options moving when a question is answered; it is a minimum,
+       so a longer example simply grows past it. */
+    --quiz-feedback-reserve: 9rem;
+    gap: var(--space-lg);
+  }
+
+  .quiz__round {
+    gap: var(--space-lg);
+  }
+
+  .quiz__card {
+    min-height: 13rem;
+  }
+
+  .quiz__option {
+    min-height: 3.75rem;
+    padding: var(--space-sm);
+    font-size: var(--text-base);
+    gap: var(--space-sm);
+  }
+}
+
+/* -- Desktop ---------------------------------------------------------------------------------
+   Not a wider version of the phone card. The proportions change: the
+   question takes a third of the composition rather than a sliver of it, the
+   four answers sit as a square block beneath it at a size a pointer can hit
+   without aiming, and the feedback area is held open from the start so
+   nothing on the screen moves when an answer lands.
+
+   The measure stops at 52rem. Past that the answers become long lines the eye
+   has to track across rather than four objects it can compare, which is the
+   opposite of what the extra width was for.
+   ---------------------------------------------------------------------------------------------- */
+@media (min-width: 1024px) {
+  .quiz {
+    --quiz-measure: 52rem;
+    --quiz-feedback-reserve: 10rem;
+  }
+
+  .quiz__head {
+    padding-block-end: var(--space-2xs);
+  }
+
+  .quiz__count {
+    font-size: var(--text-base);
+  }
+
+  .quiz__card {
+    min-height: 15rem;
+    padding: var(--space-xl) var(--space-lg);
+  }
+
+  .quiz__front[data-shape="sentence"] {
+    font-size: var(--text-lg);
+    max-width: 30ch;
+  }
+
+  .quiz__option {
+    min-height: 4.25rem;
+    padding-inline: var(--space-md);
+  }
+
+  .quiz__option-key {
+    width: 1.75rem;
+    height: 1.75rem;
+    font-size: var(--text-sm);
+  }
+
+  .quiz__summary-stats {
+    gap: var(--space-xl);
+  }
+}
+
 /* -- Small screens ------------------------------------------------------------------------- */
 @media (max-width: 480px) {
   .quiz__options {
@@ -821,6 +1202,10 @@
     max-width: none;
     padding-inline: var(--space-2xs);
     font-size: var(--text-sm);
+  }
+
+  .quiz__summary-stats {
+    gap: var(--space-md);
   }
 
   .quiz__missed-item {

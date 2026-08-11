@@ -54,6 +54,19 @@ const DECK_LABELS = {
   mistakes: 'Tricky ones',
 };
 
+/* Roughly how long a round takes, at a shade over ten seconds a card — the
+   pace of reading a question, picking one of four and glancing at the
+   answer. Rounded up to the nearest minute and never zero, because "~0 мин"
+   is not an estimate.
+
+   It is here rather than inside the quiz because this is where the reader
+   decides whether to start: what a round costs belongs beside the button
+   that begins one, not on the first question of it. */
+function describeRound(count) {
+  const minutes = Math.max(1, Math.round((count * 11) / 60));
+  return `${count} асуулт · ~${minutes} мин`;
+}
+
 /* -- View ------------------------------------------------------------------------------------
    Two screens in one region: the intro (pick a deck, pick a mode, start)
    and the quiz. The quiz hides everything else while it runs — see the
@@ -194,13 +207,16 @@ function initController(elements, decks) {
 
     if (state.deck === 'mistakes') {
       elements.status.textContent =
-        `Бүх багцаас таны байнга буруу хариулж байсан ${formatCount(items.length)} зүйл. Нэг давталтад хамгийн ихдээ ${size} зүйл багтана.`;
+        `Бүх багцаас таны байнга буруу хариулж байсан ${formatCount(items.length)} зүйл. `
+        + `Энэ давталтад ${describeRound(Math.min(size, items.length))}.`;
       return;
     }
 
     if (due === 0 && fresh === 0) {
       elements.status.textContent =
-        'Давтах зүйл алга — энд байгаа бүхний хугацаа хараахан болоогүй байна. Одоо давтвал хамгийн ойрд эргэж ирэх зүйлсийг үзнэ.';
+        'Давтах зүйл алга — энд байгаа бүхний хугацаа хараахан болоогүй байна. '
+        + 'Одоо давтвал хамгийн ойрд эргэж ирэх зүйлсийг үзнэ. '
+        + `Энэ давталтад ${describeRound(Math.min(size, items.length))}.`;
       return;
     }
 
@@ -212,7 +228,8 @@ function initController(elements, decks) {
     if (due > 0) parts.push(`${formatCount(due)} зүйл давтах цаг болсон`);
     if (fresh > 0) parts.push(`${formatCount(fresh)} зүйл хараахан эхлээгүй`);
     elements.status.textContent =
-      `${parts.join(' · ')}. Нэг давталтад хамгийн ихдээ ${size} зүйл багтах ба цаг нь болсныг эхэлж үзнэ.`;
+      `${parts.join(' · ')}. Энэ давталтад ${describeRound(Math.min(size, due + fresh))}, `
+      + 'цаг нь болсныг эхэлж үзнэ.';
   }
 
   function selectDeck(key) {
