@@ -9,7 +9,12 @@
    the reader never opens never fetches its data or builds its DOM.
    ========================================================================== */
 
-const DEFAULT_VIEW = 'dashboard';
+/* Where an empty or unrecognised hash lands. This used to be the Dashboard,
+   which meant opening the app dropped the reader into an admin panel — four
+   summary cards and a grid of figures — before any Japanese was on screen.
+   Home is the room; #dashboard is still a valid route and still renders, it
+   is simply not the door any more. */
+const DEFAULT_VIEW = 'home';
 const APP_NAME = 'Bigu';
 
 /* viewId -> initializer, and the set already run. A Map plus a Set rather

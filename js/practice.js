@@ -35,6 +35,72 @@ const DECK_SETTING_KEY = 'practiceMode';
 const QUIZ_MODE_SETTING_KEY = 'quizMode';
 const HISTORY_LIMIT = 5;
 
+/* -- The review pool ---------------------------------------------------------------
+   The four content decks and the flattened everything-pool built out of
+   them. This was inline in initPractice and is lifted out because two other
+   places need exactly the same answer and neither should be re-deriving it:
+   app.js publishes the bridge's due count over `everything` at boot, and
+   home.js asks whether anything is waiting and pulls its one line of
+   Japanese out of the same three sources.
+
+   The promise is memoized rather than the value, same reasoning as
+   content.js's own loaders: the three callers start within a frame of each
+   other, so caching the resolved arrays would only close the window after
+   the first build had finished. One build, whoever asks first. A failure
+   drops the cache so a later caller really does retry.
+   ---------------------------------------------------------------------------------- */
+
+let pendingPool = null;
+
+function loadReviewPool() {
+  if (!pendingPool) {
+    pendingPool = (async () => {
+      const [vocabData, grammarData, kanjiData, lessonData] = await Promise.all([
+        loadVocabulary(),
+        loadGrammar(),
+        loadKanji(),
+        loadLessons(),
+      ]);
+
+      const lessonWords = lessonData.flatMap((lesson) => lesson.words);
+      const vocabulary = vocabData.words;
+      const grammar = grammarData.points;
+      const kanji = kanjiData.kanji;
+
+      return {
+        lessonWords,
+        vocabulary,
+        grammar,
+        kanji,
+        // Only what the quiz can actually ask about: an id whose prefix no
+        // adapter claims would reach buildQuestion with no adapter behind it.
+        everything: [...lessonWords, ...vocabulary, ...grammar, ...kanji]
+          .filter((item) => deckKeyForItemId(item.id) !== null),
+      };
+    })();
+
+    pendingPool.catch(() => { pendingPool = null; });
+  }
+
+  return pendingPool;
+}
+
+/* Where a finished round points next, per deck. Not a recommendation engine
+   and deliberately not a guess: each deck already knows which reference view
+   its own items came from, so "continue" means the shelf you were just
+   drawing from. The two live pools have no shelf of their own — "Due today"
+   spans the whole catalogue, so it offers the beginner on-ramp, and "Tricky
+   ones" is by definition about what the reader is holding badly, so it
+   offers the screen that is about exactly that. */
+const DECK_NEXT = {
+  lessons: '#lessons',
+  vocabulary: '#vocabulary',
+  grammar: '#grammar',
+  kanji: '#kanji',
+  due: '#lessons',
+  mistakes: '#memory',
+};
+
 /* "Due today" leads: it's the deck that answers the question the Dashboard
    just asked, and the one a reader should be in on most days. The four
    content decks are the same four ADAPTERS in quiz.js; "Due today" and
@@ -172,6 +238,13 @@ function initController(elements, decks) {
     // Read per round, not once at boot: changing the round length in
     // Settings should apply to the next round, not the next page load.
     onNewRound: () => buildSession(decks[state.deck].items, sessionSize()),
+    /* One way onward from a finished round, so a session ends somewhere
+       instead of stopping dead on a score. Read at finish time rather than
+       fixed at construction, because the deck can change between rounds. */
+    onNextStep: () => {
+      const href = DECK_NEXT[state.deck];
+      return href ? { go: () => { location.hash = href; } } : null;
+    },
     onExit: showIntro,
   });
 
@@ -340,22 +413,14 @@ async function initPractice() {
   const elements = buildView(getViewContainer(view, 'practice-content'));
 
   try {
-    const [vocabData, grammarData, kanjiData, lessonData] = await Promise.all([
-      loadVocabulary(),
-      loadGrammar(),
-      loadKanji(),
-      loadLessons(),
-    ]);
-
-    const lessonWords = lessonData.flatMap((lesson) => lesson.words);
-    const everything = [...lessonWords, ...vocabData.words, ...grammarData.points, ...kanjiData.kanji]
-      .filter((item) => deckKeyForItemId(item.id) !== null);
+    const pool = await loadReviewPool();
+    const everything = pool.everything;
 
     const decks = {
-      lessons: { items: lessonWords },
-      vocabulary: { items: vocabData.words },
-      grammar: { items: grammarData.points },
-      kanji: { items: kanjiData.kanji },
+      lessons: { items: pool.lessonWords },
+      vocabulary: { items: pool.vocabulary },
+      grammar: { items: pool.grammar },
+      kanji: { items: pool.kanji },
     };
 
     // "Due today" is the whole pool, not a filtered one: buildSession() does
@@ -394,4 +459,4 @@ async function initPractice() {
   }
 }
 
-export { initPractice, DECK_LABELS };
+export { initPractice, loadReviewPool, DECK_LABELS };

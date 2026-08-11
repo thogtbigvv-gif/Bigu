@@ -262,8 +262,13 @@ function createArticlePanel(passage, state, onChange) {
   mark.lang = 'ja';
   mark.textContent = '読了';
 
+  /* The same completion prefix the quiz summary uses. Finishing a passage
+     and finishing a round are the same event as far as the reader is
+     concerned — something ended — and until now each screen said so in its
+     own words. The sentence after it stays specific to a passage; only the
+     mark is shared. */
   const doneText = document.createElement('span');
-  doneText.textContent = 'Энэ бичвэрийг бүтэн үзэж дууслаа.';
+  doneText.textContent = 'Дууссан ✓ · энэ бичвэрийг бүтэн үзлээ.';
 
   done.append(mark, doneText);
 
@@ -601,10 +606,24 @@ function createStageController(elements, rows, onExit) {
        Next becomes the filled button and stays filled; nothing else on the
        page moves. If there is no next passage there is nothing to promote —
        the completed line in the article is the whole ending, and the reader
-       leaves the way they came. */
+       leaves the way they came.
+
+       It changes its wording with its weight, to the app's own word for
+       this: a promoted Next is no longer one of two pager arrows, it is the
+       way onward from a finished session, and that is called
+       "Үргэлжлүүлэх →" wherever a session ends here. Unpromoted it goes
+       back to being a pager arrow and reads like one — the pager is still
+       an ordinary way to move around a list you have not read.
+
+       Passages have no word list in the data and the per-passage Vocabulary
+       stage is still a stub, so there is nothing honest to point at beyond
+       the next passage. When that stage ships, this is where "review the
+       words from this passage" belongs. */
     const hasNext = Boolean(rows[index + 1]);
-    elements.next.classList.toggle('button--primary', complete && hasNext);
-    elements.next.classList.toggle('button--secondary', !(complete && hasNext));
+    const promote = complete && hasNext;
+    elements.next.classList.toggle('button--primary', promote);
+    elements.next.classList.toggle('button--secondary', !promote);
+    elements.next.textContent = promote ? 'Үргэлжлүүлэх →' : 'Next →';
   }
 
   /* Moving to another passage sets progress back to zero, and a plain write
@@ -818,7 +837,9 @@ async function initReading() {
   });
 }
 
-/* Unlike the other four content loaders, this one has no second caller:
-   passages aren't part of the review pool, so neither the Dashboard nor
-   Review nor Memory reads them. */
-export { initReading };
+/* Passages aren't part of the review pool, so nothing that grades or
+   schedules reads them. The one other caller is js/home.js, which pulls its
+   single line of Japanese from four sources and this is the fourth: a
+   sentence out of a passage is the only one of them that is a fragment of
+   something longer, which is exactly what makes it worth having there. */
+export { initReading, loadReading };

@@ -11,19 +11,22 @@
    collapsed. That was survivable at today's data size and would not have
    stayed that way; the word list alone is several times the lesson count
    and is the part of the catalogue that grows fastest.
-   Now the Dashboard renders at boot (it's the default view) and everything
-   else builds the first time the reader actually goes there.
+   Now Home renders at boot (it's the default view) and everything else
+   builds the first time the reader actually goes there.
    ========================================================================== */
 
 import { isAvailable as isStorageAvailable } from './storage.js';
 import { initTheme, bindToggleButton } from './theme.js';
 import { initRouter, registerView } from './router.js';
 import { initNav } from './navigation.js';
+import { publishDue } from './bridge.js';
+import { countDue } from './review.js';
+import { initHome } from './home.js';
 import { initDashboard } from './dashboard.js';
 import { initVocabulary } from './vocabulary.js';
 import { initGrammar } from './grammar.js';
 import { initKanji } from './kanji.js';
-import { initPractice } from './practice.js';
+import { initPractice, loadReviewPool } from './practice.js';
 import { initMemory } from './memory.js';
 import { initJournal } from './journal.js';
 import { initLessons } from './lessons.js';
@@ -41,6 +44,33 @@ function checkStorage() {
   }
 }
 
+/* -- The bridge's due snapshot ------------------------------------------------
+   One write to the `bigu:bridge` key saying how many items are due today,
+   for the separate summer-project surface served from the same origin. It
+   is the only thing this file publishes; the per-session records are
+   written by practice.js and lessons.js as each round ends, and neither is
+   touched here.
+
+   This used to live inside dashboard.js's renderGrid(), which was correct
+   only for as long as the Dashboard was the view every visit started on.
+   It isn't any more — it has no nav row and is off the entry path — so
+   left there the due figure would have been written on a screen most
+   sessions never open, and the reader on the other side would have been
+   looking at a count from whenever they last happened to visit it.
+
+   Fire and forget, deliberately. It waits on the four content files, so
+   awaiting it in init() would hold the router — and therefore the first
+   paint of Home — behind four fetches that nothing on screen needs. It
+   cannot throw into the boot path: publishDue() swallows its own storage
+   errors, and a failed fetch is logged and dropped here, because a browser
+   that cannot reach data/ still has an app to render.
+   ---------------------------------------------------------------------------- */
+function publishDueSnapshot() {
+  loadReviewPool()
+    .then((pool) => publishDue(countDue(pool.everything).due))
+    .catch((error) => console.error('[Bigu]', error));
+}
+
 /* -- Footer --------------------------------------------------------------------- */
 function initFooterYear() {
   const yearEl = document.getElementById('year');
@@ -56,6 +86,7 @@ function initFooterYear() {
    listen for hashchange themselves.
    ------------------------------------------------------------------------------------ */
 const VIEW_INITIALIZERS = {
+  home: initHome,
   dashboard: initDashboard,
   vocabulary: initVocabulary,
   grammar: initGrammar,
@@ -85,6 +116,11 @@ function init() {
 
   initRouter();
   initNav();
+
+  // After the router, so the first view is already rendering while the four
+  // content files this needs are still in flight. Nothing on screen depends
+  // on it.
+  publishDueSnapshot();
 
   // The header logo's own animation. Scoped entirely to the mark — it never
   // blocks the app, so where it sits in this order does not matter.

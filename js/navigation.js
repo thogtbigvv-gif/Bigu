@@ -1,12 +1,12 @@
 /* ==========================================================================
    navigation.js
    Binds behavior to the static primary nav markup in index.html:
-     - the "Study" submenu's expand/collapse
+     - each nav group's submenu expand/collapse
      - the mobile off-canvas drawer's open/close
    Active-link highlighting (aria-current) is handled entirely by
    router.js on every hashchange, same as before — this module only
-   reads that state back to keep the Study submenu open whenever one
-   of its own children is the active view.
+   reads that state back to keep a submenu open whenever one of its
+   own children is the active view.
    ========================================================================== */
 
 /* Mirrors the 1024px line in navigation.css and the breakpoint block in
@@ -14,25 +14,47 @@
    is written in both places and the three have to move together. */
 const MOBILE_QUERY = '(max-width: 1024px)';
 
-function initStudyToggle(nav) {
-  const toggleBtn = nav.querySelector('#site-nav-study-toggle');
-  const parentItem = nav.querySelector('#site-nav-study');
-  if (!toggleBtn || !parentItem) return;
+/* Every group in the sidebar, found by class rather than by id.
 
-  toggleBtn.addEventListener('click', () => {
-    const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
-    toggleBtn.setAttribute('aria-expanded', String(!expanded));
-    parentItem.classList.toggle('is-open', !expanded);
-  });
+   This was written against one hardcoded pair of ids (#site-nav-study,
+   #site-nav-study-toggle) back when "Study" was the only disclosure in the
+   nav. The nav now groups its rows — Learn over the five ways of meeting
+   Japanese, Practice over Review and Memory — and the alternative to this
+   loop was a second copy of the same twenty lines for the second group,
+   which is exactly how two navigations that drift apart get started.
+
+   Nothing about the behavior of a single group changes: same classes, same
+   aria-expanded contract, same is-open/has-active-child pair that
+   navigation.css keys off. There is simply no longer a name in here that
+   only one group can have. */
+function initGroupToggles(nav) {
+  const groups = [];
+
+  for (const parentItem of nav.querySelectorAll('.site-nav__item--parent')) {
+    const toggleBtn = parentItem.querySelector('.site-nav__toggle');
+    if (!toggleBtn) continue;
+
+    toggleBtn.addEventListener('click', () => {
+      const expanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+      toggleBtn.setAttribute('aria-expanded', String(!expanded));
+      parentItem.classList.toggle('is-open', !expanded);
+    });
+
+    groups.push({ parentItem, toggleBtn });
+  }
 
   // Router sets aria-current="page" on whichever link matches the active
-  // route; if that link lives inside this submenu, keep the submenu open.
+  // route; if that link lives inside a submenu, keep that submenu open.
+  // Only opening, never closing: a reader who expanded Learn to look at
+  // something and then went to Journal should find Learn as they left it.
   function syncWithActiveRoute() {
-    const hasActiveChild = !!parentItem.querySelector('.site-nav__sublink[aria-current="page"]');
-    parentItem.classList.toggle('has-active-child', hasActiveChild);
-    if (hasActiveChild) {
-      parentItem.classList.add('is-open');
-      toggleBtn.setAttribute('aria-expanded', 'true');
+    for (const { parentItem, toggleBtn } of groups) {
+      const hasActiveChild = !!parentItem.querySelector('.site-nav__sublink[aria-current="page"]');
+      parentItem.classList.toggle('has-active-child', hasActiveChild);
+      if (hasActiveChild) {
+        parentItem.classList.add('is-open');
+        toggleBtn.setAttribute('aria-expanded', 'true');
+      }
     }
   }
 
@@ -225,7 +247,7 @@ function initMobileDrawer(nav) {
 function initNav() {
   const nav = document.getElementById('site-nav');
   if (!nav) return;
-  initStudyToggle(nav);
+  initGroupToggles(nav);
   initMobileDrawer(nav);
 }
 

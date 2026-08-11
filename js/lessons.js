@@ -313,9 +313,26 @@ function renderLessons(container, lessons) {
 
   intro.append(count, modePicker.wrap);
 
-  // The lesson the current round came from, so "New round" reshuffles the
-  // same one rather than falling back to the quiz's generic reshuffle.
+  // The lesson the current round came from, so "Дахин давтах" reshuffles the
+  // same one rather than falling back to the quiz's generic reshuffle, and
+  // so the ending knows which lesson comes after this one.
   let activeLesson = null;
+
+  /* Starting a round, in one place. It was inline in the group callback and
+     is lifted out because the ending needs it too: finishing lesson seven
+     offers lesson eight, and "offers" has to mean the same thing as pressing
+     lesson eight's own Quiz button — same panel, same mode, same pool —
+     rather than a second slightly different path into a round. */
+  function runLesson(lesson) {
+    activeLesson = lesson;
+    intro.hidden = true;
+    list.hidden = true;
+    quiz.run(shuffled(lesson.words), {
+      mode: modePicker.mode,
+      pool: lesson.words,
+      title: `${lesson.lesson}. ${lesson.title}`,
+    });
+  }
 
   const quiz = createQuiz({
     isActive: () => location.hash.slice(1) === VIEW_ID,
@@ -343,6 +360,15 @@ function renderLessons(container, lessons) {
       }
     },
     onNewRound: () => (activeLesson ? shuffled(activeLesson.words) : null),
+    /* The one place in the app where "what comes next" is a fact rather
+       than a suggestion: lessons are an ordered sequence, so the lesson
+       after this one is real linkage and not a recommendation. The last
+       lesson has nothing after it and says so by offering nothing. */
+    onNextStep() {
+      const at = lessons.indexOf(activeLesson);
+      const next = at === -1 ? null : lessons[at + 1];
+      return next ? { go: () => runLesson(next) } : null;
+    },
     onExit() {
       activeLesson = null;
       intro.hidden = false;
@@ -351,18 +377,7 @@ function renderLessons(container, lessons) {
   });
 
   groups.push(
-    ...lessons.map((lesson, index) =>
-      createLessonGroup(lesson, index, (chosenLesson) => {
-        activeLesson = chosenLesson;
-        intro.hidden = true;
-        list.hidden = true;
-        quiz.run(shuffled(chosenLesson.words), {
-          mode: modePicker.mode,
-          pool: chosenLesson.words,
-          title: `${chosenLesson.lesson}. ${chosenLesson.title}`,
-        });
-      }),
-    ),
+    ...lessons.map((lesson, index) => createLessonGroup(lesson, index, runLesson)),
   );
 
   list.append(...groups.map((group) => group.element));
