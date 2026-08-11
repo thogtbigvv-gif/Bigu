@@ -22,7 +22,7 @@
    browser does not belong in a grid of stat cards.
    ========================================================================== */
 
-import { progress, journal, practice, isAvailable as isStorageAvailable } from './storage.js';
+import { journal, practice, isAvailable as isStorageAvailable } from './storage.js';
 import {
   createStorageNotice,
   formatCount,
@@ -30,6 +30,7 @@ import {
   loadIntoView,
   OFFLINE_HINT,
 } from './content.js';
+import { publishDue } from './bridge.js';
 import { dailyGoal } from './preferences.js';
 import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from './review.js';
 import { loadVocabulary } from './vocabulary.js';
@@ -74,6 +75,14 @@ function formatSessionDate(timestamp) {
    memory. All three are already timestamped in storage, so this needs no
    new data — only for the streak to look at all of it. The set of kinds per
    day is kept, not just the fact of one, so the card can say which.
+
+   The two dates on a record answer two different questions and were being
+   read as if they answered one. `lastSeen` moves on every single grade, so
+   reading it as "met a new word" put шинэ үг on a day the reader spent
+   entirely on revision — and, because it only ever holds the *latest* touch,
+   the day a word was actually first met vanished from the streak as soon as
+   that word came round again. `firstSeen` never moves, so it is the one that
+   means "new", and it recovers those days.
    ------------------------------------------------------------------------------------------ */
 
 function collectStudyDays({ entries, sessions, records }) {
@@ -88,7 +97,9 @@ function collectStudyDays({ entries, sessions, records }) {
   for (const entry of entries) mark(entry.date, 'тэмдэглэл');
   for (const session of sessions) mark(toDateKey(new Date(session.createdAt)), 'давталт');
   for (const record of records) {
-    if (record && record.lastSeen) mark(toDateKey(new Date(record.lastSeen)), 'шинэ үг');
+    if (!record) continue;
+    if (record.lastSeen) mark(toDateKey(new Date(record.lastSeen)), 'давталт');
+    if (record.firstSeen) mark(toDateKey(new Date(record.firstSeen)), 'шинэ үг');
   }
 
   return days;
@@ -587,6 +598,15 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
     { due: 0, new: 0, remembered: 0, total: 0 },
   );
 
+  /* The other half of the bridge contract. bridge.js has always documented a
+     `due: { date, count }` field, carried it through every read, and exported
+     a publisher for it — which nothing called, so the field never once
+     appeared in the key and a reader on this origin saw finished sessions and
+     no idea what was waiting. This is the only place in the app that holds
+     the figure across all four decks, and it recomputes it on every return to
+     the view. It cannot throw and nothing below depends on it. */
+  publishDue(totals.due);
+
   const entries = journal.getAll();
   const sessions = practice.getAll();
   const firstVisit = isFirstVisit({ records, entries, sessions });
@@ -603,10 +623,14 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
     return;
   }
 
+  /* The snapshot taken above, not a second raw read of the same store. The
+     raw records are whatever version wrote them — a pre-scheduling record
+     has no firstSeen at all — where the snapshot is normalized, which is
+     what the two dates below are read as. */
   const days = collectStudyDays({
     entries,
     sessions,
-    records: Object.values(progress.getAll()),
+    records: records.values(),
   });
 
   const grid = document.createElement('div');
