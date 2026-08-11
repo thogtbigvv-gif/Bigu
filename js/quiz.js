@@ -81,7 +81,13 @@ const HAS_KANJI = /[一-鿿]/;
      reading   how that identity is read, or '' when there is nothing extra
      meaning   the gloss the reader is learning
      sentence  {jp, reading, mn} worth showing, or null
-     facts     [label, value, lang?] rows for the answer panel
+     facts     [label, value, lang?] rows for the answer panel, for the
+               parts that are *not* already visible on the reveal. A word's
+               reading is its furigana and its class is the hint line under
+               the question, so lessons and vocabulary have none: a labelled
+               row repeating either of them is the difference between an
+               answer and a data sheet. Grammar and kanji do have some —
+               a structure and a pair of readings appear nowhere else.
 
    These replace the near-identical deck adapters that lived in practice.js
    and the separate hand-rolled card in lessons.js.
@@ -129,10 +135,10 @@ function exampleBlock(sentence) {
   return wrap;
 }
 
-/* The item's own parts, labelled — a reading, a part of speech, a structure,
-   a pair of kanji readings. Rows with nothing in them are dropped rather
-   than rendered as an empty definition, which is where "—" placeholders and
-   `undefined` come from. */
+/* The item's own parts, labelled — a grammar structure, a kanji's two
+   readings. Rows with nothing in them are dropped rather than rendered as an
+   empty definition, which is where "—" placeholders and `undefined` come
+   from, and an adapter with nothing to add renders no list at all. */
 function factsList(facts) {
   const rows = facts.filter(([, value]) => Boolean(value));
   if (rows.length === 0) return null;
@@ -169,7 +175,7 @@ const ADAPTERS = {
     japanese: (item) => item.word,
     reading: (item) => (item.reading === item.word ? '' : item.reading),
     sentence: () => null,
-    facts: (item) => [['Уншлага', item.reading === item.word ? '' : item.reading, 'ja']],
+    facts: () => [],
   },
 
   vocabulary: {
@@ -182,10 +188,7 @@ const ADAPTERS = {
     japanese: (item) => item.kanji || item.kana,
     reading: (item) => item.kana,
     sentence: (item) => item.example,
-    facts: (item) => [
-      ['Уншлага', item.kanji ? item.kana : '', 'ja'],
-      ['Үгийн аймаг', item.partOfSpeech],
-    ],
+    facts: () => [],
   },
 
   grammar: {
@@ -249,13 +252,18 @@ function adapterFor(item) {
 
 /* The answer panel: what this item *is*, in the parts the reader is learning.
    Same block on the back of a flipped card and under a checked answer, so
-   the information a round teaches doesn't depend on which mode you picked. */
-function detailBlock(item) {
+   the information a round teaches doesn't depend on which mode you picked.
+
+   `given` is the answer the reader has just been shown, and any row equal to
+   it is dropped. A missed kunyomi question printed "Зөв хариулт ひ、か" and
+   then "Kun ひ、か" directly beneath it — the same four characters, labelled
+   twice, in the two lines the reader is most likely to read. */
+function detailBlock(item, given = null) {
   const adapter = adapterFor(item);
   const wrap = document.createElement('div');
   wrap.className = 'quiz__detail-block';
 
-  const facts = factsList(adapter.facts(item));
+  const facts = factsList(adapter.facts(item).filter(([, value]) => value !== given));
   if (facts) wrap.append(facts);
 
   const example = exampleBlock(adapter.sentence(item));
@@ -824,9 +832,9 @@ function buildPanel() {
 
   verdict.append(verdictMark, verdictText, verdictTiming);
 
-  /* Named in words, not only highlighted in green. An option marked by
-     colour alone is unreadable to a reader who cannot see the colour and
-     invisible to one who has already scrolled past the options. */
+  /* The right answer, named — shown only for questions whose answer is
+     Japanese, since those are the ones the card's own back doesn't already
+     spell out. See showFeedback. Always `ja`: nothing else reaches it. */
   const answerLine = document.createElement('p');
   answerLine.className = 'quiz__answer-line';
   answerLine.hidden = true;
@@ -837,6 +845,7 @@ function buildPanel() {
 
   const answerLineValue = document.createElement('span');
   answerLineValue.className = 'quiz__answer-line-value';
+  answerLineValue.lang = 'ja';
 
   answerLine.append(answerLineLabel, answerLineValue);
 
@@ -861,9 +870,6 @@ function buildPanel() {
   feedbackSlot.setAttribute('role', 'status');
   feedbackSlot.append(feedback);
 
-  const shortcuts = document.createElement('p');
-  shortcuts.className = 'quiz__shortcuts meta';
-
   /* Summary */
   const summary = document.createElement('div');
   summary.className = 'quiz__summary';
@@ -877,29 +883,6 @@ function buildPanel() {
 
   const summaryScore = document.createElement('p');
   summaryScore.className = 'quiz__summary-score';
-
-  /* Three figures, and none of them is a trophy: how much of the round was
-     right, how many that was, and how many are coming back. The last one is
-     the only actionable number on the screen, which is why it is on it. */
-  const summaryStats = document.createElement('dl');
-  summaryStats.className = 'quiz__summary-stats';
-
-  function statCell(label) {
-    const cell = document.createElement('div');
-    cell.className = 'quiz__stat';
-    const value = document.createElement('dd');
-    value.className = 'quiz__stat-value';
-    const term = document.createElement('dt');
-    term.className = 'quiz__stat-label';
-    term.textContent = label;
-    cell.append(value, term);
-    summaryStats.append(cell);
-    return value;
-  }
-
-  const statPercent = statCell('зөв хариулсан');
-  const statCorrect = statCell('зөв');
-  const statMissed = statCell('давтах');
 
   const summaryText = document.createElement('p');
   summaryText.className = 'quiz__summary-text';
@@ -929,11 +912,11 @@ function buildPanel() {
   doneButton.textContent = 'Done';
 
   summaryActions.append(retryMissedButton, againButton, doneButton);
-  summary.append(summaryScore, summaryStats, summaryText, missedHeading, missedList, summaryActions);
+  summary.append(summaryScore, summaryText, missedHeading, missedList, summaryActions);
 
   const round = document.createElement('div');
   round.className = 'quiz__round';
-  round.append(bar, head, scene, options, grade, feedbackSlot, shortcuts);
+  round.append(bar, head, scene, options, grade, feedbackSlot);
 
   panel.append(round, summary);
 
@@ -943,8 +926,8 @@ function buildPanel() {
     cardBack, answerJp, answer, answerDetail,
     options, grade, missButton, knewButton,
     feedbackSlot, feedback, verdict, verdictMark, verdictText, verdictTiming,
-    answerLine, answerLineValue, detail, continueButton, shortcuts,
-    summary, summaryScore, statPercent, statCorrect, statMissed, summaryText,
+    answerLine, answerLineValue, detail, continueButton,
+    summary, summaryScore, summaryText,
     missedHeading, missedList, retryMissedButton, againButton, doneButton,
   };
 }
@@ -1269,12 +1252,10 @@ function createQuiz({
       el.options.replaceChildren();
       el.options.hidden = true;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Space дарж эргүүлнэ · 1 сурч байна · 2 мэдсэн · Esc гарна';
     } else {
       renderOptions(state.question);
       el.options.hidden = false;
       el.grade.hidden = true;
-      el.shortcuts.textContent = `1–${state.question.choices.length} дарж хариулна · Enter үргэлжлүүлнэ · Esc гарна`;
     }
 
     setProgress();
@@ -1319,20 +1300,22 @@ function createQuiz({
     el.verdict.classList.toggle('is-correct', knewIt);
     el.verdict.classList.toggle('is-incorrect', !knewIt);
 
-    /* What it should have been, in words. Only when it was missed: naming the
-       right answer to someone who has just given it is noise, and Choose has
-       already marked the option green. */
+    /* What it should have been, in words — but only when the card behind it
+       isn't already saying so.
+
+       A missed meaning question ends with the right option marked and the
+       card turned to that same meaning in large type; a third copy of it
+       under both is the kind of line that makes feedback read as a
+       documentation page. A missed *reading* question is the case this is
+       for: the answer was だいがく, and the back of the card carries it only
+       as furigana over the word. */
     const question = state.question;
-    const showAnswer = !knewIt && state.mode === 'choose' && question;
+    const showAnswer = !knewIt && state.mode === 'choose' && question?.answerIsJapanese;
     el.answerLine.hidden = !showAnswer;
-    if (showAnswer) {
-      el.answerLineValue.textContent = question.answerText;
-      if (question.answerIsJapanese) el.answerLineValue.lang = 'ja';
-      else el.answerLineValue.removeAttribute('lang');
-    }
+    if (showAnswer) el.answerLineValue.textContent = question.answerText;
 
     // Flip already carries it on the back of the card.
-    const detail = state.mode === 'flip' ? null : detailBlock(currentItem());
+    const detail = state.mode === 'flip' ? null : detailBlock(currentItem(), question?.answerText);
     el.detail.replaceChildren(...(detail ? [detail] : []));
 
     /* A right answer moves on by itself — being made to confirm something
@@ -1470,11 +1453,6 @@ function createQuiz({
     el.summaryScore.textContent = `${state.correct} / ${total}`;
     el.summaryScore.classList.toggle('is-perfect', total > 0 && state.missed.length === 0);
 
-    const pct = total === 0 ? 0 : Math.round((state.correct / total) * 100);
-    el.statPercent.textContent = `${pct}%`;
-    el.statCorrect.textContent = String(state.correct);
-    el.statMissed.textContent = String(state.missed.length);
-
     el.summaryText.textContent = state.missed.length === 0
       ? 'Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
       : 'Доорх зүйлс бусдаасаа эрт эргэж ирнэ.';
@@ -1576,6 +1554,12 @@ function createQuiz({
   /* Keyboard: 1–4 answer in Choose, Space turns the card and 1/2 grade it in
      Flip, Enter continues past a wrong answer, Escape ends the round. Guarded
      by isActive() so the keys never fire while another view is on screen.
+
+     Nothing on screen lists them, and that is deliberate. Every one of these
+     has a visible control saying the same thing — the numbers are printed on
+     the options, the card says it can be turned, Continue and End are
+     buttons — so a permanent legend under every question was a line of text
+     explaining what the reader could already see, forty times a round.
 
      Modified keypresses are left alone. Ctrl+1 and Cmd+1 switch browser tabs,
      and answering the question on the way out is a graded card the reader

@@ -7,15 +7,27 @@
 
    Narrower than the app's main container, like journal.css, so the whole
    view reads as a focused study surface rather than stretching across the
-   full page. The max-width matches .quiz's own, since the quiz renders
-   inside this wrapper and a narrower parent would make the same component
-   a different width here than in the lessons view.
+   full page.
+
+   The measure sits on the two blocks that want it rather than on the wrapper
+   around them, because the quiz renders between them and carries its own —
+   38rem on a phone widening to 52rem on a desktop. Capping their shared
+   parent capped the quiz too, which made the same component two different
+   widths depending on whether the round was started from Review or from a
+   lesson. That is the exact mismatch the cap was originally written to
+   prevent; it only stopped working when the quiz stopped being 38rem
+   everywhere.
    ========================================================================== */
 
 .practice {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+}
+
+.practice__intro,
+.practice__history {
+  width: 100%;
   max-width: 38rem;
 }
 
