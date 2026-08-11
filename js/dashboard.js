@@ -30,7 +30,6 @@ import {
   loadIntoView,
   OFFLINE_HINT,
 } from './content.js';
-import { publishDue } from './bridge.js';
 import { dailyGoal } from './preferences.js';
 import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from './review.js';
 import { loadVocabulary } from './vocabulary.js';
@@ -598,14 +597,14 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
     { due: 0, new: 0, remembered: 0, total: 0 },
   );
 
-  /* The other half of the bridge contract. bridge.js has always documented a
-     `due: { date, count }` field, carried it through every read, and exported
-     a publisher for it — which nothing called, so the field never once
-     appeared in the key and a reader on this origin saw finished sessions and
-     no idea what was waiting. This is the only place in the app that holds
-     the figure across all four decks, and it recomputes it on every return to
-     the view. It cannot throw and nothing below depends on it. */
-  publishDue(totals.due);
+  /* The bridge's due snapshot used to be published from right here, on the
+     grounds that this was the one screen holding the figure across all four
+     decks and the one screen every visit started on. The second half of that
+     stopped being true: this view has no nav row and is off the entry path,
+     so publishing from it meant the summer-project surface went stale the
+     moment a reader stopped opening a screen they have no reason to open.
+     js/app.js publishes it at boot instead — see publishDueSnapshot() there.
+     Nothing else about this view changed. */
 
   const entries = journal.getAll();
   const sessions = practice.getAll();

@@ -897,21 +897,40 @@ function buildPanel() {
   const summaryActions = document.createElement('div');
   summaryActions.className = 'quiz__summary-actions';
 
+  /* The four endings, in the app's own words rather than each surface's.
+     A round finished from the Review deck and a round finished from lesson
+     seven used to end on differently-labelled buttons doing the same thing,
+     which is the small kind of inconsistency that makes two screens feel
+     like two apps. The wording is now one line, everywhere:
+
+       Дууссан ✓ · Үргэлжлүүлэх → · Дахин давтах · Сургалт руу буцах
+
+     The mark rides on the summary sentence (see finish) so it costs no
+     element and no CSS; the other three are these buttons in that order.
+     "Алдсаныг давтах" is the fifth, and only exists when there is something
+     to go back over — it is the same ending said about a subset. */
+  const nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.className = 'button';
+  nextButton.textContent = 'Үргэлжлүүлэх →';
+  nextButton.hidden = true;
+
   const retryMissedButton = document.createElement('button');
   retryMissedButton.type = 'button';
   retryMissedButton.className = 'button button--primary';
+  retryMissedButton.textContent = 'Алдсаныг давтах';
 
   const againButton = document.createElement('button');
   againButton.type = 'button';
   againButton.className = 'button button--secondary';
-  againButton.textContent = 'New round';
+  againButton.textContent = 'Дахин давтах';
 
   const doneButton = document.createElement('button');
   doneButton.type = 'button';
   doneButton.className = 'button button--secondary';
-  doneButton.textContent = 'Done';
+  doneButton.textContent = 'Сургалт руу буцах';
 
-  summaryActions.append(retryMissedButton, againButton, doneButton);
+  summaryActions.append(nextButton, retryMissedButton, againButton, doneButton);
   summary.append(summaryScore, summaryText, missedHeading, missedList, summaryActions);
 
   const round = document.createElement('div');
@@ -928,7 +947,7 @@ function buildPanel() {
     feedbackSlot, feedback, verdict, verdictMark, verdictText, verdictTiming,
     answerLine, answerLineValue, detail, continueButton,
     summary, summaryScore, summaryText,
-    missedHeading, missedList, retryMissedButton, againButton, doneButton,
+    missedHeading, missedList, nextButton, retryMissedButton, againButton, doneButton,
   };
 }
 
@@ -945,6 +964,14 @@ function buildPanel() {
  *                 round contains — Review draws from the schedule, a lesson
  *                 quiz just reshuffles its own words — so the quiz asks
  *                 rather than guessing.
+ * - `onNextStep`  asked once per finished round for the one way onward from
+ *                 here, as `{ go }` or null. Same division of labour as
+ *                 onNewRound: the quiz owns the ending, the caller owns what
+ *                 comes after it, because only the caller knows whether
+ *                 "next" is lesson eight or the vocabulary shelf. Returning
+ *                 null simply leaves the button out — an ending with nothing
+ *                 real to offer says nothing rather than inventing a
+ *                 destination.
  * - `onExit`      fires when the reader leaves the quiz entirely.
  * - `isActive`    guards the keyboard shortcuts, so they never fire while
  *                 another view is on screen.
@@ -953,6 +980,7 @@ function createQuiz({
   onGrade = () => {},
   onFinish = () => {},
   onNewRound = null,
+  onNextStep = () => null,
   onExit = () => {},
   isActive = () => true,
 } = {}) {
@@ -987,6 +1015,12 @@ function createQuiz({
      store for one round. Reset in run(), not here, so a second round through
      the same panel can finish on its own account. */
   let finished = false;
+
+  /* What the summary's "Үргэлжлүүлэх →" does, or null when the caller had
+     nothing real to offer. Held between finish() asking for it and the
+     button being pressed, so the answer can't change under the reader
+     mid-summary. */
+  let nextStep = null;
 
   /* -- Rendering ------------------------------------------------------------------------ */
 
@@ -1453,9 +1487,13 @@ function createQuiz({
     el.summaryScore.textContent = `${state.correct} / ${total}`;
     el.summaryScore.classList.toggle('is-perfect', total > 0 && state.missed.length === 0);
 
+    /* The completion mark, then what happened. One prefix everywhere a
+       session ends in this app — the reading view's finished passage carries
+       the same one — so "done" reads as the same event wherever the reader
+       got there from. */
     el.summaryText.textContent = state.missed.length === 0
-      ? 'Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
-      : 'Доорх зүйлс бусдаасаа эрт эргэж ирнэ.';
+      ? 'Дууссан ✓ · Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
+      : 'Дууссан ✓ · Доорх зүйлс бусдаасаа эрт эргэж ирнэ.';
 
     el.missedList.replaceChildren();
     for (const item of state.missed) {
@@ -1479,7 +1517,21 @@ function createQuiz({
     el.missedHeading.hidden = !hasMissed;
     el.missedList.hidden = !hasMissed;
     el.retryMissedButton.hidden = !hasMissed;
-    el.retryMissedButton.textContent = `Practise the ${state.missed.length} you missed`;
+
+    /* Where onward goes, asked now rather than held from construction: the
+       Review deck can change between rounds, and a lesson quiz's "next" is
+       whichever lesson the round that just ended came from.
+
+       Which of the two forward actions is the filled one depends on what
+       happened. With misses on the board, going back over them is the
+       better next minute and takes the primary; with a clean round there is
+       nothing to go back to and continuing is the only forward move. Only
+       ever one primary button — two filled slabs side by side is the app
+       having no opinion, loudly. */
+    nextStep = onNextStep();
+    el.nextButton.hidden = !nextStep;
+    el.nextButton.classList.toggle('button--primary', Boolean(nextStep) && !hasMissed);
+    el.nextButton.classList.toggle('button--secondary', Boolean(nextStep) && hasMissed);
 
     el.round.hidden = true;
     el.summary.hidden = false;
@@ -1548,6 +1600,17 @@ function createQuiz({
     pool: state.pool,
     title: state.title,
   }));
+
+  /* The panel is put away first, then the caller's step runs. Some of them
+     navigate (a hash change, which every view listens for) and some of them
+     start another round in this same panel — closing first means the view
+     behind the quiz is back in the state it expects either way, and a step
+     that calls run() simply re-opens the panel on its own. */
+  el.nextButton.addEventListener('click', () => {
+    const step = nextStep;
+    close();
+    step?.go();
+  });
 
   el.doneButton.addEventListener('click', close);
 
@@ -1691,9 +1754,16 @@ function createModePicker(initialMode, onChange) {
   return { wrap, get mode() { return current; } };
 }
 
+/* `furigana` joins the list for js/home.js, which sets one real word from
+   data/ as the first thing on the entry screen and has to draw its reading
+   the way the rest of the app does — ruby over the word, and no ruby at all
+   when the word and its reading are the same string. It was that or a third
+   private copy of the same eight lines (lessons.js has the second), which is
+   how the two that already exist got here. */
 export {
   createQuiz,
   createModePicker,
+  furigana,
   ADAPTERS,
   MODES,
   deckKeyForItemId,

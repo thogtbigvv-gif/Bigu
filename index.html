@@ -83,6 +83,7 @@
   <link rel="stylesheet" href="css/settings.css" />
   <link rel="stylesheet" href="css/memory.css" />
   <link rel="stylesheet" href="css/intro.css" />
+  <link rel="stylesheet" href="css/home.css" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -97,11 +98,13 @@
 
     <!-- Primary nav: a sticky sidebar on desktop, an off-canvas drawer below
          1024px (toggled by #site-nav-mobile-toggle in the header below).
-         "Study" is a disclosure toggle, not a link — it only expands and
-         collapses its own submenu. Behavior lives in js/navigation.js;
-         active-link highlighting (aria-current) is set by js/router.js.
+         "Learn" and "Practice" are disclosure toggles, not links — each only
+         expands and collapses its own submenu. Behavior lives in
+         js/navigation.js, which binds every .site-nav__item--parent it finds
+         rather than one named group; active-link highlighting (aria-current)
+         is set by js/router.js.
 
-         Every row here goes somewhere real. Six of the previous thirteen
+         Every row here goes somewhere real. Six of the original thirteen
          (Listening, Conversation, Shadowing, Search, Profile, Settings-as-
          stub) led to a heading and a "coming soon" line — nearly half the
          navigation was a promise the app didn't keep, and a nav where
@@ -109,31 +112,46 @@
          that work. Those sections still exist further down and are still
          reachable by hash; they get their nav row back when they ship.
 
-         Order follows what the app actually rewards: Lessons first inside
-         Study as the beginner on-ramp, Journal up next to Review because it
-         feeds the same streak, Settings last as the housekeeping drawer. -->
+         The grouping says what the parts are *to each other*. Five ways of
+         meeting Japanese sit under Learn; the two surfaces that ask you to
+         produce it back sit under Practice. Home is first and is the entry
+         route. Journal and Settings stand alone because they belong to
+         neither half.
+
+         Dashboard is deliberately not here. Progress, streaks and stats are
+         the separate summer-project surface's job — it reads Bigu's data
+         through the `bigu:bridge` key — so this app has no Progress
+         destination. The #dashboard section and its module still exist and
+         the hash still resolves; it simply is not on the daily path, and
+         nothing links to it.
+
+         There is no Quiz row for the same reason there is no Listening row:
+         there is no #quiz view to point at. The quiz is a mode of two rows
+         that are already here — the deck picker inside Review, and the per-
+         lesson Quiz button inside Lessons. It gets a row the day it becomes
+         a destination. -->
     <nav class="site-nav" id="site-nav" aria-label="Primary">
       <div class="site-nav__panel" id="site-nav-panel">
         <ul class="site-nav__list">
           <li class="site-nav__item">
-            <a class="site-nav__link" href="#dashboard" data-view="dashboard">Dashboard</a>
+            <a class="site-nav__link" href="#home" data-view="home">Home</a>
           </li>
 
-          <li class="site-nav__item site-nav__item--parent" id="site-nav-study">
+          <li class="site-nav__item site-nav__item--parent" id="site-nav-learn">
             <button
               type="button"
               class="site-nav__link site-nav__toggle"
-              id="site-nav-study-toggle"
+              id="site-nav-learn-toggle"
               aria-expanded="false"
-              aria-controls="site-nav-study-submenu"
+              aria-controls="site-nav-learn-submenu"
             >
-              <span>Study</span>
+              <span>Learn</span>
               <svg class="site-nav__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
               </svg>
             </button>
 
-            <div class="site-nav__submenu-wrapper" id="site-nav-study-submenu">
+            <div class="site-nav__submenu-wrapper" id="site-nav-learn-submenu">
               <ul class="site-nav__submenu" role="group">
                 <li><a class="site-nav__link site-nav__sublink" href="#lessons" data-view="lessons">Lessons</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#vocabulary" data-view="vocabulary">Vocabulary</a></li>
@@ -144,18 +162,34 @@
             </div>
           </li>
 
-          <li class="site-nav__item">
-            <a class="site-nav__link" href="#practice" data-view="practice">Review</a>
-          </li>
           <!-- Memory sits directly under Review because it is the other half
                of the same loop: Review is the session, Memory is what the
                session leaves behind and what it will ask for next. It is
                also the one row a reader can open with nothing to do and
                still get something from, which is what makes a daily habit
                survivable on the days there's no time to study. -->
-          <li class="site-nav__item">
-            <a class="site-nav__link" href="#memory" data-view="memory">Memory</a>
+          <li class="site-nav__item site-nav__item--parent" id="site-nav-practice">
+            <button
+              type="button"
+              class="site-nav__link site-nav__toggle"
+              id="site-nav-practice-toggle"
+              aria-expanded="false"
+              aria-controls="site-nav-practice-submenu"
+            >
+              <span>Practice</span>
+              <svg class="site-nav__chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <polyline points="6 9 12 15 18 9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </button>
+
+            <div class="site-nav__submenu-wrapper" id="site-nav-practice-submenu">
+              <ul class="site-nav__submenu" role="group">
+                <li><a class="site-nav__link site-nav__sublink" href="#practice" data-view="practice">Review</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#memory" data-view="memory">Memory</a></li>
+              </ul>
+            </div>
           </li>
+
           <li class="site-nav__item">
             <a class="site-nav__link" href="#journal" data-view="journal">Journal</a>
           </li>
@@ -286,9 +320,37 @@
 
       <main id="main-content" class="app-main">
         <!-- One <section> per view. JS toggles the `hidden` attribute to switch between them. -->
-        <!-- The heading and the "what's waiting for you" line form one hero
+
+        <!-- The entry route, and the only view whose heading is not on
+             screen. Every other view opens with its own name in 31px type,
+             which is right for a reference surface you arrived at on
+             purpose and wrong for the room you open the app into: the first
+             thing there has to be Japanese, not the word "Home".
+
+             The <h1> still exists because it is load-bearing — router.js
+             focuses `#<view>-heading` on every navigation so a keyboard or
+             screen-reader reader lands at the top of what they asked for,
+             and reads its text for the document title. .sr-only keeps both
+             true without drawing anything. Built by js/home.js. -->
+        <section id="home" class="view" aria-labelledby="home-heading">
+          <h1 id="home-heading" class="sr-only">Home</h1>
+        </section>
+
+        <!-- Demoted, not deleted. This is a status surface, and status —
+             streaks, due counts, session scores — is the separate
+             summer-project dashboard's subject, which reads it out of the
+             `bigu:bridge` key rather than out of this screen. So it has no
+             nav row and is not the entry route any more; the hash still
+             resolves and js/dashboard.js still renders it unchanged.
+
+             Its one side effect moved out with its nav row: publishDue()
+             used to be called from renderGrid(), so the bridge's due
+             snapshot was only written on visits to a view that is no longer
+             on the daily path. It is called from js/app.js at boot now.
+
+             The heading and the "what's waiting for you" line form one hero
              block; dashboard.js fills the status line on every visit. -->
-        <section id="dashboard" class="view" aria-labelledby="dashboard-heading">
+        <section id="dashboard" class="view" hidden aria-labelledby="dashboard-heading">
           <div class="dashboard-hero">
             <h1 id="dashboard-heading">Dashboard</h1>
             <p class="dashboard-hero__status" id="dashboard-status" aria-live="polite"></p>
@@ -386,9 +448,14 @@
 
          Four destinations and a way into the rest, chosen as the loop the app
          actually rewards rather than as the first four rows of the sidebar.
-         "Study" points at Lessons and lights up for any of the five study
-         views beneath it (see data-view-group, read by router.js); "More"
-         opens the same drawer, which stays the full map of the app.
+         "Learn" points at Lessons and lights up for any of the five views in
+         that group (see data-view-group, read by router.js); "More" opens the
+         same drawer, which stays the full map of the app.
+
+         The rows mirror the sidebar's own grouping — Home, the Learn group,
+         and the two halves of Practice — so the phone and the desktop are
+         demonstrably the same navigation at two sizes rather than two
+         navigations that happen to agree.
 
          A sibling of .app-shell__content, not a child of it: js/navigation.js
          marks the content regions `inert` while the drawer is open, and the
@@ -402,7 +469,7 @@
     <nav class="thumb-nav" id="thumb-nav" aria-label="Primary, compact">
       <ul class="thumb-nav__list">
         <li>
-          <a class="thumb-nav__link" href="#dashboard" data-view="dashboard">
+          <a class="thumb-nav__link" href="#home" data-view="home">
             <svg class="thumb-nav__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M4 10.5 12 4l8 6.5V19a1 1 0 0 1-1 1h-4v-5h-6v5H5a1 1 0 0 1-1-1z" />
             </svg>
@@ -420,7 +487,7 @@
               <path d="M12 7c-2-1.6-4.4-2.3-8-2.4v12.6c3.6.1 6 .8 8 2.4 2-1.6 4.4-2.3 8-2.4V4.6c-3.6.1-6 .8-8 2.4z" />
               <path d="M12 7v12.6" />
             </svg>
-            <span>Study</span>
+            <span>Learn</span>
           </a>
         </li>
         <li>

@@ -1,0 +1,232 @@
+/* ==========================================================================
+   home.css
+   The entry view. Every value here is a token from variables.css — this
+   screen introduces no colour, no size and no timing of its own, because a
+   room that needed its own design system would not be the same room the
+   rest of the app is in.
+
+   The whole file is about restraint. There is no card, no border, no
+   surface and no shadow: the three things Home can show sit directly on the
+   page with a great deal of space around them, and the space is the point.
+   If something is added here later and it needs a box drawn round it to
+   read, it does not belong on this screen.
+   ========================================================================== */
+
+/* A narrower measure than the app's --container-max, centred inside it. The
+   page is 72rem wide and holds grids; this holds one sentence, and a single
+   line of Japanese set across a laptop's full width is a line nobody reads
+   to the end of.
+
+   The vertical rhythm is --space-3xl between the hour and the Japanese and
+   --space-2xl after it, rather than one uniform gap: the mark is a
+   timestamp on the room and the line is what the reader came for, and the
+   larger interval is what separates them into two things instead of a
+   stack of three. */
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xl);
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
+  padding-block: var(--space-2xl) var(--space-xl);
+  text-align: center;
+}
+
+/* -- The hour ------------------------------------------------------------------------
+   One kanji in the app's meta colour, at body size. It is deliberately the
+   quietest thing on the page — smaller than the Japanese below it and
+   smaller than a heading anywhere else in the app — because it is the only
+   element here that says something about the reader's circumstances rather
+   than about Japanese.
+
+   The ruby carries the reading, so the mark is legible to someone four days
+   into the language without a Mongolian gloss under it.
+   ------------------------------------------------------------------------------------ */
+.home__hour {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-ash);
+}
+
+.home__hour rt {
+  color: var(--color-ash);
+}
+
+/* -- The Japanese ---------------------------------------------------------------------
+   A button with no chrome at all. It has to be a real control — it opens
+   the meaning, and a div with a click handler is unreachable by keyboard —
+   but it must not look like one: nothing on this screen should read as
+   something to press except the single welcome door.
+
+   `user-select: text` because this is Japanese somebody might want to copy
+   into a dictionary, and a button suppresses selection by default. The
+   click handler ignores a press that ended with a selection open, same
+   guard reading.js uses on its sentences.
+   ------------------------------------------------------------------------------------ */
+.home__line {
+  width: 100%;
+}
+
+.home__face {
+  display: block;
+  width: 100%;
+  padding: var(--space-sm);
+  border: none;
+  border-radius: var(--radius-md);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  user-select: text;
+  transition: opacity var(--transition-fast);
+}
+
+/* Pointer only. On a phone this line *is* the screen, and an ungated :hover
+   would leave it dimmed for as long as the reader stayed on Home after
+   opening the gloss — the same trap the sidebar rows document. */
+@media (hover: hover) {
+  .home__face:hover .home__jp {
+    color: var(--color-ink-soft);
+  }
+}
+
+.home__jp {
+  display: block;
+  font-size: var(--text-xl);
+  line-height: var(--leading-loose);
+  color: var(--color-ink);
+  transition: color var(--transition-fast);
+}
+
+/* The reveal. --duration-base is the floor for anything animating inside a
+   .view (see the constraint note in layout.css) and this sits exactly on
+   it — it only ever runs on a tap, long after the view's own entrance, but
+   the rule is the rule and there is no reason to be the exception. */
+.home__gloss {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+  padding-inline: var(--space-sm);
+  animation: rise-in var(--duration-base) var(--ease-entrance);
+}
+
+.home__reading {
+  margin: 0;
+  color: var(--color-ash);
+}
+
+.home__meaning {
+  margin: 0;
+  color: var(--color-ink-soft);
+}
+
+/* -- Ways back in ----------------------------------------------------------------------
+   Rows of text, not buttons and not cards. At most two of them ever exist,
+   both are links, and each is a single line: a hero block with a filled
+   button would make the app's front door an instruction.
+
+   The underline behaves exactly as every other link in the app (transparent
+   at rest, coloured on hover — see typography.css); nothing is overridden
+   here beyond the size and the colour of the gloss half.
+   ------------------------------------------------------------------------------------ */
+.home__ways {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.home__way {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
+  padding: var(--space-3xs) var(--space-2xs);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.home__way:hover {
+  color: var(--color-indigo);
+}
+
+.home__way-jp {
+  color: inherit;
+}
+
+.home__way-separator,
+.home__way-note {
+  color: var(--color-ash);
+}
+
+/* -- First visit -----------------------------------------------------------------------
+   Two lines and one door. The heading line takes the display face, which
+   this app spends deliberately sparingly — it is the one moment Home says
+   what it is, and it happens exactly once per browser.
+   ------------------------------------------------------------------------------------ */
+.home__welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+.home__welcome-line {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: var(--leading-loose);
+  color: var(--color-ink);
+}
+
+.home__welcome-line--sub {
+  font-size: var(--text-md);
+  color: var(--color-ink-soft);
+}
+
+.home__start {
+  margin-block-start: var(--space-lg);
+}
+
+/* -- Phones ------------------------------------------------------------------------------
+   The room gets tighter, not busier. The gaps step down one stop on the
+   spacing scale and the top padding goes with them, because on a 390x844
+   screen the desktop rhythm puts the one line of Japanese below the middle
+   of the fold — which is the opposite of "Japanese is the first thing on
+   screen".
+
+   The two link rows take the app's 44px touch floor at this width, the same
+   figure navigation.css applies to every control in the study loop.
+   ---------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .home {
+    gap: var(--space-xl);
+    padding-block: var(--space-lg) var(--space-md);
+  }
+
+  .home__way {
+    min-height: 2.75rem;
+    align-items: center;
+    padding-inline: var(--space-sm);
+  }
+}
+
+@media (max-width: 480px) {
+  .home {
+    gap: var(--space-lg);
+  }
+
+  .home__face {
+    padding-inline: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home__face,
+  .home__jp {
+    transition: none;
+  }
+}
