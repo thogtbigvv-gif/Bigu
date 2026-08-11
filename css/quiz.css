@@ -12,9 +12,8 @@
    column at every width, which on a laptop is a phone card stretched down
    the middle of an empty page — the question small, the answers small, and
    two thirds of the screen doing nothing. The composition below is one
-   layout with three settings of the same three dials: how much room the
-   question gets, how the four answers are arranged, and how much of the
-   feedback area is held open before there is anything in it.
+   layout with three settings of the same two dials: how much room the
+   question gets, and how the four answers are arranged.
    ========================================================================== */
 
 .quiz {
@@ -23,11 +22,6 @@
      the feedback all share an edge — which is what makes the round read as
      one object instead of four stacked panels. */
   --quiz-measure: 38rem;
-  /* How much of the feedback area is held open while the question is still
-     unanswered. Zero on a phone, where vertical space is the scarce
-     resource; a fixed block on anything larger, so answering never moves
-     the options out from under the pointer. */
-  --quiz-feedback-reserve: 0px;
 
   display: flex;
   flex-direction: column;
@@ -503,7 +497,6 @@
   transition:
     border-color var(--transition-fast),
     background-color var(--transition-fast),
-    box-shadow var(--transition-fast),
     color var(--transition-fast),
     opacity var(--transition-fast),
     transform var(--transition-fast);
@@ -524,7 +517,6 @@
   .quiz__option:hover:not(:disabled) {
     background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
     border-color: var(--color-indigo);
-    box-shadow: var(--shadow-sm);
   }
 
   .quiz__option:hover:not(:disabled) .quiz__option-key {
@@ -689,12 +681,7 @@
   /* Quieter than the label it points away from: the arrow is a direction, not
      a second word. */
   opacity: 0.55;
-  transition: transform var(--transition-fast);
 }
-
-/* The arrow leads on press, the way the card is about to. */
-.quiz__grade-button--left:active .quiz__grade-arrow { transform: translateX(-2px); }
-.quiz__grade-button--right:active .quiz__grade-arrow { transform: translateX(2px); }
 
 .quiz__grade-label {
   min-width: 0;
@@ -702,18 +689,17 @@
 
 /* -- Feedback ------------------------------------------------------------------------------
    Feedback that teaches rather than only judges: the verdict, then the right
-   answer in words when it was missed, then what the item actually is — its
-   readings, its class or structure, and a sentence it lives in.
+   answer in words when the card behind it doesn't already say so, then a
+   sentence the item lives in — plus, for grammar and kanji, the structure or
+   readings that appear nowhere else on the reveal.
 
-   The slot is held open at a fixed minimum on anything wider than a phone.
-   Without it, answering a question grows the page by a block and a half and
-   every option jumps upward under the pointer at the exact moment the reader
-   is looking at them.
+   Feedback is the last thing in the round, so it grows the page downwards and
+   nothing above it moves — the card and the four options stay exactly where
+   they were. An earlier version held this area open at a fixed height to
+   guard against a shift that measurement says does not happen, which bought
+   nothing and cost a permanent 10rem of empty screen under every unanswered
+   question.
    ------------------------------------------------------------------------------------------ */
-.quiz__feedback-slot {
-  min-height: var(--quiz-feedback-reserve);
-}
-
 .quiz__feedback {
   display: flex;
   flex-direction: column;
@@ -858,27 +844,6 @@
   color: var(--color-ink);
 }
 
-.quiz__shortcuts {
-  margin: 0;
-  text-align: center;
-}
-
-/* "Press 1–4 to answer" is instructions for hardware the reader does not have.
-   On a phone it was a line of permanent, unactionable text sitting directly
-   under the answer options — the last thing on the card, in the position a
-   reader looks to next.
-
-   Keyed on the input the hint describes, not on width: a tablet with a
-   keyboard case is a coarse pointer at a desktop width and still wants the
-   hint, and a 1400px touchscreen never does. js/quiz.js still writes the text,
-   so the shortcuts keep working for anyone who has a keyboard attached to a
-   device that reports as touch-only. */
-@media (hover: none) and (pointer: coarse) {
-  .quiz__shortcuts {
-    display: none;
-  }
-}
-
 /* -- Card motion ---------------------------------------------------------------------------
    One animated thing per moment, all under 250ms, none looping. A round is
    a card every few seconds: anything that reads as decoration the first
@@ -972,37 +937,6 @@
   color: var(--color-moss);
 }
 
-.quiz__summary-stats {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-lg);
-  margin: 0;
-  padding-block-start: var(--space-2xs);
-  border-block-start: var(--border-width) solid var(--color-stone);
-}
-
-.quiz__stat {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: var(--space-3xs);
-}
-
-.quiz__stat-value {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--text-md);
-  font-variant-numeric: tabular-nums;
-  color: var(--color-ink);
-  line-height: 1;
-}
-
-.quiz__stat-label {
-  font-size: var(--text-xs);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
-}
-
 .quiz__summary-text {
   margin: 0;
   color: var(--color-ink-soft);
@@ -1094,17 +1028,11 @@
 
 /* -- Tablet and up ---------------------------------------------------------------------------
    The same composition with more room in it: a wider measure, a taller
-   question, answer cards a pointer can hit without aiming, and the feedback
-   area held open from the first question so nothing moves when an answer
-   lands.
+   question, and answer cards a pointer can hit without aiming.
    ---------------------------------------------------------------------------------------------- */
 @media (min-width: 768px) {
   .quiz {
     --quiz-measure: 44rem;
-    /* Roughly a verdict line, an answer line and an example block. The area
-       stops the options moving when a question is answered; it is a minimum,
-       so a longer example simply grows past it. */
-    --quiz-feedback-reserve: 9rem;
     gap: var(--space-lg);
   }
 
@@ -1126,10 +1054,9 @@
 
 /* -- Desktop ---------------------------------------------------------------------------------
    Not a wider version of the phone card. The proportions change: the
-   question takes a third of the composition rather than a sliver of it, the
-   four answers sit as a square block beneath it at a size a pointer can hit
-   without aiming, and the feedback area is held open from the start so
-   nothing on the screen moves when an answer lands.
+   question takes a third of the composition rather than a sliver of it, and
+   the four answers sit as a square block beneath it at a size a pointer can
+   hit without aiming.
 
    The measure stops at 52rem. Past that the answers become long lines the eye
    has to track across rather than four objects it can compare, which is the
@@ -1138,7 +1065,6 @@
 @media (min-width: 1024px) {
   .quiz {
     --quiz-measure: 52rem;
-    --quiz-feedback-reserve: 10rem;
   }
 
   .quiz__head {
@@ -1149,10 +1075,9 @@
     font-size: var(--text-base);
   }
 
-  .quiz__card {
-    min-height: 15rem;
-    padding: var(--space-xl) var(--space-lg);
-  }
+  /* The card keeps the height it has at tablet width. Growing it again here
+     only bought air around a single word — a wider card holding the same
+     glyph does not need to be a taller one as well. */
 
   .quiz__front[data-shape="sentence"] {
     font-size: var(--text-lg);
@@ -1168,10 +1093,6 @@
     width: 1.75rem;
     height: 1.75rem;
     font-size: var(--text-sm);
-  }
-
-  .quiz__summary-stats {
-    gap: var(--space-xl);
   }
 }
 
@@ -1202,10 +1123,6 @@
     max-width: none;
     padding-inline: var(--space-2xs);
     font-size: var(--text-sm);
-  }
-
-  .quiz__summary-stats {
-    gap: var(--space-md);
   }
 
   .quiz__missed-item {
