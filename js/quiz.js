@@ -21,16 +21,36 @@
                whose meanings are long enough that four of them on screen
                at once is a wall of text.
 
-   Both grade into review.js, so either mode moves an item along the same
-   schedule. Nothing here reads or writes storage directly.
+   Choose no longer asks the same thing every time. A word is not one fact,
+   it is a small web of them — a shape, a reading, a meaning, and a place in
+   a sentence — and a quiz that only ever walks one edge of that web trains
+   exactly one direction of recall. The question types below (see QUESTION
+   TYPES) walk the others, and which one an item gets depends on how well the
+   schedule says it is already held: first meetings are recognition, and the
+   harder directions arrive once there is something to test.
+
+   Every type is generated from data the app already ships, and every one is
+   checked before it is offered — an item with no usable example never gets a
+   sentence question, and a type that cannot find enough plausible wrong
+   answers falls back to plain recognition rather than asking something
+   ambiguous.
+
+   Both modes grade into review.js, so either one moves an item along the
+   same schedule. Nothing here reads or writes storage directly.
    ========================================================================== */
 
-import { grade as gradeItem, describeNextReview, shuffled } from './review.js';
+import { grade as gradeItem, describeNextReview, getRecord, shuffled } from './review.js';
 
 /* Four is Quizlet's number and it's the right one: three distractors is
    enough that guessing is clearly worse than knowing (25%), and few enough
    that the whole set is readable at a glance on a phone. */
 const CHOICE_COUNT = 4;
+
+/* A question type is only offered if it can find this many wrong answers.
+   Two plausible distractors plus the answer is a real question; one is a
+   coin toss dressed up as one, and the reader learns nothing from winning
+   it. Below the line we fall back to plain recognition. */
+const MIN_DISTRACTORS = 2;
 
 /* How long a correct answer sits on screen before the next question. Long
    enough to register the green, short enough that a good run feels fast.
@@ -42,10 +62,26 @@ const MODES = [
   { id: 'flip', label: 'Flip', hint: 'Картыг эргүүлж хариултыг нь харна' },
 ];
 
+/* CJK ideographs. Used to decide whether a word has anything to *read* —
+   a reading question about アメリカ (reading: アメリカ) is not a question. */
+const HAS_KANJI = /[一-鿿]/;
+
 /* -- Item adapters ---------------------------------------------------------------------
    One per content kind. Each knows how to draw its item's Japanese side,
-   what the question about it should say, what counts as the answer, and
-   what extra context is worth showing once the answer is in.
+   what plain recognition should ask about it, what its parts are called,
+   and which of them are worth showing once the answer is in.
+
+   The four kinds carry genuinely different fields, and the question types
+   below are built out of *these* accessors rather than out of raw item
+   properties — which is what keeps a new question type from having to know
+   that a lesson word calls its gloss `english` and a vocabulary word calls
+   it `meaning`.
+
+     japanese  the item's Japanese identity, as a plain string
+     reading   how that identity is read, or '' when there is nothing extra
+     meaning   the gloss the reader is learning
+     sentence  {jp, reading, mn} worth showing, or null
+     facts     [label, value, lang?] rows for the answer panel
 
    These replace the near-identical deck adapters that lived in practice.js
    and the separate hand-rolled card in lessons.js.
@@ -68,59 +104,94 @@ function furigana(base, reading) {
   return ruby;
 }
 
-/* The example block shown under the feedback line. Built from whichever of
+function line(className, text, lang) {
+  const p = document.createElement('p');
+  p.className = className;
+  if (lang) p.lang = lang;
+  p.textContent = text;
+  return p;
+}
+
+/* The example block shown with the answer. Built from whichever of
    jp/reading/mn an item actually has, so one function serves all four
    content kinds instead of four near-copies. */
-function exampleBlock({ jp, reading, mn }) {
+function exampleBlock(sentence) {
+  const { jp, reading, mn } = sentence ?? {};
+  if (!jp && !reading && !mn) return null;
+
   const wrap = document.createElement('div');
   wrap.className = 'quiz__example';
 
-  if (jp) {
-    const line = document.createElement('p');
-    line.lang = 'ja';
-    line.className = 'quiz__example-jp';
-    line.textContent = jp;
-    wrap.append(line);
-  }
-  if (reading) {
-    const line = document.createElement('p');
-    line.lang = 'ja';
-    line.className = 'reading';
-    line.textContent = reading;
-    wrap.append(line);
-  }
-  if (mn) {
-    const line = document.createElement('p');
-    line.className = 'meta';
-    line.textContent = mn;
-    wrap.append(line);
-  }
+  if (jp) wrap.append(line('quiz__example-jp', jp, 'ja'));
+  if (reading) wrap.append(line('reading', reading, 'ja'));
+  if (mn) wrap.append(line('meta', mn));
 
   return wrap;
+}
+
+/* The item's own parts, labelled — a reading, a part of speech, a structure,
+   a pair of kanji readings. Rows with nothing in them are dropped rather
+   than rendered as an empty definition, which is where "—" placeholders and
+   `undefined` come from. */
+function factsList(facts) {
+  const rows = facts.filter(([, value]) => Boolean(value));
+  if (rows.length === 0) return null;
+
+  const list = document.createElement('dl');
+  list.className = 'quiz__facts';
+
+  for (const [label, value, lang] of rows) {
+    const row = document.createElement('div');
+    row.className = 'quiz__fact';
+
+    const term = document.createElement('dt');
+    term.textContent = label;
+
+    const detail = document.createElement('dd');
+    detail.textContent = value;
+    if (lang) detail.lang = lang;
+
+    row.append(term, detail);
+    list.append(row);
+  }
+
+  return list;
 }
 
 const ADAPTERS = {
   lessons: {
     label: 'Lessons',
     question: 'Энэ үг ямар утгатай вэ?',
+    noun: 'үг',
     front: (item) => furigana(item.word, item.reading),
     hint: () => '',
     meaning: (item) => item.english,
-    detail: () => null,
+    japanese: (item) => item.word,
+    reading: (item) => (item.reading === item.word ? '' : item.reading),
+    sentence: () => null,
+    facts: (item) => [['Уншлага', item.reading === item.word ? '' : item.reading, 'ja']],
   },
 
   vocabulary: {
     label: 'Vocabulary',
     question: 'Энэ үг ямар утгатай вэ?',
+    noun: 'үг',
     front: (item) => (item.kanji ? furigana(item.kanji, item.kana) : jpSpan(item.kana)),
     hint: (item) => item.partOfSpeech,
     meaning: (item) => item.meaning,
-    detail: (item) => exampleBlock(item.example),
+    japanese: (item) => item.kanji || item.kana,
+    reading: (item) => item.kana,
+    sentence: (item) => item.example,
+    facts: (item) => [
+      ['Уншлага', item.kanji ? item.kana : '', 'ja'],
+      ['Үгийн аймаг', item.partOfSpeech],
+    ],
   },
 
   grammar: {
     label: 'Grammar',
     question: 'Энэ хэлбэр ямар утгатай вэ?',
+    noun: 'хэлбэр',
     front: (item) => {
       const wrap = document.createElement('span');
       wrap.lang = 'ja';
@@ -129,16 +200,28 @@ const ADAPTERS = {
     },
     hint: (item) => item.structure,
     meaning: (item) => item.meaning,
-    detail: (item) => exampleBlock(item.example),
+    japanese: (item) => item.pattern,
+    reading: (item) => item.patternKana ?? '',
+    sentence: (item) => item.example,
+    facts: (item) => [['Бүтэц', item.structure]],
   },
 
   kanji: {
     label: 'Kanji',
     question: 'Энэ ханз ямар утгатай вэ?',
+    noun: 'ханз',
     front: (item) => jpSpan(item.character),
     hint: (item) => [item.onyomi, item.kunyomi].filter(Boolean).join(' ・ '),
     meaning: (item) => item.meaning,
-    detail: (item) => exampleBlock({ jp: item.example.word, reading: item.example.reading, mn: item.example.mn }),
+    japanese: (item) => item.character,
+    // A kanji's "reading" is two readings, and neither of them is a single
+    // answer — they get their own question types below instead.
+    reading: () => '',
+    sentence: (item) => ({ jp: item.example.word, reading: item.example.reading, mn: item.example.mn }),
+    facts: (item) => [
+      ['On', item.onyomi, 'ja'],
+      ['Kun', item.kunyomi, 'ja'],
+    ],
   },
 };
 
@@ -164,37 +247,382 @@ function adapterFor(item) {
   return key ? ADAPTERS[key] : null;
 }
 
-/* -- Question building -------------------------------------------------------------------
-   Distractors are drawn only from items of the same kind as the question.
-   A round pulled from the mixed "Due today" pool would otherwise offer a
-   grammar explanation among four answers to a kanji question, and the odd
-   one out gives the answer away without the reader knowing anything.
+/* The answer panel: what this item *is*, in the parts the reader is learning.
+   Same block on the back of a flipped card and under a checked answer, so
+   the information a round teaches doesn't depend on which mode you picked. */
+function detailBlock(item) {
+  const adapter = adapterFor(item);
+  const wrap = document.createElement('div');
+  wrap.className = 'quiz__detail-block';
 
-   Meanings are de-duplicated too: two entries that genuinely share a gloss
-   would make a question with two right answers.
+  const facts = factsList(adapter.facts(item));
+  if (facts) wrap.append(facts);
+
+  const example = exampleBlock(adapter.sentence(item));
+  if (example) wrap.append(example);
+
+  return wrap.childElementCount > 0 ? wrap : null;
+}
+
+/* -- Question types --------------------------------------------------------------------
+   The same item, asked about from different directions. Each type says what
+   the correct answer *is* for a given item, which is all the distractor
+   search needs: the wrong answers to "how is this read?" are other readings,
+   the wrong answers to "which word is this?" are other words.
+
+     meaning     Japanese → meaning          (recognition, the backbone)
+     recall      meaning → Japanese          (production)
+     reading     kanji word → its reading
+     onyomi      kanji → on reading
+     kunyomi     kanji → kun reading
+     wordReading example word → its reading
+     cloze       sentence with a gap → the word that fills it
+     context     sentence → what the marked part means
+
+   A type is only ever offered for an item that can support it — see
+   supportedTypes — and only if the pool holds enough plausible wrong
+   answers. Everything falls back to `meaning`.
    -------------------------------------------------------------------------------------- */
 
-function buildChoices(item, pool) {
-  const adapter = adapterFor(item);
-  const answer = adapter.meaning(item);
-  const kind = deckKeyForItemId(item.id);
+/* Answers that are Japanese rather than a gloss. Two things follow from
+   being on this list: the options render in the Japanese face, and a
+   candidate that shares the item's meaning is never offered as a wrong
+   answer — "which of these means X" with two words that both mean X is a
+   question with two right answers. */
+const JAPANESE_ANSWER_TYPES = new Set(['recall', 'reading', 'onyomi', 'kunyomi', 'wordReading', 'cloze']);
 
-  const seen = new Set([answer]);
-  const distractors = [];
+function clozeSurface(text) {
+  return (text ?? '').replace(/[～〜]/g, '').trim();
+}
+
+/* The surfaces an item might appear under in its own example: the written
+   form first, then the reading. Vocabulary entries with no kanji carry only
+   the second. */
+function clozeSurfaces(item, adapter) {
+  const surfaces = [];
+  for (const candidate of [adapter.japanese(item), adapter.reading(item)]) {
+    const surface = clozeSurface(candidate);
+    // Single characters are excluded on purpose: 日 or 一 turns up inside
+    // half the sentences in the file, and blanking one of them asks a
+    // question about a coincidence rather than about the word.
+    if (surface.length >= 2 && !surfaces.includes(surface)) surfaces.push(surface);
+  }
+  return surfaces;
+}
+
+/* Where the item sits inside its own example sentence, or null if it isn't
+   there in a form we can point at. Both sentence question types are built
+   from this, and both are simply not offered when it returns null — which
+   is the whole guard against a gap that isn't the word, or a highlight on
+   the wrong half of a sentence.
+
+   Exactly one occurrence, deliberately. A word that appears twice would
+   leave the second copy standing next to the gap it was cut out of. */
+function locateInSentence(item, adapter) {
+  const sentence = adapter.sentence(item);
+  if (!sentence?.jp) return null;
+
+  for (const surface of clozeSurfaces(item, adapter)) {
+    const at = sentence.jp.indexOf(surface);
+    if (at === -1) continue;
+    if (sentence.jp.indexOf(surface, at + surface.length) !== -1) continue;
+    return {
+      surface,
+      before: sentence.jp.slice(0, at),
+      after: sentence.jp.slice(at + surface.length),
+    };
+  }
+
+  return null;
+}
+
+/* What the right answer to `type` is for `item`, as text. Returns '' when
+   the item cannot answer that question, which is how the distractor search
+   skips candidates whose data is thinner than the item being asked about. */
+function answerTextFor(type, item, kind) {
+  const adapter = ADAPTERS[kind];
+
+  switch (type) {
+    case 'recall':
+      return adapter.japanese(item) ?? '';
+    case 'reading':
+      return adapter.reading(item) ?? '';
+    case 'onyomi':
+      return item.onyomi ?? '';
+    case 'kunyomi':
+      return item.kunyomi ?? '';
+    case 'wordReading':
+      return item.example?.reading ?? '';
+    case 'cloze': {
+      const [surface] = clozeSurfaces(item, adapter);
+      return surface ?? '';
+    }
+    default:
+      return adapter.meaning(item) ?? '';
+  }
+}
+
+/* Which questions this particular item can actually answer. Everything here
+   is a data check, not a guess: no type reaches the reader unless the fields
+   it needs are present and usable. */
+function supportedTypes(item, kind) {
+  const adapter = ADAPTERS[kind];
+  const types = ['meaning'];
+
+  const japanese = adapter.japanese(item);
+  if (japanese) types.push('recall');
+
+  const reading = adapter.reading(item);
+  if (reading && japanese && reading !== japanese && HAS_KANJI.test(japanese)) types.push('reading');
+
+  if (kind === 'kanji') {
+    if (item.onyomi) types.push('onyomi');
+    if (item.kunyomi) types.push('kunyomi');
+    if (item.example?.word && item.example?.reading) types.push('wordReading');
+  }
+
+  if (locateInSentence(item, adapter)) types.push('cloze', 'context');
+
+  return types;
+}
+
+/* Which of them to ask, this time.
+
+   Level 0 is an item the schedule says is either brand new or was just
+   missed, and the only fair question about a word you have not met is what
+   it means. Recognition first, production once there is something to
+   produce — the same order the review ladder itself is built on. `context`
+   is allowed early because it is still recognition, only with the sentence
+   around it; it is weighted below plain meaning so a first round reads as a
+   first round rather than as a wall of Japanese.
+
+   Above level 0 every supported type is equally likely, which is the point:
+   an item met four times should have been met four different ways. */
+function chooseType(item, kind) {
+  const available = supportedTypes(item, kind);
+  const { level } = getRecord(item.id);
+
+  if (level <= 0) {
+    const gentle = available.includes('context') ? ['meaning', 'meaning', 'context'] : ['meaning'];
+    return gentle[Math.floor(Math.random() * gentle.length)];
+  }
+
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+/* Two items that a reader could plausibly confuse: same level, and same
+   word class where the data records one. Distractors are drawn from these
+   first and only topped up from the rest of the deck when there aren't
+   enough — which is the difference between "language / banana / winter" and
+   four answers that all look like answers.
+
+   Not so close that the question stops having one right answer: an item
+   that shares the *meaning* being asked about is rejected outright in
+   pickChoices, whatever its level or class. */
+function levelOf(item, kind) {
+  if (kind === 'kanji') return item.level ?? '';
+  if (kind === 'lessons') return item.id.slice(0, item.id.indexOf('-'));
+  return item.tags?.[0] ?? '';
+}
+
+function isPlausibleNeighbour(item, candidate, kind) {
+  if (levelOf(item, kind) !== levelOf(candidate, kind)) return false;
+  if (kind === 'vocabulary') return item.partOfSpeech === candidate.partOfSpeech;
+  return true;
+}
+
+function normalize(text) {
+  return (text ?? '').trim().toLowerCase();
+}
+
+/* The wrong answers. One pass over a shuffled pool, sorting candidates into
+   plausible neighbours and everything else, then neighbours first.
+
+   Three rules, and each of them exists because breaking it produces a
+   broken question: same content kind (a grammar explanation among four
+   kanji meanings is the odd one out, and the odd one out gives the answer
+   away), no repeated answer text (two identical options, or two right
+   ones), and — for questions whose answer is Japanese — no candidate that
+   means the same thing as the item being asked about. */
+function pickChoices(item, pool, type, kind, answer) {
+  const adapter = ADAPTERS[kind];
+  const needed = CHOICE_COUNT - 1;
+  const guardMeaning = JAPANESE_ANSWER_TYPES.has(type);
+  const itemMeaning = normalize(adapter.meaning(item));
+
+  const seen = new Set([normalize(answer)]);
+  const neighbours = [];
+  const others = [];
 
   for (const candidate of shuffled(pool)) {
-    if (distractors.length >= CHOICE_COUNT - 1) break;
+    if (neighbours.length >= needed) break;
     if (candidate.id === item.id) continue;
     if (deckKeyForItemId(candidate.id) !== kind) continue;
 
-    const text = adapterFor(candidate).meaning(candidate);
-    if (!text || seen.has(text)) continue;
+    const text = answerTextFor(type, candidate, kind);
+    if (!text) continue;
 
-    seen.add(text);
-    distractors.push(text);
+    const key = normalize(text);
+    if (seen.has(key)) continue;
+    if (guardMeaning && normalize(adapter.meaning(candidate)) === itemMeaning) continue;
+
+    seen.add(key);
+    if (isPlausibleNeighbour(item, candidate, kind)) neighbours.push(text);
+    else if (others.length < needed) others.push(text);
   }
 
-  return shuffled([answer, ...distractors]).map((text) => ({ text, correct: text === answer }));
+  return [...neighbours, ...others].slice(0, needed);
+}
+
+/* -- Question building ------------------------------------------------------------------
+   A question is what the card front shows, what it asks, and the options
+   underneath it. The card *back* is deliberately not part of it: whatever
+   was asked, the reveal is the item itself — its Japanese, its reading, its
+   meaning, its example — because that is what the reader is here to learn,
+   and it means a wrong answer to an unusual question still ends with the
+   whole word in front of them.
+   -------------------------------------------------------------------------------------- */
+
+const PROMPTS = {
+  meaning: (adapter) => adapter.question,
+  context: () => 'Тодруулсан хэсэг ямар утгатай вэ?',
+  recall: (adapter, kind) =>
+    (kind === 'grammar' ? 'Энэ утгыг аль хэлбэр илэрхийлэх вэ?' : 'Үүнийг япон хэлээр юу гэх вэ?'),
+  reading: () => 'Энэ үгийг хэрхэн уншдаг вэ?',
+  onyomi: () => 'Энэ ханзны онёоми (音) аль нь вэ?',
+  kunyomi: () => 'Энэ ханзны кунёоми (訓) аль нь вэ?',
+  wordReading: () => 'Энэ үгийг хэрхэн уншдаг вэ?',
+  cloze: (adapter) => `Ямар ${adapter.noun} дутуу вэ?`,
+};
+
+/* The gap, and the sentence around it. The blank is a real element rather
+   than a run of underscores in a string, so it can be sized and coloured
+   like the answer it is waiting for. */
+function clozeNode(place) {
+  const wrap = document.createElement('span');
+  wrap.lang = 'ja';
+
+  const gap = document.createElement('span');
+  gap.className = 'quiz__blank';
+  gap.setAttribute('aria-label', 'хоосон зай');
+
+  wrap.append(place.before, gap, place.after);
+  return wrap;
+}
+
+function contextNode(place) {
+  const wrap = document.createElement('span');
+  wrap.lang = 'ja';
+
+  const target = document.createElement('mark');
+  target.className = 'quiz__target';
+  target.textContent = place.surface;
+
+  wrap.append(place.before, target, place.after);
+  return wrap;
+}
+
+/* Sentences read as prose, single words read as specimens, and a Mongolian
+   gloss asked as a question is neither — three sizes rather than one, or the
+   same rule that puts a 39px glyph on the card puts a 39px sentence on it
+   too. */
+function frontShapeFor(type) {
+  if (type === 'cloze' || type === 'context') return 'sentence';
+  if (type === 'recall') return 'phrase';
+  return 'word';
+}
+
+function buildFront(type, item, adapter, place) {
+  switch (type) {
+    /* A <span>, not a <p>: the card front is a <button> in Flip mode and a
+       button may only contain phrasing content. */
+    case 'recall': {
+      const text = document.createElement('span');
+      text.className = 'quiz__front-text';
+      text.textContent = adapter.meaning(item);
+      return text;
+    }
+    case 'cloze':
+      return clozeNode(place);
+    case 'context':
+      return contextNode(place);
+    // The reading is the answer here, so the front cannot carry furigana —
+    // adapter.front() prints it above the word.
+    case 'reading':
+      return jpSpan(adapter.japanese(item));
+    case 'onyomi':
+    case 'kunyomi':
+      return jpSpan(item.character);
+    case 'wordReading':
+      return jpSpan(item.example.word);
+    default:
+      return adapter.front(item);
+  }
+}
+
+/* The quiet line under the question. It is help, so it must never be the
+   answer: a kanji's readings are printed under it for a meaning question and
+   withheld for a reading one, and a grammar structure — which spells the
+   pattern out in full — is withheld the moment the pattern is what's being
+   asked for. */
+function buildHint(type, item, adapter) {
+  switch (type) {
+    case 'meaning':
+      return adapter.hint(item);
+    case 'reading':
+    case 'recall':
+      return adapter === ADAPTERS.vocabulary ? item.partOfSpeech : '';
+    default:
+      return '';
+  }
+}
+
+function composeQuestion(item, pool, type, kind, { minDistractors }) {
+  const adapter = ADAPTERS[kind];
+  const place = type === 'cloze' || type === 'context' ? locateInSentence(item, adapter) : null;
+  if ((type === 'cloze' || type === 'context') && !place) return null;
+
+  const answer = type === 'cloze' ? place.surface : answerTextFor(type, item, kind);
+  if (!answer) return null;
+
+  const distractors = pickChoices(item, pool, type, kind, answer);
+  if (distractors.length < minDistractors) return null;
+
+  const japanese = JAPANESE_ANSWER_TYPES.has(type);
+
+  return {
+    type,
+    prompt: PROMPTS[type](adapter, kind),
+    front: buildFront(type, item, adapter, place),
+    shape: frontShapeFor(type),
+    hint: buildHint(type, item, adapter),
+    answerText: answer,
+    answerIsJapanese: japanese,
+    choices: shuffled([answer, ...distractors]).map((text) => ({
+      text,
+      correct: text === answer,
+      lang: japanese ? 'ja' : null,
+    })),
+  };
+}
+
+/* Pick a type, then make sure it survived contact with the data. A lesson
+   quiz draws its wrong answers from eighteen words, so a reading question
+   about the one word in the lesson written in kanji has nowhere to find
+   three other readings — that question is dropped and the reader gets plain
+   recognition instead, which is always answerable because every item in
+   every deck has a meaning.
+
+   The last fallback accepts a single distractor: a two-option question is a
+   poor question, but a deck that small has nothing better to offer and an
+   empty options row would be a broken screen. */
+function buildQuestion(item, pool) {
+  const kind = deckKeyForItemId(item.id);
+  const type = chooseType(item, kind);
+
+  return composeQuestion(item, pool, type, kind, { minDistractors: MIN_DISTRACTORS })
+    ?? composeQuestion(item, pool, 'meaning', kind, { minDistractors: MIN_DISTRACTORS })
+    ?? composeQuestion(item, pool, 'meaning', kind, { minDistractors: 1 });
 }
 
 /* How far a card has to travel before letting go grades it. 72px is about a
@@ -213,9 +641,9 @@ function arrowGlyph(direction) {
   svg.setAttribute('viewBox', '0 0 24 24');
   svg.setAttribute('aria-hidden', 'true');
   svg.setAttribute('focusable', 'false');
-  const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  line.setAttribute('d', direction === 'left' ? 'M15 5 8 12l7 7' : 'M9 5l7 7-7 7');
-  svg.append(line);
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', direction === 'left' ? 'M15 5 8 12l7 7' : 'M9 5l7 7-7 7');
+  svg.append(path);
   return svg;
 }
 
@@ -254,9 +682,25 @@ function buildPanel() {
   const title = document.createElement('p');
   title.className = 'quiz__title';
 
+  /* "03 / 10" — the position, at a glance, in tabular figures so the numbers
+     don't shuffle sideways as they climb. The spoken version is a sentence
+     rather than a fraction, and it carries the score as well; both live in
+     one live region so a screen reader hears the whole state once per
+     question instead of two fragments. */
   const count = document.createElement('p');
   count.className = 'quiz__count';
   count.setAttribute('aria-live', 'polite');
+
+  const countIndex = document.createElement('span');
+  countIndex.className = 'quiz__count-index';
+
+  const countTotal = document.createElement('span');
+  countTotal.className = 'quiz__count-total';
+
+  const countSpoken = document.createElement('span');
+  countSpoken.className = 'sr-only';
+
+  count.append(countIndex, countTotal, countSpoken);
 
   const exitButton = document.createElement('button');
   exitButton.type = 'button';
@@ -273,12 +717,6 @@ function buildPanel() {
      tappable and focusable without a second button underneath doing the same
      job. In Choose the app turns it the moment an option is picked, which is
      why the front is disabled there.
-
-     Unifying the two is what let the feedback area below shrink to a verdict
-     and a button. It used to carry the example sentence as well, so answering
-     grew the page by a block and a half under the reader's thumb, pushing
-     Continue towards the fold exactly when they wanted it. The answer belongs
-     on the answer side of the card; there was never a second place for it.
 
      The front's children are <span>s, not <p>s — a <button> may only contain
      phrasing content, and they are flex items here so they lay out as blocks
@@ -316,12 +754,12 @@ function buildPanel() {
   // than only the grade buttons that appear with it.
   cardBack.tabIndex = -1;
 
-  /* The question, restated small above its own answer. A flashcard's back
-     usually carries the answer alone, and for a card you are *drilling* that
-     is right — but this is a language, and the one instant worth putting the
-     two sides in the same eyeline is the instant the reader has just
-     committed to a guess. In Choose it is also the only place the Japanese
-     survives the turn at all. */
+  /* The reveal is always the item, never merely the answer to what was
+     asked. Whatever the question walked — a reading, a gap in a sentence, a
+     meaning — the back carries the Japanese, its reading, and its gloss
+     together, because the point of the round is the word and not the
+     question. In Choose it is also the only place the Japanese survives the
+     turn at all. */
   const answerJp = document.createElement('p');
   answerJp.className = 'quiz__answer-jp';
 
@@ -347,8 +785,8 @@ function buildPanel() {
   grade.className = 'quiz__grade';
   grade.hidden = true;
 
-  /* The two verdicts have directions now — left for "still learning", right
-     for "I knew it" — and the card travels that way whether it was flicked or
+  /* The two verdicts have directions — left for "still learning", right for
+     "I knew it" — and the card travels that way whether it was flicked or
      the button was pressed. The arrows are how the buttons teach the gesture:
      a swipe nobody knows about is a feature nobody has. They stay on the outer
      edge of each button and the row never stacks, so the button's own position
@@ -365,16 +803,44 @@ function buildPanel() {
 
   grade.append(missButton, knewButton);
 
-  /* Feedback, shared by both modes */
+  /* Feedback, shared by both modes. Three parts, in the order the reader
+     needs them: was I right, what was right, and what this word actually is. */
   const feedback = document.createElement('div');
   feedback.className = 'quiz__feedback';
   feedback.hidden = true;
 
   const verdict = document.createElement('p');
   verdict.className = 'quiz__verdict';
-  verdict.setAttribute('role', 'status');
 
-  /* Choose keeps its example here rather than on the card — see the note in
+  const verdictMark = document.createElement('span');
+  verdictMark.className = 'quiz__verdict-mark';
+  verdictMark.setAttribute('aria-hidden', 'true');
+
+  const verdictText = document.createElement('span');
+  verdictText.className = 'quiz__verdict-text';
+
+  const verdictTiming = document.createElement('span');
+  verdictTiming.className = 'quiz__verdict-timing';
+
+  verdict.append(verdictMark, verdictText, verdictTiming);
+
+  /* Named in words, not only highlighted in green. An option marked by
+     colour alone is unreadable to a reader who cannot see the colour and
+     invisible to one who has already scrolled past the options. */
+  const answerLine = document.createElement('p');
+  answerLine.className = 'quiz__answer-line';
+  answerLine.hidden = true;
+
+  const answerLineLabel = document.createElement('span');
+  answerLineLabel.className = 'quiz__answer-line-label';
+  answerLineLabel.textContent = 'Зөв хариулт';
+
+  const answerLineValue = document.createElement('span');
+  answerLineValue.className = 'quiz__answer-line-value';
+
+  answerLine.append(answerLineLabel, answerLineValue);
+
+  /* Choose keeps its detail here rather than on the card — see the note in
      renderCard on why the answer face has to stay short in that mode. */
   const detail = document.createElement('div');
   detail.className = 'quiz__detail';
@@ -384,7 +850,16 @@ function buildPanel() {
   continueButton.className = 'button button--primary quiz__continue';
   continueButton.textContent = 'Continue';
 
-  feedback.append(verdict, detail, continueButton);
+  feedback.append(verdict, answerLine, detail, continueButton);
+
+  /* The whole feedback area, announced as one thing once it has something to
+     say. role=status on the verdict alone announced a fragment ("Зөв ·
+     маргааш эргэж ирнэ") and left the correct answer — the part a reader who
+     got it wrong actually needs — unspoken. */
+  const feedbackSlot = document.createElement('div');
+  feedbackSlot.className = 'quiz__feedback-slot';
+  feedbackSlot.setAttribute('role', 'status');
+  feedbackSlot.append(feedback);
 
   const shortcuts = document.createElement('p');
   shortcuts.className = 'quiz__shortcuts meta';
@@ -402,6 +877,29 @@ function buildPanel() {
 
   const summaryScore = document.createElement('p');
   summaryScore.className = 'quiz__summary-score';
+
+  /* Three figures, and none of them is a trophy: how much of the round was
+     right, how many that was, and how many are coming back. The last one is
+     the only actionable number on the screen, which is why it is on it. */
+  const summaryStats = document.createElement('dl');
+  summaryStats.className = 'quiz__summary-stats';
+
+  function statCell(label) {
+    const cell = document.createElement('div');
+    cell.className = 'quiz__stat';
+    const value = document.createElement('dd');
+    value.className = 'quiz__stat-value';
+    const term = document.createElement('dt');
+    term.className = 'quiz__stat-label';
+    term.textContent = label;
+    cell.append(value, term);
+    summaryStats.append(cell);
+    return value;
+  }
+
+  const statPercent = statCell('зөв хариулсан');
+  const statCorrect = statCell('зөв');
+  const statMissed = statCell('давтах');
 
   const summaryText = document.createElement('p');
   summaryText.className = 'quiz__summary-text';
@@ -431,22 +929,23 @@ function buildPanel() {
   doneButton.textContent = 'Done';
 
   summaryActions.append(retryMissedButton, againButton, doneButton);
-  summary.append(summaryScore, summaryText, missedHeading, missedList, summaryActions);
+  summary.append(summaryScore, summaryStats, summaryText, missedHeading, missedList, summaryActions);
 
   const round = document.createElement('div');
   round.className = 'quiz__round';
-  round.append(bar, head, scene, options, grade, feedback, shortcuts);
+  round.append(bar, head, scene, options, grade, feedbackSlot, shortcuts);
 
   panel.append(round, summary);
 
   return {
-    panel, round, bar, barFill, title, count, exitButton,
+    panel, round, bar, barFill, title, count, countIndex, countTotal, countSpoken, exitButton,
     scene, cardInner, card, prompt, front, hint, flipHint,
     cardBack, answerJp, answer, answerDetail,
     options, grade, missButton, knewButton,
-    feedback, verdict, detail, continueButton, shortcuts,
-    summary, summaryScore, summaryText, missedHeading, missedList,
-    retryMissedButton, againButton, doneButton,
+    feedbackSlot, feedback, verdict, verdictMark, verdictText, verdictTiming,
+    answerLine, answerLineValue, detail, continueButton, shortcuts,
+    summary, summaryScore, statPercent, statCorrect, statMissed, summaryText,
+    missedHeading, missedList, retryMissedButton, againButton, doneButton,
   };
 }
 
@@ -485,6 +984,11 @@ function createQuiz({
     missed: [],
     answered: false,
     flipped: false,
+    // The question on screen, built once per card in renderCard. Held so
+    // that grading and feedback describe what was actually asked rather
+    // than re-deriving it — a second call to buildQuestion would pick a
+    // different type and name a different right answer.
+    question: null,
     // 'left' | 'right' | null — which way the last answer sent the card. Set
     // at grading time and read again at advance time, so the flick, the lean
     // it settles into, and the exit are all one continuous movement.
@@ -503,23 +1007,29 @@ function createQuiz({
 
   /* -- Rendering ------------------------------------------------------------------------ */
 
+  /* The bar counts *answered* questions, not the card on screen. Filling it
+     the moment a card appears reports work that hasn't happened yet, and at
+     the last question the bar sat one whole card short of the end while the
+     reader looked at a finished round. */
   function setProgress() {
     const total = state.queue.length;
-    const done = state.index;
+    const done = Math.min(state.index + (state.answered ? 1 : 0), total);
+    const position = Math.min(state.index + 1, total);
+
     el.barFill.style.setProperty('--progress', total === 0 ? '0' : (done / total).toFixed(3));
-    el.count.textContent = `${Math.min(done + 1, total)} of ${total} · ${state.correct} correct`;
+    el.countIndex.textContent = String(position).padStart(2, '0');
+    el.countTotal.textContent = String(total).padStart(2, '0');
+    el.countSpoken.textContent = `${position} / ${total} асуулт · ${state.correct} зөв`;
   }
 
   function currentItem() {
     return state.queue[state.index];
   }
 
-  function renderOptions(item) {
+  function renderOptions(question) {
     el.options.replaceChildren();
 
-    const choices = buildChoices(item, state.pool);
-
-    choices.forEach((choice, i) => {
+    question.choices.forEach((choice, i) => {
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'quiz__option';
@@ -531,7 +1041,8 @@ function createQuiz({
       key.setAttribute('aria-hidden', 'true');
 
       const text = document.createElement('span');
-      text.className = 'quiz__option-text';
+      text.className = choice.lang === 'ja' ? 'quiz__option-text quiz__option-text--jp' : 'quiz__option-text';
+      if (choice.lang) text.lang = choice.lang;
       text.textContent = choice.text;
 
       button.append(key, text);
@@ -662,7 +1173,8 @@ function createQuiz({
 
       if (!claimed) {
         // Undecided until the gesture has committed to an axis. 10px of slop
-        // keeps a tap that wobbles from registering as a throw.
+        // keeps a tap that wobbles from registering as a throw, and the
+        // comparison against dy is what stops a scroll being graded.
         if (Math.abs(dx) < 10 || Math.abs(dx) <= Math.abs(dy)) return;
         claimed = true;
         el.scene.classList.add('is-dragging');
@@ -707,34 +1219,42 @@ function createQuiz({
     const flipMode = state.mode === 'flip';
     state.answered = false;
 
-    el.prompt.textContent = flipMode ? 'Үүнийг мэдэх үү?' : adapter.question;
-    el.front.replaceChildren(adapter.front(item));
+    /* Flip asks one question and always the same one — recall this, then
+       say whether you did. The question types are Choose's, because they
+       depend on being *checked*: nobody can honestly self-grade "which of
+       these four is the reading". */
+    state.question = flipMode ? null : buildQuestion(item, state.pool);
 
-    const hintText = adapter.hint(item);
+    el.prompt.textContent = flipMode ? 'Үүнийг мэдэх үү?' : state.question.prompt;
+    el.front.replaceChildren(flipMode ? adapter.front(item) : state.question.front);
+    el.front.dataset.shape = flipMode ? 'word' : state.question.shape;
+
+    const hintText = flipMode ? adapter.hint(item) : state.question.hint;
     el.hint.textContent = hintText;
     el.hint.hidden = !hintText;
 
-    /* The back, in both modes. It always carries the question restated over
-       its own meaning — the one moment worth putting the two sides of a word
-       in the same eyeline is the moment the reader has just committed to a
-       guess, and in Choose it is the only thing that survives the turn.
+    /* The back, in both modes: the Japanese over its own meaning. The one
+       moment worth putting the two sides of a word in the same eyeline is
+       the moment the reader has just committed to a guess, and in Choose it
+       is the only thing that survives the turn.
 
-       The example is Flip's alone, and the reason is height, measured on a
-       390x844 phone. Both faces share one grid cell, so whatever the back
+       The detail block is Flip's alone, and the reason is height, measured on
+       a 390x844 phone. Both faces share one grid cell, so whatever the back
        carries sets the card's height *for the whole round* — and an example
        block takes the card from 176px to 294px. In Flip that is free: nothing
        is below the card but two buttons. In Choose it pushes four options and
        the Continue button under the fold, so a reader would have to scroll to
        finish answering a question they can currently answer without moving.
-       Choose keeps its example in the feedback area below, where it costs
+       Choose keeps its detail in the feedback area below, where it costs
        nothing until there is something to say. */
     el.answerJp.replaceChildren(adapter.front(item));
     el.answer.textContent = adapter.meaning(item);
-    const back = flipMode ? adapter.detail(item) : null;
+    const back = flipMode ? detailBlock(item) : null;
     el.answerDetail.replaceChildren(...(back ? [back] : []));
     el.flipHint.hidden = !flipMode;
 
     el.feedback.hidden = true;
+    el.answerLine.hidden = true;
     el.detail.replaceChildren();
     el.scene.classList.remove('is-correct', 'is-leaning-left', 'is-leaning-right');
     state.direction = null;
@@ -743,14 +1263,18 @@ function createQuiz({
     faceFront();
 
     if (flipMode) {
+      // Cleared, not merely hidden: options built for a previous Choose round
+      // are stale answers to a question that is no longer on screen, and the
+      // keyboard shortcuts index straight into this list.
+      el.options.replaceChildren();
       el.options.hidden = true;
       el.grade.hidden = true;
-      el.shortcuts.textContent = 'Space дарж эргүүлнэ · 1 сурч байна · 2 мэдсэн';
+      el.shortcuts.textContent = 'Space дарж эргүүлнэ · 1 сурч байна · 2 мэдсэн · Esc гарна';
     } else {
-      renderOptions(item);
+      renderOptions(state.question);
       el.options.hidden = false;
       el.grade.hidden = true;
-      el.shortcuts.textContent = '1–4 дарж хариулна уу';
+      el.shortcuts.textContent = `1–${state.question.choices.length} дарж хариулна · Enter үргэлжлүүлнэ · Esc гарна`;
     }
 
     setProgress();
@@ -772,13 +1296,7 @@ function createQuiz({
     /* Where the card has come to rest, and where it will leave from. A flicked
        card is already off-centre and the lean simply takes over its position;
        a card graded from the buttons travels there now, so the button press
-       and the flick end in exactly the same place.
-
-       This replaces the shake a wrong answer used to get. The shake said
-       "wrong" — which the verdict, the colour and the highlighted option all
-       say already — where a lean says *which way it went*, which nothing else
-       on screen does. It is also the gentler of the two, and forty times a
-       session that matters. */
+       and the flick end in exactly the same place. */
     state.direction = knewIt ? 'right' : 'left';
     clearDrag();
     el.scene.dataset.toward = state.direction;
@@ -786,25 +1304,36 @@ function createQuiz({
     el.scene.classList.add(`is-leaning-${state.direction}`);
     if (knewIt) el.scene.classList.add('is-correct');
 
-    /* Two different jobs, because the two modes leave the reader looking at
-       different things.
+    /* Unhidden before it is written. A live region that is populated while
+       hidden and then revealed announces nothing in several screen readers —
+       the change they are watching for is to the text, and by the time the
+       element exists on screen the text is already old. */
+    el.feedback.hidden = false;
 
-       Both modes now show the answer on the card's own back, so neither of
-       them needs this line to name it. What is left is the schedule, which is
-       the one thing the card cannot say — and it is worth saying, because
-       "back in three days" is the only visible evidence that answering
-       honestly does anything at all. */
-    el.verdict.textContent = knewIt
-      ? `Зөв · ${describeNextReview(record)}`
-      : `Тэмдэглэлээ · ${describeNextReview(record)}`;
+    el.verdictMark.textContent = knewIt ? '✓' : '✕';
+    el.verdictText.textContent = knewIt ? 'Зөв' : 'Дахин үзье';
+    // The schedule is the one thing the card cannot say, and it is worth
+    // saying: "back in three days" is the only visible evidence that
+    // answering honestly does anything at all.
+    el.verdictTiming.textContent = describeNextReview(record);
     el.verdict.classList.toggle('is-correct', knewIt);
     el.verdict.classList.toggle('is-incorrect', !knewIt);
 
-    // Flip already carries it on the back of the card.
-    const detail = state.mode === 'flip' ? null : adapterFor(currentItem()).detail(currentItem());
-    el.detail.replaceChildren(...(detail ? [detail] : []));
+    /* What it should have been, in words. Only when it was missed: naming the
+       right answer to someone who has just given it is noise, and Choose has
+       already marked the option green. */
+    const question = state.question;
+    const showAnswer = !knewIt && state.mode === 'choose' && question;
+    el.answerLine.hidden = !showAnswer;
+    if (showAnswer) {
+      el.answerLineValue.textContent = question.answerText;
+      if (question.answerIsJapanese) el.answerLineValue.lang = 'ja';
+      else el.answerLineValue.removeAttribute('lang');
+    }
 
-    el.feedback.hidden = false;
+    // Flip already carries it on the back of the card.
+    const detail = state.mode === 'flip' ? null : detailBlock(currentItem());
+    el.detail.replaceChildren(...(detail ? [detail] : []));
 
     /* A right answer moves on by itself — being made to confirm something
        you already got right is the friction that makes a quiz feel slow.
@@ -855,7 +1384,7 @@ function createQuiz({
          Choose has an answer to show, and showing it on the card's own back
          is what stops the page from growing a block underneath the options
          at the exact moment the reader is reading them. The highlighted
-         option says which one; the card says what it means. */
+         option says which one; the card says what the word is. */
       turnToAnswer();
     } else {
       // The card stays turned: the answer is what the reader is grading
@@ -880,8 +1409,10 @@ function createQuiz({
      case where the animation never runs at all (an off-screen panel, a tab in
      the background) and would otherwise strand the round.
 
-     Guarded against firing twice: `once` on the listener, and a flag the
-     timeout checks, so a late animationend can't advance a second time. */
+     Guarded against firing twice, and the listener is taken off again rather
+     than left waiting on `once`: an animation that never runs leaves a live
+     listener behind on every card of the round, and the next card's entrance
+     is an animationend on the same element. */
   function advance() {
     const direction = state.direction;
     if (!direction) {
@@ -897,18 +1428,20 @@ function createQuiz({
     el.scene.classList.remove('is-entering');
 
     let stepped = false;
-    const go = () => {
-      if (stepped) return;
-      stepped = true;
-      step();
-    };
-
-    el.scene.addEventListener('animationend', (event) => {
+    const onEnd = (event) => {
       // Animation events bubble, and the correct-answer ring runs on a face
       // inside this element.
       if (event.target !== el.scene) return;
       go();
-    }, { once: true });
+    };
+    const go = () => {
+      if (stepped) return;
+      stepped = true;
+      el.scene.removeEventListener('animationend', onEnd);
+      step();
+    };
+
+    el.scene.addEventListener('animationend', onEnd);
     window.setTimeout(go, EXIT_MS + 120);
 
     el.scene.classList.add(`is-leaving-${direction}`);
@@ -938,9 +1471,13 @@ function createQuiz({
     el.summaryScore.classList.toggle('is-perfect', total > 0 && state.missed.length === 0);
 
     const pct = total === 0 ? 0 : Math.round((state.correct / total) * 100);
+    el.statPercent.textContent = `${pct}%`;
+    el.statCorrect.textContent = String(state.correct);
+    el.statMissed.textContent = String(state.missed.length);
+
     el.summaryText.textContent = state.missed.length === 0
       ? 'Бүгд зөв. Энэ давталтаас үлдсэн юм алга.'
-      : `Энэ давталтад ${pct}%. Доорх зүйлс бусдаасаа эрт эргэж ирнэ.`;
+      : 'Доорх зүйлс бусдаасаа эрт эргэж ирнэ.';
 
     el.missedList.replaceChildren();
     for (const item of state.missed) {
@@ -964,8 +1501,7 @@ function createQuiz({
     el.missedHeading.hidden = !hasMissed;
     el.missedList.hidden = !hasMissed;
     el.retryMissedButton.hidden = !hasMissed;
-    el.retryMissedButton.textContent =
-      `Practise the ${state.missed.length} you missed`;
+    el.retryMissedButton.textContent = `Practise the ${state.missed.length} you missed`;
 
     el.round.hidden = true;
     el.summary.hidden = false;
@@ -981,6 +1517,7 @@ function createQuiz({
     state.index = 0;
     state.correct = 0;
     state.missed = [];
+    state.question = null;
     state.title = title;
     finished = false;
 
@@ -998,18 +1535,12 @@ function createQuiz({
     onExit();
   }
 
-  el.card.addEventListener('click', flip);
-
-  el.missButton.addEventListener('click', () => answer(false, null));
-  el.knewButton.addEventListener('click', () => answer(true, null));
-  el.continueButton.addEventListener('click', advance);
-
-  // Ending a round early still counts what was graded: the schedule already
-  // has those answers, and reporting a 3/10 for a round stopped after three
-  // questions would punish stopping. Leaving before answering anything is
-  // just leaving — a "0 / 0" summary reports nothing and asks for a click
-  // to dismiss it.
-  el.exitButton.addEventListener('click', () => {
+  /* Ending a round early still counts what was graded: the schedule already
+     has those answers, and reporting a 3/10 for a round stopped after three
+     questions would punish stopping. Leaving before answering anything is
+     just leaving — a "0 / 0" summary reports nothing and asks for a click
+     to dismiss it. */
+  function endRound() {
     const graded = state.index + (state.answered ? 1 : 0);
     if (graded === 0) {
       close();
@@ -1017,7 +1548,14 @@ function createQuiz({
     }
     state.queue = state.queue.slice(0, graded);
     finish();
-  });
+  }
+
+  el.card.addEventListener('click', flip);
+
+  el.missButton.addEventListener('click', () => answer(false, null));
+  el.knewButton.addEventListener('click', () => answer(true, null));
+  el.continueButton.addEventListener('click', advance);
+  el.exitButton.addEventListener('click', endRound);
 
   el.againButton.addEventListener('click', () => {
     const next = onNewRound ? onNewRound() : shuffled(state.pool).slice(0, state.queue.length || 10);
@@ -1036,8 +1574,12 @@ function createQuiz({
   el.doneButton.addEventListener('click', close);
 
   /* Keyboard: 1–4 answer in Choose, Space turns the card and 1/2 grade it in
-     Flip, Enter continues past a wrong answer. Guarded by isActive() so the
-     keys never fire while another view is on screen.
+     Flip, Enter continues past a wrong answer, Escape ends the round. Guarded
+     by isActive() so the keys never fire while another view is on screen.
+
+     Modified keypresses are left alone. Ctrl+1 and Cmd+1 switch browser tabs,
+     and answering the question on the way out is a graded card the reader
+     never saw.
 
      Space is handled here rather than left to the card button's own native
      activation, because it has to work wherever focus happens to be — the
@@ -1045,9 +1587,19 @@ function createQuiz({
      focus, preventDefault() stops the native click, so it only turns once. */
   function handleKeydown(event) {
     if (event.repeat) return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     if (el.panel.hidden || !el.summary.hidden) return;
     if (!isActive()) return;
     if (event.target.matches('input, textarea')) return;
+
+    if (event.key === 'Escape') {
+      // The mobile nav drawer owns Escape while it is open, and it is over
+      // the top of this panel.
+      if (document.querySelector('.site-nav.is-open')) return;
+      event.preventDefault();
+      endRound();
+      return;
+    }
 
     if (state.answered) {
       if (event.key === 'Enter' && !el.continueButton.hidden) {
@@ -1155,4 +1707,13 @@ function createModePicker(initialMode, onChange) {
   return { wrap, get mode() { return current; } };
 }
 
-export { createQuiz, createModePicker, ADAPTERS, MODES, deckKeyForItemId, adapterFor };
+export {
+  createQuiz,
+  createModePicker,
+  ADAPTERS,
+  MODES,
+  deckKeyForItemId,
+  adapterFor,
+  buildQuestion,
+  supportedTypes,
+};
