@@ -372,16 +372,22 @@ function renderGrid(container, data) {
   /* Focus goes back to the "View details" button that opened the panel, not
      to the top of the page: a reader who opened the 96th kanji and closed
      it again should be back at the 96th kanji, which is also where the
-     browser leaves the scroll position. */
-  function closeDetail() {
+     browser leaves the scroll position.
+
+     Only when the close was the reader backing out of the panel, though. The
+     other caller is a route change, and there the router has already put
+     focus on the incoming view's heading — reaching back into a section this
+     app has just hidden to focus a button inside it is at best a no-op and
+     at worst drops the reader somewhere they cannot see. */
+  function closeDetail({ restoreFocus = true } = {}) {
     if (detailElements.wrap.hidden) return;
     detailElements.wrap.hidden = true;
     browse.hidden = false;
-    lastOpener?.focus();
+    if (restoreFocus) lastOpener?.focus();
     lastOpener = null;
   }
 
-  detailElements.exit.addEventListener('click', closeDetail);
+  detailElements.exit.addEventListener('click', () => closeDetail());
 
   // Escape closes the panel, matching the review session and the mobile
   // drawer — one key means "back out of this" everywhere in the app.
@@ -394,7 +400,7 @@ function renderGrid(container, data) {
   // Leaving the view and coming back should land on the grid. Without this
   // the panel was still open on return, showing one character with no sign
   // that a list of 132 was behind it.
-  window.addEventListener('hashchange', closeDetail);
+  window.addEventListener('hashchange', () => closeDetail({ restoreFocus: false }));
 
   function cardFor(row) {
     if (!row.item) {

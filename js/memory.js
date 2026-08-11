@@ -59,10 +59,10 @@ import { loadLessons } from './lessons.js';
 
 const VIEW_ID = 'memory';
 
-/* Eight slips per shelf. Enough that a shelf reads as a handful of real
-   things, few enough that no shelf can become the wall of rows this view
-   exists to get rid of — the rest are named in a quiet "+ n more" line
-   rather than rendered. */
+/* Six slips per shelf, and per press of "Show more". Enough that a shelf
+   reads as a handful of real things, few enough that no shelf can become the
+   wall of rows this view exists to get rid of — the rest wait behind the
+   button rather than being rendered. */
 const SHELF_LIMIT = 6;
 
 const DAY = 86400000;
@@ -847,6 +847,18 @@ function renderMemory(container, datasets) {
       const shelf = slip.closest('.memory-shelf');
       slip.remove();
       if (!list || list.children.length > 0 || !shelf) return;
+
+      /* A shelf that runs out on screen has not necessarily run out. Grading
+         the last of six while thirty wait behind "Show more" used to print
+         "that's today's lot" directly above a button saying 30 left — the app
+         contradicting itself on one shelf. Bringing the next page in is what
+         the button already promised, and only a shelf with nothing behind it
+         reaches the note below. */
+      const more = shelf.querySelector('.memory-shelf__more');
+      if (more && !more.hidden) {
+        more.click();
+        return;
+      }
 
       const emptyNote = shelf.querySelector('.memory-shelf__empty');
       if (!emptyNote) return;

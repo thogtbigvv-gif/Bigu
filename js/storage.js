@@ -66,6 +66,24 @@ function writeJSON(key, value) {
   }
 }
 
+/* Valid JSON is not the same thing as the shape a store expects, and only
+   the first was being checked. A key holding `null`, `5` or `[]` where a map
+   belongs parses cleanly and then throws on the very next line — `'x' in
+   null` is a TypeError, and so is pushing onto a string. Because every view
+   reads progress through review.js, one such key took the whole app down
+   with a blank screen, which is exactly the failure this module says it
+   exists to prevent. A wrong-shaped value is corruption like any other and
+   falls back the same way. */
+function readMap(key) {
+  const value = readJSON(key, null);
+  return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+}
+
+function readList(key) {
+  const value = readJSON(key, null);
+  return Array.isArray(value) ? value : [];
+}
+
 /* -- Availability ----------------------------------------------------------------- */
 
 function isAvailable() {
@@ -83,19 +101,19 @@ function createMapStore(name) {
   const key = buildKey(name);
   return {
     getAll() {
-      return readJSON(key, {});
+      return readMap(key);
     },
     get(itemKey, fallback) {
-      const all = readJSON(key, {});
+      const all = readMap(key);
       return itemKey in all ? all[itemKey] : fallback;
     },
     set(itemKey, value) {
-      const all = readJSON(key, {});
+      const all = readMap(key);
       all[itemKey] = value;
       return writeJSON(key, all);
     },
     remove(itemKey) {
-      const all = readJSON(key, {});
+      const all = readMap(key);
       delete all[itemKey];
       return writeJSON(key, all);
     },
@@ -119,25 +137,25 @@ function createListStore(name) {
   const key = buildKey(name);
   return {
     getAll() {
-      return readJSON(key, []);
+      return readList(key);
     },
     add(entry) {
-      const entries = readJSON(key, []);
+      const entries = readList(key);
       const record = { id: createId(), createdAt: Date.now(), ...entry };
       entries.push(record);
       writeJSON(key, entries);
       return record;
     },
     update(id, changes) {
-      const entries = readJSON(key, []);
-      const index = entries.findIndex((item) => item.id === id);
+      const entries = readList(key);
+      const index = entries.findIndex((item) => item && item.id === id);
       if (index === -1) return null;
       entries[index] = { ...entries[index], ...changes, updatedAt: Date.now() };
       writeJSON(key, entries);
       return entries[index];
     },
     remove(id) {
-      const entries = readJSON(key, []).filter((item) => item.id !== id);
+      const entries = readList(key).filter((item) => !item || item.id !== id);
       return writeJSON(key, entries);
     },
     clear() {
