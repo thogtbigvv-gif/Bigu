@@ -24,6 +24,7 @@
    ========================================================================== */
 
 import { practice, settings } from './storage.js';
+import { publishSession } from './bridge.js';
 import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker } from './quiz.js';
 import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
@@ -336,7 +337,10 @@ function renderLessons(container, lessons) {
        told they had never reviewed. A round ended early still counts what
        was graded, same rule as practice.js. */
     onFinish({ total, correct }) {
-      if (total > 0) practice.add({ total, correct, mode: 'lessons' });
+      if (total > 0) {
+        const record = practice.add({ total, correct, mode: 'lessons' });
+        publishSession({ id: record.id, total, correct, mode: 'lessons' });
+      }
     },
     onNewRound: () => (activeLesson ? shuffled(activeLesson.words) : null),
     onExit() {

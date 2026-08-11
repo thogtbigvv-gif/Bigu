@@ -20,6 +20,7 @@
    ========================================================================== */
 
 import { practice, settings } from './storage.js';
+import { publishSession } from './bridge.js';
 import { formatCount, getViewContainer } from './content.js';
 import { buildSession, countDue, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
@@ -146,7 +147,11 @@ function initController(elements, decks) {
       // already has those answers, and logging a 3/10 for a round stopped
       // after three questions would punish stopping.
       if (total > 0) {
-        practice.add({ total, correct, mode: state.deck });
+        const record = practice.add({ total, correct, mode: state.deck });
+        // Same round, same id, published for anything else on this origin
+        // that wants to know a round happened. It cannot throw, and nothing
+        // below depends on it having worked.
+        publishSession({ id: record.id, total, correct, mode: state.deck });
       }
       renderHistory();
       updateStatus();
