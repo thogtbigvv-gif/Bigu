@@ -1,94 +1,73 @@
 /* ==========================================================================
    home.js
-   The #home view — the first room of the app, and the one the reader opens
-   Bigu into.
+   道 — fills the five blocks laid out in index.html's #home section.
 
-   Home is the learning layer and only the learning layer. Progression — XP,
-   levels, ranks, skill percentages, missions — belongs to the separate
-   summer-project surface, which reads this app's activity out of the
-   `bigu:bridge` key written by js/bridge.js. Nothing here counts, awards or
-   displays any of it. Home's one question is "what can I learn right now?",
-   and everything on the screen is an answer to it.
+   Home is the space of the reader's own path. It shows presence, not plans:
+   what Japanese is on the desk today, the one line they wrote for
+   themselves, the marks their practice has left, and at most two quiet
+   sentences about where they stand. Nothing here is a task, nothing is a
+   call to action, and nothing keeps score.
 
-   What that means in practice, top to bottom:
+   Three rules this module is built to keep, and each one is a constraint on
+   the code rather than a note about the design:
 
-     今日の日本語   one real line of Japanese from data/, with an item behind
-                    it. Tap it and it opens onto its reading, its meaning,
-                    and the word or pattern it came from — the vocabulary or
-                    the grammar hint, taken straight from the same adapters
-                    the quiz uses so the reader meets it described the same
-                    way in both places.
+     No numbers reach the screen. Not a count, not a percentage, not a
+     streak, not a level, not a lesson number. That extends to the *content*:
+     the day's Japanese is picked from candidates filtered to those with no
+     digit in them, because "1,000円です" would put a figure on the calmest
+     screen in the app just as surely as a due count would. The reader's own
+     道 line is exempt — it is their writing, not the app's.
 
-     これを練習する  the primary action, and a real one. It runs a short round
-                    in the app's own quiz — the same js/quiz.js panel Review
-                    and Lessons run, the same grading into review.js's
-                    schedule — seeded with today's item and topped up by
-                    buildSession(). When it ends it is logged through
-                    practice.js's recordSession(), which is the one path that
-                    writes the practice store and republishes the id on the
-                    bridge. A round finished here is a round, indistinguishable
-                    downstream from one finished on the Review screen.
+     The page never changes its tone. A day on which nothing happened
+     renders exactly like any other day: an unmarked cell in ③ is fainter
+     ink and nothing else, and there is no branch anywhere below that praises
+     a good week or notices a bad one.
 
-     続きから / 復習 two quiet lines into the existing flows, rendered only
-                    when there is something true to say.
+     Nothing is invented. Every line comes from a store that already exists
+     or from data/. Where there is nothing true to say — no history to point
+     at, no line written — the block is hidden outright rather than filled
+     with an empty state explaining what the reader has not done.
 
-     学ぶ           the study shelf: six text links into the views that
-                    already exist. Not a second navigation and not a grid of
-                    cards — the sidebar is still the map, this is the desk.
-
-   Nothing here is stored. The lesson to continue comes from the progress
-   records review.js already keeps; whether anything is waiting is countDue()
-   over the pool the Review deck draws from; whether the reader has finished
-   something today is read off the practice store's own timestamps. No new
-   key, no new schema, no second progress model.
+   One new stored value, as specified: the 道 line, inside the existing
+   `settings` store. No new key namespace, no new store, no schema change.
    ========================================================================== */
 
-import { journal, practice as practiceStore } from './storage.js';
-import { buildSession, countDue, snapshotRecords } from './review.js';
-import { ADAPTERS, createQuiz, deckKeyForItemId, furigana } from './quiz.js';
-import { loadReviewPool, recordSession } from './practice.js';
-import { getViewContainer } from './content.js';
+import { journal, practice, settings } from './storage.js';
+import { snapshotRecords } from './review.js';
+import { deckKeyForItemId, furigana } from './quiz.js';
+import { loadReviewPool } from './practice.js';
+import { loadIntoView, OFFLINE_HINT } from './content.js';
 
 const VIEW_ID = 'home';
 
-/* Three cards. Not sessionSize() — that preference is about how long a
-   *review session* should be, and this is explicitly not one: the whole
-   promise of the button is that it costs a moment, and a reader who set
-   their rounds to twenty would find "practise this" was the longest thing
-   on the screen. Short enough to do while standing up is the feature. */
-const QUICK_ROUND = 3;
+/* The 道 line, inside the settings store the app already keeps. A single
+   string under a single key: the only value this module writes. */
+const WAY_KEY = 'wayLine';
 
-/* Choose, always. Flip asks the reader to grade themselves, which needs
-   material they already half-know; the one thing Home can't assume about
-   somebody who just opened the app is which half of the catalogue that is.
-   Four options and instant checking is answerable from a standing start,
-   which is the same reason Lessons defaults to it. Deliberately not written
-   to the shared `quizMode` setting — a round taken here should not silently
-   change how the Review screen behaves next time. */
-const QUICK_MODE = 'choose';
+/* How many days ③ shows. A rendering parameter, never rendered — two weeks
+   across on a wide screen and one week across on a phone (see home.css),
+   which is a window long enough to have a shape and short enough that its
+   far end is still something the reader remembers. */
+const DAYS_WINDOW = 56;
 
-/* The deck a Home round is logged under, and it is an existing one on
-   purpose. A quick round is buildSession() over the whole pool, due items
-   first — which is precisely what the Review view's "Due today" deck is, so
-   this is a true description rather than a convenient one. Minting a 'home'
-   value instead would put an unknown string into the `mode` field of the
-   `bigu:bridge` session contract that summer-project already consumes, and
-   into DECK_LABELS' fallback path on the Dashboard and the Review history.
-   The bridge contract is not ours to widen from here. */
-const QUICK_DECK = 'due';
+/* Anything with a digit in it is out of the running for ①. Full-width kana
+   digits included: the data is Japanese, and ５ is as much a figure as 5. */
+const HAS_DIGIT = /[0-9０-９]/;
 
 /* -- The hour ------------------------------------------------------------------------
    Four bands, named the way a room is named rather than the way a clock is
    read. Ordered by their start hour and scanned in order, so the last band
    whose `from` has passed is the current one — which leaves the small hours
-   (00:00–04:59) with the initial value, 夜, without needing a wrapping case.
+   (00:00-04:59) holding the initial value, 夜, with no wrapping case.
+
+   `key` is what home.css keys its tonal shift off; it is never shown.
    ------------------------------------------------------------------------------------ */
 
 const HOURS = [
-  { from: 5, jp: '朝', reading: 'あさ' },
-  { from: 11, jp: '昼', reading: 'ひる' },
-  { from: 17, jp: '夕', reading: 'ゆう' },
-  { from: 20, jp: '夜', reading: 'よる' },
+  { from: 5, key: 'asa', jp: '朝', reading: 'あさ' },
+  { from: 11, key: 'hiru', jp: '昼', reading: 'ひる' },
+  { from: 17, key: 'yuu', jp: '夕', reading: 'ゆう' },
+  { from: 20, key: 'yoru', jp: '夜', reading: 'よる' },
 ];
 
 function hourMark(now = new Date()) {
@@ -100,69 +79,11 @@ function hourMark(now = new Date()) {
   return mark;
 }
 
-/* -- The study shelf ------------------------------------------------------------------
-   Six doors into views that already exist, in the order the sidebar groups
-   them. It is not a copy of the navigation: the sidebar is the map of the
-   app and is always there, where this is the row of tools on the desk the
-   reader is already sitting at. Same labels as the nav rows deliberately —
-   one name per destination, or the app has two vocabularies for the same
-   six things.
+/* -- Dates ---------------------------------------------------------------------------
+   Local calendar fields, never toISOString(): a session finished at 23:30
+   belongs to the day the reader just spent, not to tomorrow in UTC. Same
+   rule bridge.js states for the same reason.
    ------------------------------------------------------------------------------------ */
-
-const SHELF = [
-  { href: '#lessons', label: 'Lessons' },
-  { href: '#vocabulary', label: 'Vocabulary' },
-  { href: '#grammar', label: 'Grammar' },
-  { href: '#kanji', label: 'Kanji' },
-  { href: '#reading', label: 'Reading' },
-  { href: '#practice', label: 'Review' },
-];
-
-/* -- Today's line ---------------------------------------------------------------------
-   Every candidate is a row that already exists in data/ *and* carries an id
-   the schedule knows, which is what makes the primary action honest: "これを
-   練習する" has to be able to actually practise this, and an item with no
-   record to grade cannot be practised. That rules out reading passages,
-   whose sentences are prose rather than catalogue entries — they stay one
-   tap away on the shelf instead.
-
-   Two shapes, because the furigana convention only applies to one of them. A
-   lesson *word* carries its reading over itself as ruby (the same rule
-   quiz.js and lessons.js use — no ruby when the word and its reading are the
-   same string). A vocabulary or grammar entry leads with its own example
-   *sentence*, and keeps its kana reading behind the tap: ruby over a whole
-   sentence would be the file's full-sentence kana stacked on one line, which
-   is not furigana.
-   ------------------------------------------------------------------------------------ */
-
-function collectLines({ lessonWords, vocabulary, grammar }) {
-  const lines = [];
-
-  for (const item of lessonWords) {
-    if (item.word && item.english) lines.push({ item, kind: 'word' });
-  }
-
-  for (const source of [vocabulary, grammar]) {
-    for (const item of source) {
-      if (item.example?.jp && item.example.mn) lines.push({ item, kind: 'sentence' });
-    }
-  }
-
-  return lines;
-}
-
-/* One line per day, the same one all day. A fresh random line on every
-   navigation would make Home flicker between sentences as the reader moves
-   around the app, and a line you can come back to is a line you might
-   actually learn. The seed is the calendar date and nothing else — no stored
-   cursor, no history, nothing to migrate. */
-function lineForToday(lines, now = new Date()) {
-  if (lines.length === 0) return null;
-  const seed = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate();
-  return lines[seed % lines.length];
-}
-
-/* -- Dates and state already on the device -------------------------------------------- */
 
 function dateKey(date) {
   const y = date.getFullYear();
@@ -171,397 +92,406 @@ function dateKey(date) {
   return `${y}-${m}-${d}`;
 }
 
-/* Whether anything was finished today — a yes or a no, never a count and
-   never a run of days. It is the difference between "you have done your
-   Japanese today" and a streak, and the difference matters: one is a
-   remark, the other is a thing to protect. The count, the streak and the XP
-   that come off the same records are summer-project's to draw. */
-function studiedToday(sessions, now = new Date()) {
-  const today = dateKey(now);
-  return sessions.some((entry) => entry?.createdAt && dateKey(new Date(entry.createdAt)) === today);
-}
+/* -- ① 言葉 -----------------------------------------------------------------------------
+   One item from data/, the same one all day.
 
-/* Lesson word ids are l1-01, l2-14, … — the lesson number is in the id, and
-   every graded or marked word already carries a `lastSeen`. The most
-   recently touched lesson word is therefore the lesson to offer, recovered
-   from records that exist rather than from a bookmark this module would have
-   to write and keep correct. Null when the reader has never touched one, in
-   which case the line is simply not rendered. */
-const LESSON_ID = /^l(\d+)-/;
+   Three shapes, because three kinds of thing live in these files and each is
+   read differently. A *word* carries its reading over itself as ruby — the
+   same rule quiz.js and lessons.js follow, including the part where a word
+   whose reading equals itself gets no ruby at all. A *sentence* is prose and
+   keeps its kana on a line of its own, because ruby over a whole sentence is
+   the file's full-sentence reading stacked on one line, which is not
+   furigana. A *kanji* has two readings and neither is an annotation of the
+   other, so they sit together under it.
 
-function lastLesson(records) {
-  let best = null;
+   Every candidate is checked for digits before it is offered. It costs about
+   an eighth of the vocabulary examples and one grammar example out of
+   fourteen, which is a price worth paying to keep the rule absolute.
+   ------------------------------------------------------------------------------------ */
 
-  for (const [itemId, record] of records) {
-    const match = LESSON_ID.exec(itemId);
-    if (!match || !record.lastSeen) continue;
-    if (!best || record.lastSeen > best.lastSeen) {
-      best = { lesson: Number(match[1]), lastSeen: record.lastSeen };
+function candidateLines({ lessonWords, vocabulary, grammar, kanji }) {
+  const lines = [];
+
+  function offer(line, ...text) {
+    if (text.some((part) => part && HAS_DIGIT.test(part))) return;
+    lines.push(line);
+  }
+
+  for (const item of lessonWords) {
+    if (!item.word || !item.english) continue;
+    offer(
+      { shape: 'word', jp: item.word, reading: item.reading, meaning: item.english },
+      item.word, item.reading, item.english,
+    );
+  }
+
+  for (const item of vocabulary) {
+    const head = item.kanji || item.kana;
+    if (head && item.meaning) {
+      offer(
+        { shape: 'word', jp: head, reading: item.kana, meaning: item.meaning },
+        head, item.kana, item.meaning,
+      );
+    }
+
+    const example = item.example;
+    if (example?.jp && example.mn) {
+      offer(
+        { shape: 'sentence', jp: example.jp, reading: example.reading, meaning: example.mn },
+        example.jp, example.reading, example.mn,
+      );
     }
   }
 
-  return best ? best.lesson : null;
+  for (const item of grammar) {
+    const example = item.example;
+    if (!example?.jp || !example.mn) continue;
+    offer(
+      { shape: 'sentence', jp: example.jp, reading: example.reading, meaning: example.mn },
+      example.jp, example.reading, example.mn,
+    );
+  }
+
+  for (const item of kanji) {
+    if (!item.character || !item.meaning) continue;
+    const readings = [item.onyomi, item.kunyomi].filter(Boolean).join(' ・ ');
+    offer(
+      { shape: 'kanji', jp: item.character, reading: readings, meaning: item.meaning },
+      item.character, readings, item.meaning,
+    );
+  }
+
+  return lines;
 }
 
-/* Nothing in any store, which is also true after a reader clears their data
-   or opens the app in a second browser — both of which are, from the app's
-   side, exactly a first visit. A flag would be wrong in all three cases. */
-function isFirstVisit(records, sessions) {
-  return records.size === 0 && journal.getAll().length === 0 && sessions.length === 0;
+/* Seeded off the YYYY-MM-DD string itself rather than off a number built
+   from its parts, so the pick is stable for the whole of a calendar day and
+   genuinely unrelated between one day and the next — an arithmetic seed like
+   y*10000+m*100+d walks the candidate list in near-lockstep with the date,
+   and consecutive days land on neighbouring entries in the same file.
+   djb2: small, well-behaved over short ASCII strings, and no dependency. */
+function seedFrom(key) {
+  let hash = 5381;
+  for (let i = 0; i < key.length; i += 1) {
+    hash = ((hash << 5) + hash + key.charCodeAt(i)) >>> 0;
+  }
+  return hash;
 }
 
-/* -- Small pieces ---------------------------------------------------------------------- */
-
-function element(tag, className, text) {
-  const node = document.createElement(tag);
-  if (className) node.className = className;
-  if (text !== undefined) node.textContent = text;
-  return node;
+function lineForToday(lines, now = new Date()) {
+  if (lines.length === 0) return null;
+  return lines[seedFrom(dateKey(now)) % lines.length];
 }
 
-function createHourMark() {
-  const mark = element('p', 'home__hour');
-  mark.lang = 'ja';
-  const { jp, reading } = hourMark();
-  mark.append(furigana(jp, reading));
-  return mark;
+function renderWords(container, pool) {
+  const line = lineForToday(candidateLines(pool));
+  if (!line) return;
+
+  const jp = document.createElement('p');
+  jp.className = line.shape === 'sentence' ? 'home__jp home__jp--sentence' : 'home__jp';
+  jp.lang = 'ja';
+
+  if (line.shape === 'word') jp.append(furigana(line.jp, line.reading));
+  else jp.textContent = line.jp;
+
+  container.append(jp);
+
+  // A word already carries its reading as ruby; printing it again underneath
+  // would be the same kana twice on a screen built around one line.
+  if (line.shape !== 'word' && line.reading) {
+    const reading = document.createElement('p');
+    reading.className = 'reading home__reading';
+    reading.lang = 'ja';
+    reading.textContent = line.reading;
+    container.append(reading);
+  }
+
+  const meaning = document.createElement('p');
+  meaning.className = 'home__meaning';
+  meaning.textContent = line.meaning;
+  container.append(meaning);
 }
 
-/* -- 今日の日本語 ------------------------------------------------------------------------
-   The Japanese, its meaning behind it, and the entry it came from.
+/* -- ② 道 --------------------------------------------------------------------------------
+   One sentence the reader writes. An <input> rather than a block that swaps
+   into one: it is already click-to-edit, it is reachable by keyboard with no
+   focus scripting at all, and its placeholder is the empty state — inline,
+   quiet, and gone the instant anything is typed.
 
-   The whole line is the control — on a phone that is the difference between
-   a comfortable tap and aiming at a glyph — and the disclosure is the same
-   aria-expanded/hidden pair reading.js uses for its sentences, so opening a
-   gloss behaves identically in both places. The hint underneath erases
-   itself once the reader has opened one, the same way reading.js's does:
-   instruction text that outstays the instruction is the commonest kind of
-   clutter there is.
+   Saved on blur and on Enter, and only when the value has actually changed,
+   so tabbing through the page does not write the store on every pass.
+   Escape restores what was last saved, which is the one thing a chromeless
+   editable line otherwise gives no way back from.
    ------------------------------------------------------------------------------------ */
 
-/* Where the line came from, revealed with its meaning.
+function renderWay(container) {
+  const label = container.querySelector('.home__label');
 
-   For a sentence that is the entry the sentence demonstrates, described by
-   the adapter that owns it rather than by a second reading of the raw fields
-   here: a vocabulary line names the word and its part of speech, a grammar
-   line names the pattern and its structure — which is exactly the "useful
-   vocabulary" and the "grammar hint" the sentence was chosen for.
+  const field = document.createElement('input');
+  field.type = 'text';
+  field.className = 'home__way-line';
+  field.id = 'home-way-line';
+  field.autocomplete = 'off';
+  field.placeholder = 'Өөрийн нэг мөр';
+  // The block's own 道 label is the accessible name; a second visible label
+  // would be the same word twice.
+  if (label) field.setAttribute('aria-labelledby', label.id);
 
-   For a lesson word the line *is* the entry, so repeating it would be the
-   same word twice. What that reader is missing instead is where the word
-   sits in the course, so the block names its lesson. Both answer the same
-   question — "what is this part of?" — which is why they are one block and
-   not two.
+  let saved = String(settings.get(WAY_KEY, '') ?? '');
+  field.value = saved;
 
-   `lessons` is the authored lesson list off the pool; the number is read out
-   of the word's own id (l7-03 → 7), which is the only place a flattened word
-   still carries it. */
-function createSource(line, lessons) {
-  const { item, kind } = line;
-  const wrap = element('div', 'home__source');
-
-  if (kind === 'word') {
-    const match = LESSON_ID.exec(item.id);
-    const lesson = match && lessons.find((entry) => entry.lesson === Number(match[1]));
-    if (!lesson) return null;
-
-    wrap.append(element('p', 'home__source-meaning', `Lesson ${lesson.lesson}`));
-    const title = element('p', 'home__source-jp', lesson.title);
-    title.lang = 'ja';
-    wrap.append(title);
-    return wrap;
+  function commit() {
+    const next = field.value.trim();
+    if (next === saved) return;
+    saved = next;
+    settings.set(WAY_KEY, next);
   }
 
-  const adapter = ADAPTERS[deckKeyForItemId(item.id)];
-  if (!adapter) return null;
-
-  const head = element('p', 'home__source-jp');
-  head.append(adapter.front(item));
-  wrap.append(head, element('p', 'home__source-meaning', adapter.meaning(item)));
-
-  const hint = adapter.hint(item);
-  if (hint) wrap.append(element('p', 'home__source-hint meta', hint));
-
-  return wrap;
-}
-
-function createToday(line, lessons) {
-  const wrap = element('div', 'home__today');
-
-  const glossId = 'home-today-gloss';
-  const { item, kind } = line;
-  const adapter = ADAPTERS[deckKeyForItemId(item.id)];
-
-  const face = document.createElement('button');
-  face.type = 'button';
-  face.className = 'home__face';
-  face.setAttribute('aria-expanded', 'false');
-  face.setAttribute('aria-controls', glossId);
-
-  const jp = element('span', 'home__jp');
-  jp.lang = 'ja';
-  if (kind === 'word') jp.append(furigana(item.word, item.reading));
-  else jp.textContent = item.example.jp;
-  face.append(jp);
-
-  const hint = element('p', 'home__hint', 'タップして意味を見る');
-  hint.lang = 'ja';
-
-  const gloss = element('div', 'home__gloss');
-  gloss.id = glossId;
-  gloss.hidden = true;
-
-  if (kind === 'sentence' && item.example.reading) {
-    const reading = element('p', 'reading home__reading', item.example.reading);
-    reading.lang = 'ja';
-    gloss.append(reading);
-  }
-
-  gloss.append(element('p', 'home__meaning', kind === 'word' ? adapter.meaning(item) : item.example.mn));
-
-  const source = createSource(line, lessons);
-  if (source) gloss.append(source);
-
-  face.addEventListener('click', () => {
-    // A drag that ended inside the button was a selection, not a press —
-    // this is Japanese somebody might want to copy into a dictionary. Same
-    // guard reading.js carries on its sentences, for the same reason.
-    const selection = window.getSelection();
-    if (selection && !selection.isCollapsed && face.contains(selection.anchorNode)) return;
-
-    const open = face.getAttribute('aria-expanded') === 'true';
-    face.setAttribute('aria-expanded', String(!open));
-    gloss.hidden = open;
-    hint.hidden = !open;
+  field.addEventListener('blur', commit);
+  field.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      commit();
+      field.blur();
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      field.value = saved;
+      field.blur();
+    }
   });
 
-  wrap.append(face, hint, gloss);
-  return wrap;
+  container.append(field);
 }
 
-/* One row, Japanese first with a quiet gloss after it — `続きから · Lesson 18`.
-   A link, not a card and not a button block: this is a door left ajar. */
-function createWay(href, jp, note) {
-  const way = document.createElement('a');
-  way.className = 'home__way';
-  way.href = href;
+/* -- ③ 積み重ね ---------------------------------------------------------------------------
+   One mark per day over the window, oldest first.
 
-  const lead = element('span', 'home__way-jp', jp);
-  lead.lang = 'ja';
-  way.append(lead);
+   A day counts as present if anything at all happened on it: a review
+   session finished, an item first met or last seen, a journal entry
+   written. All three are already timestamped in stores this module only
+   reads, so the grid needs no new state and stays correct across a restored
+   backup.
 
-  if (note) {
-    const separator = element('span', 'home__way-separator', '·');
-    separator.setAttribute('aria-hidden', 'true');
-    way.append(separator, element('span', 'home__way-note', note));
+   Presence and absence, and nothing else. No scale, no legend, no tooltip
+   and no total — an intensity ramp is a count wearing a colour, and this
+   screen does not count. The two states differ only in how much ink is on
+   the paper (see home.css), so a fortnight of absence reads as a fortnight
+   and not as a reproach.
+
+   Marked as one image with one name: per-cell labels would hand a screen
+   reader a day-by-day audit of the reader's month, which is exactly the
+   thing the visual design refuses to spell out.
+   ------------------------------------------------------------------------------------ */
+
+function collectStudyDays({ records, sessions, entries }) {
+  const days = new Set();
+
+  for (const entry of entries) {
+    if (entry?.date) days.add(entry.date);
   }
 
-  return way;
+  for (const session of sessions) {
+    if (session?.createdAt) days.add(dateKey(new Date(session.createdAt)));
+  }
+
+  for (const record of records.values()) {
+    if (record.lastSeen) days.add(dateKey(new Date(record.lastSeen)));
+    if (record.firstSeen) days.add(dateKey(new Date(record.firstSeen)));
+  }
+
+  return days;
 }
 
-function createShelf() {
-  const wrap = element('nav', 'home__shelf');
-  wrap.setAttribute('aria-labelledby', 'home-shelf-heading');
+function renderDays(container, days, now = new Date()) {
+  const grid = document.createElement('div');
+  grid.className = 'home__days-grid';
+  grid.setAttribute('role', 'img');
+  grid.setAttribute('aria-label', 'Сүүлийн үеийн өдрүүд');
 
-  const heading = element('h2', 'home__section-heading', '学ぶ');
-  heading.id = 'home-shelf-heading';
-  heading.lang = 'ja';
+  const cursor = new Date(now);
+  cursor.setDate(cursor.getDate() - (DAYS_WINDOW - 1));
 
-  const list = element('ul', 'home__shelf-list');
-  for (const { href, label } of SHELF) {
-    const item = document.createElement('li');
-    const link = document.createElement('a');
-    link.className = 'home__shelf-link';
-    link.href = href;
-    link.textContent = label;
-    item.append(link);
-    list.append(item);
+  for (let i = 0; i < DAYS_WINDOW; i += 1) {
+    const cell = document.createElement('span');
+    cell.className = days.has(dateKey(cursor)) ? 'home__day home__day--marked' : 'home__day';
+    grid.append(cell);
+    cursor.setDate(cursor.getDate() + 1);
   }
 
-  wrap.append(heading, list);
-  return wrap;
+  container.append(grid);
+}
+
+/* -- ④ 現在地 and ⑤ 続き --------------------------------------------------------------------
+   Where the reader stands, in words.
+
+   The source concept for 現在地 was a level and a progression figure. The
+   no-numbers rule bans exactly that, and no-numbers wins: this is a
+   sentence, and the numeric version of the same question belongs on the
+   summer-project dashboard, which already owns progress display. Where a
+   line cannot be said without a figure it is not said.
+
+   Which is why a lesson is named by its *title* and never "Lesson 7". Both
+   lines are derived from one fact — the most recently touched item in the
+   progress store — so they appear and disappear together, and neither
+   renders at all for a reader with no history.
+   ------------------------------------------------------------------------------------ */
+
+const LESSON_ID = /^l(\d+)-/;
+
+/* Where the deck names live in the reader's own language. quiz.js's adapter
+   labels are the English nav words; these are the same four places said in
+   the language the rest of the app's prose is written in. */
+const AREA_NAMES = {
+  lessons: 'хичээл',
+  vocabulary: 'үг',
+  grammar: 'хэл зүй',
+  kanji: 'ханз',
+};
+
+function mostRecent(records) {
+  let best = null;
+
+  for (const [itemId, record] of records) {
+    if (!record.lastSeen) continue;
+    if (!best || record.lastSeen > best.record.lastSeen) best = { itemId, record };
+  }
+
+  return best;
+}
+
+/* The name of the place the reader last stood, and the route back to it.
+   A lesson is named by its title, which is the only way to say which lesson
+   without saying a number; everything else is named by its area. A title
+   carrying a digit is dropped back to the area name rather than bending the
+   rule for one entry. */
+function describeWhere(records, lessons) {
+  const latest = mostRecent(records);
+  if (!latest) return null;
+
+  // All four deck keys are also view ids, which is what makes ⑤ a one-line
+  // lookup rather than a route table.
+  const kind = deckKeyForItemId(latest.itemId);
+  if (!kind || !AREA_NAMES[kind]) return null;
+
+  const where = { kind, href: `#${kind}`, name: AREA_NAMES[kind] };
+
+  if (kind === 'lessons') {
+    const match = LESSON_ID.exec(latest.itemId);
+    const lesson = match && lessons.find((entry) => entry.lesson === Number(match[1]));
+    if (lesson?.title && !HAS_DIGIT.test(lesson.title)) {
+      where.name = lesson.title;
+      where.lang = 'ja';
+    }
+  }
+
+  return where;
+}
+
+function renderWhere(container, where) {
+  container.textContent = 'Сүүлд: ';
+
+  const name = document.createElement('span');
+  if (where.lang) name.lang = where.lang;
+  name.textContent = where.name;
+
+  container.append(name);
+  container.hidden = false;
+}
+
+function renderNext(container, where) {
+  const link = document.createElement('a');
+  link.className = 'home__next-link';
+  link.href = where.href;
+  link.lang = 'ja';
+  link.textContent = '続き';
+
+  container.append(link);
+  container.hidden = false;
 }
 
 /* -- Rendering --------------------------------------------------------------------------
-   The room is rebuilt on every render; the quiz panel beside it is built
-   once and never thrown away, because it is a live component with listeners
-   and a round possibly in progress. Hence two stable children of the view
-   container rather than one — see initHome.
+   Everything but ① comes out of localStorage and is on screen on the first
+   frame. ① waits on the content files and goes through content.js's own
+   load cycle — skeleton, then render, then a retryable error state on
+   failure — rather than growing a sixth private copy of that machinery here.
 
-   The hour, the ways back in and today's remark all come from localStorage
-   and are on screen on the first frame. Today's Japanese and the primary
-   action wait on the content files, so they are inserted when those arrive
-   rather than held behind a skeleton: there is no layout for a skeleton to
-   reserve on a screen this quiet, and a placeholder block would be the
-   loudest thing on it.
-
-   Nothing is invented if a fetch fails. The line is absent, the action is
-   absent, and the shelf — which needs no data at all — is still there, so a
-   reader who cannot reach data/ still lands somewhere with doors in it.
+   The skeleton shape is the three-row one: three short bars is what this
+   block resolves into, so nothing on the page moves when the data lands.
    ---------------------------------------------------------------------------------------- */
 
 function initHome() {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
-  const content = getViewContainer(view, 'home-content');
+  const room = document.getElementById('home-room');
+  const blocks = {
+    words: document.getElementById('home-words'),
+    way: document.getElementById('home-way'),
+    days: document.getElementById('home-days'),
+    where: document.getElementById('home-where'),
+    next: document.getElementById('home-next'),
+    hour: document.getElementById('home-hour'),
+  };
+  if (!room || Object.values(blocks).some((block) => !block)) return;
 
-  const room = element('div', 'home');
-  const practiceSlot = element('div', 'home__practice-slot');
-  content.replaceChildren(room, practiceSlot);
+  /* Built once. The 道 line holds the reader's cursor and possibly an
+     uncommitted edit, so it must survive a re-render of everything around
+     it — which is the whole reason the blocks are separate containers
+     rather than one region this module replaces wholesale. */
+  renderWay(blocks.way);
 
-  /* Built on the first press, not at boot: a reader who never taps the
-     button never pays for the panel, and by the time they do the pool it
-     needs is already resolved. `pool` is captured by the closure below and
-     re-read on every round, so a later render can't leave it stale. */
-  let quiz = null;
-  let pool = null;
-
-  function startQuickRound(item) {
-    if (!pool) return;
-
-    if (!quiz) {
-      quiz = createQuiz({
-        // Keyboard shortcuts must not fire while another view is on screen.
-        isActive: () => location.hash.slice(1) === VIEW_ID,
-        /* The one path that logs a round in this app: the practice store
-           mints the id, bridge.js republishes it. Home does not touch the
-           bridge itself and does not award anything — it finishes a real
-           session and lets the existing pipeline carry it. */
-        onFinish: ({ total, correct }) => {
-          recordSession({ total, correct, mode: QUICK_DECK });
-        },
-        // "Дахин давтах" draws a fresh short round rather than reshuffling
-        // the same three — the schedule has moved on since they were picked.
-        onNewRound: () => buildSession(pool.everything, QUICK_ROUND),
-        // Onward from a quick round is the full Review screen: this was a
-        // taste of it, and that is where the rest of it lives.
-        onNextStep: () => ({ go: () => { location.hash = '#practice'; } }),
-        onExit: () => {
-          room.hidden = false;
-          render();
-        },
-      });
-      practiceSlot.append(quiz.element);
-    }
-
-    /* Today's item first, then whatever the schedule says is most ready.
-       Deduplicated, because buildSession is perfectly entitled to pick the
-       same word — and asking the same card twice in a three-card round is
-       the sort of thing that makes a practice surface feel fake. */
-    const rest = buildSession(pool.everything, QUICK_ROUND).filter((other) => other.id !== item.id);
-    const queue = [item, ...rest].slice(0, QUICK_ROUND);
-
-    room.hidden = true;
-    quiz.run(queue, { mode: QUICK_MODE, pool: pool.everything, title: '今日の練習' });
+  function renderHour() {
+    const { key, jp, reading } = hourMark();
+    room.dataset.hour = key;
+    blocks.hour.replaceChildren(furigana(jp, reading));
   }
 
-  /* One render at a time. A hashchange arriving while the previous render is
-     still waiting on the pool would otherwise let the slower of the two
-     finish last and write a stale room. */
-  let renderToken = 0;
+  function renderState() {
+    const records = snapshotRecords();
+    const sessions = practice.getAll();
+    const entries = journal.getAll();
+
+    blocks.days.querySelector('.home__days-grid')?.remove();
+    renderDays(blocks.days, collectStudyDays({ records, sessions, entries }));
+
+    return records;
+  }
 
   async function render() {
-    const token = (renderToken += 1);
+    renderHour();
+    const records = renderState();
 
-    const records = snapshotRecords();
-    const sessions = practiceStore.getAll();
-    const firstVisit = isFirstVisit(records, sessions);
+    /* ④ and ⑤ need one field off the lesson list, so they resolve with the
+       catalogue rather than on the first frame. Hidden until then, which is
+       also how they stay for a reader with no history. */
+    blocks.where.hidden = true;
+    blocks.where.replaceChildren();
+    blocks.next.hidden = true;
+    blocks.next.replaceChildren();
 
-    room.replaceChildren();
-    room.hidden = false;
+    await loadIntoView(blocks.words, {
+      skeleton: 'memory',
+      load: loadReviewPool,
+      render(container, pool) {
+        container.replaceChildren();
+        renderWords(container, pool);
 
-    /* -- The desk ------------------------------------------------------------- */
-    const desk = element('section', 'home__desk');
-    desk.setAttribute('aria-labelledby', 'home-desk-heading');
-
-    desk.append(createHourMark());
-
-    if (firstVisit) {
-      const welcome = element('p', 'home__welcome', '日本語を、ここから。');
-      welcome.lang = 'ja';
-      desk.append(welcome);
-    } else if (studiedToday(sessions)) {
-      /* A remark, not a reward. It says the reader has already done their
-         Japanese today and then gets out of the way — no count, no streak,
-         no badge and nothing that gets worse tomorrow if they stop. */
-      const done = element('p', 'home__done', '今日はできました。');
-      done.lang = 'ja';
-      desk.append(done);
-    }
-
-    const heading = element('h2', 'home__section-heading', '今日の日本語');
-    heading.id = 'home-desk-heading';
-    heading.lang = 'ja';
-    desk.append(heading);
-
-    /* -- The aside ------------------------------------------------------------ */
-    const aside = element('aside', 'home__aside');
-
-    const ways = element('div', 'home__ways');
-    const lesson = lastLesson(records);
-    if (lesson !== null) ways.append(createWay('#lessons', '続きから', `Lesson ${lesson}`));
-    if (ways.childElementCount > 0) aside.append(ways);
-
-    aside.append(createShelf());
-    room.append(desk, aside);
-
-    /* -- What needs the catalogue --------------------------------------------- */
-    try {
-      pool = await loadReviewPool();
-    } catch (error) {
-      console.error('[Bigu]', error);
-      return;
-    }
-    if (token !== renderToken) return;
-
-    const lines = collectLines(pool);
-    // A brand-new reader gets the first word of the first lesson rather than
-    // a random N2 grammar pattern: on day one the honest answer to "here is
-    // today's Japanese" is the one the app would have taught first anyway.
-    const line = firstVisit ? (lines[0] ?? null) : lineForToday(lines);
-    if (!line) return;
-
-    desk.append(createToday(line, pool.lessons));
-
-    const actions = element('div', 'home__actions');
-
-    const start = document.createElement('button');
-    start.type = 'button';
-    start.className = 'button button--primary home__start';
-    start.lang = 'ja';
-    start.textContent = 'これを練習する';
-    start.addEventListener('click', () => startQuickRound(line.item));
-    actions.append(start);
-
-    // First visit only: the reader has no idea yet that there are fifteen
-    // lessons behind the shelf, so the on-ramp gets named once.
-    if (firstVisit) {
-      const lessons = document.createElement('a');
-      lessons.className = 'button button--secondary';
-      lessons.href = '#lessons';
-      lessons.textContent = 'Lessons';
-      actions.append(lessons);
-    }
-
-    desk.append(actions, element('p', 'home__actions-note meta', 'Богино дасгал — эндээс шууд.'));
-
-    // Last, and only when true: the schedule is the reason to open the app
-    // on a day the reader has nothing new in mind. No count, no minutes.
-    if (countDue(pool.everything).due > 0) {
-      ways.append(createWay('#practice', '復習', 'давтах зүйл хүлээж байна'));
-      if (!ways.isConnected) aside.prepend(ways);
-    }
+        const where = describeWhere(records, pool.lessons);
+        if (where) {
+          renderWhere(blocks.where, where);
+          renderNext(blocks.next, where);
+        }
+      },
+      errorTitle: 'Өнөөдрийн япон ирсэнгүй.',
+      errorDetail: `Энэ мөр data/ доторх агуулгаас гардаг. ${OFFLINE_HINT}`,
+    });
   }
 
-  // Re-read on the way back in, same as the other views that summarize state
-  // they don't own: the lesson to continue, what is due and whether anything
-  // has been finished today all change while the reader is elsewhere. Never
-  // mid-round — the room is hidden then, and replacing it under a live quiz
-  // would be the only visible effect.
+  /* Re-read on the way back in. The marks, where the reader stands and the
+     hour all move while they are elsewhere in the app; the 道 line does not,
+     and is deliberately left alone by this path. */
   window.addEventListener('hashchange', () => {
     if (location.hash.slice(1) !== VIEW_ID) return;
-    if (quiz && !quiz.element.hidden) return;
     render().catch((error) => console.error('[Bigu]', error));
   });
 
