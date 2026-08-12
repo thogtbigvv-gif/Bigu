@@ -483,4 +483,9 @@ async function initPractice() {
   }
 }
 
-export { initPractice, loadReviewPool, recordSession, DECK_LABELS };
+/* recordSession is not on this list. It was exported for a version of Home
+   that ran its own short round and had to log it through the same two
+   writes; that Home is gone, so the export has no importer. The function
+   stays — this module's own onFinish is built on it — and goes back on the
+   list the day a second surface finishes a round again. */
+export { initPractice, loadReviewPool, DECK_LABELS };

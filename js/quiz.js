@@ -1759,15 +1759,18 @@ function createModePicker(initialMode, onChange) {
    the way the rest of the app does — ruby over the word, and no ruby at all
    when the word and its reading are the same string. It was that or a third
    private copy of the same eight lines (lessons.js has the second), which is
-   how the two that already exist got here. */
+   how the two that already exist got here.
+
+   MODES, adapterFor, buildQuestion and supportedTypes came off this list
+   for the reason content.js states about its own: they had no importer, and
+   an export with no caller advertises an API that does not exist yet — which
+   is how a second, slightly different way of asking a question gets started.
+   All four are still used inside this module and all four are one line away
+   from coming back the day something outside it needs them. */
 export {
   createQuiz,
   createModePicker,
   furigana,
   ADAPTERS,
-  MODES,
   deckKeyForItemId,
-  adapterFor,
-  buildQuestion,
-  supportedTypes,
 };

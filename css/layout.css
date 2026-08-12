@@ -324,7 +324,11 @@
    The roster of containers whose direct children reveal in sequence, listed in
    one place so the app has exactly one stagger and not eight that drifted. A
    view opts in by adding its container class here — no JS, no hook class in
-   the markup, nothing for a render path to remember to set.
+   the markup, nothing for a render path to remember to set. There is
+   deliberately no generic `.stagger` opt-in on the list: one sat here unused
+   for the whole life of the file, and a roster of real container classes says
+   which lists in this app actually cascade, where a catch-all hook only says
+   that one could.
 
    THE CAP IS THE POINT. Only the first nine children are delayed at all;
    everything past them arrives with the ninth. Without it a 300-card
@@ -350,7 +354,6 @@
    first card reads as a wait on the fortieth. The quiz gets its motion at the
    card, once per question, and nowhere else.
    ------------------------------------------------------------------------------- */
-.stagger,
 .dashboard-grid,
 .dashboard-welcome__steps,
 .vocab-list,
