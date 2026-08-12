@@ -334,6 +334,49 @@
              true without drawing anything. Built by js/home.js. -->
         <section id="home" class="view" aria-labelledby="home-heading">
           <h1 id="home-heading" class="sr-only">Home</h1>
+
+          <!-- Five blocks, in this order, filled by js/home.js. They are laid
+               out here rather than built in script so the shell of the page
+               is readable without running it, and so the aria wiring between
+               each block and its own label is valid whether or not the
+               script ever gets that far.
+
+               Nothing here is a card. The blocks are separated by space, not
+               by borders or surfaces — see css/home.css. -->
+          <div class="home" id="home-room">
+            <!-- ① 言葉. Deliberately unlabelled: the Japanese is the first
+                 thing on the page and a heading over it would put a word of
+                 UI in front of the one thing this screen exists to show. -->
+            <section class="home__words" id="home-words" aria-label="Өнөөдрийн япон"></section>
+
+            <!-- ② 道. One sentence the reader writes themselves. The label
+                 stays because an empty line with no name is not an empty
+                 state, it is a mystery. -->
+            <section class="home__way" id="home-way" aria-labelledby="home-way-label">
+              <p class="home__label" id="home-way-label" lang="ja">道</p>
+            </section>
+
+            <!-- ③ 積み重ね. One mark per day, present or absent, and nothing
+                 else — no scale, no legend, no total. -->
+            <section class="home__days" id="home-days" aria-labelledby="home-days-label">
+              <p class="home__label" id="home-days-label" lang="ja">積み重ね</p>
+            </section>
+
+            <!-- ④ 現在地 and ⑤ 続き. One line each, both `hidden` until
+                 there is something true to put in them — a reader with no
+                 history sees neither, rather than seeing two empty states
+                 explaining what they have not done yet. -->
+            <p class="home__where" id="home-where" hidden></p>
+            <p class="home__next" id="home-next" hidden></p>
+
+            <!-- The hour, as one kanji, at the foot of the page like a seal.
+                 It is the whole of the app's time-of-day framing: no
+                 greeting, no sentence, and placed last so that nothing
+                 precedes the Japanese in ①. It also carries the room's tone
+                 — js/home.js sets data-hour on .home and css/home.css shifts
+                 the quiet type a step with it. -->
+            <p class="home__hour" id="home-hour" lang="ja"></p>
+          </div>
         </section>
 
         <!-- Demoted, not deleted. This is a status surface, and status —

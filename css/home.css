@@ -1,53 +1,218 @@
 /* ==========================================================================
    home.css
-   The entry room. Every value here is a token from variables.css — this
-   screen introduces no colour, no size, no radius and no timing of its own,
-   because a room that needed its own design system would not be the same
-   room the rest of the app is in.
+   道 — the entry view, and the space of the reader's own path.
 
-   The composition is two things and their relationship: a desk, where the
-   Japanese and the one action on it live, and a shelf beside it. On a phone
-   they stack in that order, which is also their order of importance. On a
-   wide screen they sit side by side, weighted heavily to the desk — the
-   previous version centred one narrow column and left two thirds of a
-   laptop empty, which reads as an unfinished page rather than a calm one.
+   Home is not a dashboard, not a profile and not a learning page. It shows
+   presence, not plans: the day's Japanese, one line the reader wrote, the
+   marks a practice leaves behind, and at most two quiet lines about where
+   they stand. A day on which nothing was done renders exactly like any
+   other day — there is no state in this file that means "you missed one",
+   and nothing here ever changes tone to praise or to scold.
 
-   There are no cards here, and that is deliberate. Everything sits directly
-   on the page, separated by space and by one hairline. If something is added
-   later that needs a box drawn round it to read, it does not belong on this
-   screen.
+   Every value is a token from variables.css. No colour, size, radius or
+   timing is invented here, and nothing is boxed: the blocks are separated by
+   whitespace alone, so the page reads as one surface rather than as a stack
+   of widgets. If something added later needs a border drawn round it to be
+   legible, it does not belong on this screen.
    ========================================================================== */
 
+/* A single column, narrow enough to read and wide enough to breathe, with
+   the largest gap in the app between blocks. The gap is the design: five
+   things this far apart cannot read as a grid of cards no matter what they
+   contain. */
 .home {
   display: flex;
   flex-direction: column;
-  gap: var(--space-xl);
-  width: 100%;
-  padding-block-start: var(--space-md);
-}
-
-/* -- The desk --------------------------------------------------------------------------
-   Japanese first, in the reading order the screen is built around: the hour,
-   then what this is, then the Japanese itself, then the one thing to do
-   with it. Left-aligned throughout — this is a page of text somebody is
-   about to read, and centred prose with a centred control under it is a
-   poster.
-   ------------------------------------------------------------------------------------ */
-.home__desk {
-  display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: var(--space-xs);
-  min-width: 0;
+  gap: var(--space-2xl);
+  width: 100%;
+  max-width: 34rem;
+  padding-block: var(--space-xl) var(--space-2xl);
 }
 
-/* One kanji in the app's meta colour, at body size, with its own reading
-   over it. Deliberately the quietest thing here — it is the only element on
-   the screen that says something about the reader's circumstances rather
-   than about Japanese. */
+/* The one piece of chrome any block gets: its Japanese name, set at the
+   smallest size in the app and in the quietest ink. It names the block and
+   then gets out of the way. */
+.home__label {
+  margin: 0 0 var(--space-2xs);
+  font-size: var(--text-xs);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-ash);
+}
+
+/* -- ① 言葉 ------------------------------------------------------------------------------
+   The day's Japanese, on the page rather than in a box. Three lines at
+   most — the Japanese itself, how it is read, and what it means — in
+   descending weight, so the eye lands on the Japanese and finds the rest
+   only if it looks.
+
+   There is no control here of any kind. Nothing to press, nothing to
+   shuffle, nothing to mark. It is not a task; it is what is on the desk
+   today.
+   ---------------------------------------------------------------------------------------- */
+.home__words {
+  width: 100%;
+}
+
+.home__jp {
+  margin: 0;
+  font-size: var(--text-2xl);
+  line-height: var(--leading-loose);
+  color: var(--color-ink);
+  /* Japanese somebody may well want to copy into a dictionary. */
+  user-select: text;
+}
+
+/* Sentences are prose and set at reading size; a single word or a kanji is a
+   specimen and gets the full display size above. Same distinction quiz.js
+   draws between its card fronts, for the same reason: a 39px sentence is a
+   banner, not a line of Japanese. */
+.home__jp--sentence {
+  font-size: var(--text-lg);
+}
+
+.home__reading {
+  margin: var(--space-3xs) 0 0;
+  color: var(--color-ash);
+}
+
+.home__meaning {
+  margin: var(--space-2xs) 0 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+/* -- ② 道 --------------------------------------------------------------------------------
+   One sentence, written by the reader, stored beside their settings. It is
+   an <input> rather than a block that swaps into one on click: an input is
+   already "click to edit inline", it is reachable by keyboard without any
+   scripting of focus, and its own placeholder is the empty state — quiet,
+   inline, and gone the moment anything is typed.
+
+   Chromeless at rest. No border, no field background, nothing that reads as
+   a form: this is a line of the reader's own writing that happens to be
+   editable, not a setting they are being asked to fill in. The hairline
+   appears only on focus, and only underneath, so it reads as a ruled line
+   on paper rather than as a text box opening.
+   ---------------------------------------------------------------------------------------- */
+.home__way {
+  width: 100%;
+}
+
+.home__way-line {
+  display: block;
+  width: 100%;
+  padding: 0 0 var(--space-3xs);
+  border: none;
+  border-block-end: var(--border-width) solid transparent;
+  border-radius: 0;
+  background: none;
+  font-family: inherit;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--color-ink);
+  transition: border-color var(--transition-fast);
+}
+
+.home__way-line::placeholder {
+  color: var(--color-ash);
+  /* The placeholder is the empty state and must not read as a prompt, so it
+     is a step quieter than the text that will replace it. */
+  font-size: var(--text-sm);
+}
+
+.home__way-line:focus {
+  outline: none;
+  border-block-end-color: var(--color-stone);
+}
+
+.home__way-line:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: var(--space-3xs);
+}
+
+/* -- ③ 積み重ね ---------------------------------------------------------------------------
+   One small mark per day. Present or absent, and nothing in between: there
+   is no intensity ramp here, because an intensity ramp is a count wearing a
+   colour, and a count is the thing this screen does not do.
+
+   An absent day is a fainter mark of exactly the same shape and size — not
+   an outline, not a gap, not red. A week of absences has to look like a
+   week, not like a failure, or the grid becomes a debt notice and Home
+   starts asking the reader for something.
+
+   Fixed columns rather than auto-fill, so the shape of the block does not
+   change with the width of the screen — the marks stay a block of days
+   instead of reflowing into a different number of rows per device.
+   ---------------------------------------------------------------------------------------- */
+.home__days {
+  width: 100%;
+}
+
+.home__days-grid {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: var(--space-3xs);
+  max-width: 21rem;
+}
+
+.home__day {
+  /* Square, sized off the type scale rather than a magic pixel value. */
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-stone);
+  /* A mark left by a day that happened. The two states differ only in how
+     much ink is on the paper — same shape, same box, same place. */
+  opacity: 0.35;
+}
+
+.home__day--marked {
+  background-color: var(--color-ink-soft);
+  opacity: 1;
+}
+
+/* -- ④ 現在地 and ⑤ 続き -------------------------------------------------------------------
+   One line each, set as quietly as the app can set text. 現在地 states,
+   続き offers; neither is a card and 続き is deliberately a link rather
+   than a button, because a button is a thing the app wants you to press.
+   ---------------------------------------------------------------------------------------- */
+.home__where {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
+}
+
+.home__next {
+  margin: 0;
+  font-size: var(--text-sm);
+}
+
+/* The one thing on this page that can be pressed, and it has to look like
+   it. Links in this app carry a transparent underline at rest and colour it
+   on hover (see typography.css), which is right for prose with links running
+   through it and wrong for a single word standing alone on an otherwise
+   inert page — there it is indistinguishable from the 現在地 line above it,
+   and a pointer is the only way to find out. So the rule is drawn at rest,
+   in the same soft ink as the text: quiet enough not to shout on a page with
+   nothing else on it, and unambiguous about being a door. */
+.home__next-link {
+  color: var(--color-ink-soft);
+  text-decoration-color: currentColor;
+}
+
+.home__next-link:hover {
+  color: var(--color-indigo);
+}
+
+/* -- The hour -----------------------------------------------------------------------------
+   A seal at the foot of the page. It is the entire time-of-day treatment:
+   one kanji with its reading, no sentence, and last in the document so that
+   nothing at all precedes the Japanese in ①.
+   ---------------------------------------------------------------------------------------- */
 .home__hour {
   margin: 0;
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
   line-height: var(--leading-tight);
   color: var(--color-ash);
 }
@@ -56,348 +221,47 @@
   color: var(--color-ash);
 }
 
-/* The two ambient lines, both optional and mutually exclusive: the welcome
-   on a first visit, the remark on a day something has already been finished.
-   Same treatment, because they are the same kind of sentence — the room
-   saying one thing about itself before it gets on with the Japanese. */
-.home__welcome,
-.home__done {
-  margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-md);
-  line-height: var(--leading-tight);
-  color: var(--color-ink-soft);
-}
-
-/* Section labels — 今日の日本語, 学ぶ. Real headings, sized like meta: they
-   are signposts, not titles, and the Japanese underneath is what the eye is
-   supposed to land on. */
-.home__section-heading {
-  margin: 0;
-  font-family: var(--font-body-stack);
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  line-height: var(--leading-tight);
-  letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
-}
-
-/* -- Today's Japanese -------------------------------------------------------------------
-   A button with no chrome at all. It has to be a real control — it opens the
-   meaning, and a div with a click handler is unreachable by keyboard — but
-   it must not look like one: the only thing on this screen that should read
-   as pressable is the action underneath it.
-
-   `user-select: text` because this is Japanese somebody might want to copy
-   into a dictionary, and a button suppresses selection by default. The click
-   handler ignores a press that ended with a selection open.
-   ------------------------------------------------------------------------------------ */
-.home__today {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-2xs);
-  width: 100%;
-  min-width: 0;
-  margin-block-start: var(--space-2xs);
-}
-
-.home__face {
-  display: block;
-  width: 100%;
-  padding: 0;
-  border: none;
-  border-radius: var(--radius-md);
-  background: none;
-  color: inherit;
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-  user-select: text;
-}
-
-.home__face:focus-visible {
-  outline: var(--focus-ring);
-  outline-offset: 4px;
-}
-
-.home__jp {
-  display: block;
-  font-size: var(--text-xl);
-  line-height: var(--leading-loose);
-  color: var(--color-ink);
-  transition: color var(--transition-fast);
-}
-
-/* Pointer only. Below 1024px this line is most of the screen, and an
-   ungated :hover would leave it dimmed for as long as the reader stayed on
-   Home after opening the gloss — the same trap the sidebar rows document. */
-@media (hover: hover) {
-  .home__face:hover .home__jp {
-    color: var(--color-ink-soft);
-  }
-}
-
-/* The hint erases itself the first time the reader opens a gloss — it exists
-   to say the line answers to being touched, and after that it is one more
-   thing to read past every day. Same disappearing hint reading.js uses over
-   its passages. */
-.home__hint {
-  margin: 0;
-  font-size: var(--text-xs);
-  color: var(--color-ash);
-}
-
-/* --duration-base is the floor for anything animating inside a .view (see
-   the constraint note in layout.css). It only ever runs on a tap, long after
-   the view's own entrance, but the rule is the rule. */
-.home__gloss {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xs);
-  width: 100%;
-  animation: rise-in var(--duration-base) var(--ease-entrance);
-}
-
-.home__reading {
-  margin: 0;
-  color: var(--color-ash);
-}
-
-.home__meaning {
-  margin: 0;
-  color: var(--color-ink-soft);
-}
-
-/* The entry the sentence came from — the word, or the pattern and its
-   structure. Set off by a rule on its leading edge rather than a box: it is
-   a footnote to the sentence above it, not a second card. */
-.home__source {
-  margin-block-start: var(--space-2xs);
-  padding-inline-start: var(--space-sm);
-  border-inline-start: var(--border-width) solid var(--color-stone);
-}
-
-.home__source-jp {
-  margin: 0;
-  font-size: var(--text-md);
-  line-height: var(--leading-loose);
+/* The tonal shift, and the whole of it. js/home.js writes data-hour on the
+   room; morning and afternoon carry the quiet type one step darker, evening
+   and night let it fall back to the softest ink in the palette. Two existing
+   tokens, one step apart — enough that the page is not the same at midnight
+   as at nine, and far too little to announce itself. */
+.home[data-hour="asa"] .home__meaning,
+.home[data-hour="hiru"] .home__meaning {
   color: var(--color-ink);
 }
 
-.home__source-meaning,
-.home__source-hint {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
-.home__source-hint {
+.home[data-hour="yuu"] .home__label,
+.home[data-hour="yoru"] .home__label,
+.home[data-hour="yuu"] .home__where,
+.home[data-hour="yoru"] .home__where {
   color: var(--color-ash);
 }
 
-/* -- The action ------------------------------------------------------------------------
-   One filled button, and on a first visit one outlined one beside it. The
-   note underneath says what pressing it costs, in words rather than in a
-   figure — "three questions, about a minute" is an estimate dressed as a
-   promise, and this screen makes no promises about time.
-   ------------------------------------------------------------------------------------ */
-.home__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
-  margin-block-start: var(--space-sm);
-}
-
-.home__actions-note {
-  margin: 0;
-}
-
-/* -- The aside -------------------------------------------------------------------------
-   Where the reader was, and where else they can go. Separated from the desk
-   by a hairline on a phone (where it follows underneath) and by the column
-   gap on a wide screen (where it sits alongside).
-   ------------------------------------------------------------------------------------ */
-.home__aside {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  min-width: 0;
-  padding-block-start: var(--space-lg);
-  border-block-start: var(--border-width) solid var(--color-stone);
-}
-
-.home__ways {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-3xs);
-}
-
-/* Rows of text, not buttons and not cards. At most two of them ever exist,
-   both are links, and each is a single line: a filled hero block here would
-   make the app's front door an instruction. The underline behaves exactly as
-   every other link in the app — transparent at rest, coloured on hover. */
-.home__way {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-3xs);
-  padding-block: var(--space-3xs);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
-.home__way:hover {
-  color: var(--color-indigo);
-}
-
-.home__way-separator,
-.home__way-note {
-  color: var(--color-ash);
-}
-
-/* -- The shelf ---------------------------------------------------------------------------
-   Six text links, wrapping. Explicitly not six cards and explicitly not a
-   second sidebar: the nav is the map of the app and is one tap away at every
-   width, where this is the row of tools on the desk the reader is already
-   sitting at.
-
-   Two columns on a phone rather than one, so the shelf reads as a set at a
-   glance instead of as six more rows to scroll past.
-   ---------------------------------------------------------------------------------------- */
-.home__shelf {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2xs);
-}
-
-.home__shelf-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3xs) var(--space-sm);
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.home__shelf-link {
-  display: block;
-  padding-block: var(--space-3xs);
-  font-size: var(--text-sm);
-  color: var(--color-ink-soft);
-}
-
-.home__shelf-link:hover {
-  color: var(--color-indigo);
-}
-
-/* -- Quick practice ------------------------------------------------------------------------
-   The panel is js/quiz.js's own — the same markup, the same CSS, the same
-   round Review and Lessons play. Nothing is restyled here; the slot exists
-   only so the room can be rebuilt around a live panel without destroying it.
+/* -- Phones --------------------------------------------------------------------------------
+   Tighter, never busier. The block gap steps down one stop and the day's
+   Japanese takes the phone's own display size from the type scale, so the
+   first screen still opens on Japanese and not on a banner.
    ------------------------------------------------------------------------------------------ */
-.home__practice-slot:empty {
-  display: none;
-}
-
-/* -- Wide screens ---------------------------------------------------------------------------
-   Desk and shelf side by side, weighted 1.6 : 1 toward the Japanese. The
-   hairline moves from above the aside to between the columns, so the
-   division reads the same way in both layouts.
-
-   1024px is the sidebar line from the breakpoint block in variables.css, not
-   a fourth number: below it the nav is a drawer and the page is a phone or a
-   tablet held in two hands, both of which want one column.
-   ------------------------------------------------------------------------------------------ */
-@media (min-width: 1024px) {
-  /* Capped and centred rather than stretched to the container's full 72rem.
-     The desk holds one sentence: given the whole width of a 1440px page the
-     two columns end up pinned to opposite edges with the divider stranded in
-     the middle, which reads as two unrelated panels rather than as one
-     composition. 60rem is close enough for the shelf to belong to the desk. */
-  .home {
-    display: grid;
-    grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr);
-    gap: var(--space-3xl);
-    align-items: start;
-    max-width: 60rem;
-    margin-inline: auto;
-    padding-block-start: var(--space-lg);
-  }
-
-  .home__desk {
-    gap: var(--space-sm);
-  }
-
-  .home__jp {
-    font-size: var(--text-2xl);
-  }
-
-  .home__aside {
-    padding-block-start: 0;
-    padding-inline-start: var(--space-2xl);
-    border-block-start: none;
-    border-inline-start: var(--border-width) solid var(--color-stone);
-  }
-
-  /* One column once there is a column's worth of width to put it in — at
-     this size the shelf is a list beside the desk, not a block under it. */
-  .home__shelf-list {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-/* -- Phones ------------------------------------------------------------------------------
-   The room gets tighter, not busier. Everything above the fold on a 390×844
-   screen: the hour, the label, the Japanese, the action, and the first row
-   of what comes next — which is the whole point of the layout order.
-
-   The three link families take the app's 44px touch floor at this width, the
-   same figure navigation.css applies to every control in the study loop.
-   ---------------------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .home {
-    gap: var(--space-md);
-    padding-block-start: 0;
+    gap: var(--space-xl);
+    padding-block: var(--space-md) var(--space-xl);
   }
 
-  .home__aside {
-    gap: var(--space-sm);
-    padding-block-start: var(--space-md);
-  }
-
-  .home__way,
-  .home__shelf-link {
-    min-height: 2.75rem;
-    display: flex;
-    align-items: center;
-  }
-
-  /* The desk is align-items:flex-start, so its children are shrink-to-fit —
-     the action row has to claim the column back before the button inside it
-     can fill anything. */
-  .home__actions {
-    width: 100%;
-    margin-block-start: var(--space-2xs);
-  }
-
-  /* The primary action is the one control on this screen a thumb reaches for
-     every day; it gets the full width of the column rather than hugging its
-     label in a corner. */
-  .home__start {
-    flex: 1 1 100%;
-    justify-content: center;
-  }
-}
-
-@media (max-width: 480px) {
-  .home__jp {
-    font-size: var(--text-lg);
+  /* Narrower, not reshaped. The column count is deliberately the same at
+     every width — a block of days that rearranges itself per device is a
+     different block on every device — so only the size of the marks changes
+     here. Reflowing to seven columns would also double the block's height,
+     which on a phone is the difference between the accumulation being a
+     quiet band and being the largest thing on the page. */
+  .home__days-grid {
+    max-width: 15rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .home__jp {
+  .home__way-line {
     transition: none;
   }
 }
