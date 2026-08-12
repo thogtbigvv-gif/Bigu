@@ -39,18 +39,27 @@
   <meta name="theme-color" content="#E9EBE4" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#1A1D1A" media="(prefers-color-scheme: dark)" />
 
-  <!-- Three families, not four. Noto Sans JP used to be requested here at
-       three weights — the largest asset in the app — but it sits fifth in
-       --font-jp-stack behind Hiragino (every Mac/iPhone) and Yu Gothic
-       (every Windows since 8.1), so on the overwhelming majority of devices
-       it was fetched, render-blocking, and never used to paint a glyph. It
-       still resolves from a local install where one exists; see the stack
-       comment in css/typography.css. Shippori Mincho drops weight 500 for
-       the same reason: nothing uses it. -->
+  <!-- Three families, and both of the new ones are Japanese. Klee One is the
+       textbook hand that carries headwords, kanji and example sentences; Zen
+       Kaku Gothic New is the gothic under all UI copy and headings. They
+       replace Shippori Mincho and Noto Sans, which are dropped from the
+       request along with Noto Sans JP's leftovers.
+
+       Two CJK families is more bytes than one Latin one, which is what got
+       Noto Sans JP removed from this tag before. It is affordable here for a
+       reason that did not apply then: css2 serves both as unicode-range
+       subsets, so a browser fetches only the ranges it actually paints — the
+       Latin slice on an English screen, the kana and the joyo block when
+       Japanese appears — rather than one monolithic CJK file up front. Weights
+       are cut to what the app uses: Klee One ships 400/600 only, and Zen Kaku
+       takes 500 where Noto Sans took 600.
+
+       Families must stay in alphabetical order; the css2 endpoint rejects the
+       request otherwise. -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;700&family=Noto+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap"
     rel="stylesheet"
   />
 
