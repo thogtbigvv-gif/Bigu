@@ -503,7 +503,6 @@ function createSlip(entry, onGraded, onKeptChange) {
     // grading feel like dismissing a notification.
     slip.style.setProperty('--strength', nextStrength.toFixed(3));
     slip.dataset.band = bandFor(nextStrength).key;
-    slip.classList.add('is-graded');
 
     note.textContent = knewIt
       ? `Улам бараан боллоо — ${describeTiming(next)}.`

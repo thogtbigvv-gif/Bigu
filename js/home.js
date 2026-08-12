@@ -237,7 +237,14 @@ function renderWay(container) {
   // would be the same word twice.
   if (label) field.setAttribute('aria-labelledby', label.id);
 
-  let saved = String(settings.get(WAY_KEY, '') ?? '');
+  /* Read defensively, same rule storage.js states for its own maps: valid
+     JSON is not the same thing as the shape this expects, and a hand-edited
+     or restored store can hold a number, an object or null under this key.
+     Anything that is not a string is corruption and falls back to empty
+     rather than being coerced — String(12345) would put a figure on the one
+     screen in the app that renders none. */
+  const stored = settings.get(WAY_KEY, '');
+  let saved = typeof stored === 'string' ? stored : '';
   field.value = saved;
 
   function commit() {
@@ -405,7 +412,10 @@ function renderNext(container, where) {
   link.lang = 'ja';
   link.textContent = '続き';
 
-  container.append(link);
+  // replaceChildren, not append: this runs after an await, so it must be
+  // idempotent on its own rather than relying on whoever cleared the block
+  // before the await still being the only render in flight.
+  container.replaceChildren(link);
   container.hidden = false;
 }
 
@@ -457,7 +467,17 @@ function initHome() {
     return records;
   }
 
+  /* One render wins. ① waits on the catalogue, so leaving Home and coming
+     back while that first fetch is still open starts a second render that
+     awaits the same pending promise — and both continuations then write ④
+     and ⑤. Whoever is newest is right; the older one stops at the guard
+     before it touches the DOM. Cheap insurance on a screen that is entered
+     and left constantly. */
+  let renderToken = 0;
+
   async function render() {
+    const token = (renderToken += 1);
+
     renderHour();
     const records = renderState();
 
@@ -473,6 +493,8 @@ function initHome() {
       skeleton: 'memory',
       load: loadReviewPool,
       render(container, pool) {
+        if (token !== renderToken) return;
+
         container.replaceChildren();
         renderWords(container, pool);
 
