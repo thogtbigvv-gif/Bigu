@@ -68,6 +68,10 @@ function loadReviewPool() {
       const kanji = kanjiData.kanji;
 
       return {
+        // The lessons as authored, not only their flattened words: Home
+        // names the lesson a word came from, and a word row carries its
+        // lesson only in the shape of its own id.
+        lessons: lessonData,
         lessonWords,
         vocabulary,
         grammar,
@@ -83,6 +87,32 @@ function loadReviewPool() {
   }
 
   return pendingPool;
+}
+
+/* -- Logging a finished round -------------------------------------------------------
+   The two writes every finished round in this app makes, in the order they
+   have to happen: the practice store generates the id, and the bridge
+   republishes that same id so anything reading `bigu:bridge` on this origin
+   can dedupe on it.
+
+   Lifted out of this module's own onFinish because Home now runs a short
+   round of its own and has to log it *identically* — a practice surface that
+   quietly skipped either write would be a session the reader did and the
+   Review history, the Dashboard and summer-project never heard about. It is
+   the same two lines it always was; what matters is that there is now one
+   copy of them for both callers rather than a second contract growing beside
+   the first.
+
+   A round ended before anything was graded logs nothing and says so by
+   returning null. Same rule as before: reporting 0/0 is reporting nothing.
+   ---------------------------------------------------------------------------------- */
+function recordSession({ total, correct, mode }) {
+  if (!(total > 0)) return null;
+  const record = practice.add({ total, correct, mode });
+  // Cannot throw — bridge.js swallows its own storage errors — and nothing
+  // depends on it having worked.
+  publishSession({ id: record.id, total, correct, mode });
+  return record;
 }
 
 /* Where a finished round points next, per deck. Not a recommendation engine
@@ -225,13 +255,7 @@ function initController(elements, decks) {
       // A round ended early still counts what was graded — the schedule
       // already has those answers, and logging a 3/10 for a round stopped
       // after three questions would punish stopping.
-      if (total > 0) {
-        const record = practice.add({ total, correct, mode: state.deck });
-        // Same round, same id, published for anything else on this origin
-        // that wants to know a round happened. It cannot throw, and nothing
-        // below depends on it having worked.
-        publishSession({ id: record.id, total, correct, mode: state.deck });
-      }
+      recordSession({ total, correct, mode: state.deck });
       renderHistory();
       updateStatus();
     },
@@ -459,4 +483,4 @@ async function initPractice() {
   }
 }
 
-export { initPractice, loadReviewPool, DECK_LABELS };
+export { initPractice, loadReviewPool, recordSession, DECK_LABELS };

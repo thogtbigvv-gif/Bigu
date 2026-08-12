@@ -837,9 +837,10 @@ async function initReading() {
   });
 }
 
-/* Passages aren't part of the review pool, so nothing that grades or
-   schedules reads them. The one other caller is js/home.js, which pulls its
-   single line of Japanese from four sources and this is the fourth: a
-   sentence out of a passage is the only one of them that is a fragment of
-   something longer, which is exactly what makes it worth having there. */
-export { initReading, loadReading };
+/* Unlike the other four content loaders, this one has no second caller:
+   passages aren't part of the review pool, so neither the Dashboard nor
+   Review nor Memory nor Home reads them. Home's daily line is deliberately
+   drawn only from sources that carry a gradeable item behind them — a
+   passage sentence has no id to practise — so it stays on the three loaders
+   that do. */
+export { initReading };
