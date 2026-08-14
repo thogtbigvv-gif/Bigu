@@ -20,13 +20,13 @@
    the passage carries a box any more.
 
    On the palette, because the brief that drove this asked for "pure white"
-   and "#1a1a1a": those are exactly --color-washi-raised (#F4F5F0, soft
-   paper) and --color-ink (#1C2225, deep slate) in the light theme, so V3 is
+   and "#1a1a1a": those are exactly --color-paper-raised (#F4F5F0, soft
+   paper) and --color-sumi (#1C2225, deep slate) in the light theme, so V3 is
    written in tokens rather than in literals. Hard-coding the two would have
    produced the same light page and a black-on-black dark one.
 
    And on ambience, because the same brief asked for "lower default
-   opacity": the controls recede via --color-ash, which variables.css
+   opacity": the controls recede via --color-sumi-faint, which variables.css
    records at 4.83:1 on washi, rather than via an opacity multiplier that
    would take them under WCAG's 4.5:1. Same visual result, still legible.
    ========================================================================== */
@@ -114,12 +114,12 @@
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-lg);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .reading-card__title-mn {
   margin: 0;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* The passage's first line, clipped to one. It is set in the Japanese face
@@ -132,7 +132,7 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* The figures, in the app's data face. Tabular so a column of cards lines
@@ -146,7 +146,7 @@
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* The card is .card--interactive, so cards.css gives it a shu edge under
@@ -201,7 +201,7 @@
   align-items: center;
   padding: var(--space-3xs) 0;
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   border-radius: var(--radius-sm);
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
@@ -252,7 +252,7 @@
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* The hero. An <h2> — it is the title of the thing filling the screen and it
@@ -266,7 +266,7 @@
   font-size: var(--text-2xl);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-normal);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .reading-stage__title:focus-visible {
@@ -279,7 +279,7 @@
   margin: 0;
   max-width: 100%;
   font-size: var(--text-base);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Tabs -----------------------------------------------------------------------------
@@ -305,7 +305,7 @@
   padding: var(--space-3xs) 0;
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   background: none;
   border: none;
   border-block-end: 2px solid transparent;
@@ -317,7 +317,7 @@
 
 @media (hover: hover) {
   .reading-stage__tab:hover {
-    color: var(--color-ink);
+    color: var(--color-sumi);
   }
 }
 
@@ -328,7 +328,7 @@
 }
 
 .reading-stage__tab[aria-selected="true"] {
-  color: var(--color-ink);
+  color: var(--color-sumi);
   border-block-end-color: var(--color-shu);
 }
 
@@ -402,7 +402,7 @@
 .reading-article__hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .reading-article__sentences {
@@ -452,7 +452,7 @@
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   text-align: end;
-  color: var(--color-stone);
+  color: var(--color-line);
   transition: color var(--transition-fast);
 }
 
@@ -474,11 +474,11 @@
 .reading-sentence__jp {
   font-size: var(--text-md);
   line-height: var(--reading-leading);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   text-decoration-line: underline;
   text-decoration-style: dotted;
   text-decoration-thickness: 1px;
-  text-decoration-color: color-mix(in srgb, var(--color-ink) 18%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--color-sumi) 18%, transparent);
   text-underline-offset: 0.4em;
   transition: text-decoration-color var(--transition-fast);
 }
@@ -531,7 +531,7 @@
   gap: var(--space-3xs);
   margin-inline-start: calc(1.25rem + var(--space-sm));
   padding-inline-start: var(--space-sm);
-  border-inline-start: var(--border-width) solid var(--color-stone);
+  border-inline-start: var(--border-width) solid var(--color-line);
   --rise: -4px;
   animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
@@ -539,14 +539,14 @@
 .reading-sentence__reading {
   margin: 0;
   max-width: none;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .reading-sentence__mn {
   margin: 0;
   max-width: none;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* -- Reveal all ------------------------------------------------------------------------
@@ -559,7 +559,7 @@
   align-self: flex-start;
   padding: var(--space-3xs) 0;
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   border-radius: var(--radius-sm);
   transition: color var(--transition-fast);
 }
@@ -591,9 +591,9 @@
   gap: var(--space-sm);
   margin: 0;
   padding-block-start: var(--space-md);
-  border-block-start: var(--border-width) solid var(--color-stone);
+  border-block-start: var(--border-width) solid var(--color-line);
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   /* reading.js builds it hidden and un-hides it on the frame the last line is
      opened, which is where the animation starts — so it plays exactly once
      per passage, on the event worth marking, and never again while the
@@ -636,7 +636,7 @@
 .reading-stage__sentence-jp {
   font-size: var(--text-md);
   line-height: var(--reading-leading);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 /* -- Colophon --------------------------------------------------------------------------
@@ -660,7 +660,7 @@
   width: 3rem;
   height: 2px;
   border-radius: 999px;
-  background-color: var(--color-stone);
+  background-color: var(--color-line);
   overflow: hidden;
 }
 
@@ -670,7 +670,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background-color: var(--color-ink-soft);
+  background-color: var(--color-sumi-soft);
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition:
@@ -697,7 +697,7 @@
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Pager ------------------------------------------------------------------------------
@@ -724,7 +724,7 @@
   min-width: 0;
   padding-inline: 0;
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   background: none;
   border-color: transparent;
   box-shadow: none;
@@ -759,7 +759,7 @@
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Small screens ----------------------------------------------------------------------

@@ -30,8 +30,8 @@
   left: var(--space-sm);
   z-index: 100;
   padding: var(--space-2xs) var(--space-sm);
-  background-color: var(--color-ink);
-  color: var(--color-washi);
+  background-color: var(--color-sumi);
+  color: var(--color-paper);
   border-radius: var(--radius-sm);
   transform: translateY(calc(-100% - var(--space-sm) - var(--space-2xs)));
   transition: transform var(--transition-fast);
@@ -46,8 +46,8 @@
 .site-nav {
   flex-shrink: 0;
   width: 16rem;
-  border-right: var(--border-width) solid var(--color-stone);
-  background-color: var(--color-washi);
+  border-right: var(--border-width) solid var(--color-line);
+  background-color: var(--color-paper);
 }
 
 /* The thumb bar is a phone-only surface; above 768px the sidebar or the drawer
@@ -107,7 +107,7 @@
   border-left: 2px solid transparent;
   background: none;
   padding: var(--space-2xs) var(--space-xs);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   font: inherit;
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);
@@ -233,7 +233,7 @@
 .site-nav__item--foot {
   margin-block-start: var(--space-sm);
   padding-block-start: var(--space-sm);
-  border-top: var(--border-width) solid var(--color-stone);
+  border-top: var(--border-width) solid var(--color-line);
 }
 
 /* reset.css already collapses every duration in the app to 0.01ms, so this
@@ -273,10 +273,10 @@
   flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
-  border: var(--border-width) solid var(--color-stone);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
   background: none;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   cursor: pointer;
   transition:
     background-color var(--transition-fast),
@@ -561,7 +561,7 @@
     background-color: var(--glass-surface);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
     backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-    border-top: var(--border-width) solid var(--color-stone);
+    border-top: var(--border-width) solid var(--color-line);
     /* The home indicator on a gesture-navigation phone overlaps the bottom
        ~34px of the screen. Padding rather than a taller bar, so the labels
        stay put and only the ground extends underneath it. */
@@ -578,7 +578,7 @@
 
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .thumb-nav {
-      background-color: var(--color-washi);
+      background-color: var(--color-paper);
     }
   }
 
@@ -618,7 +618,7 @@
     padding: var(--space-3xs) var(--space-3xs) var(--space-2xs);
     border: none;
     background: none;
-    color: var(--color-ink-soft);
+    color: var(--color-sumi-soft);
     font: inherit;
     font-size: var(--text-xs);
     letter-spacing: var(--tracking-wide);

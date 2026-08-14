@@ -10,10 +10,10 @@
   display: block;
   width: 100%;
   padding: var(--space-xs) var(--space-sm);
-  border: var(--border-width) solid var(--color-stone);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  background-color: var(--color-washi-raised);
-  color: var(--color-ink);
+  background-color: var(--color-paper-raised);
+  color: var(--color-sumi);
   font-size: var(--text-base);
   transition:
     background-color var(--transition-base),
@@ -25,7 +25,7 @@
    full strength until the first character replaces it. It is the one piece of
    text on screen whose job ends the moment you engage with it. */
 .field::placeholder {
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   transition: color var(--transition-base), opacity var(--transition-base);
 }
 
@@ -40,7 +40,7 @@
    still paying attention when it is not. */
 @media (hover: hover) {
   .field:hover {
-    border-color: var(--color-ash);
+    border-color: var(--color-sumi-faint);
   }
 }
 
@@ -56,7 +56,7 @@
   outline: var(--focus-ring);
   outline-offset: 2px;
   border-color: var(--color-shu);
-  background-color: color-mix(in srgb, var(--color-shu) 3%, var(--color-washi-raised));
+  background-color: color-mix(in srgb, var(--color-shu) 3%, var(--color-paper-raised));
   box-shadow: var(--focus-halo);
 }
 
@@ -93,7 +93,7 @@
 }
 
 .field:user-valid {
-  border-color: color-mix(in srgb, var(--color-moss) 60%, var(--color-stone));
+  border-color: color-mix(in srgb, var(--color-moss) 60%, var(--color-line));
 }
 
 @keyframes field-settle {
@@ -122,7 +122,7 @@ textarea.field {
    Keeps the browser's own dropdown arrow. This used to hide it with
    appearance:none and draw a replacement from a data URI, which meant the
    arrow's color was a literal hex in two places (light and dark) that a
-   comment asked future edits to keep in sync with --color-ash by hand — a
+   comment asked future edits to keep in sync with --color-sumi-faint by hand — a
    comment isn't a constraint, and darkening that token broke the pairing
    the first time it changed. The native arrow follows the `color-scheme`
    already declared in variables.css, so it themes itself correctly for
@@ -168,7 +168,7 @@ select.field {
   transform: translateY(-50%);
   width: 1rem;
   height: 1rem;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   pointer-events: none;
   transition: color var(--transition-base);
 }
@@ -198,7 +198,7 @@ select.field {
   margin-block-end: var(--space-2xs);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   transition: color var(--transition-base);
 }
 

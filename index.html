@@ -31,8 +31,15 @@
 
   <!-- Installability. This app's whole retention model is a daily streak, so
        it has to survive being added to a home screen: without these it gets
-       a blank icon and a white status bar fighting the dark theme. The two
-       theme-color values mirror the light and dark --color-washi tokens. -->
+       a blank icon and a white status bar fighting the dark theme.
+
+       The two theme-color values below are stale: they still carry the retired
+       washi palette (#E9EBE4 / #1A1D1A) rather than the current grounds
+       (--color-paper, #FBFBF9 / #14161A). A <meta> cannot read a custom
+       property, so these are hand-copied and drifted when the palette changed.
+       Left alone here on purpose — this commit is a rename and may not move a
+       rendered value — but they, and manifest.json's matching pair, are wrong
+       and worth a commit of their own. -->
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />

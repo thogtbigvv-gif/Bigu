@@ -38,8 +38,8 @@ body {
   font-size: var(--text-base);
   line-height: var(--leading-normal);
   font-weight: var(--weight-regular);
-  color: var(--color-ink);
-  background-color: var(--color-washi);
+  color: var(--color-sumi);
+  background-color: var(--color-paper);
 }
 
 /* -- Japanese text --------------------------------------------------------------
@@ -75,7 +75,7 @@ h6 {
   font-family: var(--font-display);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   /* A heading that wraps is one of the few places automatic line-breaking
      visibly fails: the browser fills line one to the edge and drops a single
      orphaned word onto line two. `balance` distributes the words evenly
@@ -151,7 +151,7 @@ p {
 small,
 .meta {
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Furigana (ruby annotations for kanji readings) -------------------------------- */
@@ -163,7 +163,7 @@ rt {
   font-family: var(--font-jp-stack);
   font-size: var(--text-xs);
   font-weight: var(--weight-regular);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   user-select: none;
 }
 
@@ -209,5 +209,5 @@ button:focus-visible {
 /* -- Selection --------------------------------------------------------------------- */
 ::selection {
   background-color: var(--color-shu);
-  color: var(--color-washi);
+  color: var(--color-paper);
 }

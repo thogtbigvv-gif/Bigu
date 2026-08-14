@@ -7,8 +7,10 @@
        The blues and the ground are literal here rather than tokens: an icon
        file is fetched outside the page, so it can't read css/variables.css,
        and a home-screen icon has to look the same whichever theme the
-       reader is in. Keep #E9EBE4 in step with the color-washi token and
-       #3b8bca with the mark in index.html if either ever changes.
+       reader is in. #E9EBE4 is the retired washi ground and no longer matches
+       the page it sits against (--color-paper is #FBFBF9); it is left alone
+       because changing it means re-rendering the PNGs, which is its own
+       commit. Keep #3b8bca in step with the mark in index.html.
 
        Rendered to PNG at 180/192/512 by tools/build-icons.py. -->
   <rect width="64" height="64" fill="#E9EBE4" />

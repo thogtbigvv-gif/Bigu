@@ -8,8 +8,8 @@
 
 .card {
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   /* Declared on the resting card, not only on the hover states below, so the
@@ -109,12 +109,12 @@
    last. */
 @media (hover: hover) {
   .card--interactive:hover {
-    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
+    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-line));
   }
 }
 
 .card--interactive:focus-within {
-  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
+  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-line));
 }
 
 /* -- Pressed ---------------------------------------------------------------------
@@ -160,7 +160,7 @@
 .card__title {
   font-size: var(--text-md);
   font-weight: var(--weight-bold);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 /* -- Empty state -------------------------------------------------------------------
@@ -174,10 +174,10 @@
   margin: 0;
   padding: var(--space-lg);
   text-align: center;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   font-size: var(--text-sm);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) dashed var(--color-stone);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) dashed var(--color-line);
   border-radius: var(--radius-lg);
   /* Fades without travelling — softer than the .error-state below, which
      shares this shape but rises as it arrives. The asymmetry is the message:
@@ -198,7 +198,7 @@
   align-items: flex-start;
   gap: var(--space-2xs);
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
+  background-color: var(--color-paper-raised);
   border: var(--border-width) solid var(--color-error);
   border-radius: var(--radius-lg);
   /* An error is the one thing on screen that must not be missed, and it always
@@ -224,13 +224,13 @@
 .error-state__detail {
   margin: 0 0 var(--space-2xs) 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* -- Loading skeleton -------------------------------------------------------------
    Stands in for content between first paint and the fetch resolving, in
    the shape of whatever grid is coming — see the shape table in
-   js/content.js. Built from --color-stone so it reads as structure rather
+   js/content.js. Built from --color-line so it reads as structure rather
    than as content, and pulses slowly enough to say "working" without
    drawing the eye. reset.css's global prefers-reduced-motion rule already
    collapses the animation, so no separate query is needed here.
@@ -288,7 +288,7 @@
    lets the page be still. A reader waiting on a fetch is already waiting — they
    do not also need to watch something. */
 .skeleton__block {
-  background-color: var(--color-stone);
+  background-color: var(--color-line);
   border-radius: var(--radius-lg);
 }
 

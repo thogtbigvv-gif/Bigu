@@ -49,11 +49,11 @@
   margin: 0;
   font-size: var(--text-md);
   line-height: var(--leading-tight);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .home__hour rt {
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* The two ambient lines, both optional and mutually exclusive: the welcome
@@ -66,7 +66,7 @@
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-md);
   line-height: var(--leading-tight);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* Section labels — 今日の日本語, 学ぶ. Real headings, sized like meta: they
@@ -79,7 +79,7 @@
   font-weight: var(--weight-medium);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Today's Japanese -------------------------------------------------------------------
@@ -125,7 +125,7 @@
   display: block;
   font-size: var(--text-xl);
   line-height: var(--leading-loose);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   transition: color var(--transition-fast);
 }
 
@@ -134,7 +134,7 @@
    Home after opening the gloss — the same trap the sidebar rows document. */
 @media (hover: hover) {
   .home__face:hover .home__jp {
-    color: var(--color-ink-soft);
+    color: var(--color-sumi-soft);
   }
 }
 
@@ -145,7 +145,7 @@
 .home__hint {
   margin: 0;
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* --duration-base is the floor for anything animating inside a .view (see
@@ -161,12 +161,12 @@
 
 .home__reading {
   margin: 0;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .home__meaning {
   margin: 0;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* The entry the sentence came from — the word, or the pattern and its
@@ -175,25 +175,25 @@
 .home__source {
   margin-block-start: var(--space-2xs);
   padding-inline-start: var(--space-sm);
-  border-inline-start: var(--border-width) solid var(--color-stone);
+  border-inline-start: var(--border-width) solid var(--color-line);
 }
 
 .home__source-jp {
   margin: 0;
   font-size: var(--text-md);
   line-height: var(--leading-loose);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .home__source-meaning,
 .home__source-hint {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .home__source-hint {
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- The action ------------------------------------------------------------------------
@@ -224,7 +224,7 @@
   gap: var(--space-lg);
   min-width: 0;
   padding-block-start: var(--space-lg);
-  border-block-start: var(--border-width) solid var(--color-stone);
+  border-block-start: var(--border-width) solid var(--color-line);
 }
 
 .home__ways {
@@ -244,7 +244,7 @@
   gap: var(--space-3xs);
   padding-block: var(--space-3xs);
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .home__way:hover {
@@ -253,7 +253,7 @@
 
 .home__way-separator,
 .home__way-note {
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- The shelf ---------------------------------------------------------------------------
@@ -284,7 +284,7 @@
   display: block;
   padding-block: var(--space-3xs);
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .home__shelf-link:hover {
@@ -337,7 +337,7 @@
     padding-block-start: 0;
     padding-inline-start: var(--space-2xl);
     border-block-start: none;
-    border-inline-start: var(--border-width) solid var(--color-stone);
+    border-inline-start: var(--border-width) solid var(--color-line);
   }
 
   /* One column once there is a column's worth of width to put it in — at

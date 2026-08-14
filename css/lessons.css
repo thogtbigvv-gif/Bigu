@@ -50,7 +50,7 @@
      word "Lessons" the largest thing on the lessons screen. */
   font-size: var(--text-lg);
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   text-align: start;
   cursor: pointer;
   transition: background-color var(--transition-fast);
@@ -62,7 +62,7 @@
    on a page where nothing is. */
 @media (hover: hover) {
   .lesson-group__header:hover {
-    background-color: var(--color-washi);
+    background-color: var(--color-paper);
   }
 }
 
@@ -74,7 +74,7 @@
    where the hover above never runs, this is the only colour the header ever
    changes. */
 .lesson-group__header:active {
-  background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-washi));
+  background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-paper));
 }
 
 /* .lesson-group sets overflow:hidden to keep the body's corners rounded, which
@@ -96,7 +96,7 @@
 .lesson-group__count {
   flex-shrink: 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .lesson-group__icon {
@@ -108,7 +108,7 @@
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   transition: transform var(--transition-fast);
 }
 
@@ -139,7 +139,7 @@
    `-6px` rather than the shared rise-in's positive default: this content
    descends from the header it opened out of, so it should arrive from above. */
 .lesson-group__body {
-  border-top: var(--border-width) solid var(--color-stone);
+  border-top: var(--border-width) solid var(--color-line);
   --rise: -6px;
   animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
@@ -179,13 +179,13 @@
   font-family: var(--font-jp), var(--font-jp-stack);
   font-size: var(--text-lg);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .lesson-word__meaning {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* -- The memory mark ------------------------------------------------------------------
@@ -211,7 +211,7 @@
      difference to centre on it. */
   margin-block-start: 0.1rem;
   border-radius: 50%;
-  color: var(--color-stone);
+  color: var(--color-line);
   transition: color var(--transition-fast), transform var(--transition-fast);
 }
 

@@ -110,7 +110,7 @@
   font-family: var(--font-jp), var(--font-jp-stack);
   font-size: var(--text-3xl);
   line-height: 1;
-  color: var(--color-ink);
+  color: var(--color-sumi);
   transition: transform var(--transition-base);
 }
 
@@ -142,7 +142,7 @@
   margin: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 /* Carries .reading as well, which is where the mono face and --text-sm come
@@ -153,7 +153,7 @@
 }
 
 /* An indent and a rule, not a recess. The filled version this replaces was a
-   panel of --color-washi sunk into a raised white card; on a row that has no
+   panel of --color-paper sunk into a raised white card; on a row that has no
    card the fill is the page's own colour, so the "recess" was a rectangle
    painted the same value as the paper with an inset highlight along its top —
    visible only as a stray hairline that looked like a rendering artefact.
@@ -245,7 +245,7 @@
   font-size: var(--text-5xl);
   font-weight: var(--weight-regular);
   line-height: 1;
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .kanji-detail__sections {
@@ -265,7 +265,7 @@
   margin: 0 0 var(--space-2xs) 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* Everything under the character is annotation and is sized as annotation. The
@@ -319,8 +319,8 @@
 .kanji-detail__related [aria-disabled="true"]:hover,
 .kanji-detail__related [aria-disabled="true"]:active {
   background-color: transparent;
-  border-color: var(--color-stone);
-  color: var(--color-ink-soft);
+  border-color: var(--color-line);
+  color: var(--color-sumi-soft);
   transform: none;
 }
 

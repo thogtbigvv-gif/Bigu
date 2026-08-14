@@ -44,7 +44,7 @@
   font-family: var(--font-body-stack);
   font-size: var(--text-base);
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .settings__field-label:first-of-type {
@@ -68,7 +68,7 @@
 .settings-backup__warning {
   margin: var(--space-xs) 0 0 0;
   padding-block-start: var(--space-xs);
-  border-top: var(--border-width) solid var(--color-stone);
+  border-top: var(--border-width) solid var(--color-line);
   font-size: var(--text-sm);
   color: var(--color-error);
 }

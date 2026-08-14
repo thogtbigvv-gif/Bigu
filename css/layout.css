@@ -101,7 +101,7 @@
   background-color: var(--glass-surface);
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
   backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
-  border-bottom: var(--border-width) solid var(--color-stone);
+  border-bottom: var(--border-width) solid var(--color-line);
 }
 
 /* Without the blur, translucency is not a softer header — it is content
@@ -109,7 +109,7 @@
    than the opaque bar this replaced. So the fallback is the opaque bar. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .site-header {
-    background-color: var(--color-washi);
+    background-color: var(--color-paper);
   }
 }
 
@@ -140,7 +140,7 @@
   pointer-events: none;
   background-image: linear-gradient(
     to bottom,
-    color-mix(in srgb, var(--color-ink) 10%, transparent),
+    color-mix(in srgb, var(--color-sumi) 10%, transparent),
     transparent
   );
 }
@@ -192,7 +192,7 @@
    in the app's own divider colour gives it an edge without recolouring it. */
 .brand__mark-bubble {
   fill: #fff;
-  stroke: var(--color-stone);
+  stroke: var(--color-line);
   stroke-width: 1;
 }
 
@@ -226,12 +226,12 @@
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-md);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .brand__title-en {
   font-family: var(--font-display);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* -- Header, end group ------------------------------------------------------------
@@ -426,7 +426,7 @@
 /* -- Footer ------------------------------------------------------------------------ */
 .site-footer {
   padding-block: var(--space-md);
-  border-top: var(--border-width) solid var(--color-stone);
+  border-top: var(--border-width) solid var(--color-line);
   text-align: center;
 }
 
