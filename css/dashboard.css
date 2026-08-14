@@ -313,9 +313,11 @@
    and the same `to` is written out explicitly that memory.css's wash needs, so
    the fill survives --progress being updated in place.
 
-   --duration-slow, matching the drawer: this is the other piece of motion in
-   the app that is allowed to take its time, because it happens once a visit
-   and nothing waits behind it. */
+   --duration-base, like everything else. This used to run at --duration-slow
+   on the grounds that it happens once a visit and nothing waits behind it,
+   which was true and still left a bar sliding across the screen for the better
+   part of half a second. A meter filling is the most literal "UI animating"
+   motion in the app; at 250ms it reads as the value settling into place. */
 .dashboard-goal__fill {
   display: block;
   height: 100%;
@@ -324,7 +326,7 @@
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--transition-base);
-  animation: dashboard-goal-fill var(--duration-slow) var(--ease-entrance) both;
+  animation: dashboard-goal-fill var(--duration-base) var(--ease-entrance) both;
 }
 
 @keyframes dashboard-goal-fill {

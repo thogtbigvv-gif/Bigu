@@ -212,7 +212,7 @@
      still under half a second and still transform-and-opacity only. */
   box-shadow: var(--shadow-lg);
   --rise: 12px;
-  animation: rise-in var(--duration-slow) var(--ease-entrance) backwards;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 .error-state__title {
@@ -275,35 +275,27 @@
   animation: fade-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
+/* No pulse. These blocks breathed on a 1.6s loop, phase-offset in thirds so
+   the grid rippled as a slow diagonal — the most carefully built motion in the
+   app and the only thing in it that never stopped. Two rules kill it: nothing
+   here runs past 250ms, and an animation that draws attention to itself is too
+   much. A loading placeholder is the definition of both, because it is on
+   screen precisely when there is nothing to look at and it is the only thing
+   moving.
+
+   What is lost is the reassurance that the app is working; what replaces it is
+   .skeleton's own fade-up, which says the same thing once, on arrival, and then
+   lets the page be still. A reader waiting on a fetch is already waiting — they
+   do not also need to watch something. */
 .skeleton__block {
   background-color: var(--color-stone);
   border-radius: var(--radius-lg);
-  animation: skeleton-pulse 1.6s ease-in-out infinite;
 }
-
-/* Phase, not delay. A negative animation-delay starts the block partway
-   through its own cycle, so every placeholder is already mid-breath on the
-   first frame — where a positive delay would hold three of them flat and
-   still while the others moved.
-
-   The effect of offsetting neighbours by a third of a cycle is that the grid
-   breathes as a slow diagonal rather than as one flashing block, which reads
-   as a system working through something instead of a page blinking at you.
-   Same single animated property, same cost. */
-.skeleton__block:nth-child(3n + 2) { animation-delay: -0.53s; }
-.skeleton__block:nth-child(3n + 3) { animation-delay: -1.06s; }
 
 .skeleton__block--card { height: 13rem; }
 .skeleton__block--compact { height: 9rem; }
 .skeleton__block--row { height: 7rem; }
 .skeleton__block--bar { height: 3.5rem; }
-
-/* Opacity only — a moving highlight sweep would be a second animated thing
-   on a screen that is, by definition, still waiting. */
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.45; }
-  50% { opacity: 0.8; }
-}
 
 @media (max-width: 480px) {
   .skeleton--card-grid,

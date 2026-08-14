@@ -235,7 +235,7 @@
      its own centre is the one motion here that should have weight at both
      ends, and --ease-entrance spends four fifths of its duration on a turn
      that is already over. */
-  transition: transform var(--duration-slow) var(--ease-turn);
+  transition: transform var(--duration-base) var(--ease-turn);
 }
 
 .quiz__scene.is-flipped .quiz__card-inner {
@@ -894,7 +894,7 @@
    on the scene. Only the one facing the reader is visible; drawing it on both
    costs nothing and means the class doesn't have to know which that is. */
 .quiz__scene.is-correct .quiz__card {
-  animation: quiz-card-correct 260ms var(--ease-exit);
+  animation: quiz-card-correct var(--duration-base) var(--ease-exit);
 }
 
 /* The wrong-answer shake is gone: the lean at the top of this file says which
@@ -902,6 +902,19 @@
    at forty times a session. Its keyframes went with it. */
 
 .quiz__feedback:not([hidden]) {
+  animation: quiz-card-enter 180ms var(--ease-entrance);
+}
+
+/* The grade pair, in Flip mode, on the same reveal as the feedback block in
+   Choose mode. These two buttons are the whole answer moment for half the
+   rounds played in this app — the card turns, and then the reader says whether
+   they had it — and they were the one reveal in the quiz that simply appeared:
+   quiz.js unhides them and they were there, mid-turn, at full strength.
+
+   Same 180ms and same curve as the feedback block, so the two modes resolve
+   identically; the turn behind it is --duration-base, so the buttons finish
+   settling just before the card does rather than racing it. */
+.quiz__grade:not([hidden]) {
   animation: quiz-card-enter 180ms var(--ease-entrance);
 }
 
@@ -944,7 +957,7 @@
   padding-block: var(--space-lg);
   text-align: center;
   --rise: 10px;
-  animation: rise-in var(--duration-slow) var(--ease-entrance) backwards;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 /* Ink by default, moss only for a clean round. A 1/3 rendered in the

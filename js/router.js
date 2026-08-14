@@ -150,13 +150,23 @@ function render({ moveFocus = false } = {}) {
   }
 }
 
-/* A 160ms rise-and-fade on the incoming view. Switching views is the one
-   moment in this app where the entire screen is replaced at once, and
-   without a transition it reads as a flash rather than as an arrival. Kept
-   under the app's own motion ceiling and restarted the same way practice.js
-   restarts its card animation — class off, reflow, class on — so rapid
-   navigation doesn't leave a view stuck mid-animation. reset.css's
-   reduced-motion rule collapses it to nothing. */
+/* A 150ms fade on the incoming view. Switching views is the one moment in this
+   app where the entire screen is replaced at once, and without a transition it
+   reads as a flash rather than as an arrival.
+
+   The two views do NOT overlap, and that is the deliberate part. A true
+   cross-fade holds both on screen at once, which for two screens of dense
+   bilingual text means ~150ms of one paragraph ghosting through another —
+   legible as neither, and exactly the kind of animation that draws attention
+   to itself. Overlapping them also means the outgoing view has to leave the
+   layout flow or the page is briefly as tall as both, which on a phone is the
+   height change this app's motion rules forbid outright. So the outgoing view
+   is replaced and the incoming one comes up through the paper: a dissolve
+   through the page ground rather than a dissolve between two documents.
+
+   Restarted the same way practice.js restarts its card animation — class off,
+   reflow, class on — so rapid navigation doesn't leave a view stuck
+   mid-animation. reset.css's reduced-motion rule collapses it to nothing. */
 function playEnter(view) {
   view.classList.remove('is-entering');
   void view.offsetWidth;

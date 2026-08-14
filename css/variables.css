@@ -262,11 +262,23 @@
                         reads as a glitch rather than as weight. Use it only
                         for motion that ends where it started.
 
-     Durations stay short. This is a study app someone opens every day for
-     months, and the ceiling on anything the reader has to wait through is
-     --duration-base. --duration-slow is only for things that happen once per
-     visit (a view arriving, a drawer opening) and never on the critical path
-     to an answer.
+     Durations stay short, and --duration-base is now the ceiling rather than
+     the common case: nothing in this app runs longer than 250ms. That is a
+     hard limit, not a preference. This is a study app someone opens every day
+     for months, and a flourish that reads as craft on the first morning reads
+     as a wait on the ninetieth — the drawer, the card turn and the ink wash
+     were all the wrong side of that line.
+
+     --duration-slow (420ms) is gone with them. It had six callers, every one
+     of which was over the ceiling by definition, so keeping the token would
+     have meant keeping a value that no rule in this file permits anyone to
+     use. There is no long duration any more because there is no long motion.
+
+     Sequences are the exception the ceiling does not cover, and deliberately:
+     a staggered list runs 250ms *per item* with delays behind it, and the logo
+     assembles over four overlapping 200-250ms parts. What the limit governs is
+     how long any single thing takes to arrive, which is what a reader waiting
+     on it actually feels.
      ------------------------------------------------------------------------------ */
   --ease-exit: cubic-bezier(0.32, 0.72, 0, 1);
   --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
@@ -275,7 +287,6 @@
 
   --duration-fast: 150ms;
   --duration-base: 250ms;
-  --duration-slow: 420ms;
 
   /* Shorthands — same names, same durations, better curve. Only two, matching
      what the app actually writes: the spring is applied as a bare
@@ -286,10 +297,11 @@
   --transition-base: var(--duration-base) var(--ease-exit);
 
   /* The beat between one item in a staggered reveal and the next. Small on
-     purpose: a stagger is meant to be felt as texture, not counted. The
-     roster in layout.css caps the ladder at nine steps, so the longest
-     cascade in the app is 288ms end to end. */
-  --stagger-step: 32ms;
+     purpose: a stagger is meant to be felt as texture, not counted. The roster
+     in layout.css caps the ladder at the first eight items, so the last
+     delayed row starts 280ms in and the whole cascade is done at 530ms — and
+     rows nine onward arrive with row eight rather than queueing behind it. */
+  --stagger-step: 40ms;
 
   /* -- Layout ------------------------------------------------------------------ */
   --container-max: 72rem;  /* 1152px */
