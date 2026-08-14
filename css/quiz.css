@@ -59,7 +59,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background-color: var(--color-indigo);
+  background-color: var(--color-shu);
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--transition-base);
@@ -255,6 +255,9 @@
    sentence question is three lines where a single kanji is one — so without
    this the card, and every option below it, would jump up and down the page
    between questions. */
+/* Padding comes from .card — this restated the shared value verbatim. The
+   small-screen block at the foot of this file still overrides it, which is a
+   real override and stays. */
 .quiz__card {
   display: flex;
   flex-direction: column;
@@ -262,7 +265,6 @@
   justify-content: center;
   gap: var(--space-2xs);
   min-height: 11rem;
-  padding: var(--space-lg);
   text-align: center;
 }
 
@@ -309,7 +311,7 @@
 
 @media (hover: hover) {
   .quiz__card--front:not(:disabled):hover {
-    border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
     box-shadow: var(--shadow-md);
   }
 }
@@ -326,7 +328,7 @@
    nothing moves. The outline from typography.css's `button:focus-visible`
    stays on top of it. */
 .quiz__card--front:not(:disabled):focus-visible {
-  border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
   box-shadow: var(--shadow-md);
 }
 
@@ -409,7 +411,7 @@
   display: inline-block;
   width: 3.5ch;
   margin-inline: 0.15em;
-  border-block-end: 2px solid var(--color-indigo);
+  border-block-end: 2px solid var(--color-shu);
   vertical-align: baseline;
 }
 
@@ -419,9 +421,9 @@
    fill, which also survives being read in dark mode. */
 .quiz__target {
   background-color: transparent;
-  color: var(--color-bengara);
+  color: var(--color-shu);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--color-bengara) 45%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--color-shu) 45%, transparent);
   text-underline-offset: 0.25em;
   text-decoration-thickness: 2px;
 }
@@ -522,13 +524,13 @@
    no opinion about, once per question, for the whole round. */
 @media (hover: hover) {
   .quiz__option:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
-    border-color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-washi-raised));
+    border-color: var(--color-shu);
   }
 
   .quiz__option:hover:not(:disabled) .quiz__option-key {
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
   }
 }
 
@@ -543,8 +545,8 @@
    watching the numbers sees them stay grey while everything around them
    responds. */
 .quiz__option:focus-visible .quiz__option-key {
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
+  border-color: var(--color-shu);
+  color: var(--color-shu);
 }
 
 .quiz__option:focus-visible {

@@ -109,12 +109,12 @@
    last. */
 @media (hover: hover) {
   .card--interactive:hover {
-    border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
   }
 }
 
 .card--interactive:focus-within {
-  border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
 }
 
 /* -- Pressed ---------------------------------------------------------------------

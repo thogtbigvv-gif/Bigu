@@ -74,7 +74,7 @@
    a resting shadow tied to its own colour rather than to neutral ink, which
    keeps a coloured button from looking like it is sitting in grey smoke.
 
-   Painted in --fill-primary rather than --color-indigo. The two are the same
+   Painted in --fill-primary rather than --color-shu. The two are the same
    colour in light and deliberately different in dark: see the note beside the
    fill tokens in variables.css for why a slab and a mark need opposite
    adjustments on a dark ground.
@@ -133,9 +133,9 @@
 
 @media (hover: hover) {
   .button--secondary:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
     transform: translateY(var(--lift-card));
     /* The smallest shadow on the scale, and it is doing structural work rather
        than decoration: the secondary was already travelling the full
@@ -150,9 +150,9 @@
 /* Back to the page, shadow gone with it — the same collapse the primary does,
    so both treatments describe the same physical event. */
 .button--secondary:active:not(:disabled) {
-  background-color: color-mix(in srgb, var(--color-indigo) 12%, transparent);
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
+  background-color: color-mix(in srgb, var(--color-shu) 12%, transparent);
+  border-color: var(--color-shu);
+  color: var(--color-shu);
   transform: translateY(var(--lift-press));
   box-shadow: none;
 }
@@ -186,9 +186,9 @@
 
 @media (hover: hover) {
   .theme-toggle:hover {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
   }
 }
 
@@ -286,9 +286,9 @@
 
 @media (hover: hover) {
   .toggle-chip:hover {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
   }
 }
 
@@ -391,7 +391,7 @@
 
 @media (hover: hover) {
   .favorite-button:hover {
-    color: var(--color-bengara);
+    color: var(--color-shu);
   }
 }
 
@@ -418,11 +418,11 @@
 }
 
 .favorite-button[aria-pressed="true"] {
-  color: var(--color-bengara);
+  color: var(--color-shu);
 }
 
 .favorite-button[aria-pressed="true"] .favorite-button__icon {
-  fill: color-mix(in srgb, var(--color-bengara) 22%, transparent);
+  fill: color-mix(in srgb, var(--color-shu) 22%, transparent);
 }
 
 /* Marking a 栞 is a deliberate, occasional act — unlike the memory chip beside

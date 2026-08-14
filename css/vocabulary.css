@@ -51,16 +51,30 @@
   margin: 0 0 var(--space-md) 0;
 }
 
-/* minmax(20rem, 1fr) below the auto-fill, and minmax(0, 1fr) in the phone
-   block at the foot of this file. A bare `1fr` is minmax(auto, 1fr), whose
-   floor is the widest min-content in the column — so one card holding an
-   unbreakable string is enough to push the whole track past the page. The
-   0 floor makes the track the container's width and lets the card wrap
-   inside it, which is what the reader wants on a 358px column. */
+/* -- The list -----------------------------------------------------------------------
+   Two fixed columns, not `auto-fill`. Auto-fill with a 20rem minimum gave three
+   or four columns on a wide screen, which is a card wall — and the wider the
+   window, the more it looked like a dashboard of tiles rather than a
+   vocabulary. Two columns is the densest arrangement that still lets a headword
+   and its gloss sit on one readable line, and it holds the same shape at every
+   width above the breakpoint instead of reflowing under the reader.
+
+   `minmax(0, 1fr)` rather than `1fr`. A bare `1fr` is minmax(auto, 1fr), whose
+   floor is the widest min-content in the column — so one entry holding an
+   unbreakable string is enough to push the whole track past the page. The 0
+   floor makes the track its share of the container and lets the entry wrap
+   inside it.
+
+   No row gap. The hairline on each entry is the division, and rows are kept on
+   one baseline across both columns by the grid's default `align-items:
+   stretch` — so the rules line up straight across the page the way a table's
+   do, instead of stopping at whatever height each entry happened to reach.
+   ------------------------------------------------------------------------------------ */
 .vocab-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
-  gap: var(--space-lg);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-2xl);
+  row-gap: 0;
 }
 
 /* -- Show more -----------------------------------------------------------------------
@@ -76,26 +90,33 @@
   padding-inline: var(--space-xl);
 }
 
+/* An entry, not a card. The surface, border, radius and shadow are gone — this
+   no longer carries `.card` at all (see the note in vocabulary.js) — and what
+   marks one entry off from the next is a hairline and the air above it, the
+   same device the kanji list uses one view over.
+
+   Padding is vertical only. Inline padding on a borderless row just insets the
+   text from a boundary that isn't drawn, and costs the column width that the
+   two-up layout is here to spend. */
 .vocab-card {
   display: flex;
   flex-direction: column;
   gap: 0;
-  padding: var(--space-lg);
-  /* See .card--deferred in cards.css. Measured resting height of a card
-     carrying a headword, a meaning, a three-line example and the control row.
+  padding-block: var(--space-md);
+  border-block-end: var(--border-width) solid var(--color-line);
+  /* See .card--deferred in cards.css. Re-measured for the entry: a headword, a
+     meaning, a three-line example and the control row, with the padding and
+     border it now has instead of a card's.
 
      Two values, and the `none` is load-bearing. `contain-intrinsic-size` with
-     a single value applies it to *both* axes, so every skipped card was also
-     claiming to be 21rem wide — and since a skipped element's placeholder size
-     is what the grid measures, `1fr` (which is minmax(auto, 1fr), and so has a
-     min-content floor) resolved its track to 21rem + padding = 386px inside a
-     358px column. That is the horizontal overflow this list had on every phone:
-     the right edge of each card sat past the screen, cropped. Desktop never
-     showed it because the column there is wider than 386px anyway.
+     a single value applies it to *both* axes, so every skipped entry was also
+     claiming a fixed width — and since a skipped element's placeholder size is
+     what the grid measures, that resolved the track wider than the page and
+     cropped the right edge of every entry on a phone.
 
      `none` means "no assumed width, size me normally"; the height is what the
      property was wanted for and is the only part that should be guessed. */
-  contain-intrinsic-size: none auto 21rem;
+  contain-intrinsic-size: none auto 18rem;
 }
 
 .vocab-card__head {
@@ -103,7 +124,7 @@
   align-items: baseline;
   flex-wrap: wrap;
   gap: var(--space-xs);
-  margin-block-end: var(--space-xs);
+  margin-block-end: var(--space-3xs);
 }
 
 /* The headword is the card. --font-jp first so it is set in the textbook hand
@@ -126,48 +147,33 @@
 }
 
 .vocab-card__meaning {
-  margin: 0 0 var(--space-sm) 0;
+  margin: 0 0 var(--space-2xs) 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
 }
 
-/* The example sits *into* the card rather than on it — the card's surface is
-   washi-raised, so an inset panel takes the page tone one step back down. The
-   inset hairline is what makes that read as a recess instead of as a second,
-   flatter card: a single top-edge highlight is how a physical impression
-   catches light, and it costs one inset shadow with no blur.
+/* An indent and a rule, not a recess. The filled panel this replaces was
+   --color-washi sunk into a raised white card; with no card the fill is the
+   page's own colour, so the recess became a rectangle painted the same value as
+   the paper with a stray highlight along its top edge.
 
-   It deepens fractionally while the card is raised, so the whole card reads as
-   one object coming forward rather than as a panel sliding around inside a
-   frame. */
+   The left rule is what Memory already uses to mark a quoted example, and it is
+   the right device here for the same reason it is right in the kanji list: it
+   subordinates a block without drawing a box. On a dense two-column list that
+   matters more than anywhere else in the app — twenty-four filled panels down a
+   page is the texture this view was being redesigned away from.
+
+   The hover and focus deepenings are gone with the fill. There is no surface
+   left to deepen, and no card lift for them to stay in step with.
+   ------------------------------------------------------------------------------------ */
 .vocab-card__example {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
-  padding: var(--space-sm);
-  margin-block-end: var(--space-sm);
-  background-color: var(--color-washi);
-  border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
-  transition: box-shadow var(--transition-base);
-}
-
-@media (hover: hover) {
-  .vocab-card:hover .vocab-card__example {
-    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
-  }
-}
-
-/* And while the card holds focus, which is the half that was missing. cards.css
-   raises a collection card on hover *and* focus-within precisely so that
-   tabbing through a grid is wayfinding and not just pointing — grammar.css
-   already pairs its pattern rule the same way — but here only the pointer got
-   the deeper recess, so a keyboard reader watched the card come forward while
-   the panel inside it stayed flat and the object came apart. Ungated, because
-   a keyboard is a keyboard on any device. */
-.vocab-card:focus-within .vocab-card__example {
-  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  padding-inline-start: var(--space-sm);
+  margin-block-end: var(--space-2xs);
+  border-inline-start: var(--border-width) solid var(--color-line);
 }
 
 .vocab-card__example p {
@@ -175,14 +181,10 @@
   max-width: none;
 }
 
-/* Layout only — visual treatment (color, border, hover, pressed state)
-   now lives in the shared .toggle-chip class in buttons.css. The row is
-   pushed to the foot of the card so the control line sits on the same
-   baseline across a grid of cards of different heights. */
-/* Placement only. The row itself — the chip, the bookmark, and the flex
-   that pairs them — is .study-controls in buttons.css, built by
-   js/studyControls.js. Pushed to the foot of the card so the control line
-   sits on one baseline across a grid of cards of different heights. */
+/* Placement only. The row itself — the chip, the bookmark, and the flex that
+   pairs them — is .study-controls in buttons.css, built by js/studyControls.js.
+   Pushed to the foot of the entry so the control line sits on one baseline
+   across a row of entries of different heights. */
 .vocab-card__controls {
   margin-block-start: auto;
 }
@@ -191,11 +193,15 @@
    Shared look for the small badge that marks a word/point's JLPT level;
    grammar.css and kanji.css reuse this same class rather than redefining it.
 
-   Outlined, not filled. As a filled badge this was washi text on gold —
-   2.85:1 at 12px, the worst contrast in the app and repeated on every
-   vocabulary, grammar, and kanji card. Gold-on-paper at the darkened
-   --color-gold measures 4.99:1, and a hairline box matches the "a line, not
-   a spotlight" language the rest of the app already uses.
+   Outlined, not filled. As a filled badge this was pale text on a dark
+   yellow-brown — 2.85:1 at 12px, the worst contrast in the app and repeated on
+   every vocabulary, grammar, and kanji card. It now takes --color-sumi-faint,
+   which clears 4.5:1 on both grounds, and a hairline box matches the "a line,
+   not a spotlight" language the rest of the app already uses.
+
+   The colour is meta ink rather than an accent of its own, which is the whole
+   point of a level tag: N5 is bookkeeping attached to a word, and a badge that
+   competes with the word it labels is a badge in the wrong place.
    ------------------------------------------------------------------------------------ */
 .jlpt-tag {
   display: inline-block;
@@ -207,9 +213,9 @@
      rectangle drawn around two characters. Contrast is unaffected: the text
      colour and the border are exactly as they were, and the tint is mixed
      into the card surface rather than laid over it. */
-  background-color: color-mix(in srgb, var(--color-gold) 7%, transparent);
-  border: var(--border-width) solid var(--color-gold);
-  color: var(--color-gold);
+  background-color: color-mix(in srgb, var(--color-sumi-faint) 7%, transparent);
+  border: var(--border-width) solid var(--color-sumi-faint);
+  color: var(--color-sumi-faint);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
   font-weight: var(--weight-medium);
@@ -217,26 +223,26 @@
   line-height: 1;
 }
 
-/* -- Mobile spacing ---------------------------------------------------------------- */
+/* -- Mobile spacing ----------------------------------------------------------------
+   768px is the breakpoint this view already used to drop to one column and it
+   still is; only the number of columns above it changed. The row gap stays at
+   zero in one column too — the hairlines are the division at every width, and a
+   single column of them is exactly the list the kanji view is.
+   ------------------------------------------------------------------------------------ */
 @media (max-width: 768px) {
   .vocab-list {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-sm);
-  }
-
-  .vocab-card {
-    padding: var(--space-md);
   }
 }
 
 @media (max-width: 480px) {
   .vocab-card {
-    padding: var(--space-sm);
+    padding-block: var(--space-sm);
   }
 
   /* The headword and its part-of-speech tag share a row, and `margin-inline-
-     start: auto` pins the tag to the far right of it — fine at 20rem, a tag
-     stranded across the page from a two-character word at 358px. Below the
+     start: auto` pins the tag to the far right of it — fine in a 20rem card, a
+     tag stranded across the page from a two-character word at 358px. Below the
      phone line the row simply reads left to right in the order it is written. */
   .vocab-card__pos {
     margin-inline-start: 0;

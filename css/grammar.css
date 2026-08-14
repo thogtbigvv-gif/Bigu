@@ -30,18 +30,34 @@
   margin-block-end: var(--space-lg);
 }
 
+/* -- The list ---------------------------------------------------------------------
+   Grammar keeps its cards, and is the only reference view that does. A word is
+   a headword with annotations hanging off it and a kanji is a single glyph —
+   neither needs a container to say where it ends — but a grammar point is a
+   pattern *plus* a structure line *plus* an example *plus* a note, four
+   different kinds of text that only cohere because something is drawn around
+   them. Take the box away here and the page becomes an undifferentiated column
+   of sentences.
+
+   The gap widens with the padding so the cards do not end up closer to each
+   other than their own contents are.
+   ------------------------------------------------------------------------------------ */
 .grammar-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-md);
+  gap: var(--space-lg);
   max-width: 46rem;
 }
 
+/* --space-xl, up from the shared card's --space-lg. This is the one view in the
+   app built to be read rather than scanned, and the extra 16px on each side is
+   what lets the example inside it sit as a block of its own with margin around
+   it instead of pressing against the card's edge. */
 .grammar-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-sm);
-  padding: var(--space-lg);
+  gap: var(--space-md);
+  padding: var(--space-xl);
 }
 
 .grammar-card__head {
@@ -50,7 +66,7 @@
   gap: var(--space-sm);
 }
 
-/* The pattern is the card's headword and the only bengara on a grammar card,
+/* The pattern is the card's headword and the only shu on a grammar card,
    so it is what carries the card's accent edge — the same device the
    Dashboard's hero card uses, at list scale. The rule is transparent at rest
    and only colours in on hover or focus: forty stacked cards each with a red
@@ -61,7 +77,7 @@
 .grammar-card__pattern {
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-lg);
-  color: var(--color-bengara);
+  color: var(--color-shu);
   margin-inline-end: auto;
   padding-inline-start: var(--space-2xs);
   border-inline-start: 2px solid transparent;
@@ -69,14 +85,14 @@
 }
 
 .grammar-card:focus-within .grammar-card__pattern {
-  border-inline-start-color: color-mix(in srgb, var(--color-bengara) 50%, transparent);
+  border-inline-start-color: color-mix(in srgb, var(--color-shu) 50%, transparent);
 }
 
 /* Gated like the vocabulary and kanji cards' own hover treatments — a mark
    left behind on the last card a thumb touched is worse than no mark. */
 @media (hover: hover) {
   .grammar-card:hover .grammar-card__pattern {
-    border-inline-start-color: color-mix(in srgb, var(--color-bengara) 50%, transparent);
+    border-inline-start-color: color-mix(in srgb, var(--color-shu) 50%, transparent);
   }
 }
 
@@ -91,14 +107,25 @@
   font-family: var(--font-mono);
 }
 
-/* The same recessed treatment vocabulary.css gives its example block, so an
-   example reads as the same kind of thing on both card shapes — see the note
-   there for why a single inset hairline is what sells the impression. */
+/* -- The example, as the card's centre ---------------------------------------------
+   Vocabulary and kanji have both given up the filled recess for a left rule,
+   because on a borderless row a panel painted the page's own colour is not a
+   recess at all. This card is the one place the recess still works — it is a
+   raised white surface, so --color-washi genuinely sinks into it — and it is
+   also the one place the example deserves to be the thing you look at.
+
+   A grammar point is learned from its example. The pattern names it and the
+   structure line abstracts it, but the sentence is where it means something, so
+   the block is given the room to be read as a sentence: --space-md/--space-lg of
+   padding rather than a uniform --space-sm, a real gap between the Japanese and
+   its reading, and the Japanese itself a step up the scale at --text-md with
+   loose leading. Everything else on the card stays at annotation size.
+   ------------------------------------------------------------------------------------ */
 .grammar-card__example {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3xs);
-  padding: var(--space-sm);
+  gap: var(--space-2xs);
+  padding: var(--space-md) var(--space-lg);
   background-color: var(--color-washi);
   border-radius: var(--radius-md);
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
@@ -107,6 +134,14 @@
 .grammar-card__example p {
   margin: 0;
   max-width: none;
+}
+
+/* The sentence itself — the first <p> in the block, and the only Japanese on a
+   grammar card that is a whole thought rather than a fragment of notation. */
+.grammar-card__example p:lang(ja):first-child {
+  font-size: var(--text-md);
+  line-height: var(--leading-loose);
+  color: var(--color-ink);
 }
 
 .grammar-card__notes {

@@ -65,7 +65,7 @@ function formatSessionDate(timestamp) {
 /* -- Study days -------------------------------------------------------------------------
    Which calendar days count toward the streak. This used to read the
    journal alone, which meant the app's hero number — biggest type on the
-   page, bengara accent, first card in the grid — rewarded the one activity
+   page, in the accent colour, first card in the grid — rewarded the one activity
    most readers do least. Someone who reviewed a hundred cards a day for a
    month saw a streak of zero, which is not just wrong, it's discouraging.
 

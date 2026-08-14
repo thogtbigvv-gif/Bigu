@@ -111,7 +111,10 @@ function createExample(example) {
 
 function createCard(entry, level, onOpenDetail) {
   const item = document.createElement('li');
-  item.className = 'card kanji-card card--deferred';
+  /* No `card` — see the same note in vocabulary.js. A kanji entry is one row of
+     a sparse list separated by hairlines, and carrying the card primitive only
+     to cancel every one of its properties would misdescribe the view. */
+  item.className = 'kanji-card card--deferred';
   item.dataset.kanjiId = entry.id;
 
   const head = document.createElement('div');

@@ -55,8 +55,8 @@
 .field:focus-visible {
   outline: var(--focus-ring);
   outline-offset: 2px;
-  border-color: var(--color-indigo);
-  background-color: color-mix(in srgb, var(--color-indigo) 3%, var(--color-washi-raised));
+  border-color: var(--color-shu);
+  background-color: color-mix(in srgb, var(--color-shu) 3%, var(--color-washi-raised));
   box-shadow: var(--focus-halo);
 }
 
@@ -174,7 +174,7 @@ select.field {
 }
 
 .search-field__control:has(.field:focus-visible) .search-field__icon {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 .search-field .field {
@@ -206,5 +206,5 @@ select.field {
    the wrapper has to be the one that holds exactly one field, or a group with
    several would light up every label in it when any single input took focus. */
 .search-field:has(.field:focus-visible) .field-label {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }

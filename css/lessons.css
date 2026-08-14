@@ -74,7 +74,7 @@
    where the hover above never runs, this is the only colour the header ever
    changes. */
 .lesson-group__header:active {
-  background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi));
+  background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-washi));
 }
 
 /* .lesson-group sets overflow:hidden to keep the body's corners rounded, which
@@ -83,7 +83,7 @@
 .lesson-group__header:focus-visible {
   outline: var(--focus-ring);
   outline-offset: -2px;
-  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--color-shu) 25%, transparent);
 }
 
 .lesson-group__title {

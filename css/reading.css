@@ -92,12 +92,14 @@
   padding: 0;
 }
 
+/* Padding comes from .card. This rule used to restate `padding: var(--space-lg)`
+   — the shared card's own value, copied — so the app's card padding could not
+   be changed from cards.css without this view silently keeping the old one. */
 .reading-card {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--space-3xs);
-  padding: var(--space-lg);
 }
 
 .reading-card__head {
@@ -147,16 +149,16 @@
   color: var(--color-ash);
 }
 
-/* The card is .card--interactive, so cards.css gives it an indigo edge under
+/* The card is .card--interactive, so cards.css gives it a shu edge under
    the pointer and a press — but only the button actually opens anything, so
    the lift resolves to it the same way the Dashboard's cards resolve to
    theirs. Colour only: the card is already carrying the movement, and a
    button travelling inside a travelling card comes unstuck from it. */
 @media (hover: hover) {
   .reading-card:hover .reading-card__open {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
     box-shadow: none;
     transform: none;
   }
@@ -206,7 +208,7 @@
 
 @media (hover: hover) {
   .reading-stage__exit:hover {
-    color: var(--color-indigo);
+    color: var(--color-shu);
     transform: translateX(-2px);
   }
 }
@@ -215,7 +217,7 @@
    completes that movement rather than reversing into the app's vertical
    settle, exactly as the journal's entry rows do. */
 .reading-stage__exit:active {
-  color: var(--color-indigo);
+  color: var(--color-shu);
   transform: translateX(-4px);
 }
 
@@ -227,9 +229,9 @@
 /* -- Masthead -------------------------------------------------------------------------
    Centred, in the order a printed sheet states itself: what this is, what it
    is called, what it is about. The level rides in the top line rather than
-   as a gold badge beside the title — a bordered box a few millimetres from
-   the one piece of Japanese the page is built around was the loudest thing
-   in the header and said nothing the line above could not.
+   as a badge beside the title — a bordered box a few millimetres from the one
+   piece of Japanese the page is built around was the loudest thing in the
+   header and said nothing the line above could not.
 
    --space-2xl under the block is the largest gap in the view and is doing
    the work the white band under a title does on paper: it is what makes the
@@ -327,7 +329,7 @@
 
 .reading-stage__tab[aria-selected="true"] {
   color: var(--color-ink);
-  border-block-end-color: var(--color-bengara);
+  border-block-end-color: var(--color-shu);
 }
 
 /* A stage with nothing behind it yet. Four of the six are stubs, and all six
@@ -467,8 +469,8 @@
    how an interface highlights a row; a dotted underline is how a Japanese
    textbook marks a line worth looking at, it costs no colour, and — unlike a
    hover tint — it is *there at rest*, so the reader can see which lines
-   answer before touching one. It goes solid indigo under a pointer and stays
-   indigo while the line is open. */
+   answer before touching one. It goes solid shu under a pointer and stays
+   shu while the line is open. */
 .reading-sentence__jp {
   font-size: var(--text-md);
   line-height: var(--reading-leading);
@@ -483,11 +485,11 @@
 
 @media (hover: hover) {
   .reading-sentence__face:hover .reading-sentence__jp {
-    text-decoration-color: var(--color-indigo);
+    text-decoration-color: var(--color-shu);
   }
 
   .reading-sentence__face:hover .reading-sentence__index {
-    color: var(--color-indigo);
+    color: var(--color-shu);
   }
 }
 
@@ -496,7 +498,7 @@
    finger is a line of running text — text that drops a pixel or lights up is
    text you lose your place in. The rule going solid is the whole press. */
 .reading-sentence__face:active .reading-sentence__jp {
-  text-decoration-color: var(--color-indigo);
+  text-decoration-color: var(--color-shu);
 }
 
 .reading-sentence__face:focus-visible {
@@ -506,17 +508,17 @@
 }
 
 .reading-sentence__face[aria-expanded="true"] .reading-sentence__jp {
-  text-decoration-color: color-mix(in srgb, var(--color-indigo) 55%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--color-shu) 55%, transparent);
 }
 
 .reading-sentence__face[aria-expanded="true"] .reading-sentence__index {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 /* -- The gloss --------------------------------------------------------------------
    What the sentence gives back: its reading, then its meaning, indented to
    the text column and hung off a hairline in the margin. The rule was 2px of
-   indigo, which made the answer the most saturated thing on a page of black
+   shu, which made the answer the most saturated thing on a page of black
    type; in stone it reads as the marginal note it is and the passage stays
    the darkest thing on the sheet.
 
@@ -564,13 +566,13 @@
 
 @media (hover: hover) {
   .reading-article__reveal:hover {
-    color: var(--color-indigo);
+    color: var(--color-shu);
   }
 }
 
 .reading-article__reveal:active,
 .reading-article__reveal[aria-pressed="true"] {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 .reading-article__reveal:focus-visible {
@@ -730,7 +732,7 @@
 
 @media (hover: hover) {
   .reading-pager__button:not(.button--primary):hover:not(:disabled) {
-    color: var(--color-indigo);
+    color: var(--color-shu);
     background: none;
     border-color: transparent;
     box-shadow: none;

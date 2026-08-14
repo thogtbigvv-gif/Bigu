@@ -59,7 +59,7 @@
   gap: var(--space-2xs);
 }
 
-/* Layout only. The look — quiet outline, indigo on hover, filled when
+/* Layout only. The look — quiet outline, shu on hover, filled when
    pressed, plus the focus ring and press feedback — is .toggle-chip in
    buttons.css. The deck picker used to have its own near-identical rule
    block that had already drifted: it was missing both :focus-visible and

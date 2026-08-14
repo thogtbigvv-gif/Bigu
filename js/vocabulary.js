@@ -97,7 +97,13 @@ function createExample(example) {
    lesson word all say it the same way. */
 function createCard(word, level, onProgressChange) {
   const item = document.createElement('li');
-  item.className = 'card vocab-card card--deferred';
+  /* No `card`. A vocabulary entry is a row in a dense two-column list now, not
+     a surface — see vocabulary.css. Dropping the class is the honest way to say
+     that: the alternative was keeping it and then cancelling its background,
+     border, radius, shadow and lift one property at a time, which leaves the
+     app's card primitive looking like it applies here when it does not.
+     `card--deferred` stays; it is content-visibility and independent of .card. */
+  item.className = 'vocab-card card--deferred';
   item.dataset.wordId = word.id;
 
   const head = document.createElement('div');

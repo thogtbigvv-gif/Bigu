@@ -133,14 +133,14 @@
 
    Gated behind (hover: hover), which matters more on this element than on any
    other in the app: below 1024px these rows *are* the drawer, so on a phone an
-   ungated :hover left the last row the reader tapped nudged and washed indigo
+   ungated :hover left the last row the reader tapped nudged and washed shu
    underneath the view they had just navigated to — a second, false "you are
    here" competing with the real one two rows away. The active row's own border
    is the state; a hover is a pointer thing and now says so. */
 @media (hover: hover) {
   .site-nav__link:hover {
-    background-color: color-mix(in srgb, var(--color-indigo) 7%, transparent);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 7%, transparent);
+    color: var(--color-shu);
     transform: translateX(2px);
   }
 }
@@ -148,9 +148,9 @@
 /* The active row does not travel. It is where you already are, not somewhere
    to go, and a permanent 2px offset would just read as a misaligned list. */
 .site-nav__link[aria-current="page"] {
-  color: var(--color-indigo);
+  color: var(--color-shu);
   font-weight: var(--weight-medium);
-  border-left-color: var(--color-indigo);
+  border-left-color: var(--color-shu);
   transform: none;
 }
 
@@ -180,7 +180,7 @@
 }
 
 .site-nav__item--parent.has-active-child > .site-nav__toggle {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 /* Opening and closing are not the same event, so they do not share a curve.
@@ -291,9 +291,9 @@
    touched rather than pointed at. */
 @media (hover: hover) {
   .site-nav__mobile-toggle:hover {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
   }
 }
 
@@ -670,7 +670,7 @@
   }
 
   .thumb-nav__link[aria-current="page"] {
-    color: var(--color-indigo);
+    color: var(--color-shu);
     font-weight: var(--weight-medium);
   }
 

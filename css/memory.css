@@ -4,7 +4,7 @@
 
    The whole sheet is one idea: ink on paper, at four densities. Nothing here
    introduces a colour — every value is --color-ink, --color-stone or
-   --color-bengara at some opacity, so the page reads as one material in both
+   --color-shu at some opacity, so the page reads as one material in both
    themes and inverts for free when the ink and the paper swap places.
 
    Two custom properties do most of the work:
@@ -252,7 +252,7 @@
 }
 
 .memory-week__day.is-today .memory-week__dot {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-bengara) 28%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-shu) 28%, transparent);
 }
 
 .memory-week__initial {
@@ -274,7 +274,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-md);
   font-variant-numeric: tabular-nums;
-  color: var(--color-bengara);
+  color: var(--color-shu);
 }
 
 /* -- Shelves --------------------------------------------------------------------------------
@@ -370,10 +370,10 @@
 /* Gated. This control removes itself the moment it is used — the shelf expands
    and the line is replaced by the slips it revealed — so on a touch screen the
    stuck hover landed on whatever inherited its position, colouring a *different*
-   shelf's link indigo for an action the reader took somewhere else. */
+   shelf's link shu for an action the reader took somewhere else. */
 @media (hover: hover) {
   .memory-shelf__more:hover {
-    color: var(--color-indigo);
+    color: var(--color-shu);
     text-decoration-color: currentColor;
   }
 }
@@ -384,7 +384,7 @@
    every other view settle. transform is in its transition list now for the
    same reason. */
 .memory-shelf__more:active {
-  color: var(--color-indigo);
+  color: var(--color-shu);
   transform: translateY(var(--lift-press));
   transition-timing-function: var(--ease-spring);
 }
@@ -539,8 +539,8 @@
 .memory-slip[data-band="faint"] .memory-slip__ink {
   background-image: linear-gradient(
     to bottom,
-    var(--color-bengara) 0%,
-    color-mix(in srgb, var(--color-bengara) 30%, transparent) 100%
+    var(--color-shu) 0%,
+    color-mix(in srgb, var(--color-shu) 30%, transparent) 100%
   );
   opacity: 0.85;
 }
@@ -599,7 +599,7 @@
 }
 
 .memory-slip[data-band="faint"] .memory-slip__state {
-  color: var(--color-bengara);
+  color: var(--color-shu);
 }
 
 /* -- Slip detail ------------------------------------------------------------------------------
