@@ -44,7 +44,11 @@
   border: none;
   border-radius: 0;
   font-family: inherit;
-  font-size: var(--text-base);
+  /* The lesson titles are what this screen is: a stack of eighteen closed
+     doors, and the label on each is the only content on the page until one
+     opens. At --text-base they sat below the view's own <h1>, which made the
+     word "Lessons" the largest thing on the lessons screen. */
+  font-size: var(--text-lg);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
   text-align: start;
@@ -86,8 +90,13 @@
   flex: 1;
 }
 
+/* "18 words · 0 in memory" — the row's meta, and it inherits the header's font
+   size unless told otherwise, which would have dragged it up to --text-lg
+   alongside the title it annotates. */
 .lesson-group__count {
   flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
 }
 
 .lesson-group__icon {
@@ -161,14 +170,22 @@
   min-width: 0;
 }
 
+/* Same treatment as the vocabulary headword, one step down for list density:
+   --font-jp for the textbook hand, and --text-lg against a --text-sm meaning so
+   the column reads as words with glosses rather than as pairs of equal lines.
+   Both used to sit at --text-base, which made a lesson's word list a wall of
+   sixteen-pixel text with no way in. */
 .lesson-word__head {
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-base);
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
   color: var(--color-ink);
 }
 
 .lesson-word__meaning {
   margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink-soft);
 }
 
 /* -- The memory mark ------------------------------------------------------------------
@@ -189,8 +206,10 @@
   width: 1.75rem;
   height: 1.75rem;
   /* Optical alignment with the first line of the headword beside it, which
-     sits on the display face at --text-base with loose Japanese leading. */
-  margin-block-start: 0.125rem;
+     sits on the Japanese face at --text-lg with tight leading — a 31px line
+     box against this 28px ring, so the ring drops by roughly half the
+     difference to centre on it. */
+  margin-block-start: 0.1rem;
   border-radius: 50%;
   color: var(--color-stone);
   transition: color var(--transition-fast), transform var(--transition-fast);

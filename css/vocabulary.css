@@ -106,10 +106,17 @@
   margin-block-end: var(--space-xs);
 }
 
+/* The headword is the card. --font-jp first so it is set in the textbook hand
+   rather than the UI gothic, and --text-xl so it clears the Mongolian meaning
+   under it by two full steps of the scale. At --text-lg over a --text-base
+   meaning the two sat one step apart, which is close enough that the card read
+   as two lines of similar text and a reader scanning the grid had to actually
+   read to find the word. */
 .vocab-card__head ruby,
 .vocab-card__head span:first-child {
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-lg);
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-xl);
+  line-height: var(--leading-tight);
   color: var(--color-ink);
 }
 
@@ -120,6 +127,7 @@
 
 .vocab-card__meaning {
   margin: 0 0 var(--space-sm) 0;
+  font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
 }

@@ -6,11 +6,15 @@
    ========================================================================== */
 
 /* -- Hero / section spacing ---------------------------------------------------------------
-   The dashboard is the app's landing view, so it is the one h1 that keeps
-   the top of the type scale — every section heading sits a step below it
-   at --text-xl (see typography.css). That step is what tells a reader at a
-   glance whether they're at home or inside a section; before it, the
-   Dashboard and "Shadowing is coming soon" rendered identically.
+   The dashboard is the app's landing view, so it is the one h1 that sits a
+   step above the rest — every other view's title is at --text-lg (see the
+   ladder in typography.css). That step is what tells a reader at a glance
+   whether they're at home or inside a section; before it, the Dashboard and
+   "Shadowing is coming soon" rendered identically.
+
+   One step now, not two. This heading used to take the top of the scale
+   outright, which made the word "Dashboard" the largest thing on the app's
+   landing page — the title of the room rather than anything in it.
 
    The heading also gets a touch more air and a hairline rule beneath it —
    the same "thin line, not a spotlight" divider language already used by
@@ -21,7 +25,7 @@
 }
 
 #dashboard-heading {
-  font-size: var(--text-2xl);
+  font-size: var(--text-lg);
 }
 
 /* The rule sits under the heading *and* its status line, so it reads as the

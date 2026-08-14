@@ -76,11 +76,15 @@
    textarea's box never changes and the text does not shift down by a pixel the
    moment the field takes focus — which, on a writing surface, is the one place
    a layout nudge is genuinely felt. */
+/* --text-lg, and it is the largest thing on the Journal screen on purpose: the
+   sheet you write on is what this view is. It also has to be big enough to
+   check your own kana against, which is most of the reason someone writes
+   Japanese into a box at all. */
 .journal__textarea {
   display: block;
   width: 100%;
   min-height: clamp(12rem, 40vh, 22rem);
-  font-size: var(--text-md);
+  font-size: var(--text-lg);
   background: transparent;
   border: none;
   border-block-end: var(--border-width) solid var(--color-stone);
@@ -296,8 +300,18 @@ button.journal__calendar-day:active {
    the main event. A smaller heading and a plain hairline-divided list keep
    it from competing with the writing surface above.
    -------------------------------------------------------------------------------------------- */
+/* The same treatment .practice__history-heading already has, because it is the
+   same thing: a quiet label over a log of what you did before. At --text-lg it
+   was the largest object on the Journal screen — a section label for the
+   archive beating the surface you actually came here to write on. Two files
+   describing one component two different ways is the drift the shared notes in
+   this codebase keep warning about, so this is now that component. */
 .journal__history-heading {
-  font-size: var(--text-lg);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   margin-block-end: var(--space-sm);
 }
 
@@ -424,9 +438,9 @@ button.journal__calendar-day:active {
   }
 
   /* `height`, not `min-height`. journal.js sets rows=12 on this element, and
-     twelve rows of --text-md Japanese at --leading-loose is ~440px — taller
-     than the clamp above ever was, so tuning a minimum here would have changed
-     nothing. On a 844px screen that put the writing surface, the character
+     twelve rows of Japanese at --text-lg and --leading-loose is ~550px — taller
+     still than the clamp above ever was, so tuning a minimum here would have
+     changed nothing. On a 844px screen that put the writing surface, the character
      count and the Save button below the fold together, and the keyboard then
      took the bottom 40% of what was left. You could write, but you could not
      see that you had saved.
