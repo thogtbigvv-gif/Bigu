@@ -86,26 +86,36 @@ h6 {
   text-wrap: balance;
 }
 
-/* Optical tightening. Shippori Mincho sets loosely at display sizes — correct
-   for a body serif, slightly slack for a 39px page title — so the two largest
-   steps pull back by a hair. Below --text-lg nothing is touched: negative
-   tracking on small text costs legibility, which is the opposite of the trade
-   being made here. */
-h1,
-h2 {
-  letter-spacing: -0.012em;
-}
+/* -- The ladder ---------------------------------------------------------------------
+   Every rung moved down, because the titles were winning screens they had no
+   business winning. A view's <h1> is its label, not its subject: the subject is
+   the kanji, the headword, the question on the card. At --text-xl the word
+   "Vocabulary" was the largest thing on the vocabulary screen — an interface
+   describing itself instead of showing you something — and measuring it across
+   the app, twelve of sixteen views had their own title as the biggest object
+   on them.
 
-/* Every view's title is an h1, so the default is the section size and the
-   Dashboard opts back up to the hero size in dashboard.css. Landing on a
-   section should not look identical to landing at home. */
-h1 { font-size: var(--text-xl); }
-h2 { font-size: var(--text-xl); }
-h3 { font-size: var(--text-lg); }
-h4 { font-size: var(--text-md); }
+   So the h1 sits at --text-md: a step above body copy, which is all a label
+   needs to read as a label, and comfortably below everything that is actually
+   content. The scale above it now belongs entirely to the app's subjects — a
+   headword at --text-xl, a quiz prompt at --text-3xl, a kanji at --text-5xl.
+   The Dashboard still opts up in dashboard.css, because landing at home should
+   not look identical to landing in a section.
+
+   The optical tightening that used to sit on h1 and h2 is gone with them. It
+   was written for a 39px title in a serif that set loosely at display sizes;
+   negative tracking at 20px in the gothic costs legibility and buys nothing.
+
+   h4-h6 are unused across the whole app (every heading is an h1, h2 or h3) and
+   stay defined only so the ladder has no gap for a later one to fall into.
+   ------------------------------------------------------------------------------------ */
+h1 { font-size: var(--text-md); }
+h2 { font-size: var(--text-base); }
+h3,
+h4,
 h5,
 h6 {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: var(--weight-medium);
 }
 

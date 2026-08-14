@@ -9,25 +9,68 @@
 
 :root {
 
-  /* -- Color: ground (paper & ink) --------------------------------------- */
-  --color-washi: #E9EBE4;         /* washi paper — page background */
-  --color-washi-raised: #F4F5F0;  /* lighter panel/card surface */
-  --color-ink: #1C2225;           /* sumi ink — primary text */
-  --color-ink-soft: #454B45;      /* softened ink — secondary text */
-  --color-ash: #6A6558;           /* muted stone-grey — tertiary text, meta (4.83:1 on washi) */
-  --color-stone: #D7D2C4;         /* borders, dividers, hairlines */
+  /* -- Color: ground (paper & ink) ---------------------------------------------
+     Near-white paper, not cream. The old washi ground (#E9EBE4) tinted every
+     surface in the app a pale green-grey, which reads less as handmade paper
+     than as an interface that has been left in the sun. A near-white page
+     gives ink somewhere to be black and gives the one accent somewhere to be
+     loud; the paper character comes from the type and the spacing instead.
 
-  /* -- Color: accent -------------------------------------------------------- */
-  --color-indigo: #2C4A5C;        /* ai-iro — links, primary interactive */
-  --color-indigo-deep: #1D3340;   /* hover/active state of indigo */
-  --color-bengara: #9C4A3C;       /* bengara red-ochre — signature accent, hanko */
-  --color-moss: #4E6B4A;          /* moss/bamboo green — success, held-in-memory state */
-  --color-gold: #7A5F2E;          /* muted gold — highlight, streaks, level tags */
+     Ratios below are against --color-paper; each of the three ink steps also
+     clears its threshold on --color-paper-raised.
+     ----------------------------------------------------------------------------- */
+  --color-paper: #FBFBF9;         /* page ground */
+  --color-paper-raised: #FFFFFF;  /* cards, panels */
+  --color-sumi: #101418;          /* 墨 — primary text (17.85:1) */
+  --color-sumi-soft: #4A5058;     /* secondary text (7.86:1) */
+  --color-sumi-faint: #6E737B;    /* meta (4.61:1; 4.77:1 on raised) */
+  --color-line: #E4E3DE;          /* hairlines, dividers */
+
+  /* -- Color: accent -----------------------------------------------------------
+     One accent, not four. Indigo, bengara, moss and gold each carried a
+     different job and no hierarchy between them, so nothing on a page was ever
+     clearly the important thing — four accents is the same as none.
+
+     朱色 (shu-iro) is the vermilion of a hanko, a torii, a teacher's correcting
+     pen. It is the only colour in the app allowed to be loud, and it means
+     "this one" — the primary action, the current item, the focus ring. Moss is
+     not a second accent: it is a state, and it says one thing only, which is
+     that a word is held in memory.
+     ----------------------------------------------------------------------------- */
+  --color-shu: #D9422B;           /* 朱色 — the one accent (4.25:1) */
+  --color-shu-deep: #B33520;      /* pressed/hover (5.88:1) */
+  --color-moss: #5E7A58;          /* held-in-memory state only (4.61:1) */
 
   /* -- Color: feedback ------------------------------------------------------ */
   --color-error: #A13B2E;
   --color-success: var(--color-moss);
-  --color-focus: var(--color-indigo);
+  --color-focus: var(--color-shu);
+
+  /* -- Retired names, aliased ---------------------------------------------------
+     --color-washi, --color-ink, --color-indigo and friends are gone as values
+     and survive here only as pointers at the tokens above, because roughly two
+     hundred references across seventeen component files still name them.
+     Nothing below holds a colour of its own, so there is exactly one live
+     palette and the dark block overleaf only has to redefine the real tokens.
+
+     Two of these are lossy on purpose. Bengara was already doing the
+     signature-accent job, so it collapses into shu. Gold was carrying JLPT
+     level tags and streak counts — bookkeeping, not emphasis — so it collapses
+     into the meta ink rather than becoming a second loud colour; a level tag
+     that shouts is a level tag competing with the word it describes.
+
+     Task C rewrites the call sites and deletes this block. Do not add to it.
+     ----------------------------------------------------------------------------- */
+  --color-washi: var(--color-paper);
+  --color-washi-raised: var(--color-paper-raised);
+  --color-ink: var(--color-sumi);
+  --color-ink-soft: var(--color-sumi-soft);
+  --color-ash: var(--color-sumi-faint);
+  --color-stone: var(--color-line);
+  --color-indigo: var(--color-shu);
+  --color-indigo-deep: var(--color-shu-deep);
+  --color-bengara: var(--color-shu);
+  --color-gold: var(--color-sumi-faint);
 
   /* -- Color: filled controls ------------------------------------------------
      The accents above are tuned for *marks on the page* — link text, a
@@ -40,28 +83,56 @@
      a lamp sitting on it.
 
      So filled controls take their own tokens, and only the fills move between
-     themes. In light they are exactly the accents they always were — a deep
-     indigo slab on paper is ink, which is the whole language of this app. In
-     dark they are darkened until they sit a step or two *above* the card they
-     are on rather than a leap above the page, and the text on them flips to
-     --color-ink instead of --color-washi.
+     themes. In light they are exactly the accents themselves — a shu slab on
+     near-white paper is the hanko pressed onto the page, which is the whole
+     language of this app. In dark they are darkened until they sit a step or
+     two *above* the card they are on rather than a leap above the page, and
+     the text on them flips to --color-sumi instead of --color-paper.
 
      Meters are deliberately not on this list. A progress bar has no text and
-     is supposed to be the lit part; --color-indigo stays right for those.
+     is supposed to be the lit part; --color-shu stays right for those.
      -------------------------------------------------------------------------- */
-  --fill-primary: var(--color-indigo);
-  --fill-primary-strong: var(--color-indigo-deep);
+  --fill-primary: var(--color-shu);
+  --fill-primary-strong: var(--color-shu-deep);
   --fill-accent: var(--color-moss);
   --fill-danger: var(--color-error);
-  --fill-ink: var(--color-washi);
+  --fill-ink: var(--color-paper);
 
-  /* -- Typography: families -------------------------------------------------- */
-  --font-display: 'Shippori Mincho', serif;                        /* headings, brand mark */
-  --font-jp: 'Noto Sans JP', sans-serif;                            /* kana / kanji content */
-  --font-body: 'Noto Sans', system-ui, -apple-system, sans-serif;  /* UI copy */
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;           /* readings, level tags */
+  /* -- Typography: families -----------------------------------------------------
+     Shippori Mincho over Noto Sans JP is the pairing every generated Japanese
+     interface arrives at, and it lands the app somewhere between a museum
+     placard and an admin console. Klee One is a Japanese schoolbook hand — the
+     lettering on a 漢字ドリル — so a headword set in it reads as something being
+     taught rather than something being administered. Zen Kaku Gothic New is
+     the quiet gothic underneath it: it carries the UI copy and the headings
+     without ever competing with the Japanese.
 
-  /* -- Typography: scale (restrained, rounded to practical rem values) ------ */
+     Klee One ships 400 and 600 only. Anything asking for --weight-bold (700)
+     against it will be matched down to 600 rather than synthesised bold, which
+     is the right outcome for a hand face — a faux-bold Klee One smears.
+
+     NOTE for Task C: neither of these paints yet. typography.css builds
+     --font-jp-stack and --font-body-stack with the platform faces (Hiragino,
+     Yu Gothic, -apple-system) ahead of these tokens, so on Mac and Windows the
+     system font still wins and the downloaded families are fetched and unused.
+     Moving --font-jp and --font-body to the front of those two stacks is a
+     typography.css edit and out of scope here.
+     -------------------------------------------------------------------------- */
+  --font-jp: 'Klee One', serif;                       /* headwords, kanji, examples */
+  --font-body: 'Zen Kaku Gothic New', sans-serif;     /* all UI copy */
+  --font-display: 'Zen Kaku Gothic New', sans-serif;  /* headings, brand mark */
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;  /* readings, level tags */
+
+  /* -- Typography: scale (restrained, rounded to practical rem values) --------
+     The scale used to stop at 39px, which meant the largest thing the app could
+     ever put on screen was a section heading — every view was the same weight
+     as every other view and nothing was ever the subject. The three steps above
+     --text-2xl break that ceiling deliberately, and they break the modular
+     ratio too: they are display sizes for a single glyph, not the next rungs of
+     a ladder for paragraphs to climb.
+
+     Unused as of this commit. Nothing in the app references them yet.
+     -------------------------------------------------------------------------- */
   --text-xs: 0.75rem;     /* 12px */
   --text-sm: 0.875rem;    /* 14px */
   --text-base: 1rem;      /* 16px */
@@ -69,6 +140,9 @@
   --text-lg: 1.563rem;    /* 25px */
   --text-xl: 1.953rem;    /* 31px */
   --text-2xl: 2.441rem;   /* 39px */
+  --text-3xl: 3.75rem;    /* 60px */
+  --text-4xl: 6rem;       /* 96px  — hero glyph */
+  --text-5xl: 8.5rem;     /* 136px — the one glyph a view is about */
 
   /* -- Typography: weight & rhythm ------------------------------------------- */
   --weight-regular: 400;
@@ -109,11 +183,11 @@
   --radius-md: 4px;
   --radius-lg: 8px;
 
-  --shadow-sm: 0 1px 2px rgba(28, 34, 37, 0.06);
-  --shadow-md: 0 2px 8px rgba(28, 34, 37, 0.08);
+  --shadow-sm: 0 1px 2px rgba(16, 20, 24, 0.06);
+  --shadow-md: 0 2px 8px rgba(16, 20, 24, 0.08);
   --shadow-lg:
-    0 10px 28px -14px rgba(28, 34, 37, 0.22),
-    0 2px 6px rgba(28, 34, 37, 0.05);
+    0 10px 28px -14px rgba(16, 20, 24, 0.22),
+    0 2px 6px rgba(16, 20, 24, 0.05);
 
   --lift-card: -2px;   /* translateY applied with --shadow-lg */
   --lift-press: 1px;   /* the one-pixel settle every control shares */
@@ -128,7 +202,7 @@
 
      Glassmorphism anywhere else in this app would be decoration — cards sit
      on the page, not over it, and there is nothing behind them to reveal. */
-  --glass-surface: color-mix(in srgb, var(--color-washi) 82%, transparent);
+  --glass-surface: color-mix(in srgb, var(--color-paper) 82%, transparent);
   --glass-blur: 10px;
 
   /* -- Focus indicator ---------------------------------------------------------
@@ -143,12 +217,17 @@
      halo is decoration on top of it. Never use the halo without the
      outline; that is the state these tokens were factored out of.
 
+     The outline now rides --color-shu rather than indigo, and the 3:1 floor
+     was re-measured against every ground it can land on: 4.25:1 on light
+     paper, 4.41:1 on a light card, 4.86:1 on the dark ground, 4.44:1 on a
+     dark card. Nothing here may be re-tuned without re-running those four.
+
      Offset is deliberately not a token: it is the one part that legitimately
      differs per control (2px on a button, -2px inside a nav row whose edge
      touches the sidebar border, 3px around the brand mark). --focus-ring
      is the outline shorthand, --focus-halo the box-shadow. */
   --focus-ring: 2px solid var(--color-focus);
-  --focus-halo: 0 0 0 3px color-mix(in srgb, var(--color-indigo) 25%, transparent);
+  --focus-halo: 0 0 0 3px color-mix(in srgb, var(--color-shu) 25%, transparent);
 
   /* -- Motion -------------------------------------------------------------------
      Duration and easing were previously fused into two shorthand tokens, so
@@ -283,22 +362,26 @@
    <html> is ever the theme root.
    ------------------------------------------------------------------------------------ */
 :root[data-theme="dark"] {
-  /* -- Color: ground (ink & paper, inverted) --------------------------------- */
-  --color-washi: #1A1D1A;         /* page background — night ground */
-  --color-washi-raised: #242823;  /* panel/card surface, lighter than ground */
-  --color-ink: #E8E6DC;           /* primary text — warm off-white */
-  --color-ink-soft: #B6B8AC;      /* softened text — secondary */
-  --color-ash: #8F9484;           /* muted — tertiary text, meta */
-  --color-stone: #3A3F38;         /* borders, dividers, hairlines */
+  /* Only the real tokens are redefined here. The retired names in the light
+     block are aliases — `var(--color-ink)` resolves through to --color-sumi
+     on every re-evaluation — so they follow this block for free, and there is
+     no second place a stale indigo could survive. Nothing below may redeclare
+     a retired name; that would bring the old palette back to life. */
+
+  /* -- Color: ground (paper & ink, inverted) --------------------------------- */
+  --color-paper: #14161A;         /* page ground — night paper */
+  --color-paper-raised: #1C1F24;  /* cards, panels, a step above the ground */
+  --color-sumi: #E8E6E1;          /* primary text — warm off-white (14.52:1) */
+  --color-sumi-soft: #ADABA5;     /* secondary text (7.89:1) */
+  --color-sumi-faint: #8A8883;    /* meta (5.11:1; 4.67:1 on raised) */
+  --color-line: #2B2E33;          /* hairlines, dividers */
 
   /* -- Color: accent (brightened for contrast on a dark ground) -------------- */
-  --color-indigo: #6FA4BE;
-  --color-indigo-deep: #8FC0D6;   /* lighter on hover — darkening a light
+  --color-shu: #E5533D;           /* 4.86:1 on the ground, 4.44:1 on a card */
+  --color-shu-deep: #F06E58;      /* lighter on hover — darkening a light
                                        accent on a dark ground would hurt
                                        contrast instead of helping it */
-  --color-bengara: #D08670;
-  --color-moss: #94AD7E;
-  --color-gold: #D2AD70;
+  --color-moss: #8FA987;
 
   /* -- Color: feedback -------------------------------------------------------- */
   --color-error: #E08170;
@@ -306,12 +389,12 @@
   /* Filled controls, darkened rather than brightened — see the long note in
      the light block. Each sits about 2:1 above the page and 1.8:1 above a
      card, which is enough to read as raised without becoming the brightest
-     thing in the room, and each carries --color-ink at better than 6:1. */
-  --fill-primary: #2F5468;
-  --fill-primary-strong: #3E6A82;
+     thing in the room, and each carries --color-sumi at better than 5:1. */
+  --fill-primary: #8C3222;
+  --fill-primary-strong: #A33C29;
   --fill-accent: #3E5535;
   --fill-danger: #7A3229;
-  --fill-ink: var(--color-ink);
+  --fill-ink: var(--color-sumi);
 
   /* -- Elevation (deeper, since a dark ground swallows a light shadow) ------- */
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
@@ -320,11 +403,11 @@
     0 12px 32px -14px rgba(0, 0, 0, 0.7),
     0 2px 8px rgba(0, 0, 0, 0.45);
 
-  /* The glass ground is re-mixed rather than inherited: --color-washi has
+  /* The glass ground is re-mixed rather than inherited: --color-paper has
      already flipped to the night value above, but a dark surface needs to sit
      *more* opaque than a light one to hold its type — an 82% dark bar over
      bright content still lets enough through to grey the header's own text. */
-  --glass-surface: color-mix(in srgb, var(--color-washi) 88%, transparent);
+  --glass-surface: color-mix(in srgb, var(--color-paper) 88%, transparent);
 
   color-scheme: dark;
 }

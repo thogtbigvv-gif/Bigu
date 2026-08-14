@@ -706,15 +706,20 @@
   text-align: center;
 }
 
+/* The one glyph on an empty Memory page, so it is the one thing sized as a
+   subject: --text-4xl, in the Japanese face. The literal 5rem here was the last
+   hardcoded type size in the app and predates the scale having anything to
+   offer above 39px — there was no token for a hero glyph, so this one invented
+   its own. Now there is. */
 .memory-empty__mark {
   margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: 5rem;
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-4xl);
   line-height: 1;
   color: var(--color-ink);
   opacity: 0.12;
   /* --duration-slow, the app's ceiling, which is what 600ms was reaching for.
-     This is a 5rem glyph at 12% opacity on an otherwise empty page and it is
+     This is a hero glyph at 12% opacity on an otherwise empty page and it is
      allowed to take the long end of the scale — but the long end of the scale
      is a token, and nothing else in Bigu runs past --duration-slow. */
   animation: memory-detail-in var(--duration-slow) var(--ease-entrance) both;

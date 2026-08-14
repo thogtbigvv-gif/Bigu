@@ -59,10 +59,18 @@
 
    Behind the hover query, so a touch reader never gets a card left permanently
    enlarged by the last thing they tapped. */
+/* --font-jp first, not --font-display. This is the one glyph the card exists
+   for, so it is set in the textbook hand rather than in the UI gothic, and the
+   platform stack stays behind it for anything Klee One doesn't draw.
+
+   --text-3xl and not the --text-5xl the detail panel takes: this is a scanning
+   grid of 132 of them, and a card is a character *plus* its annotations. At
+   60px the character is roughly four times the meaning under it, which is the
+   separation the card was missing; at 136px it would be a flip-book. */
 .kanji-card__character {
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-2xl);
-  line-height: var(--leading-tight);
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-3xl);
+  line-height: 1;
   color: var(--color-ink);
   transition: transform var(--transition-base);
 }
@@ -82,12 +90,19 @@
   transform: scale(1.03);
 }
 
+/* Annotation, not headline. The meaning used to run at body size directly under
+   a 39px character, which put the two close enough that the card read as a
+   two-line block rather than as a glyph with a caption. */
 .kanji-card__meaning {
   margin: 0;
+  font-size: var(--text-sm);
   font-weight: var(--weight-medium);
   color: var(--color-ink);
 }
 
+/* Carries .reading as well, which is where the mono face and --text-sm come
+   from — the readings are data and are set as data, here and everywhere else
+   in the app. */
 .kanji-card__readings {
   margin: 0;
 }
@@ -122,7 +137,7 @@
 }
 
 .kanji-card__example ruby {
-  font-size: var(--text-md);
+  font-size: var(--text-sm);
 }
 
 .kanji-card__example p {
@@ -160,18 +175,41 @@
   align-self: flex-start;
 }
 
+/* The head is a column now, not a baseline row. This panel replaces the entire
+   grid and holds exactly one character, so that character gets the top of the
+   scale and the 空白 that makes it read as a specimen rather than as a heading
+   with a badge stuck to its side. The level tag drops underneath it — a
+   --text-xs chip on the same baseline as a 136px glyph was a rounding error
+   wearing a border.
+
+   The vertical padding is the point of the block. --space-3xl above and below
+   is 96px of nothing, which is what stops the character being "the first item
+   in a stack" and makes it the thing the page is about. */
 .kanji-detail__head {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding-block: var(--space-3xl);
+  text-align: center;
 }
 
+/* --font-jp first — the textbook hand, at the size a specimen wants. line-height
+   1 because a CJK glyph fills its em square: --leading-tight at 136px would add
+   34px of空 above and below the character *inside* its own line box, on top of
+   the padding that is already doing that job deliberately. */
+/* Regular weight, against the bold every other heading takes. This is an <h2>
+   structurally — it is the panel's title, and it has to be, or the panel has no
+   announced identity — but it is a *specimen*, and Klee One at 136px in bold
+   resolves to its 600 and fills the strokes in until 日 is a black rectangle.
+   The whole reason for the textbook hand is the modulation in the stroke, which
+   only exists at regular. */
 .kanji-detail__character {
   margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-2xl);
-  line-height: var(--leading-tight);
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-5xl);
+  font-weight: var(--weight-regular);
+  line-height: 1;
   color: var(--color-ink);
 }
 
@@ -195,8 +233,22 @@
   color: var(--color-ink-soft);
 }
 
+/* Everything under the character is annotation and is sized as annotation. The
+   sections carry the meaning, the two readings, and the example blocks; at body
+   size they competed with each other and with nothing else, so the panel read
+   as seven equal paragraphs below a picture. */
 .kanji-detail__text {
   margin: 0;
+  font-size: var(--text-sm);
+}
+
+/* The On and Kun sections. These are readings — the same data the cards and the
+   quiz set in the mono face — so they are set the same way, with the Japanese
+   stack behind the mono for the kana themselves. Wide tracking is what .reading
+   already does to a string that is being read as data rather than as prose. */
+.kanji-detail__text:lang(ja) {
+  font-family: var(--font-mono), var(--font-jp-stack);
+  letter-spacing: var(--tracking-wide);
 }
 
 .kanji-detail__examples {
