@@ -29,7 +29,7 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
+  background-color: var(--color-paper-raised);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
 }
@@ -45,7 +45,7 @@
 .journal__date {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   letter-spacing: var(--tracking-wide);
 }
 
@@ -87,7 +87,7 @@
   font-size: var(--text-lg);
   background: transparent;
   border: none;
-  border-block-end: var(--border-width) solid var(--color-stone);
+  border-block-end: var(--border-width) solid var(--color-line);
   padding-block-end: var(--space-sm);
   resize: vertical;
   transition:
@@ -101,7 +101,7 @@
 }
 
 .journal__textarea::placeholder {
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* The composer is an underline, not a box, so its focus ring is drawn inside
@@ -160,7 +160,7 @@
 .journal__calendar-label {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   letter-spacing: var(--tracking-wide);
 }
 
@@ -169,7 +169,7 @@
   height: 1.75rem;
   font-size: var(--text-md);
   line-height: 1;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   border-radius: var(--radius-sm);
   transition:
     background-color var(--transition-fast),
@@ -183,8 +183,8 @@
    previous arrow stay lit while they reach for the next one. */
 @media (hover: hover) {
   .journal__calendar-nav:hover:not(:disabled) {
-    color: var(--color-ink);
-    background-color: var(--color-washi-raised);
+    color: var(--color-sumi);
+    background-color: var(--color-paper-raised);
   }
 }
 
@@ -194,7 +194,7 @@
 }
 
 .journal__calendar-nav:disabled {
-  color: var(--color-stone);
+  color: var(--color-line);
   cursor: not-allowed;
 }
 
@@ -208,7 +208,7 @@
 .journal__calendar-weekdays span {
   font-size: var(--text-xs);
   text-align: center;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .journal__calendar-day {
@@ -217,7 +217,7 @@
   align-items: center;
   justify-content: center;
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   border-radius: var(--radius-sm);
   transition:
     background-color var(--transition-fast),
@@ -264,12 +264,12 @@ button.journal__calendar-day:active {
 
 .journal__calendar-day[data-intensity="1"] {
   background-color: color-mix(in srgb, var(--fill-accent) 25%, transparent);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .journal__calendar-day[data-intensity="2"] {
   background-color: color-mix(in srgb, var(--fill-accent) 50%, transparent);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .journal__calendar-day[data-intensity="3"] {
@@ -309,7 +309,7 @@ button.journal__calendar-day:active {
 .journal__history-heading {
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   margin-block-end: var(--space-sm);
@@ -325,7 +325,7 @@ button.journal__calendar-day:active {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
-  border-bottom: var(--border-width) solid var(--color-stone);
+  border-bottom: var(--border-width) solid var(--color-line);
 }
 
 .journal__entry:last-child {
@@ -357,7 +357,7 @@ button.journal__calendar-day:active {
    one is offset two pixels, which is the only thing distinguishing them. */
 @media (hover: hover) {
   .journal__entry-row:hover {
-    background-color: var(--color-washi-raised);
+    background-color: var(--color-paper-raised);
     transform: translateX(2px);
   }
 }
@@ -367,19 +367,19 @@ button.journal__calendar-day:active {
    already 2px to the right would read as a stumble. Same distance, same axis,
    one step further. */
 .journal__entry-row:active {
-  background-color: var(--color-washi-raised);
+  background-color: var(--color-paper-raised);
   transform: translateX(4px);
 }
 
 .journal__entry--active .journal__entry-row {
-  background-color: var(--color-washi-raised);
+  background-color: var(--color-paper-raised);
 }
 
 .journal__entry-date {
   flex-shrink: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   white-space: nowrap;
 }
 
@@ -389,7 +389,7 @@ button.journal__calendar-day:active {
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .journal__entry-meta {
@@ -402,7 +402,7 @@ button.journal__calendar-day:active {
   min-width: 4.5rem;
   padding: var(--space-3xs) var(--space-2xs);
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   text-align: center;
   border-radius: var(--radius-sm);
   transition: color var(--transition-fast), background-color var(--transition-fast);

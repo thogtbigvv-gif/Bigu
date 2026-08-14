@@ -51,7 +51,7 @@
 .quiz__progress {
   height: 2px;
   border-radius: 999px;
-  background-color: var(--color-stone);
+  background-color: var(--color-line);
   overflow: hidden;
 }
 
@@ -75,7 +75,7 @@
   margin: 0;
   min-width: 0;
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   overflow-wrap: anywhere;
 }
 
@@ -93,17 +93,17 @@
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .quiz__count-index {
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .quiz__count-total::before {
   content: '/';
   margin-inline-end: var(--space-3xs);
-  color: var(--color-stone);
+  color: var(--color-line);
 }
 
 .quiz__exit {
@@ -209,7 +209,7 @@
    correct-answer ring below blooms above this and settles back onto it.
    ------------------------------------------------------------------------------------------ */
 .quiz__scene[data-toward] .quiz__card--back {
-  border-color: color-mix(in srgb, var(--cue, var(--color-stone)) calc(var(--drag-progress, 0) * 100%), var(--color-stone));
+  border-color: color-mix(in srgb, var(--cue, var(--color-line)) calc(var(--drag-progress, 0) * 100%), var(--color-line));
   box-shadow: 0 0 0 calc(var(--drag-progress, 0) * 3px)
     color-mix(in srgb, var(--cue, transparent) 22%, transparent);
 }
@@ -317,7 +317,7 @@
 
 @media (hover: hover) {
   .quiz__card--front:not(:disabled):hover {
-    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
+    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-line));
     box-shadow: var(--shadow-md);
   }
 }
@@ -334,7 +334,7 @@
    nothing moves. The outline from typography.css's `button:focus-visible`
    stays on top of it. */
 .quiz__card--front:not(:disabled):focus-visible {
-  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
+  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-line));
   box-shadow: var(--shadow-md);
 }
 
@@ -353,13 +353,13 @@
   margin-block-start: var(--space-2xs);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .quiz__prompt {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- The question itself -------------------------------------------------------------
@@ -387,7 +387,7 @@
   font-family: var(--font-jp), var(--font-jp-stack);
   font-size: var(--text-3xl);
   line-height: 1;
-  color: var(--color-ink);
+  color: var(--color-sumi);
   overflow-wrap: anywhere;
 }
 
@@ -438,7 +438,7 @@
   margin: 0;
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* -- The back --------------------------------------------------------------------------
@@ -454,7 +454,7 @@
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-md);
   line-height: var(--leading-tight);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   max-width: none;
 }
 
@@ -469,7 +469,7 @@
   font-size: var(--text-xl);
   font-weight: var(--weight-medium);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   max-width: none;
 }
 
@@ -504,10 +504,10 @@
   min-height: 3.25rem;
   padding: var(--space-xs) var(--space-sm);
   text-align: start;
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   font-size: var(--text-sm);
   transition:
     border-color var(--transition-fast),
@@ -530,7 +530,7 @@
    no opinion about, once per question, for the whole round. */
 @media (hover: hover) {
   .quiz__option:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-washi-raised));
+    background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-paper-raised));
     border-color: var(--color-shu);
   }
 
@@ -570,11 +570,11 @@
   flex-shrink: 0;
   width: 1.5rem;
   height: 1.5rem;
-  border: var(--border-width) solid var(--color-stone);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-sm);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   /* Declared on the base so the box eases back out of hover as smoothly as it
      eases in, and so the answered states below fade into place rather than
      snapping the instant a choice is graded. */
@@ -624,7 +624,7 @@
 
 .quiz__option.is-answer {
   border-color: var(--color-moss);
-  background-color: color-mix(in srgb, var(--color-moss) 14%, var(--color-washi-raised));
+  background-color: color-mix(in srgb, var(--color-moss) 14%, var(--color-paper-raised));
 }
 
 .quiz__option.is-answer::after {
@@ -647,7 +647,7 @@
    An em dash rather than a cross: it says "not this one", where ✕ says wrong. */
 .quiz__option.is-wrong {
   border-color: var(--color-sumi-faint);
-  background-color: color-mix(in srgb, var(--color-sumi-faint) 10%, var(--color-washi-raised));
+  background-color: color-mix(in srgb, var(--color-sumi-faint) 10%, var(--color-paper-raised));
 }
 
 .quiz__option.is-wrong::after {
@@ -765,13 +765,13 @@
 .quiz__verdict-timing {
   font-size: var(--text-sm);
   font-weight: var(--weight-regular);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .quiz__verdict-timing::before {
   content: '·';
   margin-inline-end: var(--space-2xs);
-  color: var(--color-stone);
+  color: var(--color-line);
 }
 
 /* What it should have been, named. The green option says it too, but only to
@@ -790,12 +790,12 @@
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .quiz__answer-line-value {
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .quiz__answer-line-value:lang(ja) {
@@ -836,13 +836,13 @@
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
   text-transform: uppercase;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .quiz__fact dd {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .quiz__fact dd:lang(ja) {
@@ -854,9 +854,9 @@
   flex-direction: column;
   gap: var(--space-3xs);
   padding: var(--space-sm) var(--space-md);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
-  border-inline-start: 2px solid var(--color-stone);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
+  border-inline-start: 2px solid var(--color-line);
   border-radius: var(--radius-md);
   text-align: start;
 }
@@ -867,7 +867,7 @@
 }
 
 .quiz__example-jp {
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 /* -- Card motion ---------------------------------------------------------------------------
@@ -971,7 +971,7 @@
   font-size: var(--text-3xl);
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
-  color: var(--color-ink);
+  color: var(--color-sumi);
   line-height: var(--leading-tight);
 }
 
@@ -981,14 +981,14 @@
 
 .quiz__summary-text {
   margin: 0;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .quiz__missed-heading {
   margin: var(--space-sm) 0 0 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1010,8 +1010,8 @@
   align-items: baseline;
   gap: var(--space-sm);
   padding: var(--space-2xs) var(--space-sm);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
   /* Was a 2px error-red rule down the side of every item under a heading that
      reads "Worth another look". The heading had the register right and the
      border was arguing with it. */
@@ -1022,7 +1022,7 @@
 .quiz__missed-front {
   flex-shrink: 0;
   font-family: var(--font-display), var(--font-jp-stack);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .quiz__missed-meaning {
@@ -1054,7 +1054,7 @@
   margin: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .quiz-modes__group {

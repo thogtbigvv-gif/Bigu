@@ -47,32 +47,6 @@
   --color-success: var(--color-moss);
   --color-focus: var(--color-shu);
 
-  /* -- Retired names, aliased ---------------------------------------------------
-     --color-washi, --color-ink and friends are gone as values and survive here
-     only as pointers at the tokens above, because references across the
-     component files still name them. Nothing below holds a colour of its own,
-     so there is exactly one live palette and the dark block overleaf only has
-     to redefine the real tokens.
-
-     The three accent aliases are gone as of this commit. The blue, the
-     red-ochre and the yellow-brown have been rewritten at every call site in
-     css/ — the first two to --color-shu, the third to --color-sumi-faint — and
-     their names no longer appear anywhere in the app. Two of those rewrites
-     were lossy on purpose: the red-ochre was already doing the
-     signature-accent job so it merged into shu, and the yellow-brown was
-     carrying JLPT level tags and streak counts — bookkeeping, not emphasis —
-     so it became meta ink rather than a second loud colour.
-
-     What is left is the six ground names, which are a pure rename away from
-     being deleted too. Do not add to this block.
-     ----------------------------------------------------------------------------- */
-  --color-washi: var(--color-paper);
-  --color-washi-raised: var(--color-paper-raised);
-  --color-ink: var(--color-sumi);
-  --color-ink-soft: var(--color-sumi-soft);
-  --color-ash: var(--color-sumi-faint);
-  --color-stone: var(--color-line);
-
   /* -- Color: filled controls ------------------------------------------------
      The accents above are tuned for *marks on the page* — link text, a
      border, a verdict line — and the dark theme brightens them so they stay
@@ -375,11 +349,14 @@
    <html> is ever the theme root.
    ------------------------------------------------------------------------------------ */
 :root[data-theme="dark"] {
-  /* Only the real tokens are redefined here. The retired names in the light
-     block are aliases — `var(--color-ink)` resolves through to --color-sumi
-     on every re-evaluation — so they follow this block for free, and there is
-     no second place a stale accent could survive. Nothing below may redeclare
-     a retired name; that would bring the old palette back to life. */
+  /* Every token this block names is a real one with a value of its own, which
+     is worth stating because it was not always true. The palette used to carry
+     a second set of names for all six grounds and inks, each declared as a
+     pointer at the token beside it, so that a rename could land in
+     variables.css without touching the two hundred and fifty-five call sites
+     that used the old spelling. That compatibility layer is gone: every one of
+     those call sites now names its token directly, and there is exactly one
+     spelling for each colour in the app. */
 
   /* -- Color: ground (paper & ink, inverted) --------------------------------- */
   --color-paper: #14161A;         /* page ground — night paper */

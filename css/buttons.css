@@ -127,8 +127,8 @@
 
 .button--secondary {
   background-color: transparent;
-  border-color: var(--color-stone);
-  color: var(--color-ink-soft);
+  border-color: var(--color-line);
+  color: var(--color-sumi-soft);
 }
 
 @media (hover: hover) {
@@ -169,9 +169,9 @@
   flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
-  border: var(--border-width) solid var(--color-stone);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   /* box-shadow joins the list so the focus halo fades in rather than snapping.
      .button has always had it; these three icon-and-chip controls did not, so
      tabbing across the header row produced a ring that eased onto one control
@@ -264,8 +264,8 @@
   padding: var(--space-3xs) var(--space-sm);
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
-  border: var(--border-width) solid var(--color-stone);
+  color: var(--color-sumi-soft);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-md);
   /* background-size is here as well as on the pressed rule below, and the two
      durations differ on purpose. The fill sweeping *in* is the app
@@ -382,7 +382,7 @@
   width: 2rem;
   height: 2rem;
   border-radius: var(--radius-md);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   transition:
     box-shadow var(--transition-fast),
     color var(--transition-fast),

@@ -209,7 +209,7 @@ function debounce(fn, wait = 140) {
    hamburger, lesson chevron, brand mark) except the two that used to be
    data-URI backgrounds in forms.css. A data URI can't reference a custom
    property, so those two had their color baked in as a literal hex with a
-   comment asking future edits to keep it in sync with --color-ash by hand.
+   comment asking future edits to keep it in sync with the meta ink by hand.
    Drawn inline they inherit currentColor and that whole class of drift
    disappears.
    ------------------------------------------------------------------------------------ */

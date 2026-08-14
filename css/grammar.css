@@ -99,7 +99,7 @@
 .grammar-card__meaning {
   margin: 0;
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .grammar-card__structure {
@@ -111,7 +111,7 @@
    Vocabulary and kanji have both given up the filled recess for a left rule,
    because on a borderless row a panel painted the page's own colour is not a
    recess at all. This card is the one place the recess still works — it is a
-   raised white surface, so --color-washi genuinely sinks into it — and it is
+   raised white surface, so --color-paper genuinely sinks into it — and it is
    also the one place the example deserves to be the thing you look at.
 
    A grammar point is learned from its example. The pattern names it and the
@@ -126,9 +126,9 @@
   flex-direction: column;
   gap: var(--space-2xs);
   padding: var(--space-md) var(--space-lg);
-  background-color: var(--color-washi);
+  background-color: var(--color-paper);
   border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-sumi) 5%, transparent);
 }
 
 .grammar-card__example p {
@@ -141,7 +141,7 @@
 .grammar-card__example p:lang(ja):first-child {
   font-size: var(--text-md);
   line-height: var(--leading-loose);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .grammar-card__notes {

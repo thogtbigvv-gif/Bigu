@@ -138,7 +138,7 @@
   font-family: var(--font-jp), var(--font-jp-stack);
   font-size: var(--text-xl);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .vocab-card__pos {
@@ -150,11 +150,11 @@
   margin: 0 0 var(--space-2xs) 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 /* An indent and a rule, not a recess. The filled panel this replaces was
-   --color-washi sunk into a raised white card; with no card the fill is the
+   --color-paper sunk into a raised white card; with no card the fill is the
    page's own colour, so the recess became a rectangle painted the same value as
    the paper with a stray highlight along its top edge.
 

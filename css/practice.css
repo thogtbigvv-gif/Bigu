@@ -41,8 +41,8 @@
   align-items: flex-start;
   gap: var(--space-md);
   padding: var(--space-lg);
-  background-color: var(--color-washi-raised);
-  border: var(--border-width) solid var(--color-stone);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-lg);
 }
 
@@ -50,7 +50,7 @@
   margin: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .practice__deck-group {
@@ -72,7 +72,7 @@
 
 .practice__status {
   margin: 0;
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* Full width on a phone, where a button the width of its label reads as an
@@ -98,7 +98,7 @@
   margin: 0;
   font-size: var(--text-sm);
   font-weight: var(--weight-medium);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -128,7 +128,7 @@
 .practice__history-mode {
   flex: 1;
   font-weight: var(--weight-medium);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 /* The one figure a returning reader is actually looking for, so it takes the
@@ -137,7 +137,7 @@
    body face does not line up, and a log you cannot scan down is just a
    paragraph of history. */
 .practice__history-score {
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;

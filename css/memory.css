@@ -3,7 +3,7 @@
    Styles for the #memory view built by js/memory.js.
 
    The whole sheet is one idea: ink on paper, at four densities. Nothing here
-   introduces a colour — every value is --color-ink, --color-stone or
+   introduces a colour — every value is --color-sumi, --color-line or
    --color-shu at some opacity, so the page reads as one material in both
    themes and inverts for free when the ink and the paper swap places.
 
@@ -51,7 +51,7 @@
   font-size: var(--text-xs);
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .memory-hero__line {
@@ -61,7 +61,7 @@
   font-size: var(--text-2xl);
   font-weight: var(--weight-regular);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .memory-hero__sub {
@@ -69,7 +69,7 @@
   max-width: 46ch;
   font-size: var(--text-md);
   line-height: var(--leading-normal);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* -- The wash ----------------------------------------------------------------------------
@@ -84,7 +84,7 @@
   height: 3px;
   margin-block-start: var(--space-sm);
   border-radius: 999px;
-  background-color: color-mix(in srgb, var(--color-stone) 55%, transparent);
+  background-color: color-mix(in srgb, var(--color-line) 55%, transparent);
   overflow: hidden;
 }
 
@@ -112,9 +112,9 @@
   border-radius: inherit;
   background-image: linear-gradient(
     90deg,
-    var(--color-ink) 0%,
-    color-mix(in srgb, var(--color-ink) 70%, transparent) 72%,
-    color-mix(in srgb, var(--color-ink) 20%, transparent) 100%
+    var(--color-sumi) 0%,
+    color-mix(in srgb, var(--color-sumi) 70%, transparent) 72%,
+    color-mix(in srgb, var(--color-sumi) 20%, transparent) 100%
   );
   transform-origin: left center;
   transform: scaleX(var(--strength));
@@ -147,7 +147,7 @@
 .memory-hero__wash-note {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .memory-hero__cta {
@@ -165,7 +165,7 @@
   flex-direction: column;
   gap: var(--space-sm);
   padding-block: var(--space-md);
-  border-block: var(--border-width) solid var(--color-stone);
+  border-block: var(--border-width) solid var(--color-line);
 }
 
 /* -- The top of the page, at width ---------------------------------------------------------
@@ -194,7 +194,7 @@
     padding-block: 0;
     padding-inline-start: var(--space-2xl);
     border-block: none;
-    border-inline-start: var(--border-width) solid var(--color-stone);
+    border-inline-start: var(--border-width) solid var(--color-line);
   }
 
   /* The dots spread across whatever column they're given rather than
@@ -212,12 +212,12 @@
   gap: var(--space-2xs);
   font-size: var(--text-base);
   font-weight: var(--weight-regular);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .memory-week__jp {
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .memory-week__days {
@@ -242,7 +242,7 @@
   width: 0.75rem;
   height: 0.75rem;
   border-radius: 50%;
-  background-color: var(--color-ink);
+  background-color: var(--color-sumi);
   opacity: calc(0.12 + var(--weight) * 0.78);
   transform: scale(calc(0.55 + var(--weight) * 0.45));
   transition: opacity var(--transition-base), transform var(--transition-base);
@@ -253,7 +253,7 @@
    absence. */
 .memory-week__dot--empty {
   background-color: transparent;
-  border: var(--border-width) solid var(--color-stone);
+  border: var(--border-width) solid var(--color-line);
   opacity: 1;
 }
 
@@ -264,13 +264,13 @@
 .memory-week__initial {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .memory-week__note {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 /* Not loud any more. A run of days in the hanko red made the streak the
@@ -314,7 +314,7 @@
   gap: var(--space-2xs);
   font-size: var(--text-lg);
   font-weight: var(--weight-regular);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .memory-shelf__icon {
@@ -322,27 +322,27 @@
   height: 1rem;
   flex-shrink: 0;
   align-self: center;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .memory-shelf__jp {
   font-size: var(--text-sm);
   font-weight: var(--weight-regular);
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 .memory-shelf__note {
   margin: 0;
   max-width: 56ch;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .memory-shelf__empty {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* How full a shelf is, beside its name — the schedule's own number, so it
@@ -352,7 +352,7 @@
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* A real control now, not the dead "+ 30 more on this shelf" line it
@@ -364,9 +364,9 @@
   align-self: start;
   padding: var(--space-3xs) 0;
   font-size: var(--text-sm);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
   text-decoration: underline;
-  text-decoration-color: var(--color-stone);
+  text-decoration-color: var(--color-line);
   text-underline-offset: 0.3em;
   transition:
     color var(--transition-fast),
@@ -440,7 +440,7 @@
 .memory-slip {
   min-width: 0;
   border-radius: var(--radius-md);
-  background-color: var(--color-washi-raised);
+  background-color: var(--color-paper-raised);
   transition:
     background-color var(--transition-fast),
     transform var(--transition-fast),
@@ -495,7 +495,7 @@
    slip inherited the position, marking a card the reader never touched. */
 @media (hover: hover) {
   .memory-slip__face:hover {
-    background-color: color-mix(in srgb, var(--color-ink) 4%, transparent);
+    background-color: color-mix(in srgb, var(--color-sumi) 4%, transparent);
   }
 }
 
@@ -528,9 +528,9 @@
   border-radius: 999px;
   background-image: linear-gradient(
     to bottom,
-    var(--color-ink) 0%,
-    var(--color-ink) 65%,
-    color-mix(in srgb, var(--color-ink) 25%, transparent) 100%
+    var(--color-sumi) 0%,
+    var(--color-sumi) 65%,
+    color-mix(in srgb, var(--color-sumi) 25%, transparent) 100%
   );
   opacity: calc(0.14 + var(--strength) * 0.76);
   transform-origin: top center;
@@ -564,7 +564,7 @@
    doesn't exist. */
 .memory-slip[data-band="unmet"] .memory-slip__ink {
   background-image: none;
-  border: var(--border-width) dashed var(--color-stone);
+  border: var(--border-width) dashed var(--color-line);
   opacity: 1;
   transform: none;
   width: 3px;
@@ -585,7 +585,7 @@
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-md);
   line-height: var(--leading-tight);
-  color: var(--color-ink);
+  color: var(--color-sumi);
   overflow-wrap: anywhere;
 }
 
@@ -596,7 +596,7 @@
 .memory-slip__reading {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   overflow-wrap: anywhere;
 }
 
@@ -608,7 +608,7 @@
   flex-shrink: 0;
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
   text-align: end;
 }
 
@@ -667,7 +667,7 @@
 .memory-slip__meaning {
   margin: 0;
   font-size: var(--text-md);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .memory-slip__example {
@@ -675,7 +675,7 @@
   flex-direction: column;
   gap: var(--space-3xs);
   padding-inline-start: var(--space-sm);
-  border-inline-start: var(--border-width) solid var(--color-stone);
+  border-inline-start: var(--border-width) solid var(--color-line);
 }
 
 .memory-slip__example p {
@@ -701,14 +701,14 @@
   gap: var(--space-sm);
   width: 100%;
   padding-block-start: var(--space-2xs);
-  border-block-start: var(--border-width) solid var(--color-stone);
+  border-block-start: var(--border-width) solid var(--color-line);
 }
 
 .memory-slip__kind {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
-  color: var(--color-ash);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Empty state ---------------------------------------------------------------------------------
@@ -736,7 +736,7 @@
   font-family: var(--font-jp), var(--font-jp-stack);
   font-size: var(--text-4xl);
   line-height: 1;
-  color: var(--color-ink);
+  color: var(--color-sumi);
   opacity: 0.12;
   /* --duration-base, like everything else. This was the last holdout: a hero
      glyph at 12% opacity on an otherwise empty page, argued into 420ms on the
@@ -751,14 +751,14 @@
   font-family: var(--font-display);
   font-size: var(--text-xl);
   font-weight: var(--weight-regular);
-  color: var(--color-ink);
+  color: var(--color-sumi);
 }
 
 .memory-empty__body {
   margin: 0;
   max-width: 42ch;
   font-size: var(--text-base);
-  color: var(--color-ink-soft);
+  color: var(--color-sumi-soft);
 }
 
 .memory-empty .button {
