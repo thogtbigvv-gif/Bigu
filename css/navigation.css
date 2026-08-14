@@ -133,14 +133,14 @@
 
    Gated behind (hover: hover), which matters more on this element than on any
    other in the app: below 1024px these rows *are* the drawer, so on a phone an
-   ungated :hover left the last row the reader tapped nudged and washed indigo
+   ungated :hover left the last row the reader tapped nudged and washed shu
    underneath the view they had just navigated to — a second, false "you are
    here" competing with the real one two rows away. The active row's own border
    is the state; a hover is a pointer thing and now says so. */
 @media (hover: hover) {
   .site-nav__link:hover {
-    background-color: color-mix(in srgb, var(--color-indigo) 7%, transparent);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 7%, transparent);
+    color: var(--color-shu);
     transform: translateX(2px);
   }
 }
@@ -148,9 +148,9 @@
 /* The active row does not travel. It is where you already are, not somewhere
    to go, and a permanent 2px offset would just read as a misaligned list. */
 .site-nav__link[aria-current="page"] {
-  color: var(--color-indigo);
+  color: var(--color-shu);
   font-weight: var(--weight-medium);
-  border-left-color: var(--color-indigo);
+  border-left-color: var(--color-shu);
   transform: none;
 }
 
@@ -180,7 +180,7 @@
 }
 
 .site-nav__item--parent.has-active-child > .site-nav__toggle {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 /* Opening and closing are not the same event, so they do not share a curve.
@@ -291,9 +291,9 @@
    touched rather than pointed at. */
 @media (hover: hover) {
   .site-nav__mobile-toggle:hover {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
   }
 }
 
@@ -472,18 +472,21 @@
       visibility var(--duration-base) var(--ease-exit);
   }
 
-  /* Opening. Slower than the app's base, on the entrance curve. A drawer
-     travels most of the width of a phone — an order of magnitude further than
-     anything else that moves here — and at 250ms on a symmetrical curve that
-     distance reads as a panel being snapped into place. The extra 170ms is
-     spent almost entirely in the deceleration, so it arrives at the same
-     moment and simply stops shoving. */
+  /* Opening, at the app's base like everything else. This ran 170ms longer on
+     the argument that a drawer travels most of the width of a phone and needs
+     the extra time in its deceleration not to read as snapping into place.
+     The distance is real; the conclusion was not. A drawer is on the critical
+     path — it is opened to get somewhere — and 420ms of it is 420ms of not
+     being where you were going. The entrance curve is what stops 250ms from
+     shoving: it is ~90% travelled a third of the way in, so the panel is
+     effectively there almost immediately and spends the rest of its run
+     settling. */
   .site-nav.is-open {
     visibility: visible;
     transform: translateX(0);
     transition:
-      transform var(--duration-slow) var(--ease-entrance),
-      visibility var(--duration-slow) var(--ease-entrance);
+      transform var(--duration-base) var(--ease-entrance),
+      visibility var(--duration-base) var(--ease-entrance);
   }
 
   /* The rows arrive after the panel does. The drawer's own slide carries the
@@ -567,9 +570,9 @@
     /* The bar's return, which happens as the drawer closes — so it is timed to
        the drawer's close, not to its open. The two surfaces move in opposite
        directions during one gesture and should take exactly as long as each
-       other doing it; before this the bar came back on --duration-slow while
-       the drawer it was following left on --duration-base, and the phone
-       briefly had neither navigation nor drawer on screen. */
+       other doing it; before this the bar came back 170ms slower than the
+       drawer it was following, and the phone briefly had neither navigation
+       nor drawer on screen. */
     transition: transform var(--duration-base) var(--ease-exit);
   }
 
@@ -586,7 +589,7 @@
   .site-nav.is-open ~ .thumb-nav {
     transform: translateY(100%);
     /* …and its exit, timed to the drawer's entrance for the same reason. */
-    transition: transform var(--duration-slow) var(--ease-entrance);
+    transition: transform var(--duration-base) var(--ease-entrance);
   }
 
   .thumb-nav__list {
@@ -670,7 +673,7 @@
   }
 
   .thumb-nav__link[aria-current="page"] {
-    color: var(--color-indigo);
+    color: var(--color-shu);
     font-weight: var(--weight-medium);
   }
 

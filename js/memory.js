@@ -141,7 +141,7 @@ const SHELVES = [
     key: 'waiting',
     label: 'Waiting for you',
     jp: '待っている',
-    note: 'Эргэж ирэхэд бэлэн. Бэх нь уншигдсаар байна — одоо нэг харвал ийм хэвээр үлдэнэ.',
+    note: 'Эргэж ирэхэд бэлэн. Бэх нь уншигдсаар байна.',
     empty: 'Одоогоор хүлээж буй юм алга.',
     icon: [['circle', { cx: '8', cy: '8', r: '5.5' }], ['path', { d: 'M8 5v3.2l2 1.4' }]],
   },
@@ -149,7 +149,7 @@ const SHELVES = [
     key: 'fading',
     label: 'Fading',
     jp: '薄れゆく',
-    note: 'Эдгээр нь бүдгэрчээ. Энд нэг минут зарцуулах нь шинэ үг цээжлэх нэг цагтай дүйнэ.',
+    note: 'Эдгээр нь бүдгэрчээ. Дахин харвал бэх нь эргэж бараадна.',
     empty: 'Бүдгэрсэн юм алга. Ховор тохиолдол — анзаарах нь зүйтэй.',
     // Three strokes losing their length, left to right: the shelf's own
     // subject drawn in the page's own visual language.
@@ -159,7 +159,7 @@ const SHELVES = [
     key: 'newlyMet',
     label: 'Newly met',
     jp: 'はじめまして',
-    note: 'Сүүлийн долоо хоногийнх. Одоо ч танил бус хэвээр — удахгүй дахин эргэж ирэх хэрэгтэй.',
+    note: 'Сүүлийн долоо хоногийнх. Одоо ч танил бус хэвээр — удахгүй дахин эргэж ирнэ.',
     empty: 'Энэ долоо хоногт шинэ юмтай танилцаагүй байна.',
     icon: [['path', { d: 'M8 13.5V6' }], ['path', { d: 'M8 6C6 6 4.5 4.5 4.5 2.5 6.5 2.5 8 4 8 6z' }], ['path', { d: 'M8 7.5c0-1.8 1.4-3 3.2-3 0 1.8-1.4 3-3.2 3z' }]],
   },
@@ -167,7 +167,7 @@ const SHELVES = [
     key: 'hardToHold',
     label: 'Hard to hold',
     jp: '手ごわい',
-    note: 'Байнга мартагдаад байгаа нь. Буруу юм алга — зүгээр л богино завсартай давтах хэрэгтэй.',
+    note: 'Байнга мартагдаад байгаа нь. Буруу юм алга — эдгээр нь богино завсартай эргэж ирдэг.',
     empty: 'Одоогоор таныг зовоож байгаа юм алга.',
     icon: [['path', { d: 'M2.5 6.5c1.8-2 3.6-2 5.5 0s3.7 2 5.5 0' }], ['path', { d: 'M2.5 10.5c1.8-2 3.6-2 5.5 0s3.7 2 5.5 0' }]],
   },
@@ -619,11 +619,16 @@ function heroLines({ waiting, fading, seenCount }) {
     };
   }
 
-  const line = `${due} үг таныг хүлээж байна.`;
+  /* No figure, and no instruction under it. "14 үг таныг хүлээж байна" put a
+     number on the reader in the second person, and the sub-line then told them
+     which part of it to do first. What the hero is for is whether there is
+     anything here today, and what the ink is doing — both of which are facts
+     about the page, not assignments. */
+  const line = 'Хэдэн үг эргэж ирэхэд бэлэн байна.';
 
-  if (fading === 0) return { line, sub: 'Тэдний нэг нь ч хараахан бүдгэрээгүй. Хэдхэн минут зарцуулахад ийм хэвээр үлдэнэ.' };
-  if (fading === due) return { line, sub: 'Бүгд нь бүдгэрчээ. Эндээс эхэлбэл үлдсэн нь амархан.' };
-  return { line, sub: `${fading} нь бүдгэрчээ — эхлээд тэднийг харна уу.` };
+  if (fading === 0) return { line, sub: 'Тэдний нэг нь ч хараахан бүдгэрээгүй.' };
+  if (fading === due) return { line, sub: 'Бүгдийнх нь бэх бүдгэрчээ.' };
+  return { line, sub: 'Заримынх нь бэх бүдгэрчээ.' };
 }
 
 function createHero(summary) {
@@ -709,8 +714,12 @@ function createWeek(week, streak) {
   }
 
   const note = element('p', 'memory-week__note');
+  /* Presence only. The old line named the absent streak and then said what
+     would start one, which is the shape of a reminder — and a run of days is
+     the one number in this app most able to make a quiet week feel like a
+     failure. When there is nothing to report, it reports nothing. */
   if (streak === 0) {
-    note.textContent = 'Одоогоор цуваа алга. Өнөөдөр нэг үг ч гэсэн шинэ цуваа эхлүүлнэ.';
+    note.textContent = 'Энэ долоо хоногт давтсан өдөр алга.';
   } else {
     note.append(
       element('span', 'memory-week__streak', String(streak)),
@@ -745,10 +754,14 @@ function createEmptyState() {
     ),
   );
 
+  /* A door, named after where it goes. "Meet your first words" is an
+     instruction with a friendly voice, and an empty page is the worst place in
+     the app to be told to do something — it is where someone has arrived with
+     nothing yet, which is a fine thing to have done. */
   const cta = document.createElement('a');
   cta.href = '#lessons';
-  cta.className = 'button button--primary';
-  cta.textContent = 'Meet your first words';
+  cta.className = 'button button--secondary';
+  cta.textContent = 'Lessons';
   empty.append(cta);
 
   return empty;

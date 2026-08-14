@@ -179,23 +179,28 @@ function bandFor(strength) {
   return STRENGTH_BANDS.find((band) => strength >= band.min) ?? STRENGTH_BANDS[STRENGTH_BANDS.length - 1];
 }
 
-/* "5 days late" / "back in 3 days" / "due today" — where an item sits
-   relative to its own schedule, in the reader's terms.
+/* "ready since 5 days" / "back in 3 days" / "ready today" — where an item
+   sits relative to its own schedule, in the reader's terms.
+
+   Nothing here is ever late. An item past its date is not a debt the reader
+   has failed to pay; it is simply something that has been ready for a while,
+   and the schedule is the app's business rather than theirs. "5 хоног
+   хоцорсон" made the ladder into a ledger — the one place in Bigu that told
+   someone they were behind — and the same fact reads as availability instead.
 
    A record written before scheduling existed has no dueAt at all, which as a
-   timestamp is 1970 and as a sentence is "20672 days late" — a number that
-   is both meaningless and quietly accusing. Those records are due
-   immediately by design (see the note on normalizeRecord), and that is
-   exactly what this says instead. */
+   timestamp is 1970 and as a sentence was "20672 days late". Those records
+   are due immediately by design (see the note on normalizeRecord), and that
+   is exactly what this says instead. */
 function describeTiming(record, now = Date.now()) {
   if (!record.dueAt) return 'одоо бэлэн';
 
   const days = Math.round((record.dueAt - now) / DAY);
   if (days > 1) return `${days} хоногийн дараа эргэж ирнэ`;
   if (days === 1) return 'маргааш эргэж ирнэ';
-  if (days === 0) return 'өнөөдөр давтах';
-  if (days === -1) return '1 хоног хоцорсон';
-  return `${Math.abs(days)} хоног хоцорсон`;
+  if (days === 0) return 'өнөөдөр бэлэн';
+  if (days === -1) return 'өчигдрөөс бэлэн';
+  return `${Math.abs(days)} хоногийн өмнөөс бэлэн`;
 }
 
 /* -- Queries ------------------------------------------------------------------------------- */

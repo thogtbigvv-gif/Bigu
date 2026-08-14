@@ -193,7 +193,7 @@ function renderList(container, data) {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Тохирох хэлбэр олдсонгүй. Хэлбэрийн хэсэг, эсвэл утгаар нь хайж үзнэ үү.';
+  empty.textContent = 'Тохирох хэлбэр олдсонгүй.';
   empty.hidden = true;
 
   const selectedTags = new Set();

@@ -248,7 +248,7 @@
 }
 
 .home__way:hover {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 .home__way-separator,
@@ -288,7 +288,7 @@
 }
 
 .home__shelf-link:hover {
-  color: var(--color-indigo);
+  color: var(--color-shu);
 }
 
 /* -- Quick practice ------------------------------------------------------------------------

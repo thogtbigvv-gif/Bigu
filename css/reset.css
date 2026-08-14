@@ -145,7 +145,7 @@ h6 {
 
    The two *-delay lines are the part that is easy to miss. Collapsing only the
    duration leaves a staggered reveal technically instant but still scheduled:
-   an element with `animation: rise-in 300ms both` and a 320ms delay finishes in
+   an element with `animation: rise-in 250ms both` and a 280ms delay finishes in
    0.01ms and then sits at its `from` state — invisible — for the rest of the
    delay. On a twelve-item grid that is a third of a second of blank page for
    precisely the reader who asked for less motion. Zeroing the delays makes the

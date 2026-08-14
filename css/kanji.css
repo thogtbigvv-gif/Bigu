@@ -9,10 +9,22 @@
   margin: 0;
 }
 
+/* -- The list ---------------------------------------------------------------------
+   One kanji per row, and no boxes. This was a grid of 14rem cards, which is the
+   same shape vocabulary, grammar and reading were all using — four views that
+   differed only in what was printed inside an identical rectangle, which is
+   most of why moving between them felt like no movement at all.
+
+   A kanji needs the least chrome of anything in the app: the character is the
+   whole index, and a border around it is a border around a single glyph. So the
+   view is a column of rows divided by hairlines, with the air doing the work
+   the boxes were doing. No gap on the flex column — the rule *is* the division,
+   and a gap on top of it would leave the hairlines floating between rows
+   instead of belonging to them. The padding inside each row is the space.
+   ------------------------------------------------------------------------------------ */
 .kanji-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
-  gap: var(--space-md);
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -27,38 +39,65 @@
   margin-block-end: var(--space-lg);
 }
 
+/* The row: the character in its own column, everything it is annotated with in
+   the next one. A dictionary entry, in other words, and the reason for the
+   shape is that a column of glyphs down the left edge is scannable in a way a
+   grid of centred cards never was — the eye runs down one line of characters
+   and stops at the one it wants, instead of reading six boxes per row.
+
+   The second column is placed by rule rather than by markup: the head takes
+   column 1 and every other child is sent to column 2, so the row survives kanji.js
+   appending or dropping a child (the example is hidden on a phone) without a
+   hand-maintained grid template.
+   ------------------------------------------------------------------------------------ */
 .kanji-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2xs);
-  padding: var(--space-lg);
-  text-align: center;
-  /* See .card--deferred in cards.css. Measured resting height of a card
-     carrying the character, its tag, meaning, readings, one example and the
-     two control rows. `none` for the inline axis — see the long note on the
-     same property in vocabulary.css; a single value applies to both axes and
-     made every skipped card claim a 26rem width, which is what pushed this
-     grid past the right edge of a phone. */
-  contain-intrinsic-size: none auto 26rem;
+  display: grid;
+  grid-template-columns: 7rem 1fr;
+  /* Five explicit rows so the character can span them with `1 / -1`, which only
+     resolves against an *explicit* grid — on an implicit one it collapses to a
+     single row, and the annotations then inherit the glyph's 60px row height
+     and stand apart in five widely spaced lines. Five is what kanji.js appends
+     beside the head: meaning, readings, example, controls, detail button. If a
+     sixth is ever added it flows into an implicit row and the character simply
+     stops spanning it — the row degrades, it does not break. */
+  grid-template-rows: repeat(5, min-content);
+  column-gap: var(--space-2xl);
+  row-gap: var(--space-2xs);
+  align-items: start;
+  /* Items size to their content instead of stretching across the column. A
+     stretched grid item made "View details" a full-width slab — the heaviest
+     thing on a line whose subject is a single character. */
+  justify-items: start;
+  padding-block: var(--space-xl);
+  border-block-end: var(--border-width) solid var(--color-line);
+  /* See .card--deferred in cards.css. Re-measured for the row: a character, its
+     tag, the meaning, the readings, one example and the two control rows, laid
+     out in two columns rather than stacked centre. `none` for the inline axis —
+     see the long note on the same property in vocabulary.css; a single value
+     applies to both axes and made every skipped entry claim a fixed width. */
+  contain-intrinsic-size: none auto 15rem;
+}
+
+.kanji-card > *:not(.kanji-card__head) {
+  grid-column: 2;
+}
+
+/* The last row's rule would be a line under the list with nothing beneath it —
+   a hairline that divides a thing from nothing is just an underline. */
+.kanji-card:last-child {
+  border-block-end: none;
 }
 
 .kanji-card__head {
+  grid-column: 1;
+  grid-row: 1 / -1;
+  justify-self: center;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2xs);
 }
 
-/* The character grows a shade while its card is raised. This is the one place
-   in the app where a scale on hover is right rather than gimmicky: a kanji
-   card is a character *and* its annotations, the character is the entire
-   reason the card exists, and 3% is enough to bring it forward without moving
-   anything around it — the transform is compositor-only and takes no layout
-   with it, so the meaning, readings and example below stay exactly put.
-
-   Behind the hover query, so a touch reader never gets a card left permanently
-   enlarged by the last thing they tapped. */
 /* --font-jp first, not --font-display. This is the one glyph the card exists
    for, so it is set in the textbook hand rather than in the UI gothic, and the
    platform stack stays behind it for anything Klee One doesn't draw.
@@ -75,17 +114,23 @@
   transition: transform var(--transition-base);
 }
 
+/* The character grows a shade while the pointer is on its row. With the card
+   gone this is the row's only response to being approached, which makes it more
+   load-bearing than it was, not less: 132 hairline-separated rows give the eye
+   nothing to hold on to otherwise. 3% is enough to bring the glyph forward
+   without moving anything around it — the transform is compositor-only and
+   takes no layout with it, so the meaning, readings and example stay put.
+
+   Behind the hover query, so a touch reader never gets a row left permanently
+   enlarged by the last thing they tapped. Focus is ungated, because a keyboard
+   is a keyboard on any device and tabbing through the list needs the same
+   answer pointing at it gets. */
 @media (hover: hover) {
   .kanji-card:hover .kanji-card__character {
     transform: scale(1.03);
   }
 }
 
-/* The same while the card holds focus. The card is already raised by
-   cards.css's :focus-within for exactly this reason — a grid of 132 near
-   identical surfaces gives a keyboard reader no sense of place otherwise — and
-   the character is the part of a kanji card that says *which* one. Leaving it
-   pointer-only meant tabbing raised the card and left its subject behind. */
 .kanji-card:focus-within .kanji-card__character {
   transform: scale(1.03);
 }
@@ -107,33 +152,24 @@
   margin: 0;
 }
 
-/* Same recessed example block as vocabulary and grammar — see the note in
-   vocabulary.css for why one inset hairline reads as an impression.
-   "Same" was only true at rest: vocabulary's recess deepens while its card is
-   raised so the card reads as one object coming forward, and this copy stayed
-   flat through the whole lift. Two cards built from the same note behaving
-   differently under the same pointer is the drift those shared notes exist to
-   prevent, so it deepens here too — same values, same transition. */
+/* An indent and a rule, not a recess. The filled version this replaces was a
+   panel of --color-washi sunk into a raised white card; on a row that has no
+   card the fill is the page's own colour, so the "recess" was a rectangle
+   painted the same value as the paper with an inset highlight along its top —
+   visible only as a stray hairline that looked like a rendering artefact.
+
+   The left rule is the treatment Memory already uses for a quoted example, and
+   it is the right one here for the same reason: it marks a block as subordinate
+   without drawing a box, which is the whole language of this view now. The
+   hover and focus deepenings are gone with the fill — there is no longer a
+   surface for them to deepen, and the character's own scale is the row's
+   answer to a pointer. */
 .kanji-card__example {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--space-3xs);
-  padding: var(--space-xs) var(--space-sm);
-  background-color: var(--color-washi);
-  border-radius: var(--radius-md);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-ink) 5%, transparent);
-  transition: box-shadow var(--transition-base);
-}
-
-@media (hover: hover) {
-  .kanji-card:hover .kanji-card__example {
-    box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
-  }
-}
-
-.kanji-card:focus-within .kanji-card__example {
-  box-shadow: inset 0 1px 2px color-mix(in srgb, var(--color-ink) 8%, transparent);
+  padding-inline-start: var(--space-sm);
+  border-inline-start: var(--border-width) solid var(--color-line);
 }
 
 .kanji-card__example ruby {
@@ -145,12 +181,11 @@
   max-width: none;
 }
 
-/* The chip and the bookmark share one row, same pairing as the vocabulary
-   and grammar cards. */
-/* Placement only — see the note on .vocab-card__controls. The kanji card is
-   centred, so its control row is too. */
+/* Placement only — see the note on .vocab-card__controls. The row reads left to
+   right now rather than down a centred axis, so its controls start where every
+   other line in the second column starts. */
 .kanji-card__controls {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .kanji-card__detail-button {
@@ -269,7 +304,7 @@
 
    That was not enough on its own. .toggle-chip's :hover and :active are written
    against the class, and a class matches a span exactly as happily as a button:
-   pointing at a chip the app had just declared unavailable washed it indigo and
+   pointing at a chip the app had just declared unavailable washed it shu and
    moved its border, and holding the mouse down settled it a pixel like a real
    control. Dimming something and then having it answer to the pointer is worse
    than not dimming it — the reader believes the hover over the opacity, tries
@@ -294,54 +329,47 @@
    is declared above it at the same specificity, and a media query carries no
    weight of its own — only document order decides that one.
 
-   The grid is the substantial change here. A 14rem minimum resolves to exactly
-   one column inside a 358px page, which turned the densest browsing surface in
-   the app into a flip-book: one character per screen, 132 of them, and no way
-   to scan. Browsing kanji *is* scanning — the character is the index and
-   everything under it is detail — so the phone gets two columns, and the card
-   gives up the example sentence that was paying for a third of its height.
+   The two-column card grid this block used to build is gone with the cards.
+   What replaces it needs much less: the row is already one per line, so the
+   phone only has to give the glyph column back most of its width and tighten
+   the vertical rhythm. 4rem still holds a --text-3xl character, and the gutter
+   drops from --space-2xl to --space-md so the annotations are not pushed into
+   a 150px alley.
 
-   Hidden, not removed. kanji.js still builds the example, the detail panel
-   behind "View details" still shows it in full, and at 481px and up the card
-   is exactly as it was. What a two-up card has room to carry is the character,
-   its level, what it means, and how it is read.
+   The example is still hidden here and still hidden rather than removed:
+   kanji.js builds it, the detail panel behind "View details" shows it in full,
+   and on a 358px page an example sentence under a headword is what turns a
+   scannable list back into a flip-book.
    ------------------------------------------------------------------------------------ */
 @media (max-width: 480px) {
-  .kanji-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-sm);
-  }
-
   .kanji-card {
-    padding: var(--space-sm) var(--space-2xs);
-    gap: var(--space-3xs);
-    /* Re-measured for the shorter card. A placeholder that is wrong by more
-       than a card's height is worse than none: the scrollbar lies and the
+    grid-template-columns: 4rem 1fr;
+    /* Four here, not five: the example is hidden below, so kanji.js's five
+       become four laid-out children beside the head. */
+    grid-template-rows: repeat(4, min-content);
+    column-gap: var(--space-md);
+    padding-block: var(--space-md);
+    /* Re-measured for the shorter row. A placeholder that is wrong by more
+       than a row's height is worse than none: the scrollbar lies and the
        page jumps as rows resolve. */
-    contain-intrinsic-size: none auto 13rem;
+    contain-intrinsic-size: none auto 9rem;
   }
 
   .kanji-card__example {
     display: none;
   }
 
-  /* "Remember this" is wider than half a phone, so the row stacks instead of
-     hyphenating the chip. The bookmark keeps its own line and stays centred
-     under it, matching the card's centred axis. */
+  /* "Remember this" plus the bookmark is wider than the second column has left
+     at this width, so the row stacks. Start-aligned, matching the column. */
   .kanji-card__controls {
     flex-direction: column;
-    align-items: center;
-    width: 100%;
+    align-items: flex-start;
     gap: var(--space-3xs);
   }
 
-  .kanji-card__controls .toggle-chip {
-    width: 100%;
-  }
-
-  .kanji-card__detail-button {
-    width: 100%;
-  }
+  /* No longer stretched. A full-width button made sense spanning a two-up card;
+     in the row's second column it would run the width of the annotations and
+     become the heaviest thing on a line whose subject is the character. */
 
   .kanji-detail__section {
     padding: var(--space-sm) var(--space-md);

@@ -453,7 +453,7 @@ function buildStageFlow() {
 
   /* The masthead of a printed sheet: what this is, then what it is called,
      then what it is about — centred, in that order, with the level folded
-     into the top line instead of riding beside the title as a bordered gold
+     into the top line instead of riding beside the title as a bordered
      badge. The badge was a UI widget sitting a few millimetres from the one
      piece of Japanese the page is built around, and the level is a fact
      about the passage, not a label on the title. It reads the same and draws
@@ -765,7 +765,7 @@ function renderList(container, data) {
      screen to say otherwise. */
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Энэ түвшинд тохирох бичвэр алга. Өөр түвшин сонгож үзнэ үү.';
+  empty.textContent = 'Энэ түвшинд тохирох бичвэр алга.';
   empty.hidden = true;
 
   /* The same data-driven chip row the other three views have. Two passages

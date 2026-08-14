@@ -83,10 +83,10 @@
    only its body is a row — see .dashboard-today__body. */
 .dashboard-card--hero {
   grid-column: 1 / -1;
-  border-color: var(--color-bengara);
+  border-color: var(--color-shu);
   box-shadow: var(--shadow-md);
   /* A hairline of the hanko colour bleeding in from the leading edge. The card
-     already carries a bengara border on all four sides; this thickens the one
+     already carries a shu border on all four sides; this thickens the one
      the eye reaches first, so "today's action" reads as marked at a glance
      rather than only on inspection.
 
@@ -96,12 +96,12 @@
      nothing. */
   background-image: linear-gradient(
     to right,
-    color-mix(in srgb, var(--color-bengara) 55%, transparent) 0 3px,
+    color-mix(in srgb, var(--color-shu) 55%, transparent) 0 3px,
     transparent 3px
   );
 }
 
-/* The one card whose lift is worth more than the others', so it gets a bengara
+/* The one card whose lift is worth more than the others', so it gets a shu
    shadow instead of the neutral one — the same "this is the thing to do"
    signal the border and the streak figure already carry, in the one channel
    that was still speaking in grey.
@@ -114,7 +114,7 @@
 @media (hover: hover) {
   .card.dashboard-card--hero:hover {
     box-shadow:
-      0 12px 30px -16px color-mix(in srgb, var(--color-bengara) 60%, transparent),
+      0 12px 30px -16px color-mix(in srgb, var(--color-shu) 60%, transparent),
       var(--shadow-md);
   }
 }
@@ -130,7 +130,7 @@
    cards.css's `.card:not(…):focus-within` and win on source order. */
 .card.dashboard-card--hero:focus-within {
   box-shadow:
-    0 12px 30px -16px color-mix(in srgb, var(--color-bengara) 60%, transparent),
+    0 12px 30px -16px color-mix(in srgb, var(--color-shu) 60%, transparent),
     var(--shadow-md);
 }
 
@@ -168,9 +168,9 @@
   }
 
   .dashboard-grid .card:hover .dashboard-card__cta.button--secondary {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, transparent);
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, transparent);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
     box-shadow: none;
     transform: none;
   }
@@ -244,9 +244,27 @@
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-normal);
-  color: var(--color-bengara);
+  /* Ink, not shu. This class carries four figures — the streak, the words
+     held, the last score, and (until this commit) the number of items due —
+     and painting all four in the app's one loud colour made the dashboard a
+     row of red numbers about how the reader is doing. Shu is for where the
+     reader is now and for genuine errors; a count of what they hold is
+     neither. The figures still read as figures: mono, tabular, and larger
+     than anything around them. */
+  color: var(--color-sumi);
   line-height: var(--leading-tight);
   margin-block-end: var(--space-3xs);
+}
+
+/* The Today card's lead is a phrase now rather than a figure (see
+   dashboard.js), so it takes the display treatment instead of the tabular
+   one — same size and weight in the composition, none of the ledger. */
+.dashboard-today__headline {
+  margin: 0 0 var(--space-3xs) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--color-sumi);
 }
 
 .dashboard-streak__count--score {
@@ -295,18 +313,20 @@
    and the same `to` is written out explicitly that memory.css's wash needs, so
    the fill survives --progress being updated in place.
 
-   --duration-slow, matching the drawer: this is the other piece of motion in
-   the app that is allowed to take its time, because it happens once a visit
-   and nothing waits behind it. */
+   --duration-base, like everything else. This used to run at --duration-slow
+   on the grounds that it happens once a visit and nothing waits behind it,
+   which was true and still left a bar sliding across the screen for the better
+   part of half a second. A meter filling is the most literal "UI animating"
+   motion in the app; at 250ms it reads as the value settling into place. */
 .dashboard-goal__fill {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background-color: var(--color-indigo);
+  background-color: var(--color-shu);
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--transition-base);
-  animation: dashboard-goal-fill var(--duration-slow) var(--ease-entrance) both;
+  animation: dashboard-goal-fill var(--duration-base) var(--ease-entrance) both;
 }
 
 @keyframes dashboard-goal-fill {
@@ -377,7 +397,7 @@
   font-family: var(--font-display), var(--font-jp-stack);
   font-size: var(--text-md);
   line-height: var(--leading-tight);
-  color: var(--color-bengara);
+  color: var(--color-shu);
 }
 
 .dashboard-welcome__step-title {

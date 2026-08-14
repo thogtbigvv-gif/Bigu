@@ -277,24 +277,30 @@
    animation events bubble — so a *descendant* animation that finishes before
    this one does will strip the class mid-flight and snap the view to opacity 1.
 
-   Every reveal that can run inside a view is therefore longer than the 220ms
-   here — the shortest is --duration-base at 250ms (the skeleton, the empty
-   state, a swapped reading panel), and the staggers are 320ms. That makes the
-   clash impossible rather than unlikely: a descendant can never *start* before
-   its ancestor, so with a longer duration it can never finish first either.
+   At --duration-fast this view is now the shortest animation in the app, which
+   turns that guard from "arranged" into "structural". Every reveal that can
+   run inside a view is 180ms or longer — the quiz card's 180ms enter and exit
+   were the two that used to sit under the old 220ms and could, in principle,
+   have stripped the class. A descendant can never *start* before its ancestor,
+   so with the ancestor shortest it can never finish first either.
 
-   Keep new reveals under a .view at --duration-base or longer and this stays
-   true without JS knowing anything about it.
+   Nothing to keep in mind when adding a reveal: 150ms is the floor and the
+   ceiling is --duration-base, so anything written under a .view is inside the
+   window by construction.
+
+   The rise is gone. A route change swapping one full screen for another moved
+   the whole page 6px, which on a phone is the one place motion reads as the
+   layout shifting under a thumb rather than as content arriving. What is left
+   is opacity alone: the outgoing screen is replaced and the incoming one comes
+   up through the paper. That is the cross-fade — see the note in router.js on
+   why the two views do not overlap while it runs.
    ------------------------------------------------------------------------------ */
 .view.is-entering {
-  animation: view-enter 220ms var(--ease-entrance);
+  animation: view-enter var(--duration-fast) var(--ease-entrance);
 }
 
 @keyframes view-enter {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
+  from { opacity: 0; }
 }
 
 /* -- Shared reveal --------------------------------------------------------------
@@ -326,12 +332,22 @@
    view opts in by adding its container class here — no JS, no hook class in
    the markup, nothing for a render path to remember to set.
 
-   THE CAP IS THE POINT. Only the first nine children are delayed at all;
-   everything past them arrives with the ninth. Without it a 300-card
-   vocabulary grid would schedule its last card ten seconds out — a stagger's
-   cost grows with the list while its benefit does not, because a reader only
-   ever perceives the first screenful arriving. Nine steps at 32ms is 288ms of
-   texture, and then the list is simply there.
+   THE CAP IS THE POINT, and it caps the animation itself rather than only its
+   delay. Nothing past the eighth child animates at all.
+
+   That distinction is measured, not assumed. The cap used to bound the delay
+   while still handing every row an animation, so the kanji list ran 132 of them
+   and the vocabulary list, fully expanded, ran 816. Under a 4x CPU throttle
+   that cost five to seven dropped frames on every arrival at #kanji on a phone,
+   with worst frames of 33-50ms; the same navigation under prefers-reduced-
+   motion, which collapses the animations and changes nothing else, dropped
+   none. Building the rows was never the expensive part — promoting a hundred
+   and thirty of them to their own compositor layers in one frame was.
+
+   Eight is also all a reader can perceive: the rest are below the fold when the
+   list arrives, so their animations were paying a frame budget to be watched by
+   nobody. Eight steps at 40ms is 280ms of texture, and then the list is simply
+   there — which is what it looked like anyway.
 
    `backwards`, not `both`: the start state applies during the delay, and the
    element reverts to its own natural styles the instant the run ends. Nothing
@@ -363,8 +379,8 @@
 .journal__entry-list,
 .quiz__missed-list,
 .settings-content {
-  & > * {
-    animation: rise-in 320ms var(--ease-entrance) backwards;
+  & > :nth-child(-n + 8) {
+    animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
     animation-delay: calc(var(--stagger-step) * var(--stagger-index, 0));
   }
 
@@ -375,7 +391,6 @@
   & > :nth-child(6) { --stagger-index: 5; }
   & > :nth-child(7) { --stagger-index: 6; }
   & > :nth-child(8) { --stagger-index: 7; }
-  & > :nth-child(n + 9) { --stagger-index: 8; }
 }
 
 /* The header is sticky, so any scroll that lands an element at the top of

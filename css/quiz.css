@@ -59,7 +59,7 @@
   display: block;
   height: 100%;
   border-radius: inherit;
-  background-color: var(--color-indigo);
+  background-color: var(--color-shu);
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--transition-base);
@@ -214,7 +214,13 @@
     color-mix(in srgb, var(--cue, transparent) 22%, transparent);
 }
 
-.quiz__scene[data-toward="left"] { --cue: var(--color-error); }
+/* Left is "not this time", and it is not an error. The two directions used to
+   be moss and the error red, which made every card a pass/fail and painted the
+   failing half in the colour the app reserves for something having gone wrong.
+   Nothing has gone wrong: a card you did not recall is the ordinary case this
+   whole app exists for. Right keeps moss because moss means held; left takes
+   the line colour, which means nothing at all. */
+.quiz__scene[data-toward="left"] { --cue: var(--color-line); }
 .quiz__scene[data-toward="right"] { --cue: var(--color-moss); }
 
 .quiz__card-inner {
@@ -229,7 +235,7 @@
      its own centre is the one motion here that should have weight at both
      ends, and --ease-entrance spends four fifths of its duration on a turn
      that is already over. */
-  transition: transform var(--duration-slow) var(--ease-turn);
+  transition: transform var(--duration-base) var(--ease-turn);
 }
 
 .quiz__scene.is-flipped .quiz__card-inner {
@@ -255,6 +261,9 @@
    sentence question is three lines where a single kanji is one — so without
    this the card, and every option below it, would jump up and down the page
    between questions. */
+/* Padding comes from .card — this restated the shared value verbatim. The
+   small-screen block at the foot of this file still overrides it, which is a
+   real override and stays. */
 .quiz__card {
   display: flex;
   flex-direction: column;
@@ -262,7 +271,6 @@
   justify-content: center;
   gap: var(--space-2xs);
   min-height: 11rem;
-  padding: var(--space-lg);
   text-align: center;
 }
 
@@ -309,7 +317,7 @@
 
 @media (hover: hover) {
   .quiz__card--front:not(:disabled):hover {
-    border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+    border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
     box-shadow: var(--shadow-md);
   }
 }
@@ -326,7 +334,7 @@
    nothing moves. The outline from typography.css's `button:focus-visible`
    stays on top of it. */
 .quiz__card--front:not(:disabled):focus-visible {
-  border-color: color-mix(in srgb, var(--color-indigo) 45%, var(--color-stone));
+  border-color: color-mix(in srgb, var(--color-shu) 45%, var(--color-stone));
   box-shadow: var(--shadow-md);
 }
 
@@ -409,7 +417,7 @@
   display: inline-block;
   width: 3.5ch;
   margin-inline: 0.15em;
-  border-block-end: 2px solid var(--color-indigo);
+  border-block-end: 2px solid var(--color-shu);
   vertical-align: baseline;
 }
 
@@ -419,9 +427,9 @@
    fill, which also survives being read in dark mode. */
 .quiz__target {
   background-color: transparent;
-  color: var(--color-bengara);
+  color: var(--color-shu);
   text-decoration: underline;
-  text-decoration-color: color-mix(in srgb, var(--color-bengara) 45%, transparent);
+  text-decoration-color: color-mix(in srgb, var(--color-shu) 45%, transparent);
   text-underline-offset: 0.25em;
   text-decoration-thickness: 2px;
 }
@@ -522,13 +530,13 @@
    no opinion about, once per question, for the whole round. */
 @media (hover: hover) {
   .quiz__option:hover:not(:disabled) {
-    background-color: color-mix(in srgb, var(--color-indigo) 6%, var(--color-washi-raised));
-    border-color: var(--color-indigo);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-washi-raised));
+    border-color: var(--color-shu);
   }
 
   .quiz__option:hover:not(:disabled) .quiz__option-key {
-    border-color: var(--color-indigo);
-    color: var(--color-indigo);
+    border-color: var(--color-shu);
+    color: var(--color-shu);
   }
 }
 
@@ -543,8 +551,8 @@
    watching the numbers sees them stay grey while everything around them
    responds. */
 .quiz__option:focus-visible .quiz__option-key {
-  border-color: var(--color-indigo);
-  color: var(--color-indigo);
+  border-color: var(--color-shu);
+  color: var(--color-shu);
 }
 
 .quiz__option:focus-visible {
@@ -629,19 +637,27 @@
   color: var(--color-moss);
 }
 
+/* The option that was picked, marked so it can be told from the three that
+   weren't — and no louder than that. In the error red with a ✕ it was the
+   brightest object on the screen at the exact moment the reader had got
+   something not-quite-right, which is the app grading them. The answer beside
+   it still carries moss and a ✓, so the pair still reads at a glance and still
+   has two channels; this half is simply the quiet one now.
+
+   An em dash rather than a cross: it says "not this one", where ✕ says wrong. */
 .quiz__option.is-wrong {
-  border-color: var(--color-error);
-  background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-washi-raised));
+  border-color: var(--color-sumi-faint);
+  background-color: color-mix(in srgb, var(--color-sumi-faint) 10%, var(--color-washi-raised));
 }
 
 .quiz__option.is-wrong::after {
-  content: '✕';
-  color: var(--color-error);
+  content: '—';
+  color: var(--color-sumi-faint);
 }
 
 .quiz__option.is-wrong .quiz__option-key {
-  border-color: var(--color-error);
-  color: var(--color-error);
+  border-color: var(--color-sumi-faint);
+  color: var(--color-sumi-faint);
 }
 
 /* Options that were neither picked nor correct step back so the two that
@@ -736,9 +752,12 @@
   color: var(--color-moss);
 }
 
+/* "Дахин үзье" set in the error colour is a sentence and a contradiction: the
+   words say the card comes back, the colour says something broke. Meta ink, to
+   match what the words already meant. */
 .quiz__verdict.is-incorrect .quiz__verdict-mark,
 .quiz__verdict.is-incorrect .quiz__verdict-text {
-  color: var(--color-error);
+  color: var(--color-sumi-faint);
 }
 
 /* The schedule, which is the one thing neither the card nor the options can
@@ -875,7 +894,7 @@
    on the scene. Only the one facing the reader is visible; drawing it on both
    costs nothing and means the class doesn't have to know which that is. */
 .quiz__scene.is-correct .quiz__card {
-  animation: quiz-card-correct 260ms var(--ease-exit);
+  animation: quiz-card-correct var(--duration-base) var(--ease-exit);
 }
 
 /* The wrong-answer shake is gone: the lean at the top of this file says which
@@ -883,6 +902,19 @@
    at forty times a session. Its keyframes went with it. */
 
 .quiz__feedback:not([hidden]) {
+  animation: quiz-card-enter 180ms var(--ease-entrance);
+}
+
+/* The grade pair, in Flip mode, on the same reveal as the feedback block in
+   Choose mode. These two buttons are the whole answer moment for half the
+   rounds played in this app — the card turns, and then the reader says whether
+   they had it — and they were the one reveal in the quiz that simply appeared:
+   quiz.js unhides them and they were there, mid-turn, at full strength.
+
+   Same 180ms and same curve as the feedback block, so the two modes resolve
+   identically; the turn behind it is --duration-base, so the buttons finish
+   settling just before the card does rather than racing it. */
+.quiz__grade:not([hidden]) {
   animation: quiz-card-enter 180ms var(--ease-entrance);
 }
 
@@ -925,7 +957,7 @@
   padding-block: var(--space-lg);
   text-align: center;
   --rise: 10px;
-  animation: rise-in var(--duration-slow) var(--ease-entrance) backwards;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
 }
 
 /* Ink by default, moss only for a clean round. A 1/3 rendered in the
@@ -980,7 +1012,10 @@
   padding: var(--space-2xs) var(--space-sm);
   background-color: var(--color-washi-raised);
   border: var(--border-width) solid var(--color-stone);
-  border-inline-start: 2px solid var(--color-error);
+  /* Was a 2px error-red rule down the side of every item under a heading that
+     reads "Worth another look". The heading had the register right and the
+     border was arguing with it. */
+  border-inline-start: 2px solid var(--color-sumi-faint);
   border-radius: var(--radius-md);
 }
 

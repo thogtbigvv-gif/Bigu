@@ -185,7 +185,7 @@ rt {
    typeface says it belongs rather than at a guessed offset.
    ---------------------------------------------------------------------------------- */
 a {
-  color: var(--color-indigo);
+  color: var(--color-shu);
   text-decoration: underline;
   text-decoration-thickness: from-font;
   text-decoration-color: transparent;
@@ -196,7 +196,7 @@ a {
 }
 
 a:hover {
-  color: var(--color-indigo-deep);
+  color: var(--color-shu-deep);
   text-decoration-color: currentColor;
 }
 
@@ -208,6 +208,6 @@ button:focus-visible {
 
 /* -- Selection --------------------------------------------------------------------- */
 ::selection {
-  background-color: var(--color-bengara);
+  background-color: var(--color-shu);
   color: var(--color-washi);
 }

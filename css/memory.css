@@ -4,7 +4,7 @@
 
    The whole sheet is one idea: ink on paper, at four densities. Nothing here
    introduces a colour — every value is --color-ink, --color-stone or
-   --color-bengara at some opacity, so the page reads as one material in both
+   --color-shu at some opacity, so the page reads as one material in both
    themes and inverts for free when the ink and the paper swap places.
 
    Two custom properties do most of the work:
@@ -119,14 +119,20 @@
   transform-origin: left center;
   transform: scaleX(var(--strength));
   /* Drawn on arrival rather than simply present: the stroke is the reader's
-     own work, and watching it laid down once is the single most emotive
-     moment on the page. 700ms — slower than UI feedback, faster than an
-     animation you have to wait for. */
-  /* Curve left exactly as it was. --ease-entrance would be wrong here: it is
-     ~90% travelled a third of the way in, which is right for a panel arriving
-     and wrong for a brush, where the ink should keep moving at a readable
-     speed for most of the stroke and only ease off as it dries. */
-  animation: memory-wash-in 700ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+     own work, and watching it laid down once is the single most emotive moment
+     on the page. It ran at 700ms on that argument, and 700ms is how long it
+     takes to stop being a page opening and start being a page performing —
+     nearly three times the app's ceiling, on the first thing a reader sees
+     here. At --duration-base the stroke still reads as laid down rather than
+     printed, and the page is finished settling before they have finished
+     looking at it. */
+  /* Curve left exactly as it was, and it matters more at the shorter duration
+     than it did at the longer one. --ease-entrance is ~90% travelled a third of
+     the way in, which is right for a panel arriving and wrong for a brush: the
+     ink should keep moving at a readable speed for most of the stroke and only
+     ease off as it dries. Compressed into 250ms, the entrance curve would be a
+     flick. This one is the only bespoke easing left in the app. */
+  animation: memory-wash-in var(--duration-base) cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
 /* `to` is written out rather than left implicit. With a `from`-only keyframe
@@ -252,7 +258,7 @@
 }
 
 .memory-week__day.is-today .memory-week__dot {
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-bengara) 28%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-shu) 28%, transparent);
 }
 
 .memory-week__initial {
@@ -267,14 +273,15 @@
   color: var(--color-ink-soft);
 }
 
-/* The one place a number is allowed to be loud on this page — a run of days
-   is the single figure worth protecting, and the hanko red is the app's
-   established mark for "this one matters". */
+/* Not loud any more. A run of days in the hanko red made the streak the
+   brightest object on the page, which is the same as saying it is the part
+   worth protecting — and a figure worth protecting is a figure that can be
+   lost. It reports the days that happened, in ink, at the size it always was. */
 .memory-week__streak {
   font-family: var(--font-mono);
   font-size: var(--text-md);
   font-variant-numeric: tabular-nums;
-  color: var(--color-bengara);
+  color: var(--color-sumi);
 }
 
 /* -- Shelves --------------------------------------------------------------------------------
@@ -370,10 +377,10 @@
 /* Gated. This control removes itself the moment it is used — the shelf expands
    and the line is replaced by the slips it revealed — so on a touch screen the
    stuck hover landed on whatever inherited its position, colouring a *different*
-   shelf's link indigo for an action the reader took somewhere else. */
+   shelf's link shu for an action the reader took somewhere else. */
 @media (hover: hover) {
   .memory-shelf__more:hover {
-    color: var(--color-indigo);
+    color: var(--color-shu);
     text-decoration-color: currentColor;
   }
 }
@@ -384,7 +391,7 @@
    every other view settle. transform is in its transition list now for the
    same reason. */
 .memory-shelf__more:active {
-  color: var(--color-indigo);
+  color: var(--color-shu);
   transform: translateY(var(--lift-press));
   transition-timing-function: var(--ease-spring);
 }
@@ -439,7 +446,7 @@
     transform var(--transition-fast),
     opacity var(--transition-base);
   --rise: 6px;
-  animation: rise-in 320ms var(--ease-entrance) both;
+  animation: rise-in var(--duration-base) var(--ease-entrance) both;
   animation-delay: calc(var(--index, 0) * 40ms);
 }
 
@@ -528,21 +535,28 @@
   opacity: calc(0.14 + var(--strength) * 0.76);
   transform-origin: top center;
   transform: scaleY(calc(0.4 + var(--strength) * 0.6));
-  /* Slower than any other transition in the app on purpose: this is the one
-     moment the page shows a memory changing, and at 150ms nobody sees it. */
-  transition: opacity 600ms ease-out, transform 600ms ease-out;
+  /* The one moment the page shows a memory changing, which is why it was the
+     slowest transition in the app at 600ms — and why it now uses the base
+     duration and the app's own curve rather than a bare `ease-out`. At 250ms
+     on --ease-exit the stroke still reads as darkening rather than switching:
+     the curve puts most of the travel in the first third and then settles, so
+     what the eye catches is the ink moving, not the transition ending. */
+  transition:
+    opacity var(--duration-base) var(--ease-exit),
+    transform var(--duration-base) var(--ease-exit);
 }
 
-/* The faintest band gets the app's attention colour instead of ink — the
-   single exception to the one-material rule, and it is spent on the one
-   thing worth interrupting a calm page for. */
+/* Ink, like every other band. This was the faintest band drawn in the accent —
+   "the one thing worth interrupting a calm page for" — and it is the same rule
+   the state line beside it broke: a word whose ink has gone pale is doing
+   exactly what this page says ink does, and absence does not get the attention
+   colour. It was missed when the state line was corrected, because the two live
+   forty lines apart and only one of them says "faint" in its selector.
+
+   The band still reads: it is the palest stroke on the shelf by opacity, and
+   the slip names it in words. */
 .memory-slip[data-band="faint"] .memory-slip__ink {
-  background-image: linear-gradient(
-    to bottom,
-    var(--color-bengara) 0%,
-    color-mix(in srgb, var(--color-bengara) 30%, transparent) 100%
-  );
-  opacity: 0.85;
+  opacity: 0.28;
 }
 
 /* Kept but never studied: an outline where the stroke would be. There is no
@@ -598,8 +612,14 @@
   text-align: end;
 }
 
+/* Faint ink is the quietest state on the shelf, not an alarm on it. This was
+   the app's clearest case of a warning treatment on absence: a word whose ink
+   has gone pale is a word doing exactly what the whole page says ink does, and
+   it was the only slip state painted in the accent. --color-sumi-faint is the
+   meta ink every other state line already uses; the band is still named in
+   words on the slip, so nothing was ever carried by colour alone. */
 .memory-slip[data-band="faint"] .memory-slip__state {
-  color: var(--color-bengara);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Slip detail ------------------------------------------------------------------------------
@@ -718,11 +738,12 @@
   line-height: 1;
   color: var(--color-ink);
   opacity: 0.12;
-  /* --duration-slow, the app's ceiling, which is what 600ms was reaching for.
-     This is a hero glyph at 12% opacity on an otherwise empty page and it is
-     allowed to take the long end of the scale — but the long end of the scale
-     is a token, and nothing else in Bigu runs past --duration-slow. */
-  animation: memory-detail-in var(--duration-slow) var(--ease-entrance) both;
+  /* --duration-base, like everything else. This was the last holdout: a hero
+     glyph at 12% opacity on an otherwise empty page, argued into 420ms on the
+     grounds that nothing waits behind it. Nothing did — but an empty state is
+     the screen a reader sees when they have nothing yet, and it should not be
+     the screen that keeps them watching the longest. */
+  animation: memory-detail-in var(--duration-base) var(--ease-entrance) both;
 }
 
 .memory-empty__line {

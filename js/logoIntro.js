@@ -17,8 +17,8 @@ const SESSION_KEY = 'biguIntroPlayed';
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 /* Longer than the slowest track in css/intro.css (the trailing sparkle:
-   380ms delay + 380ms duration). Used only as a fallback timer — see play(). */
-const SEQUENCE_MS = 900;
+   320ms delay + 220ms duration). Used only as a fallback timer — see play(). */
+const SEQUENCE_MS = 700;
 
 /* -- Session gate -------------------------------------------------------------------
    Guarded the same way storage.js guards localStorage: Safari private mode and
