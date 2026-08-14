@@ -154,15 +154,50 @@ small,
   color: var(--color-sumi-faint);
 }
 
-/* -- Furigana (ruby annotations for kanji readings) -------------------------------- */
+/* -- Furigana (ruby annotations for kanji readings) ----------------------------------
+   `ruby-position: over` puts the reading above the base, which is where a
+   Japanese reader looks for it — and it is stated rather than left to the
+   default because engines disagree: the default is `alternate`, which in a
+   multi-line block can flip an annotation to the underside.
+
+   The line-height pins the annotation's own leading, which it previously took
+   from the `:lang(ja)` rule above — 1.85, a value meant for a *base* line of
+   Japanese and far too loose for a 12px gloss sitting on top of one.
+
+   What it does not do, measured rather than assumed: it is not what keeps the
+   vertical rhythm even. Two wrapped lines of this passage's Japanese are 74px
+   tall whether or not one of them carries furigana, and they stay 74px with rt
+   at either 1.25 or 1.85 — at --leading-loose the base line box is already
+   tall enough to contain the annotation, so the ruby costs nothing. Drop the
+   host text to --leading-normal and a ruby line adds 5px; drop it to
+   --leading-tight and it adds 15px, and rt's own leading does not change that
+   either. The rhythm guarantee is the leading on the text, not this line. This
+   is here because an annotation should not carry a page's leading internally,
+   and because a two-line rt would otherwise set itself at 1.85.
+
+   The selector is a list because of how it loses otherwise. `rt` is a type
+   selector at 0-0-1 and `:lang(ja)` is 0-1-0, so a plain `rt { line-height }`
+   is overridden by the very rule it is correcting — the declaration sits in
+   the file looking right while the browser keeps 1.85, which is exactly what
+   it was doing before this was measured. `rt:lang(ja)` is 0-1-1 and wins; the
+   bare `rt` stays in the list so an annotation that is never lang-tagged
+   still gets the treatment.
+
+   The size was already reduced and stays so. --text-xs against --text-md body
+   is 60%, close to the ~50% Japanese typesetting expects — see the note in the
+   commit for why it is an absolute step rather than a ratio, and why that is
+   still worth revisiting.
+   ------------------------------------------------------------------------------------ */
 ruby {
   ruby-position: over;
 }
 
-rt {
+rt,
+rt:lang(ja) {
   font-family: var(--font-jp-stack);
   font-size: var(--text-xs);
   font-weight: var(--weight-regular);
+  line-height: var(--leading-tight);
   color: var(--color-sumi-soft);
   user-select: none;
 }

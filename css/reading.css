@@ -47,15 +47,29 @@
    running Japanese, not a token the Dashboard should be able to reach.
    ------------------------------------------------------------------------------------ */
 #reading {
+  /* The container, not the measure. This used to be both: 42rem of column with
+     the text simply filling it, which put the passage at about 32 characters a
+     line — under the 34-38 a page of Japanese is set to, and a number that only
+     held while --text-md, the line-number gutter and the panel padding all
+     stayed exactly where they were.
+
+     The measure now lives on the type itself, in em, where a Japanese
+     character is exactly 1em wide (see .reading-sentence__jp). What is left
+     here is a column, and it stays at 42rem because the passage *list* is a
+     table of contents and reads well at 672px. The open passage widens past it
+     on its own — see .reading-stage — because a sheet has to hold 720px of
+     text plus the line-number gutter plus its own margins, and forcing the
+     contents page to that width to suit the sheet would be the tail wagging
+     the dog.
+
+     The two local custom properties that used to sit here — a 2.05 leading and
+     a 2.5rem paragraph gap — are gone. Both were real typographic judgements
+     and both were values invented in a component file, which is the one thing
+     this codebase does not allow: --leading-loose and --space-xl are what the
+     scale already has for "a page of Japanese" and "the gap between two
+     paragraphs", and the difference from the invented numbers is a tenth of a
+     line either way. */
   --reading-measure: 42rem;
-  /* Between --leading-loose (1.85, tuned for a card's worth of Japanese) and
-     the 2.0-2.2 a full page of it wants. The difference is invisible on three
-     lines and is the whole difference over twenty. */
-  --reading-leading: 2.05;
-  /* Sits deliberately between --space-lg (2rem) and --space-xl (3rem). On a
-     scale built for interface spacing there is no step for "the gap between
-     two paragraphs of body text", and this is that gap. */
-  --reading-para-gap: 2.5rem;
 }
 
 #reading > * {
@@ -179,10 +193,32 @@
    so masthead, tabs, sheet, colophon and pager all share one centre line.
    ------------------------------------------------------------------------------------ */
 
+/* Wider than the column the list uses, and the arithmetic is the reason. The
+   passage wants 36em of text — 720px at --text-md — and three things sit
+   between that and the edge of the stage: the line-number gutter (1.25rem) and
+   its gap (--space-sm), then the sheet's own --space-xl of padding on each
+   side. 720 + 36 + 96 is 852px, so 54rem (864px) is the first whole step that
+   lets the em cap on the type be the thing that binds rather than this box
+   quietly binding first at 32 characters.
+
+   The width goes on the column rather than on the stage, because the stage is
+   not the box that binds: `#reading > *` caps .reading-content, the stage sits
+   inside it, and a child cannot be wider than the parent clipping it. Setting
+   54rem on .reading-stage put a max-width in the file that could never apply.
+
+   `:has(.reading-stage)` is what distinguishes the two screens without asking
+   reading.js for a class — the column holding a sheet widens, the column
+   holding the contents list does not, and the rule says exactly that. The
+   selector is 1-2-0 against the column rule's 1-0-0, so it wins on merit
+   rather than on source order. */
 .reading-stage {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
+}
+
+#reading > .reading-content:has(.reading-stage) {
+  max-width: 54rem;
 }
 
 /* -- Back ---------------------------------------------------------------------------
@@ -392,7 +428,7 @@
 .reading-article {
   display: flex;
   flex-direction: column;
-  gap: var(--reading-para-gap);
+  gap: var(--space-xl);
 }
 
 /* The one line saying the sheet answers to being touched — and reading.js
@@ -411,7 +447,7 @@
   /* The largest piece of whitespace on the sheet, and the one doing the work
      paragraph spacing does on a printed page: it is what lets the eye find
      the start of the next line without re-reading the end of the last. */
-  gap: var(--reading-para-gap);
+  gap: var(--space-xl);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -461,8 +497,15 @@
 
    --text-md rather than --text-base: 16px is a size for interface copy, and
    Japanese at 16px asks a learner to resolve a twelve-stroke kanji inside a
-   16px box. --reading-leading rather than the :lang(ja) default, because
-   1.85 is tuned for a card's worth of Japanese and this is a page of it.
+   16px box.
+
+   The measure is here rather than on the column, and it is in em because this
+   is Japanese: a CJK glyph is drawn on a full em square, so 1em is exactly one
+   character and 36em is exactly 36 of them — inside the 34-38 a page of
+   Japanese is set to, and true at any font-size the reader's browser gives
+   --text-md. `ch` would be wrong for the same reason it is the right unit in
+   Latin: it measures the advance of "0", which in a Japanese face is a
+   half-width figure, so 36ch would be about eighteen characters.
 
    The dotted rule is the interactive affordance, and it replaced a block of
    background colour behind the whole line. A tinted slab under a sentence is
@@ -472,8 +515,9 @@
    answer before touching one. It goes solid shu under a pointer and stays
    shu while the line is open. */
 .reading-sentence__jp {
+  max-width: 36em;
   font-size: var(--text-md);
-  line-height: var(--reading-leading);
+  line-height: var(--leading-loose);
   color: var(--color-sumi);
   text-decoration-line: underline;
   text-decoration-style: dotted;
@@ -619,7 +663,7 @@
 .reading-stage__body {
   display: flex;
   flex-direction: column;
-  gap: var(--reading-para-gap);
+  gap: var(--space-xl);
 }
 
 .reading-stage__sentence {
@@ -628,14 +672,29 @@
   gap: var(--space-3xs);
 }
 
+/* Margin only. This rule used to clear `max-width` here as well, to undo
+   typography.css's 68ch measure on every <p> — which would have silently
+   beaten the 36em cap below it: `.reading-stage__sentence p` scores 0-1-1 and
+   a lone class scores 0-1-0, so the passage would have run the full column
+   while the rule capping it looked correct in the file. The two glosses that
+   do want the measure off say so themselves. */
 .reading-stage__sentence p {
   margin: 0;
+}
+
+.reading-stage__sentence .reading,
+.reading-stage__sentence .meta {
   max-width: none;
 }
 
+/* The same measure the Article tab sets, for the same reason: switching tabs
+   must not re-wrap the passage under the reader. This block has no line-number
+   gutter beside it, so without the cap it would run the full column and every
+   line would break in a different place from the one the reader just left. */
 .reading-stage__sentence-jp {
+  max-width: 36em;
   font-size: var(--text-md);
-  line-height: var(--reading-leading);
+  line-height: var(--leading-loose);
   color: var(--color-sumi);
 }
 
@@ -834,12 +893,17 @@
 }
 
 @media (max-width: 480px) {
-  #reading {
-    /* Two steps tighter than the desktop page. Still comfortably inside the
-       2.0-2.2 a page of Japanese wants, and it buys back a line every three
-       or four on a phone screen. */
-    --reading-leading: 2.0;
-    --reading-para-gap: 2rem;
+  /* The phone used to tighten the leading and the paragraph gap together,
+     buying back a line every three or four. Both were overrides of locally
+     invented values. The leading stays at --leading-loose now — a page of
+     Japanese reads the same on a phone, and tightening it here would put this
+     view a step out of line with every other Japanese block in the app — but
+     the paragraph gap does come down, because --space-xl of blank between two
+     sentences is a sixth of a phone screen spent on nothing. */
+  .reading-article,
+  .reading-article__sentences,
+  .reading-stage__body {
+    gap: var(--space-lg);
   }
 
   .reading-stage {
