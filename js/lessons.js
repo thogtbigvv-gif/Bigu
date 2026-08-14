@@ -196,9 +196,17 @@ function createLessonGroup(lesson, index, onQuiz) {
   const count = document.createElement('span');
   count.className = 'lesson-group__count meta';
 
+  /* The word count stays — it is the size of the thing you are about to open,
+     which is worth knowing before you open it. What goes is the "· 0 санах
+     ойд" half on a lesson nobody has touched: eighteen rows each reporting a
+     zero is the "0/802" shape, a progress bar drawn in text, and it is on the
+     one screen a reader sees before they have done anything at all. Once
+     there is something held, saying so is a report rather than a scoreboard. */
   const updateCount = (records) => {
     const remembered = countRemembered(lesson.words, records);
-    count.textContent = `${lesson.words.length} үг \u00b7 ${remembered} санах ойд`;
+    count.textContent = remembered > 0
+      ? `${lesson.words.length} үг \u00b7 ${remembered} санах ойд`
+      : `${lesson.words.length} үг`;
   };
   updateCount();
 

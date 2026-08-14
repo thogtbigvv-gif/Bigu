@@ -244,9 +244,27 @@
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-normal);
-  color: var(--color-shu);
+  /* Ink, not shu. This class carries four figures — the streak, the words
+     held, the last score, and (until this commit) the number of items due —
+     and painting all four in the app's one loud colour made the dashboard a
+     row of red numbers about how the reader is doing. Shu is for where the
+     reader is now and for genuine errors; a count of what they hold is
+     neither. The figures still read as figures: mono, tabular, and larger
+     than anything around them. */
+  color: var(--color-sumi);
   line-height: var(--leading-tight);
   margin-block-end: var(--space-3xs);
+}
+
+/* The Today card's lead is a phrase now rather than a figure (see
+   dashboard.js), so it takes the display treatment instead of the tabular
+   one — same size and weight in the composition, none of the ledger. */
+.dashboard-today__headline {
+  margin: 0 0 var(--space-3xs) 0;
+  font-size: var(--text-lg);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-tight);
+  color: var(--color-sumi);
 }
 
 .dashboard-streak__count--score {

@@ -351,7 +351,7 @@ function renderGrid(container, data) {
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Тохирох ханз олдсонгүй. Тэмдэгт, дуудлага, эсвэл утгаар нь хайж үзнэ үү.';
+  empty.textContent = 'Тохирох ханз олдсонгүй.';
   empty.hidden = true;
 
   /* The grid, its search field and its facets are one thing — the browse

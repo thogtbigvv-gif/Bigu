@@ -123,27 +123,6 @@ function computeStreak(days) {
   return streak;
 }
 
-/**
- * Longest unbroken run of consecutive study days anywhere in the history,
- * not just the one ending today — a personal best that survives a broken
- * streak, shown next to the current one so a lapse doesn't erase it.
- */
-function computeLongestStreak(days) {
-  const sorted = [...days.keys()].sort();
-  if (sorted.length === 0) return 0;
-
-  let longest = 1;
-  let current = 1;
-
-  for (let i = 1; i < sorted.length; i += 1) {
-    const diffDays = Math.round((new Date(sorted[i]) - new Date(sorted[i - 1])) / 86400000);
-    current = diffDays === 1 ? current + 1 : 1;
-    longest = Math.max(longest, current);
-  }
-
-  return longest;
-}
-
 /* -- First visit ----------------------------------------------------------------------------
    What a brand-new reader used to be shown, on the first screen of the app,
    was four cards reading 0 items due, 0 days streak, 0 words in memory, and
@@ -351,13 +330,19 @@ function createTodayCard(counts, { reviewedToday, goal }) {
   const lead = document.createElement('div');
   lead.className = 'dashboard-today__lead';
 
+  /* A phrase, not a figure. "14" over "давтах зүйл" was the app's largest
+     number and the only one that described work owed rather than work done —
+     and it grew on exactly the days the reader had least appetite for it.
+     What is useful here is whether there is anything waiting at all, which is
+     a two-state fact, so it is said in two words and set as text rather than
+     in the tabular figure style the counts below it use. */
   const headline = document.createElement('p');
-  headline.className = 'dashboard-streak__count';
-  headline.textContent = formatCount(counts.due);
+  headline.className = 'dashboard-today__headline';
+  headline.textContent = counts.due > 0 ? 'Хэдэн зүйл' : 'Юм алга';
 
   const label = document.createElement('p');
   label.className = 'meta';
-  label.textContent = 'давтах зүйл';
+  label.textContent = counts.due > 0 ? 'эргэж ирэхэд бэлэн' : 'өнөөдөр хүлээж буй';
 
   const detail = document.createElement('p');
   detail.className = 'dashboard-today__detail';
@@ -369,9 +354,11 @@ function createTodayCard(counts, { reviewedToday, goal }) {
   const cta = document.createElement('a');
   cta.href = '#practice';
   cta.className = 'dashboard-card__cta button';
-  // Nothing due is not nothing to do — early review is still worth a button,
-  // just a quieter one than the day's actual work.
-  cta.classList.add(counts.due > 0 || counts.new > 0 ? 'button--primary' : 'button--secondary');
+  /* Loud only when something is actually ready. The condition used to include
+     counts.new, which meant a day with nothing waiting still got the app's
+     most emphatic button — "Юм алга" and a primary CTA in the accent colour,
+     on the same card, disagreeing about whether there was anything to do. */
+  cta.classList.add(counts.due > 0 ? 'button--primary' : 'button--secondary');
   cta.textContent = counts.due > 0 ? 'Start review' : 'Review early';
 
   body.append(lead, cta);
@@ -382,7 +369,6 @@ function createTodayCard(counts, { reviewedToday, goal }) {
 function createStreakCard(days, entries) {
   const card = createCard('Streak');
   const streak = computeStreak(days);
-  const longest = computeLongestStreak(days);
   const today = todayKey();
   const wroteToday = entries.some((entry) => entry.date === today);
 
@@ -402,19 +388,24 @@ function createStreakCard(days, entries) {
     ? `Өнөөдөр: ${[...days.get(today)].sort().join(' · ')}`
     : 'Давтах, шинэ үг сурах, тэмдэглэл бичих — бүгд тооцогдоно.';
 
-  const best = document.createElement('p');
-  best.className = 'meta';
-  best.textContent = `Хамгийн урт цуваа: ${longest} өдөр`;
+  /* No "longest streak" line, and no computeLongestStreak to feed it. A
+     personal best is only ever readable as a measurement of the present
+     against it: on the day a run of forty ends, "Хамгийн урт цуваа: 40 өдөр"
+     sits under a 1 and says one thing. A streak in this app reports presence
+     — the days that happened — and nothing about the days that did not.
 
-  card.append(count, label, kinds, best);
+     The journal door is unconditional for the same reason. It used to appear
+     only when today had no entry, which made its presence the notification
+     that something was missing. */
+  card.append(count, label, kinds);
 
-  if (!wroteToday) {
-    const cta = document.createElement('a');
-    cta.href = '#journal';
-    cta.className = 'button button--secondary dashboard-card__cta';
-    cta.textContent = 'Write today’s entry';
-    card.append(cta);
-  } else {
+  const cta = document.createElement('a');
+  cta.href = '#journal';
+  cta.className = 'button button--secondary dashboard-card__cta';
+  cta.textContent = 'Journal';
+  card.append(cta);
+
+  if (wroteToday) {
     const done = document.createElement('p');
     done.className = 'dashboard-card__status';
     done.textContent = 'Өнөөдрийн тэмдэглэл бичигдлээ ✓';
@@ -471,8 +462,11 @@ function createMemoryCard(entries) {
     detail.textContent = 'Хараахан юу ч бичигдээгүй. Таны танилцсан үг бүр тэр агшнаасаа бүдгэрч эхэлнэ — түүнийг эндээс ажиглана.';
   } else {
     const band = bandFor(strengthTotal / held);
+    /* No count of what has faded. Fading is what ink does in this app — it is
+       the mechanism, not a backlog — and a figure attached to it turns the one
+       screen that describes a natural process into a tally of neglect. */
     detail.textContent = fading > 0
-      ? `Бэх нийтдээ ${band.label} байгаа бөгөөд ${fading} үг бүдгэрчээ.`
+      ? `Бэх нийтдээ ${band.label} байна. Заримынх нь бүдгэрчээ.`
       : `Бүгдийнх нь бэх ${band.label} байна. Бүдгэрсэн юм алга.`;
   }
 
@@ -503,7 +497,7 @@ function createPracticeCard(sessions) {
   if (!latest) {
     const empty = document.createElement('p');
     empty.className = 'meta';
-    empty.textContent = 'Та хараахан давтаж эхлээгүй байна.';
+    empty.textContent = 'Дуусгасан давталт хараахан алга.';
     card.append(empty);
   } else {
     /* A step down from the other three figures, and its own class. A score
@@ -561,11 +555,11 @@ function renderHeroStatus(counts, { firstVisit }) {
   if (firstVisit) {
     status.textContent = 'Япон хэлийг өдөрт хэдхэн үгээр, тайвнаар сурах орон зай.';
   } else if (counts.due > 0) {
-    status.textContent = `Өнөөдөр ${formatCount(counts.due)} зүйл давтах ёстой.`;
+    status.textContent = 'Эргэж ирэхэд бэлэн зүйл хүлээж байна.';
   } else if (counts.new > 0) {
-    status.textContent = 'Өнөөдөр давтах юм алга — шинэ зүйл эхлэх сайхан өдөр.';
+    status.textContent = 'Өнөөдөр хүлээж буй юм алга — шинэ зүйл эхлэх сайхан өдөр.';
   } else {
-    status.textContent = 'Бүгдийг гүйцээсэн байна.';
+    status.textContent = 'Өнөөдөр хүлээж буй юм алга.';
   }
 }
 

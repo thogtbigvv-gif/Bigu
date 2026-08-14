@@ -267,14 +267,15 @@
   color: var(--color-ink-soft);
 }
 
-/* The one place a number is allowed to be loud on this page — a run of days
-   is the single figure worth protecting, and the hanko red is the app's
-   established mark for "this one matters". */
+/* Not loud any more. A run of days in the hanko red made the streak the
+   brightest object on the page, which is the same as saying it is the part
+   worth protecting — and a figure worth protecting is a figure that can be
+   lost. It reports the days that happened, in ink, at the size it always was. */
 .memory-week__streak {
   font-family: var(--font-mono);
   font-size: var(--text-md);
   font-variant-numeric: tabular-nums;
-  color: var(--color-shu);
+  color: var(--color-sumi);
 }
 
 /* -- Shelves --------------------------------------------------------------------------------
@@ -598,8 +599,14 @@
   text-align: end;
 }
 
+/* Faint ink is the quietest state on the shelf, not an alarm on it. This was
+   the app's clearest case of a warning treatment on absence: a word whose ink
+   has gone pale is a word doing exactly what the whole page says ink does, and
+   it was the only slip state painted in the accent. --color-sumi-faint is the
+   meta ink every other state line already uses; the band is still named in
+   words on the slip, so nothing was ever carried by colour alone. */
 .memory-slip[data-band="faint"] .memory-slip__state {
-  color: var(--color-shu);
+  color: var(--color-sumi-faint);
 }
 
 /* -- Slip detail ------------------------------------------------------------------------------

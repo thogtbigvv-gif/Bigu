@@ -765,7 +765,7 @@ function renderList(container, data) {
      screen to say otherwise. */
   const empty = document.createElement('p');
   empty.className = 'empty-state';
-  empty.textContent = 'Энэ түвшинд тохирох бичвэр алга. Өөр түвшин сонгож үзнэ үү.';
+  empty.textContent = 'Энэ түвшинд тохирох бичвэр алга.';
   empty.hidden = true;
 
   /* The same data-driven chip row the other three views have. Two passages

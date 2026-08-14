@@ -214,7 +214,13 @@
     color-mix(in srgb, var(--cue, transparent) 22%, transparent);
 }
 
-.quiz__scene[data-toward="left"] { --cue: var(--color-error); }
+/* Left is "not this time", and it is not an error. The two directions used to
+   be moss and the error red, which made every card a pass/fail and painted the
+   failing half in the colour the app reserves for something having gone wrong.
+   Nothing has gone wrong: a card you did not recall is the ordinary case this
+   whole app exists for. Right keeps moss because moss means held; left takes
+   the line colour, which means nothing at all. */
+.quiz__scene[data-toward="left"] { --cue: var(--color-line); }
 .quiz__scene[data-toward="right"] { --cue: var(--color-moss); }
 
 .quiz__card-inner {
@@ -631,19 +637,27 @@
   color: var(--color-moss);
 }
 
+/* The option that was picked, marked so it can be told from the three that
+   weren't — and no louder than that. In the error red with a ✕ it was the
+   brightest object on the screen at the exact moment the reader had got
+   something not-quite-right, which is the app grading them. The answer beside
+   it still carries moss and a ✓, so the pair still reads at a glance and still
+   has two channels; this half is simply the quiet one now.
+
+   An em dash rather than a cross: it says "not this one", where ✕ says wrong. */
 .quiz__option.is-wrong {
-  border-color: var(--color-error);
-  background-color: color-mix(in srgb, var(--color-error) 12%, var(--color-washi-raised));
+  border-color: var(--color-sumi-faint);
+  background-color: color-mix(in srgb, var(--color-sumi-faint) 10%, var(--color-washi-raised));
 }
 
 .quiz__option.is-wrong::after {
-  content: '✕';
-  color: var(--color-error);
+  content: '—';
+  color: var(--color-sumi-faint);
 }
 
 .quiz__option.is-wrong .quiz__option-key {
-  border-color: var(--color-error);
-  color: var(--color-error);
+  border-color: var(--color-sumi-faint);
+  color: var(--color-sumi-faint);
 }
 
 /* Options that were neither picked nor correct step back so the two that
@@ -738,9 +752,12 @@
   color: var(--color-moss);
 }
 
+/* "Дахин үзье" set in the error colour is a sentence and a contradiction: the
+   words say the card comes back, the colour says something broke. Meta ink, to
+   match what the words already meant. */
 .quiz__verdict.is-incorrect .quiz__verdict-mark,
 .quiz__verdict.is-incorrect .quiz__verdict-text {
-  color: var(--color-error);
+  color: var(--color-sumi-faint);
 }
 
 /* The schedule, which is the one thing neither the card nor the options can
@@ -982,7 +999,10 @@
   padding: var(--space-2xs) var(--space-sm);
   background-color: var(--color-washi-raised);
   border: var(--border-width) solid var(--color-stone);
-  border-inline-start: 2px solid var(--color-error);
+  /* Was a 2px error-red rule down the side of every item under a heading that
+     reads "Worth another look". The heading had the register right and the
+     border was arguing with it. */
+  border-inline-start: 2px solid var(--color-sumi-faint);
   border-radius: var(--radius-md);
 }
 

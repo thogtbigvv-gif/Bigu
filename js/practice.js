@@ -21,7 +21,7 @@
 
 import { practice, settings } from './storage.js';
 import { publishSession } from './bridge.js';
-import { formatCount, getViewContainer } from './content.js';
+import { getViewContainer } from './content.js';
 import { buildSession, countDue, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
 import { sessionSize } from './preferences.js';
@@ -304,29 +304,35 @@ function initController(elements, decks) {
 
     if (state.deck === 'mistakes') {
       elements.status.textContent =
-        `Бүх багцаас таны байнга буруу хариулж байсан ${formatCount(items.length)} зүйл. `
+        'Бүх багцаас удаан тогтож буй зүйлс. '
         + `Энэ давталтад ${describeRound(Math.min(size, items.length))}.`;
       return;
     }
 
     if (due === 0 && fresh === 0) {
       elements.status.textContent =
-        'Давтах зүйл алга — энд байгаа бүхний хугацаа хараахан болоогүй байна. '
+        'Хүлээж буй юм алга — энд байгаа бүхний хугацаа хараахан болоогүй байна. '
         + 'Одоо давтвал хамгийн ойрд эргэж ирэх зүйлсийг үзнэ. '
         + `Энэ давталтад ${describeRound(Math.min(size, items.length))}.`;
       return;
     }
 
-    /* Due first, and said in that order. The catalogue holds well over a
-       thousand items a reader has never met, and a four-figure number
-       attached to the word "not" is a debt notice, not a status line — so
-       what's due leads, and "not started" only appears alongside it. */
+    /* Neither pool is counted any more. "842 зүйл хараахан эхлээгүй" is a
+       fact about a JSON file worn as a fact about the reader, and it is the
+       one sentence in the app guaranteed never to shrink no matter how much
+       they study; "14 зүйл давтах цаг болсон" is the same shape with a
+       deadline attached. What the screen before a round has to answer is what
+       this round will be, and that is the size of the round itself — a number
+       the reader chose, in settings, and can change.
+
+       The order still holds: what is ready leads, what is untouched follows
+       as a supply rather than a backlog. */
     const parts = [];
-    if (due > 0) parts.push(`${formatCount(due)} зүйл давтах цаг болсон`);
-    if (fresh > 0) parts.push(`${formatCount(fresh)} зүйл хараахан эхлээгүй`);
+    if (due > 0) parts.push('Эргэж ирэхэд бэлэн зүйл байна');
+    if (fresh > 0) parts.push('хараахан үзээгүй зүйл ч бий');
     elements.status.textContent =
       `${parts.join(' · ')}. Энэ давталтад ${describeRound(Math.min(size, due + fresh))}, `
-      + 'цаг нь болсныг эхэлж үзнэ.';
+      + 'бэлэн болсныг эхэлж үзнэ.';
   }
 
   function selectDeck(key) {

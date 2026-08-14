@@ -324,9 +324,12 @@ function renderList(container, data) {
     showMore();
 
     empty.hidden = matched.length > 0;
+    /* One line, and no instruction after it. Every empty state in the app used
+       to end by telling the reader what to type or which control to clear —
+       advice they did not ask for about a screen they can already see. */
     empty.textContent = hideRemembered && !query && selectedTags.size === 0
-      ? 'Энд байгаа бүхэн аль хэдийн санах ойд орсон байна. Бүтэн жагсаалтыг харахын тулд шүүлтүүрээ цэвэрлэнэ үү.'
-      : 'Тохирох үг олдсонгүй. Өөр дуудлагаар, эсвэл цөөн шүүлтүүрээр хайж үзнэ үү.';
+      ? 'Энд байгаа бүхэн аль хэдийн санах ойд орсон байна.'
+      : 'Тохирох үг олдсонгүй.';
   }
 
   searchInput.addEventListener('input', debounce(applyFilter));

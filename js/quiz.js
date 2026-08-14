@@ -918,7 +918,7 @@ function buildPanel() {
   const retryMissedButton = document.createElement('button');
   retryMissedButton.type = 'button';
   retryMissedButton.className = 'button button--primary';
-  retryMissedButton.textContent = 'Алдсаныг давтах';
+  retryMissedButton.textContent = 'Дахин харах';
 
   const againButton = document.createElement('button');
   againButton.type = 'button';
@@ -1325,7 +1325,8 @@ function createQuiz({
        element exists on screen the text is already old. */
     el.feedback.hidden = false;
 
-    el.verdictMark.textContent = knewIt ? '✓' : '✕';
+    // ↻ rather than ✕: the card is coming back, which is what happened.
+    el.verdictMark.textContent = knewIt ? '✓' : '↻';
     el.verdictText.textContent = knewIt ? 'Зөв' : 'Дахин үзье';
     // The schedule is the one thing the card cannot say, and it is worth
     // saying: "back in three days" is the only visible evidence that
