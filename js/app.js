@@ -26,6 +26,7 @@ import { initDashboard } from './dashboard.js';
 import { initVocabulary } from './vocabulary.js';
 import { initGrammar } from './grammar.js';
 import { initKanji } from './kanji.js';
+import { initKakitori } from './kakitori.js';
 import { initPractice, loadReviewPool } from './practice.js';
 import { initMemory } from './memory.js';
 import { initJournal } from './journal.js';
@@ -97,6 +98,7 @@ const VIEW_INITIALIZERS = {
   journal: initJournal,
   lessons: initLessons,
   reading: initReading,
+  kakitori: initKakitori,
   settings: initSettings,
 };
 

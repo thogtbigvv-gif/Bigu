@@ -100,6 +100,7 @@
   <link rel="stylesheet" href="css/memory.css" />
   <link rel="stylesheet" href="css/intro.css" />
   <link rel="stylesheet" href="css/home.css" />
+  <link rel="stylesheet" href="css/kakitori.css" />
   <link rel="stylesheet" href="css/keyboard.css" />
 </head>
 <body>
@@ -202,6 +203,7 @@
             <div class="site-nav__submenu-wrapper" id="site-nav-practice-submenu">
               <ul class="site-nav__submenu" role="group">
                 <li><a class="site-nav__link site-nav__sublink" href="#practice" data-view="practice">Review</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#kakitori" data-view="kakitori">Writing</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#memory" data-view="memory">Memory</a></li>
               </ul>
             </div>
@@ -386,6 +388,14 @@
           <h1 id="kanji-heading">Kanji</h1>
         </section>
 
+        <!-- 書き取り. Under Practice rather than Learn: the nav's own note says
+             Practice is where the app asks you to produce Japanese back, and
+             writing a character from its reading is the most literal case of
+             that in here. -->
+        <section id="kakitori" class="view" hidden aria-labelledby="kakitori-heading">
+          <h1 id="kakitori-heading">Writing</h1>
+        </section>
+
         <!-- id/heading-id stay "practice" (practice.js, dashboard.js, and
              every saved practice/progress record key off this exact id) —
              only the visible label changes to "Review". -->
@@ -508,7 +518,12 @@
           </a>
         </li>
         <li>
-          <a class="thumb-nav__link" href="#practice" data-view="practice">
+          <a
+            class="thumb-nav__link"
+            href="#practice"
+            data-view="practice"
+            data-view-group="practice kakitori"
+          >
             <svg class="thumb-nav__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M20 12a8 8 0 1 1-2.6-5.9" />
               <path d="M20 4v4.5h-4.5" />
