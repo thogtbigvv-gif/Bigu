@@ -209,9 +209,22 @@ function createSentence(sentence, index, onToggle) {
    still reads as finished after they close the lines they opened.
    ---------------------------------------------------------------------------------------- */
 
+/* 縦書き, per session and defaulting off. Module scope rather than the settings
+   store on purpose: it is a way of looking at a passage, not a preference about
+   the app, and persisting it would mean a new key in nagi:settings for a mode a
+   reader turns on to try a page and off again. It survives tab switches and the
+   pager because it lives out here; it does not survive a reload.
+
+   Everything it does is add one class. The passage is not rebuilt, not
+   re-fetched and not re-measured when it changes — see toggleVertical below. */
+let verticalMode = false;
+
+const VERTICAL_CLASS = 'reading-article--vertical';
+
 function createArticlePanel(passage, state, onChange) {
   const wrap = document.createElement('div');
   wrap.className = 'reading-article';
+  if (verticalMode) wrap.classList.add(VERTICAL_CLASS);
 
   /* The hint erases itself. It exists to say the sheet answers to being
      touched, and the dotted rule under every sentence now says that on its
@@ -289,6 +302,44 @@ function createArticlePanel(passage, state, onChange) {
     sync();
   });
 
+  /* The 縦書き toggle, beside "Show all readings" at the foot of the sheet —
+     the two ambient controls a reader reaches for while reading, in the order
+     they meet them. It is not at the top for the reason the reveal control is
+     not: the head of the page belongs to the masthead and the first line.
+
+     Japanese label, Mongolian underneath it, matching how Settings names a
+     choice and then says what it does. */
+  const vertical = document.createElement('button');
+  vertical.type = 'button';
+  vertical.className = 'reading-article__vertical';
+
+  const verticalLabel = document.createElement('span');
+  verticalLabel.className = 'reading-article__vertical-label';
+  verticalLabel.lang = 'ja';
+  verticalLabel.textContent = '縦書き';
+
+  const verticalNote = document.createElement('span');
+  verticalNote.className = 'reading-article__vertical-note';
+  verticalNote.textContent = 'Номон дахь шиг босоо бичлэг';
+
+  vertical.append(verticalLabel, verticalNote);
+
+  /* One class on one element. No re-render: the sentences, their glosses and
+     whatever the reader had open are the same DOM nodes before and after, and
+     the browser reflows them into columns itself. */
+  function toggleVertical() {
+    verticalMode = !verticalMode;
+    wrap.classList.toggle(VERTICAL_CLASS, verticalMode);
+    vertical.setAttribute('aria-pressed', String(verticalMode));
+  }
+
+  vertical.setAttribute('aria-pressed', String(verticalMode));
+  vertical.addEventListener('click', toggleVertical);
+
+  const controls = document.createElement('div');
+  controls.className = 'reading-article__controls';
+  controls.append(showAll, vertical);
+
   /* One place that reads the state and writes the DOM, called after every
      change. Cheaper than it looks — it touches two attributes per sentence
      and nothing reflows — and it means the chip, the lines, the completed
@@ -306,7 +357,7 @@ function createArticlePanel(passage, state, onChange) {
     onChange();
   }
 
-  wrap.append(hint, list, showAll, done);
+  wrap.append(hint, list, controls, done);
   sync();
 
   return wrap;

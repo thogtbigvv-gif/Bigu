@@ -1,0 +1,135 @@
+/* ==========================================================================
+   keyboard.css
+   The two things keyboard movement adds to the page: a focus ring on the rows
+   J and K walk, and the shortcut list.
+
+   No new colours. Selection is focus (see js/keyboard.js), so the "selected"
+   state here is the app's own --focus-ring on an element that could not
+   previously receive focus — the same indicator, in the same token, that every
+   control in Bigu already uses. Nothing about how the ring behaves changes;
+   this only says which elements are allowed to show it.
+   ========================================================================== */
+
+/* -- The rows -----------------------------------------------------------------
+   :focus-visible, not :focus. js/keyboard.js focuses these programmatically
+   with tabindex="-1", and the browser's own heuristic is what decides whether
+   that focus deserves a ring: pressing J is a keyboard interaction and draws
+   one, while a click that happens to land on a row does not. That is exactly
+   the rule the rest of the app follows, and it is why the ring is not painted
+   by a class of this file's own invention.
+
+   The offsets differ because the rows do. A vocabulary entry and a kanji row
+   are borderless list rows whose neighbours are one hairline away, so their
+   ring sits tight; a reading card and a lesson group are real cards with
+   padding of their own and can afford the app's usual 2px.
+   ----------------------------------------------------------------------------- */
+.vocab-card:focus-visible,
+.grammar-card:focus-visible,
+.kanji-card:focus-visible,
+.reading-card:focus-visible,
+.lesson-group:focus-visible,
+.memory-slip:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+.vocab-card:focus-visible,
+.kanji-card:focus-visible {
+  outline-offset: 4px;
+}
+
+/* -- The shortcut list --------------------------------------------------------
+   Plain, as asked: a title, a two-column list of key and meaning, and the way
+   out. No icons, no shadow beyond the one every raised surface in the app
+   already has, no illustration of a keyboard.
+
+   `dialog` needs its own reset because the UA stylesheet gives it a border, a
+   black background in some engines, and margins that centre it by magic; the
+   inset/margin pair below is the standard way to place a modal dialog without
+   inheriting any of that.
+   ----------------------------------------------------------------------------- */
+.shortcuts {
+  inset: 0;
+  margin: auto;
+  width: min(26rem, calc(100vw - var(--space-lg)));
+  max-height: calc(100dvh - var(--space-2xl));
+  padding: var(--space-lg);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-sumi);
+  overflow-y: auto;
+}
+
+/* The page behind it, dimmed in the app's own ink rather than the UA's black.
+   ::backdrop cannot see custom properties inherited from the page in every
+   engine, so the value is mixed from the token on the element itself and the
+   backdrop is left to a plain rgba — the one place in this file that names a
+   colour, and it is a shadow over the page rather than a colour on it. */
+.shortcuts::backdrop {
+  background-color: rgb(16 20 24 / 0.32);
+}
+
+.shortcuts__title {
+  margin: 0 0 var(--space-md) 0;
+  font-size: var(--text-md);
+}
+
+/* Key column then meaning column. A grid rather than a <dl>'s default block
+   flow, so every key sits on one left edge and the meanings line up with each
+   other — which is most of what makes a list of shortcuts scannable. */
+.shortcuts__list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-2xs) var(--space-md);
+  margin: 0;
+  align-items: baseline;
+}
+
+.shortcuts__keys {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3xs);
+}
+
+.shortcuts__keys kbd {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-sumi);
+  padding: var(--space-3xs) var(--space-2xs);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-sm);
+  line-height: 1;
+}
+
+.shortcuts__text {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-soft);
+}
+
+/* The way out, said the way the app says it everywhere else: quiet text, not a
+   filled button. Escape closes this natively, so the control is a second door
+   for a pointer rather than the only one. */
+.shortcuts__close {
+  margin-block-start: var(--space-lg);
+  padding: var(--space-3xs) 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-sumi-faint);
+  transition: color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .shortcuts__close:hover {
+    color: var(--color-shu);
+  }
+}
+
+.shortcuts__close:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}

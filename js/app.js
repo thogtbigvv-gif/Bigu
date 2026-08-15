@@ -33,6 +33,7 @@ import { initLessons } from './lessons.js';
 import { initReading } from './reading.js';
 import { initSettings } from './settings.js';
 import { initIntro } from './logoIntro.js';
+import { initKeyboard } from './keyboard.js';
 
 /* -- Storage ------------------------------------------------------------------
    Confirms localStorage actually works (Safari private mode and locked-down
@@ -116,6 +117,11 @@ function init() {
 
   initRouter();
   initNav();
+
+  /* After the router and the nav, because it defers to both: it reads which
+     view is on screen, and it stands down while the drawer is open. Binding
+     one document listener costs nothing and needs no view to have rendered. */
+  initKeyboard();
 
   // After the router, so the first view is already rendering while the four
   // content files this needs are still in flight. Nothing on screen depends

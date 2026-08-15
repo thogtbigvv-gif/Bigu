@@ -624,6 +624,146 @@
   outline-offset: 3px;
 }
 
+/* -- The two foot controls ---------------------------------------------------------- */
+.reading-article__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-sm) var(--space-lg);
+}
+
+/* The 縦書き toggle. Same ambient text treatment as the reveal beside it — this
+   is a way of looking at the page, not a widget on it — with the Japanese
+   label leading and the Mongolian saying what it does. */
+.reading-article__vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3xs);
+  padding: var(--space-3xs) 0;
+  text-align: start;
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+.reading-article__vertical-label {
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+  transition: color var(--transition-fast);
+}
+
+.reading-article__vertical-note {
+  font-size: var(--text-xs);
+  color: var(--color-sumi-faint);
+}
+
+@media (hover: hover) {
+  .reading-article__vertical:hover .reading-article__vertical-label {
+    color: var(--color-shu);
+  }
+}
+
+.reading-article__vertical[aria-pressed="true"] .reading-article__vertical-label {
+  color: var(--color-shu);
+}
+
+.reading-article__vertical:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* -- 縦書き --------------------------------------------------------------------------
+   The one structural form the app was missing, and the only one that is not
+   ornament: this is how the language is set in a book.
+
+   `vertical-rl` on the list turns the passage's block axis ninety degrees. The
+   sentences were a column flowing down; they become columns flowing from the
+   right edge leftward, each sentence reading top to bottom. Nothing about the
+   markup changes and nothing is rebuilt — the flex column below is the same
+   flex column, laid out along a different axis.
+
+   Almost every offset in this file survives that rotation without a line of
+   its own, because they were written as logical properties: the gloss's
+   `margin-inline-start` and `border-inline-start` follow the inline axis, so a
+   rule that hung off the left of a horizontal line hangs off the top of a
+   vertical one, which is where a note belongs in a vertical page too.
+
+   `text-orientation: mixed` is stated rather than left to the initial value,
+   because it is a decision: it stands kana and kanji upright and lays Latin
+   runs on their side, which is what a Japanese book does with an English word.
+   `upright` would stack a Latin word's letters one above another, which is a
+   shop sign, not a sentence.
+
+   DIGITS, checked rather than assumed. Rendered three ways in this mode:
+
+     １９８４年に２５人   full-width digits stand upright, one per line, exactly
+                        as a book sets them
+     1984年に25人       half-width ASCII digits lie on their side — correct
+                        behaviour for `mixed`, and not how a year is set
+     <span>25</span>人  with text-combine-upright, the pair sets upright in one
+                        em square: 縦中横, which is what print does
+
+   No passage in data/reading.json contains a digit or a Latin character in its
+   Japanese, so nothing in the app renders wrong today. `text-combine-upright:
+   digits 2` below is insurance for the day one does: it asks the engine to set
+   runs of one or two digits as 縦中横 automatically. Chromium does not support
+   the `digits` form yet (it supports `all`, which needs a span around every
+   number and therefore a change to the data); Firefox does. An engine that
+   does not understand the value drops the declaration and the digits simply
+   lie on their side as they do now, so this costs nothing and quietly comes
+   right where it is understood.
+   ------------------------------------------------------------------------------------ */
+.reading-article--vertical .reading-article__sentences {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  text-combine-upright: digits 2;
+  /* The inline axis is now vertical, so this is the *measure* — the height a
+     column runs before it wraps — rather than a box height. Bounded above so a
+     desktop does not set a forty-character column, and below so a short phone
+     still gets a page rather than a strip. dvh because the whole point on a
+     phone is the height actually available under the browser chrome. */
+  block-size: auto;
+  height: clamp(20rem, 62dvh, 34rem);
+  /* The passage now overflows sideways, and it fills from the right, so this
+     is the scroller and it starts at the right-hand edge. */
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Everything that is not the passage comes back to horizontal. A Mongolian
+   translation rotated ninety degrees is not a translation any more, and a line
+   number laid on its side is a glyph. */
+.reading-article--vertical .reading-sentence__index,
+.reading-article--vertical .reading-article__hint,
+.reading-article--vertical .reading-article__done {
+  writing-mode: horizontal-tb;
+}
+
+/* The gloss, and it is the one part of this that needed a decision rather than
+   a rotation.
+
+   `flex-direction: column` under vertical-rl runs along the block axis, which
+   is now horizontal and right-to-left — so an opened gloss lands to the *left*
+   of the sentence it belongs to, which is where a note belongs on a page that
+   reads right to left. That part is free.
+
+   What is not free is its size. Left horizontal and unbounded, the Mongolian
+   line takes as much width as it wants, and width in this mode is the axis the
+   columns advance along: one open gloss pushed the whole passage sideways far
+   enough that the first sentence sat off the left edge of the scroller. A
+   definite inline-size is what makes it a note in a margin rather than a
+   sentence that happens to be sideways.
+
+   The whole block goes horizontal, kana reading included. The reading is
+   apparatus rather than passage — the thing you consult, not the thing you are
+   reading — and a note that is half vertical and half horizontal is harder to
+   take in than one that is simply a note. */
+.reading-article--vertical .reading-sentence__gloss {
+  writing-mode: horizontal-tb;
+  inline-size: 14rem;
+}
+
 /* -- Completed ------------------------------------------------------------------------
    One Japanese word and one sentence over a hairline. It is the end of a
    passage, not the end of a level: no score, no streak, no button, and
