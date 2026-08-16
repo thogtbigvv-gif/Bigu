@@ -138,7 +138,7 @@
    paragraph of history. */
 .practice__history-score {
   color: var(--color-sumi-soft);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }

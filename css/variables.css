@@ -86,17 +86,26 @@
      against it will be matched down to 600 rather than synthesised bold, which
      is the right outcome for a hand face — a faux-bold Klee One smears.
 
-     NOTE for Task C: neither of these paints yet. typography.css builds
-     --font-jp-stack and --font-body-stack with the platform faces (Hiragino,
-     Yu Gothic, -apple-system) ahead of these tokens, so on Mac and Windows the
-     system font still wins and the downloaded families are fetched and unused.
-     Moving --font-jp and --font-body to the front of those two stacks is a
-     typography.css edit and out of scope here.
+     EACH OF THESE NAMES ONE FAMILY AND ENDS THERE. No generic tail, and that is
+     load-bearing rather than tidiness. A generic family always matches, so a
+     generic anywhere in a list ends the list: when these tokens carried their
+     own `serif` / `sans-serif` / `monospace`, every composed declaration in the
+     app — `var(--font-display), var(--font-jp-stack)`, eleven of them, plus
+     `var(--font-mono), var(--font-jp-stack)` — was silently truncated at the
+     generic and never reached the Japanese faces written after it. Measured
+     rather than reasoned: the kanji detail readings were being painted by
+     WenQuanYi Zen Hei, a *Chinese* face, because the stack's own fallbacks were
+     unreachable and the engine went to its generic monospace instead.
+
+     So the rule is: a token names a family, a -stack adds the fallbacks and the
+     generic. typography.css builds --font-jp-stack, --font-body-stack and
+     --font-mono-stack from these; use a -stack anywhere the declaration is the
+     last word on what paints.
      -------------------------------------------------------------------------- */
-  --font-jp: 'Klee One', serif;                       /* headwords, kanji, examples */
-  --font-body: 'Zen Kaku Gothic New', sans-serif;     /* all UI copy */
-  --font-display: 'Zen Kaku Gothic New', sans-serif;  /* headings, brand mark */
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;  /* readings, level tags */
+  --font-jp: 'Klee One';                 /* headwords, kanji, examples */
+  --font-body: 'Zen Kaku Gothic New';    /* all UI copy */
+  --font-display: 'Zen Kaku Gothic New'; /* headings, brand mark */
+  --font-mono: 'JetBrains Mono';         /* readings, level tags */
 
   /* -- Typography: scale (restrained, rounded to practical rem values) --------
      The scale used to stop at 39px, which meant the largest thing the app could

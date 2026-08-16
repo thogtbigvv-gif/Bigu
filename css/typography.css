@@ -6,26 +6,42 @@
    ========================================================================== */
 
 /* -- Font stacks -------------------------------------------------------------
-   Native OS fonts render Japanese glyphs faster and closer to how the
-   reader already reads on their own device, so they come first: Hiragino
-   ships on every Mac and iPhone, Yu Gothic on every Windows since 8.1.
+   The chosen face first, the reader's own device second.
 
-   --font-jp (Noto Sans JP) sits fifth and is no longer *fetched* — it was
-   the largest asset in the app by a wide margin, a CJK face at three
-   weights, downloaded on every load and then never used to paint a glyph
-   on any of those platforms. It stays in the stack because a locally
-   installed copy is common on Linux and picks up for free; when it isn't
-   installed the stack falls through to Meiryo and then the system sans.
+   These stacks used to lead with the platform faces — Hiragino on every Mac and
+   iPhone, Yu Gothic on every Windows since 8.1 — on the argument that a reader
+   is most fluent in the face they already read everything else in. That
+   argument is real, and it is the right default for an app with no opinion
+   about its own typography. This app has one. --font-jp is Klee One, a Japanese
+   schoolbook hand, picked so a headword reads as something being taught; the
+   platform gothics are the faces of the settings screen the app is trying not
+   to be. Leading with them meant the choice was made in variables.css and
+   overruled here, and the downloaded families were fetched on every load and
+   then never painted a glyph on any device the developer owns.
+
+   So the order is the choice first and the familiar face as fallback, which is
+   what a fallback is for. The platform names stay exactly as they were and in
+   the same order; they now catch the glyphs Klee One and Zen Kaku Gothic New do
+   not cover, and the whole of both stacks if the webfont never arrives.
+
+   Each stack ends in a generic, and the generic is the only one in it — see the
+   note in variables.css for why the family tokens no longer carry their own.
    ----------------------------------------------------------------------------- */
 :root {
   --font-jp-stack:
+    var(--font-jp),
     "Hiragino Sans", "Hiragino Kaku Gothic ProN",
-    "Yu Gothic Medium", "Yu Gothic",
-    var(--font-jp), Meiryo, sans-serif;
+    "Yu Gothic Medium", "Yu Gothic", Meiryo,
+    serif;
 
   --font-body-stack:
-    -apple-system, BlinkMacSystemFont,
-    var(--font-body), "Segoe UI", Roboto, sans-serif;
+    var(--font-body),
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    sans-serif;
+
+  --font-mono-stack:
+    var(--font-mono),
+    ui-monospace, monospace;
 }
 
 /* -- Document defaults --------------------------------------------------------- */
@@ -55,16 +71,14 @@ body {
 }
 
 /* -- Headings ---------------------------------------------------------------------
-   The display face (Shippori Mincho) is deliberately rare. It earns its
-   emphasis by only appearing in three roles across the whole app:
-
-     1. headings — the page's structure,
-     2. the brand mark,
-     3. Japanese headwords — the content the app is actually about.
-
-   Anything else that wants weight uses the body face or the mono face.
-   A display face used on seven different element types stops distinguishing
-   any of them; it just becomes the app's font.
+   --font-display is Zen Kaku Gothic New, the same family as --font-body. It was
+   Shippori Mincho, a display serif that earned its keep by appearing in only
+   three roles — headings, the brand mark, Japanese headwords — and the note
+   here used to argue for exactly that restraint. It no longer applies: since
+   the palette change the app has one gothic for its interface and one hand for
+   its Japanese, and a heading is distinguished by size and weight rather than
+   by a third family. The two tokens are kept separate because the roles are
+   separate and one may diverge again, not because they currently differ.
    ------------------------------------------------------------------------------------- */
 h1,
 h2,
@@ -72,7 +86,10 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: var(--font-display);
+  /* Terminated by the body stack rather than left bare: --font-display names a
+     family and nothing else now, and a heading in Mongolian needs somewhere to
+     go for the Cyrillic Zen Kaku Gothic New does not carry. */
+  font-family: var(--font-display), var(--font-body-stack);
   font-weight: var(--weight-bold);
   line-height: var(--leading-tight);
   color: var(--color-sumi);
@@ -119,8 +136,11 @@ h6 {
   font-weight: var(--weight-medium);
 }
 
-/* Japanese headings keep the display face but fall back through the
-   Japanese stack for glyphs Shippori Mincho doesn't cover.
+/* Japanese headings keep the display face but fall back through the Japanese
+   stack for glyphs Zen Kaku Gothic New doesn't cover — which is what this
+   declaration always said and, until --font-display stopped carrying its own
+   `sans-serif`, never did: the generic matched everything and the Japanese
+   stack after it was unreachable.
 
    Tracking goes back to zero here. CJK glyphs are drawn on a full em square
    with their breathing room already inside it, so the negative tracking that
@@ -202,10 +222,21 @@ rt:lang(ja) {
   user-select: none;
 }
 
-/* -- Readings and level tags -------------------------------------------------------- */
+/* -- Readings and level tags --------------------------------------------------------
+   The mono face for the Latin and the digits, the Japanese stack for the kana —
+   the same two-part family kanji.css already writes for the detail panel, and
+   for the same reason. A reading is mostly kana and JetBrains Mono has none of
+   it, so the whole kana half of every readings row in the app was landing on
+   whatever the engine picks for generic `monospace`: measured here, WenQuanYi
+   Zen Hei, a Chinese face, setting Japanese. Naming the Japanese stack puts the
+   kana in --font-jp and leaves the mono doing the part it can actually do.
+
+   Not --font-mono-stack, which ends in `monospace` and would keep the kana on
+   the generic; the jp stack supplies the terminator instead.
+   ------------------------------------------------------------------------------------ */
 .reading,
 .jlpt-tag {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono), var(--font-jp-stack);
   font-size: var(--text-sm);
   letter-spacing: var(--tracking-wide);
 }

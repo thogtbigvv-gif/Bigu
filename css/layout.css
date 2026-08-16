@@ -230,7 +230,7 @@
 }
 
 .brand__title-en {
-  font-family: var(--font-display);
+  font-family: var(--font-display), var(--font-body-stack);
   color: var(--color-sumi-soft);
 }
 

@@ -47,7 +47,7 @@
 
 .memory-hero__kicker {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-xs);
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -57,7 +57,7 @@
 .memory-hero__line {
   margin: 0;
   max-width: 22ch;
-  font-family: var(--font-display);
+  font-family: var(--font-display), var(--font-body-stack);
   font-size: var(--text-2xl);
   font-weight: var(--weight-regular);
   line-height: var(--leading-tight);
@@ -262,7 +262,7 @@
 }
 
 .memory-week__initial {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-xs);
   color: var(--color-sumi-faint);
 }
@@ -278,7 +278,7 @@
    worth protecting — and a figure worth protecting is a figure that can be
    lost. It reports the days that happened, in ink, at the size it always was. */
 .memory-week__streak {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-md);
   font-variant-numeric: tabular-nums;
   color: var(--color-sumi);
@@ -349,7 +349,7 @@
    is set in the face the app uses for data. Quiet enough that the shelf
    still reads as a name rather than as a count. */
 .memory-shelf__count {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   color: var(--color-sumi-faint);
@@ -594,7 +594,7 @@
 }
 
 .memory-slip__reading {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-xs);
   color: var(--color-sumi-faint);
   overflow-wrap: anywhere;
@@ -705,7 +705,7 @@
 }
 
 .memory-slip__kind {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);
   color: var(--color-sumi-faint);
@@ -748,7 +748,7 @@
 
 .memory-empty__line {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-display), var(--font-body-stack);
   font-size: var(--text-xl);
   font-weight: var(--weight-regular);
   color: var(--color-sumi);

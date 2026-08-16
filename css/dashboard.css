@@ -239,7 +239,7 @@
    and at 39px that is already emphatic.
    ------------------------------------------------------------------------------------------- */
 .dashboard-streak__count {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-2xl);
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;

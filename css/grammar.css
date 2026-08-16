@@ -104,7 +104,7 @@
 
 .grammar-card__structure {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
 }
 
 /* -- The example, as the card's centre ---------------------------------------------
