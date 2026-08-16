@@ -368,21 +368,6 @@
   border-block-end-color: var(--color-shu);
 }
 
-/* A stage with nothing behind it yet. Four of the six are stubs, and all six
-   used to look like working tabs — so a reader met the same four "coming
-   soon" notes one at a time. A dot, not a disabled state: the tabs still
-   open, still say what is coming, and still take focus. The same fact is on
-   the button as aria-description for anyone who cannot see a 4px circle. */
-.reading-stage__tab--pending::after {
-  content: '';
-  width: 4px;
-  height: 4px;
-  margin-inline-start: var(--space-3xs);
-  border-radius: 50%;
-  background-color: currentColor;
-  opacity: 0.45;
-}
-
 /* -- The sheet ---------------------------------------------------------------------
    Paper and type, and nothing else. It keeps .card's washi-raised ground —
    that is the "soft paper" the whole page is arranged around — and gives up

@@ -1,22 +1,32 @@
 /* ==========================================================================
    reading.js
    Loads data/reading.json and renders it as a browsable passage list
-   inside the #reading view. Selecting a passage opens a per-passage study
-   flow — Article, Vocabulary, Grammar, Questions, Translation, Shadowing —
-   as a tab row over a single swapped panel, same list-to-detail swap
-   lessons.js already uses for its quiz (list/summary hidden, detail panel
-   shown; a "back" button reverses it).
+   inside the #reading view. Selecting a passage opens it as two views of the
+   same sentences — Article and Translation — as a tab row over a single
+   swapped panel, same list-to-detail swap lessons.js already uses for its
+   quiz (list/summary hidden, detail panel shown; a "back" button reverses
+   it).
 
-   Only Article and Translation have real content today; both reuse the
-   same sentence data. Vocabulary, Grammar, Questions, and Shadowing render
-   a "coming soon" note — same empty-state language already used for the
-   Listening/Conversation/Shadowing view stubs in index.html — so a
-   not-yet-built stage never looks broken. Each is a future, separate task:
-   linking passage words to vocabulary.json, linking sentences to
-   grammar.json patterns, a comprehension quiz, and an audio shadowing
-   recorder. Those four are marked `ready: false` below and the tab row says
-   so, rather than offering six identical-looking doors of which four are
-   shut.
+   -- Two stages, not six ------------------------------------------------
+   There were six. Vocabulary, Grammar, Questions and Shadowing each rendered
+   a "coming soon" note and were marked `ready: false`, and the tab row grew a
+   dot to warn the reader which four doors were shut. A marked shut door is
+   still a shut door: four of the six tabs existed only to explain themselves.
+
+   They are gone, and the reason is the data rather than the effort.
+   data/reading.json holds `{id, level, title, titleMn, sentences[{jp, reading,
+   mn}]}` and nothing else — no per-passage word list, no grammar references,
+   no questions, no audio. Vocabulary and Grammar would need either new
+   authored fields or Japanese morphological segmentation the app has no
+   tokenizer for; Questions must be written by hand per passage; Shadowing
+   needs recordings that do not exist in this repo. None of those is close, so
+   none of them is a tab.
+
+   What is left is a real pair rather than a remainder. The Article is the
+   Japanese with its readings and meanings hidden behind a tap; the
+   Translation is every sentence with everything shown at once. One is the
+   exercise and the other is the reference, which is exactly why the Article
+   can afford to hide anything at all.
 
    -- On the Article panel ------------------------------------------------
    The Article used to print every sentence with its full hiragana reading
@@ -67,13 +77,12 @@ function getPassageLevel(passage) {
   return passage.level ?? null;
 }
 
+/* No `ready` flag any more. It existed to mark the four stages that had
+   nothing behind them, and with those gone every stage in this list is a
+   stage — which is the only state a tab row should be able to be in. */
 const STAGES = [
-  { id: 'article', label: 'Article', ready: true },
-  { id: 'vocabulary', label: 'Vocabulary', ready: false },
-  { id: 'grammar', label: 'Grammar', ready: false },
-  { id: 'questions', label: 'Questions', ready: false },
-  { id: 'translation', label: 'Translation', ready: true },
-  { id: 'shadowing', label: 'Shadowing', ready: false },
+  { id: 'article', label: 'Article' },
+  { id: 'translation', label: 'Translation' },
 ];
 
 /* -- What the passage itself can tell us -------------------------------------------
@@ -399,30 +408,19 @@ function createTranslationPanel(passage) {
   return wrap;
 }
 
-function createComingSoonPanel(message) {
-  const p = document.createElement('p');
-  p.className = 'empty-state';
-  p.textContent = message;
-  return p;
-}
+/* One builder per stage, keyed by the same ids STAGES declares — so the tab
+   row and the panel cannot disagree about what exists. There is no default
+   branch: STAGES is the only thing that puts an id into circulation, and a
+   stage listed there without a builder here should be a visible failure
+   during the change that added it, not a "coming soon" note shipped to a
+   reader. */
+const STAGE_PANELS = {
+  article: (passage, state, onChange) => createArticlePanel(passage, state, onChange),
+  translation: (passage) => createTranslationPanel(passage),
+};
 
 function buildStagePanel(stageId, passage, state, onChange) {
-  switch (stageId) {
-    case 'article':
-      return createArticlePanel(passage, state, onChange);
-    case 'translation':
-      return createTranslationPanel(passage);
-    case 'vocabulary':
-      return createComingSoonPanel('Энэ бичвэрийн үгийн задаргаа удахгүй нэмэгдэнэ.');
-    case 'grammar':
-      return createComingSoonPanel('Энэ бичвэрийн хэл зүйн тайлбар удахгүй нэмэгдэнэ.');
-    case 'questions':
-      return createComingSoonPanel('Ойлголтын асуултууд удахгүй нэмэгдэнэ.');
-    case 'shadowing':
-      return createComingSoonPanel('Давтан хэлэх дасгал удахгүй нэмэгдэнэ.');
-    default:
-      return createComingSoonPanel('Энэ шат удахгүй нэмэгдэнэ.');
-  }
+  return STAGE_PANELS[stageId](passage, state, onChange);
 }
 
 /* -- Passage list ------------------------------------------------------------------- */
@@ -580,16 +578,6 @@ function buildStageFlow() {
     button.setAttribute('aria-controls', panel.id);
     button.textContent = stage.label;
 
-    /* A stage with nothing behind it says so on the tab rather than only
-       after it has been opened. Four of the six were stubs and all six
-       looked identical, so every reader discovered the same four dead ends
-       one at a time. The dot is drawn in CSS; the label carries the same
-       fact for a screen reader. */
-    if (!stage.ready) {
-      button.classList.add('reading-stage__tab--pending');
-      button.setAttribute('aria-description', 'Удахгүй нэмэгдэнэ');
-    }
-
     tabs.append(button);
     return button;
   });
@@ -666,10 +654,8 @@ function createStageController(elements, rows, onExit) {
        back to being a pager arrow and reads like one — the pager is still
        an ordinary way to move around a list you have not read.
 
-       Passages have no word list in the data and the per-passage Vocabulary
-       stage is still a stub, so there is nothing honest to point at beyond
-       the next passage. When that stage ships, this is where "review the
-       words from this passage" belongs. */
+       Passages have no word list in the data, so the next passage is the
+       only honest thing to point at. */
     const hasNext = Boolean(rows[index + 1]);
     const promote = complete && hasNext;
     elements.next.classList.toggle('button--primary', promote);

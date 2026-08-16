@@ -128,8 +128,10 @@
          stub) led to a heading and a "coming soon" line — nearly half the
          navigation was a promise the app didn't keep, and a nav where
          clicking might do nothing teaches readers not to explore the parts
-         that work. Those sections still exist further down and are still
-         reachable by hash; they get their nav row back when they ship.
+         that work. Those rows came out first and the sections stayed behind,
+         reachable by hash; the five that never shipped have now gone too, so
+         there is no longer a version of this app in which a route resolves to
+         an apology. Settings did ship and is a row again.
 
          The grouping says what the parts are *to each other*. Five ways of
          meeting Japanese sit under Learn; the two surfaces that ask you to
@@ -434,35 +436,15 @@
           <h1 id="ichibun-heading">Sentence</h1>
         </section>
 
-        <!-- Not in the nav. Bare shells, matching how every other view
-             started out — each is a future initX() task away from real
-             content, and each gets its nav row back when it has some.
-             They stay in the document so the hash still resolves and so
-             the work needed to ship one is visible from here. -->
-        <section id="listening" class="view" hidden aria-labelledby="listening-heading">
-          <h1 id="listening-heading">Listening</h1>
-          <p class="empty-state">Сонсголын дасгал удахгүй нэмэгдэнэ.</p>
-        </section>
-
-        <section id="conversation" class="view" hidden aria-labelledby="conversation-heading">
-          <h1 id="conversation-heading">Conversation</h1>
-          <p class="empty-state">Ярианы дасгал удахгүй нэмэгдэнэ.</p>
-        </section>
-
-        <section id="shadowing" class="view" hidden aria-labelledby="shadowing-heading">
-          <h1 id="shadowing-heading">Shadowing</h1>
-          <p class="empty-state">Давтан хэлэх дасгал удахгүй нэмэгдэнэ.</p>
-        </section>
-
-        <section id="search" class="view" hidden aria-labelledby="search-heading">
-          <h1 id="search-heading">Search</h1>
-          <p class="empty-state">Үг, хэл зүй, ханзыг нэгтгэсэн хайлт удахгүй нэмэгдэнэ.</p>
-        </section>
-
-        <section id="profile" class="view" hidden aria-labelledby="profile-heading">
-          <h1 id="profile-heading">Profile</h1>
-          <p class="empty-state">Профайлын тоо баримт удахгүй нэмэгдэнэ.</p>
-        </section>
+        <!-- Listening, Conversation, Shadowing, Search and Profile stood here
+             as five bare shells: a heading and a line saying the feature was
+             coming. None was in the nav, so the only way to reach one was to
+             type its hash, and what you got for knowing it was an apology.
+             Three of them need audio this repo does not contain, and a room
+             with five doors that do not open is not a room with five rooms
+             behind it. router.js reads whichever .view sections exist and
+             sends an unknown hash to Home, so the old routes now land
+             somewhere real rather than on a shell. -->
 
         <!-- Real, and the only home for its two controls. Appearance and
              backup/restore used to live on the Dashboard, which is a status
