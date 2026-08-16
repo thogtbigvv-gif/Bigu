@@ -22,6 +22,7 @@ import {
   journal,
   practice,
   favorites,
+  sentences,
   clearAll,
   isAvailable as isStorageAvailable,
 } from './storage.js';
@@ -186,6 +187,7 @@ function buildBackupPayload() {
       journal: journal.getAll(),
       practice: practice.getAll(),
       favorites: favorites.getAll(),
+      sentences: sentences.getAll(),
     },
   };
 }
@@ -237,6 +239,10 @@ function restoreBackup(payload) {
   // into an empty map, which is the correct reading of "this file predates
   // keeping things".
   favorites.replaceAll(data.favorites);
+  // Same guard as favorites above: absent in any backup taken before this
+  // store existed, and replaceAll turns undefined into an empty list rather
+  // than writing garbage.
+  sentences.replaceAll(data.sentences);
 }
 
 function setRestoreStatus(statusEl, message, isError) {

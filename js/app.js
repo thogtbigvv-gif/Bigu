@@ -32,6 +32,7 @@ import { initMemory } from './memory.js';
 import { initJournal } from './journal.js';
 import { initLessons } from './lessons.js';
 import { initReading } from './reading.js';
+import { initIchibun } from './ichibun.js';
 import { initSettings } from './settings.js';
 import { initIntro } from './logoIntro.js';
 import { initKeyboard } from './keyboard.js';
@@ -98,6 +99,7 @@ const VIEW_INITIALIZERS = {
   journal: initJournal,
   lessons: initLessons,
   reading: initReading,
+  ichibun: initIchibun,
   kakitori: initKakitori,
   settings: initSettings,
 };

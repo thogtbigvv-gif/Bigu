@@ -101,6 +101,7 @@
   <link rel="stylesheet" href="css/intro.css" />
   <link rel="stylesheet" href="css/home.css" />
   <link rel="stylesheet" href="css/kakitori.css" />
+  <link rel="stylesheet" href="css/ichibun.css" />
   <link rel="stylesheet" href="css/keyboard.css" />
 </head>
 <body>
@@ -176,6 +177,7 @@
                 <li><a class="site-nav__link site-nav__sublink" href="#grammar" data-view="grammar">Grammar</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#kanji" data-view="kanji">Kanji</a></li>
                 <li><a class="site-nav__link site-nav__sublink" href="#reading" data-view="reading">Reading</a></li>
+                <li><a class="site-nav__link site-nav__sublink" href="#ichibun" data-view="ichibun">Sentence</a></li>
               </ul>
             </div>
           </li>
@@ -423,6 +425,15 @@
           <h1 id="reading-heading">Reading</h1>
         </section>
 
+        <!-- 一文. Under Learn, and last in it: every other row here opens a
+             closed set the app already holds, and this one is the only way
+             Japanese from outside gets in at all. It belongs beside Reading
+             because it is the same act — meeting a sentence — with the
+             sentence supplied by the reader instead of by data/. -->
+        <section id="ichibun" class="view" hidden aria-labelledby="ichibun-heading">
+          <h1 id="ichibun-heading">Sentence</h1>
+        </section>
+
         <!-- Not in the nav. Bare shells, matching how every other view
              started out — each is a future initX() task away from real
              content, and each gets its nav row back when it has some.
@@ -508,7 +519,7 @@
             class="thumb-nav__link"
             href="#lessons"
             data-view="lessons"
-            data-view-group="lessons vocabulary grammar kanji reading"
+            data-view-group="lessons vocabulary grammar kanji reading ichibun"
           >
             <svg class="thumb-nav__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
               <path d="M12 7c-2-1.6-4.4-2.3-8-2.4v12.6c3.6.1 6 .8 8 2.4 2-1.6 4.4-2.3 8-2.4V4.6c-3.6.1-6 .8-8 2.4z" />
