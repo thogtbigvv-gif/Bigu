@@ -1,0 +1,363 @@
+/* ==========================================================================
+   ichibun.css
+   一文 — the door Japanese comes in through.
+
+   The whole view is a box you paste into and then the sentence itself, set as
+   running text. Every character in it is its own control, which is a lot of
+   controls on one screen, so the entire design problem here is making a hundred
+   of them look like a paragraph. They get no border, no background, no padding
+   that would separate them, and they inherit their type from the paragraph —
+   the only thing that says "interactive" is what happens when you point at one
+   or focus it.
+
+   No grid of tiles. A sentence broken into a grid of boxes is a word list, and
+   a word list is the one thing this view is not: the reason to paste a line in
+   is that it is a line, with its own order and its own rhythm, and the layout
+   has to keep that.
+
+   The absent line — "this character isn't in the set" — carries no
+   --color-shu, no icon and no border. It is an answer, not an error.
+   ========================================================================== */
+
+.ichibun {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xl);
+  max-width: 46rem;
+}
+
+/* -- Paste --------------------------------------------------------------------
+   Same composer shape as Journal's, one step quieter: this box is a doorway,
+   not a writing surface, and the reader's attention is meant to land on what
+   comes out of it rather than on it.
+   ----------------------------------------------------------------------------- */
+.ichibun__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+/* Japanese in the box as soon as it is pasted, rather than after a submit —
+   the field is the only place the reader's own text lives before analysis, and
+   seeing it in the body face there and the JP face below would read as two
+   different sentences. */
+.ichibun__input {
+  font-family: var(--font-jp), var(--font-jp-stack);
+  line-height: var(--leading-normal);
+  resize: vertical;
+  min-height: 5.5rem;
+}
+
+.ichibun__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+/* -- What the app can explain -------------------------------------------------
+   A row of the characters from this text that data/kanji.json holds. Set as
+   chips because they are a set and not a sentence — this is the one place in
+   the view where a grid is the honest shape, since order here means nothing
+   but first appearance.
+   ----------------------------------------------------------------------------- */
+.ichibun__found {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.ichibun__found-label {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+}
+
+.ichibun__found-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+.ichibun__found-chip {
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: 1;
+  padding: var(--space-2xs) var(--space-xs);
+  color: var(--color-sumi);
+  background-color: var(--color-paper-raised);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .ichibun__found-chip:hover {
+    border-color: var(--color-sumi-faint);
+  }
+}
+
+/* -- The text -----------------------------------------------------------------
+   `pre-wrap` is load-bearing, not cosmetic: ichibun.js keeps the pasted
+   newlines as their own text nodes precisely so a three-line lyric stays three
+   lines, and `pre-wrap` is what makes the browser honour them. It also keeps
+   any spaces the reader pasted, which in mixed Japanese/Latin text are the
+   only word boundaries there are.
+   ----------------------------------------------------------------------------- */
+.ichibun__reader {
+  padding: var(--space-lg);
+  background-color: var(--color-paper-raised);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.ichibun__text {
+  margin: 0;
+  font-family: var(--font-jp), var(--font-jp-stack);
+  /* Reading size, not display size. This is a sentence to be read, and the
+     32em cap is the same measure Reading uses — one CJK glyph is 1em, so the
+     line breaks at roughly the same place a book would break it. */
+  font-size: var(--text-md);
+  line-height: var(--leading-loose);
+  max-width: 32em;
+  white-space: pre-wrap;
+  word-break: normal;
+  overflow-wrap: anywhere;
+}
+
+/* A control that has to disappear into a paragraph.
+
+   These are spans carrying role="button", not <button> elements, and the
+   reason is line breaking — see the note in ichibun.js, which has the measured
+   comparison. The short version: Blink computes `display: inline-block` on a
+   button no matter what the cascade asks for, and a run of inline-block boxes
+   is not a run of text as far as Japanese line breaking is concerned, so 」
+   ends up at the head of a line. An inline span breaks where prose breaks.
+
+   `display: inline` is therefore load-bearing here rather than a default worth
+   restating, and everything else is what a span does not get for free: the
+   pointer, the focus ring that typography.css only hands to <a> and <button>. */
+.ichibun__char {
+  display: inline;
+  cursor: pointer;
+  /* Not redundant, and the same 0-1-0 trap documented over `rt` in
+     typography.css. `:lang(ja)` sets font-family and font-feature-settings, and
+     lang is inherited, so it matches each character span *directly* — the span
+     was resolving to --font-jp-stack with palt off while the paragraph around
+     it resolved to --font-jp with palt on, which is two typefaces in one
+     sentence. Inheriting explicitly wins on source order and makes the
+     character typographically identical to its paragraph whatever either rule
+     resolves to. font-feature-settings is named separately because the `font`
+     shorthand resets it. */
+  font: inherit;
+  font-feature-settings: inherit;
+  border-radius: var(--radius-sm);
+  /* The hint that this is touchable at all: a hairline under the character,
+     transparent until pointed at. Drawn as a text decoration rather than a
+     border so it follows the glyph across a line break instead of boxing it. */
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.3em;
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .ichibun__char:hover {
+    text-decoration-color: var(--color-line);
+  }
+}
+
+/* The same ring every other control in the app draws, restated because
+   typography.css scopes its rule to `a` and `button` and this is neither.
+   Offset inward rather than out: at --leading-loose a 2px ring 2px clear of a
+   glyph still lands inside its own line box, where an outward one on a
+   character in the line above would overlap it. */
+.ichibun__char:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 1px;
+}
+
+/* The character currently in the panel below. This is the one piece of state
+   in the view worth marking, and it is marked by weight and a visible rule
+   rather than by colour — a red character inside a pasted sentence would read
+   as the app correcting the sentence. */
+.ichibun__char.is-picked {
+  font-weight: var(--weight-bold);
+  text-decoration-color: var(--color-sumi-faint);
+}
+
+/* -- The entry ----------------------------------------------------------------
+   What the app knows about one character. A hairline panel rather than the
+   raised sheet above it — the sentence is the thing on this screen, and the
+   lookup is a note in the margin of it.
+
+   One panel, one shape, both outcomes. A found character and an absent one
+   render into the same box with the same border and the same padding; only the
+   lines inside differ. That is the whole reason the absent case does not read
+   as a failure — it is not a different component, it is this one with less in
+   it.
+   ----------------------------------------------------------------------------- */
+.ichibun__entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.ichibun__entry-char {
+  margin: 0;
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-3xl);
+  /* Klee One resolves bold at this size into a filled shape — a 60px 日 with
+     weight 600 loses its counters and becomes a rectangle. Regular is the only
+     weight a display-size kanji can be set in. */
+  font-weight: var(--weight-regular);
+  line-height: 1;
+}
+
+.ichibun__entry-meaning {
+  margin: 0;
+  font-size: var(--text-md);
+}
+
+.ichibun__entry-readings {
+  margin: 0;
+  color: var(--color-sumi-soft);
+}
+
+.ichibun__entry-example {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-3xs) var(--space-sm);
+  margin-top: var(--space-2xs);
+}
+
+.ichibun__entry-example p {
+  margin: 0;
+}
+
+.ichibun__entry-example p:lang(ja) {
+  font-family: var(--font-jp), var(--font-jp-stack);
+}
+
+/* One line, at the weight of a caption, in the same grey every other secondary
+   line in the app uses. Not --color-shu, not --color-error, no border and no
+   icon: the dataset holds 132 characters and most of what a reader pastes will
+   not be in it, so this line is the *common* case and must not look like a
+   fault. */
+.ichibun__entry-absent {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+}
+
+/* -- Kept ---------------------------------------------------------------------
+   Lines the reader chose to keep. No dates, no numbering, no count — a shelf
+   does not tell you how full it is, and a date on a saved sentence turns a
+   collection into a log with gaps in it.
+   ----------------------------------------------------------------------------- */
+.ichibun__kept {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.ichibun__kept-heading {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-sumi-faint);
+}
+
+.ichibun__kept-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.ichibun__kept-item {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-sm);
+  padding: var(--space-sm) 0;
+  border-bottom: 1px solid var(--color-line);
+}
+
+.ichibun__kept-item:last-child {
+  border-bottom: 0;
+}
+
+/* The sentence is the control — pressing it puts the line back in the reader
+   above. Left-aligned and allowed to wrap, because a kept sentence is a
+   sentence and truncating it to one line would hide the half worth keeping. */
+.ichibun__kept-text {
+  flex: 1;
+  text-align: start;
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-sumi);
+  transition: color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .ichibun__kept-text:hover {
+    color: var(--color-sumi-soft);
+  }
+}
+
+.ichibun__kept-remove {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .ichibun__kept-remove:hover {
+    color: var(--color-sumi);
+  }
+}
+
+/* -- Phone --------------------------------------------------------------------
+   The reader loses its raised panel and keeps only its vertical padding. At a
+   360px viewport the content column is 328px, which at 20px Japanese is a
+   little over sixteen characters a line; put the card back and its --space-lg
+   inset on both sides takes 64 of those pixels, dropping the measure to
+   thirteen. A raised surface is not worth three characters a line on the one
+   screen size where the line is already short.
+   ----------------------------------------------------------------------------- */
+@media (max-width: 40rem) {
+  .ichibun {
+    gap: var(--space-xl);
+  }
+
+  .ichibun__reader {
+    padding: var(--space-md) 0;
+    background: none;
+    box-shadow: none;
+  }
+
+  .ichibun__entry {
+    padding: var(--space-md);
+  }
+
+  /* The remove control drops under the sentence rather than competing with it
+     for a narrow line. */
+  .ichibun__kept-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2xs);
+  }
+}

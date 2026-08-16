@@ -176,14 +176,21 @@ const settings = createMapStore('settings');
 const progress = createMapStore('progress');
 const journal = createListStore('journal');
 const practice = createListStore('practice');
+/* Sentences the reader brought in from outside the app — see ichibun.js. A
+   list rather than a map for the same reason journal is: they are kept in the
+   order they arrived and never looked up by a fixed key. */
+const sentences = createListStore('sentences');
 /* id → true for anything the reader has chosen to keep. A map rather than a
    list so the "is this one kept?" lookup every card does is a key check, and
    so un-keeping is a delete instead of a filter. */
 const favorites = createMapStore('favorites');
 
 function clearAll() {
-  const results = [settings.clear(), progress.clear(), journal.clear(), practice.clear(), favorites.clear()];
+  const results = [
+    settings.clear(), progress.clear(), journal.clear(),
+    practice.clear(), favorites.clear(), sentences.clear(),
+  ];
   return results.every(Boolean);
 }
 
-export { isAvailable, settings, progress, journal, practice, favorites, clearAll };
+export { isAvailable, settings, progress, journal, practice, favorites, sentences, clearAll };

@@ -1,0 +1,184 @@
+/* ==========================================================================
+   kakitori.css
+   書き取り — the writing sheet.
+
+   The whole view is one square and four quiet words under it. Nothing here
+   frames, scores or decorates: the sheet is a lighter field with a hairline
+   round it, the way a page of practice paper is a page, and the loudest thing
+   on screen is whatever the reader has just drawn.
+
+   No --color-shu anywhere in this file except the focus ring, which inherits
+   it from --focus-ring. There is nothing on this screen for the app's "this
+   one" colour to point at — no current item, no answer, no state worth
+   marking. An empty sheet is not a task waiting to be completed.
+   ========================================================================== */
+
+.kakitori {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.kakitori__levels {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
+.kakitori__meta {
+  margin: 0;
+  text-align: center;
+}
+
+/* -- The prompt ---------------------------------------------------------------
+   What the character is, without being it. Both lines are small and centred
+   over the sheet: this is the question, and a question set at the size of an
+   answer stops being one.
+   ----------------------------------------------------------------------------- */
+.kakitori__prompt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3xs);
+  text-align: center;
+}
+
+/* Carries .reading too, which is where the mono face comes from — a reading is
+   data here exactly as it is on a kanji row or a quiz card. */
+.kakitori__readings {
+  margin: 0;
+  color: var(--color-sumi-soft);
+}
+
+.kakitori__meaning {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+}
+
+/* -- The sheet ----------------------------------------------------------------
+   Square, and as large as the viewport comfortably allows: `min` against both
+   axes so the sheet is bounded by whichever runs out first, with room left for
+   the prompt above and the controls below. A drawing surface that needs the
+   page scrolled to see its own bottom edge is not a drawing surface.
+
+   The stack is two layers in one square — the revealed character underneath,
+   the canvas over it — so a reader comparing the two is looking at one place
+   rather than two.
+   ----------------------------------------------------------------------------- */
+.kakitori__pad {
+  position: relative;
+  display: grid;
+  width: min(100%, 60vh, 32rem);
+  aspect-ratio: 1;
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.kakitori__pad > * {
+  grid-area: 1 / 1;
+}
+
+/* touch-action: none is the load-bearing line on a phone. Without it the
+   browser claims a drag on the canvas as a scroll gesture, the page moves
+   under the finger, and the stroke stops wherever the browser decided the
+   gesture was a pan instead. It also has to be CSS rather than
+   preventDefault() in the handler, because the decision is made before the
+   first pointermove is dispatched. */
+.kakitori__canvas {
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  cursor: crosshair;
+}
+
+/* The character, revealed. Set at the sheet's own size in the textbook hand so
+   the comparison is like for like — the reader's stroke against the shape it
+   was reaching for, in the same square, at the same scale.
+
+   Faint on purpose. At full ink it would read as the correct answer laid over
+   a wrong one; at this weight it is a shape showing through paper, which is
+   what tracing paper does and what a comparison wants. */
+.kakitori__ghost {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  font-family: var(--font-jp), var(--font-jp-stack);
+  /* Sized to the square rather than to the type scale: this is not a step in
+     the app's hierarchy, it is a character filling a sheet. */
+  font-size: 68cqmin;
+  line-height: 1;
+  color: var(--color-sumi);
+  opacity: 0.22;
+}
+
+.kakitori__pad {
+  container-type: size;
+}
+
+/* -- Controls -----------------------------------------------------------------
+   Four ambient text controls on one centred row, the same treatment the
+   reading view gives its own — a way of working on the sheet, not a toolbar
+   over it. None of them is filled, and none of them is the app's accent.
+   ----------------------------------------------------------------------------- */
+.kakitori__controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-sm) var(--space-lg);
+}
+
+.kakitori__control {
+  padding: var(--space-3xs) 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+  border-radius: var(--radius-sm);
+  transition: color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .kakitori__control:not(:disabled):hover {
+    color: var(--color-sumi);
+  }
+}
+
+/* Nothing to undo and nothing to clear is a fact about the sheet, not a
+   refusal — so the control fades rather than being taken away, and the row
+   keeps its shape while the reader draws. */
+.kakitori__control:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.kakitori__control:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 3px;
+}
+
+/* The two that end an attempt read a shade stronger than the two that edit it
+   — still ink, still no fill, still nothing the accent would point at. */
+.kakitori__control--reveal,
+.kakitori__control--next {
+  color: var(--color-sumi-soft);
+}
+
+/* -- Phone ---------------------------------------------------------------------
+   The sheet takes what is left after the prompt and the controls. 52vh rather
+   than 60 because the bottom bar and the browser's own chrome are both in the
+   way on a phone, and a square that runs under either is a square with a
+   corner the reader cannot draw in.
+   ------------------------------------------------------------------------------ */
+@media (max-width: 480px) {
+  .kakitori__pad {
+    width: min(100%, 52vh);
+  }
+
+  .kakitori__controls {
+    gap: var(--space-sm) var(--space-md);
+  }
+}
