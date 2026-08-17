@@ -310,38 +310,6 @@
   gap: var(--space-sm);
 }
 
-.kanji-detail__related {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
-}
-
-/* A related character the dataset doesn't hold yet. It is a <span> carrying
-   .toggle-chip purely for the shape — there is nowhere for it to jump to — so
-   it is dimmed and given the default cursor.
-
-   That was not enough on its own. .toggle-chip's :hover and :active are written
-   against the class, and a class matches a span exactly as happily as a button:
-   pointing at a chip the app had just declared unavailable washed it shu and
-   moved its border, and holding the mouse down settled it a pixel like a real
-   control. Dimming something and then having it answer to the pointer is worse
-   than not dimming it — the reader believes the hover over the opacity, tries
-   it, and nothing happens.
-   Both states are turned off at 0-3-0, which clears .toggle-chip's own 0-2-0
-   rules. Focus needs no rule: a span is not focusable. */
-.kanji-detail__related [aria-disabled="true"] {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.kanji-detail__related [aria-disabled="true"]:hover,
-.kanji-detail__related [aria-disabled="true"]:active {
-  background-color: transparent;
-  border-color: var(--color-line);
-  color: var(--color-sumi-soft);
-  transform: none;
-}
-
 /* -- Mobile spacing ------------------------------------------------------------------
    Last block in the file on purpose: it turns off .kanji-card__example, which
    is declared above it at the same specificity, and a media query carries no

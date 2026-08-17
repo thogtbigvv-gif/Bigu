@@ -25,7 +25,9 @@ import { createStudyControls } from './studyControls.js';
 import {
   collectFacets,
   createContentLoader,
+  createEntryLink,
   createFacetChips,
+  createLinkGroup,
   createSearchField,
   debounce,
   describeLevelSpan,
@@ -34,10 +36,14 @@ import {
   jlptLevelOf,
   levelBucketOf,
   loadIntoView,
+  loadLinkIndex,
+  revealEntry,
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
+import { registerItemHandler } from './router.js';
+import { kanjiInWord, routeTo } from './links.js';
 
 const DATA_URL = 'data/vocabulary.json';
 const VIEW_ID = 'vocabulary';
@@ -51,6 +57,10 @@ const PAGE_SIZE = 24;
 /* -- Data ------------------------------------------------------------------------- */
 
 const loadVocabulary = createContentLoader(DATA_URL, 'vocabulary');
+
+/* Set by renderList once the list exists; read by the router's item handler.
+   See the same note in kanji.js. */
+let showEntry = null;
 
 /* -- Card building -------------------------------------------------------------------- */
 
@@ -138,6 +148,28 @@ function createCard(word, level, onProgressChange) {
   });
 
   item.append(head, meaning, createExample(word.example), row);
+
+  /* The kanji inside the word, each one a way into its own entry. Appended
+     when the index arrives rather than waited for: the list is 816 rows and
+     the reader is looking at the Japanese, not at the links under it.
+
+     236 of the 816 words contain a character this app holds an entry for. The
+     other 580 are kana-only or built from kanji outside the 132 — they get no
+     row at all, not an empty one. */
+  loadLinkIndex().then((index) => {
+    const links = kanjiInWord(index, word.id).map((id) => {
+      const entry = index.kanjiById.get(id);
+      return createEntryLink({
+        href: routeTo('kanji', id),
+        jp: entry.character,
+        gloss: entry.meaning,
+      });
+    });
+
+    const group = createLinkGroup(null, links);
+    if (group) item.append(group);
+  }).catch(() => {});
+
   return item;
 }
 
@@ -353,11 +385,46 @@ function renderList(container, data) {
   applyFilter();
 
   container.replaceChildren(filters, facetWrap, summary, list, empty, more);
+
+  /* `#vocabulary/n5-001` scrolls to that word and focuses it.
+
+     The list is paged and filtered, so the word being asked for is very often
+     not in the document: it may be on page 20 of 34, or excluded by a search
+     the reader left in the box. Clearing the filters first is the honest
+     reading of a link that names one entry — the reader asked for this word,
+     not for this word if it happens to survive the current query — and then
+     paging forward until it is rendered is what makes "scroll to it" possible
+     at all.
+
+     The paging loop is bounded by showMore() itself: it stops adding when
+     `shown` stops moving, so a word that is genuinely not in the match set
+     cannot spin here. */
+  showEntry = (itemId) => {
+    if (!rows.some((row) => row.word.id === itemId)) return;
+
+    if (!matched.some((row) => row.word.id === itemId)) {
+      searchInput.value = '';
+      selectedTags.clear();
+      for (const button of facetButtons) button.setAttribute('aria-pressed', 'false');
+      rememberedToggle.setAttribute('aria-pressed', 'false');
+      applyFilter();
+    }
+
+    const position = matched.findIndex((row) => row.word.id === itemId);
+    if (position === -1) return;
+    while (shown <= position) {
+      const before = shown;
+      showMore();
+      if (shown === before) break;
+    }
+
+    revealEntry(list.querySelector(`[data-word-id="${CSS.escape(itemId)}"]`));
+  };
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
 
-async function initVocabulary() {
+async function initVocabulary(itemId) {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
@@ -368,6 +435,9 @@ async function initVocabulary() {
     errorTitle: 'Vocabulary ачаалагдсангүй.',
     errorDetail: `Үгийн жагсаалт data/vocabulary.json дотор байгаа. ${OFFLINE_HINT}`,
   });
+
+  registerItemHandler(VIEW_ID, (id) => showEntry?.(id));
+  if (itemId) showEntry?.(itemId);
 }
 
 export { initVocabulary, loadVocabulary };

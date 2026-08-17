@@ -52,19 +52,28 @@
 import {
   collectFacets,
   createContentLoader,
+  createEntryLink,
   createFacetChips,
+  createLinkGroup,
   describeLevelSpan,
   levelBucketOf,
   loadIntoView,
+  loadLinkIndex,
+  revealEntry,
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
+import { registerItemHandler } from './router.js';
+import { entriesInText, routeTo } from './links.js';
 
 const DATA_URL = 'data/reading.json';
 const VIEW_ID = 'reading';
 
 const loadReading = createContentLoader(DATA_URL, 'reading');
+
+/* Set by renderPassages; read by the router's item handler. See kanji.js. */
+let showEntry = null;
 
 /* Each passage carries its own `level`, optional — reading.json used to
    state one level for the whole file, which stopped being true the moment
@@ -177,6 +186,41 @@ function createSentence(sentence, index, onToggle) {
   mn.textContent = sentence.mn;
 
   gloss.append(reading, mn);
+
+  /* What is in this line that has an entry of its own.
+
+     The gloss already answers "how is this read" and "what does it mean"; this
+     is the third question a reader asks of a sentence — "what *is* that
+     character" — and until now the only way to answer it was to leave the
+     passage, open Kanji, and search. The links are quiet and sit under the
+     translation, because the sentence is still the subject of this panel.
+
+     Appended when the index arrives, which is after the gloss is already
+     open and readable. Opening a line is the most repeated action on this
+     screen, so it does not wait for a 336 KB file to answer a question the
+     reader has not asked yet.
+
+     Words are matched longest-first and kanji are collected separately — see
+     entriesInText in links.js. In these two passages that yields far more
+     kanji than words, because vocabulary.json is mostly N5 and the passages
+     are N2. */
+  loadLinkIndex().then((index) => {
+    const { words, kanji } = entriesInText(index, sentence.jp);
+
+    const links = [
+      ...words.map((id) => {
+        const word = index.wordById.get(id);
+        return createEntryLink({ href: routeTo('vocabulary', id), jp: word.kanji, gloss: word.meaning });
+      }),
+      ...kanji.map((id) => {
+        const entry = index.kanjiById.get(id);
+        return createEntryLink({ href: routeTo('kanji', id), jp: entry.character, gloss: entry.meaning });
+      }),
+    ];
+
+    const group = createLinkGroup(null, links);
+    if (group) gloss.append(group);
+  }).catch(() => {});
 
   face.addEventListener('click', () => {
     // A drag that ended inside the button was a selection, not a press.
@@ -857,11 +901,26 @@ function renderList(container, data) {
   applyFilter();
 
   container.replaceChildren(levelWrap, summary, list, empty, stageElements.wrap);
+
+  /* `#reading/read-002` opens that passage rather than the list — which is
+     what a link from a grammar card means when it says a pattern appears in a
+     passage: it points at the passage, not at the shelf the passage is on. */
+  showEntry = (itemId) => {
+    const row = rows.find((candidate) => candidate.passage.id === itemId);
+    if (!row) return;
+
+    levelWrap.hidden = true;
+    summary.hidden = true;
+    list.hidden = true;
+    empty.hidden = true;
+    stageController.open(row.passage);
+    revealEntry(stageElements.wrap.querySelector('.reading-stage__title'));
+  };
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
 
-async function initReading() {
+async function initReading(itemId) {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
@@ -872,6 +931,9 @@ async function initReading() {
     errorTitle: 'Reading ачаалагдсангүй.',
     errorDetail: `Бичвэрийн багц data/reading.json дотор байгаа. ${OFFLINE_HINT}`,
   });
+
+  registerItemHandler(VIEW_ID, (id) => showEntry?.(id));
+  if (itemId) showEntry?.(itemId);
 }
 
 /* Unlike the other four content loaders, this one has no second caller:
@@ -880,4 +942,4 @@ async function initReading() {
    drawn only from sources that carry a gradeable item behind them — a
    passage sentence has no id to practise — so it stays on the three loaders
    that do. */
-export { initReading };
+export { initReading, loadReading };

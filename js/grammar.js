@@ -10,7 +10,9 @@ import { createStudyControls } from './studyControls.js';
 import {
   collectFacets,
   createContentLoader,
+  createEntryLink,
   createFacetChips,
+  createLinkGroup,
   createSearchField,
   debounce,
   describeLevelSpan,
@@ -19,10 +21,14 @@ import {
   jlptLevelOf,
   levelBucketOf,
   loadIntoView,
+  loadLinkIndex,
+  revealEntry,
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
+import { registerItemHandler } from './router.js';
+import { passagesForGrammar, routeTo } from './links.js';
 
 const DATA_URL = 'data/grammar.json';
 const VIEW_ID = 'grammar';
@@ -30,6 +36,9 @@ const VIEW_ID = 'grammar';
 /* -- Data --------------------------------------------------------------------------- */
 
 const loadGrammar = createContentLoader(DATA_URL, 'grammar');
+
+/* Set by renderList; read by the router's item handler. See kanji.js. */
+let showEntry = null;
 
 
 /* -- Card building --------------------------------------------------------------------- */
@@ -115,6 +124,29 @@ function createCard(point, level) {
      than a word you have "learned". Built by studyControls.js now, so the
      four views can't drift back apart. */
   item.append(createStudyControls(point.id, { className: 'grammar-card__controls' }).row);
+
+  /* A passage that contains this pattern, if one does.
+
+     Almost none do, and that is the data rather than the code: the match is a
+     plain substring of the pattern as written, against two passages, and
+     exactly one of the fourteen patterns is found. The rest render nothing —
+     no section, no "not found", no placeholder. A grammar point with no
+     passage behind it should look like a grammar point, not like a grammar
+     point that is missing something. */
+  loadLinkIndex().then((index) => {
+    const links = passagesForGrammar(index, point.id).map((id) => {
+      const passage = index.passageById.get(id);
+      return createEntryLink({
+        href: routeTo('reading', id),
+        jp: passage.title,
+        gloss: passage.titleMn,
+      });
+    });
+
+    const group = createLinkGroup('Уншихад тохиолдоно', links);
+    if (group) item.append(group);
+  }).catch(() => {});
+
   return item;
 }
 
@@ -229,11 +261,28 @@ function renderList(container, data) {
   applyFilter();
 
   container.replaceChildren(searchWrap, categoryWrap, summary, list, empty);
+
+  /* `#grammar/gr-004` scrolls to that pattern. The list is not paged, so every
+     card is already in the document — but a search left in the box can still
+     be hiding the one being asked for, and a link that names an entry outranks
+     a filter the reader set earlier. */
+  showEntry = (itemId) => {
+    if (!data.points.some((point) => point.id === itemId)) return;
+
+    const card = () => list.querySelector(`[data-point-id="${CSS.escape(itemId)}"]`);
+    if (!card()) {
+      searchInput.value = '';
+      selectedTags.clear();
+      for (const button of categoryButtons) button.setAttribute('aria-pressed', 'false');
+      applyFilter();
+    }
+    revealEntry(card());
+  };
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
 
-async function initGrammar() {
+async function initGrammar(itemId) {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
@@ -244,6 +293,9 @@ async function initGrammar() {
     errorTitle: 'Grammar ачаалагдсангүй.',
     errorDetail: `Хэлбэрийн жагсаалт data/grammar.json дотор байгаа. ${OFFLINE_HINT}`,
   });
+
+  registerItemHandler(VIEW_ID, (id) => showEntry?.(id));
+  if (itemId) showEntry?.(itemId);
 }
 
 export { initGrammar, loadGrammar };

@@ -34,7 +34,8 @@ import { practice, settings } from './storage.js';
 import { publishSession } from './bridge.js';
 import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker } from './quiz.js';
-import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
+import { createContentLoader, createIcon, getViewContainer, loadIntoView, revealEntry, OFFLINE_HINT } from './content.js';
+import { registerItemHandler } from './router.js';
 
 const DATA_URL = 'data/lessons.json';
 const VIEW_ID = 'lessons';
@@ -47,6 +48,9 @@ const QUIZ_MODE_SETTING_KEY = 'quizMode';
 /* -- Data ------------------------------------------------------------------------- */
 
 const loadLessons = createContentLoader(DATA_URL, 'lessons');
+
+/* Set by renderLessons; read by the router's item handler. See kanji.js. */
+let showEntry = null;
 
 /* -- Unwritten lessons ------------------------------------------------------------
    The spine runs 1 to 50 because that is how far みんなの日本語 runs, and the
@@ -325,6 +329,9 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   return {
     element: li,
+    lesson,
+    open: () => setExpanded(true),
+    header: button,
     // Only what's on screen needs re-syncing; a group that has never been
     // opened has no marks to correct, and will read the store when it does
     // open. The count in the header always refreshes, because that is
@@ -467,11 +474,28 @@ function renderLessons(container, lessons) {
   list.append(...groups.map((group) => group.element));
 
   container.replaceChildren(intro, list, quiz.element);
+
+  /* `#lessons/26` opens lesson 26 and scrolls to it. The id here is the lesson
+     number, because that is what a lesson is called everywhere else in the app
+     and in the book — there is no other identifier in the file to use.
+
+     Expanding it first is the point: a disclosure scrolled into view but still
+     shut has answered the reader's question with the same closed row they
+     could already see. An unwritten lesson opens too, onto its one line — a
+     link to a lesson that has not been transcribed is not broken, it just
+     arrives somewhere quiet. */
+  showEntry = (itemId) => {
+    const number = Number(itemId);
+    const group = groups.find((candidate) => candidate.lesson.lesson === number);
+    if (!group) return;
+    group.open();
+    revealEntry(group.header);
+  };
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
 
-async function initLessons() {
+async function initLessons(itemId) {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
@@ -482,6 +506,9 @@ async function initLessons() {
     errorTitle: 'Lessons ачаалагдсангүй.',
     errorDetail: `Хичээлийн жагсаалт data/lessons.json дотор байгаа. ${OFFLINE_HINT}`,
   });
+
+  registerItemHandler(VIEW_ID, (id) => showEntry?.(id));
+  if (itemId) showEntry?.(itemId);
 }
 
 export { initLessons, loadLessons };

@@ -422,6 +422,145 @@ function createStorageNotice() {
   return wrap;
 }
 
+/* -- The link index --------------------------------------------------------------
+   js/links.js is pure: it takes datasets and returns ids, and it neither
+   fetches nor imports a view, which is what lets it be run and checked outside
+   a browser. The fetching has to live somewhere though, and it lives here,
+   beside the loader factory the four datasets are already built with.
+
+   The imports are dynamic on purpose. Kanji needs vocabulary to answer "which
+   words use this character?" and vocabulary needs kanji to answer the reverse,
+   so a static import in either direction would be a cycle between two view
+   modules. `import()` is resolved when the index is first wanted, by which
+   time every module is long since evaluated.
+
+   Built once per session and shared. The loaders are themselves memoized, so
+   a dataset the reader's current view already fetched is not fetched twice —
+   entering Kanji and opening a card costs one vocabulary fetch, and every
+   later question of any kind is answered from memory.
+
+   Deliberately not called at view init: the index is only wanted when a link
+   surface is actually rendered, and vocabulary.json is 336 KB. A reader who
+   scans the kanji grid without opening a card never pays for it. */
+let pendingLinkIndex = null;
+
+function loadLinkIndex() {
+  if (!pendingLinkIndex) {
+    pendingLinkIndex = (async () => {
+      const [links, vocabularyModule, kanjiModule, grammarModule, readingModule] = await Promise.all([
+        import('./links.js'),
+        import('./vocabulary.js'),
+        import('./kanji.js'),
+        import('./grammar.js'),
+        import('./reading.js'),
+      ]);
+
+      const [vocabulary, kanji, grammar, passages] = await Promise.all([
+        vocabularyModule.loadVocabulary(),
+        kanjiModule.loadKanji(),
+        grammarModule.loadGrammar(),
+        readingModule.loadReading(),
+      ]);
+
+      return links.buildLinkIndex({
+        vocabulary: vocabulary.words,
+        kanji: kanji.kanji,
+        grammar: grammar.points,
+        passages: passages.passages,
+      });
+    })();
+
+    // Same rule as createContentLoader: a rejection is not cached, so one bad
+    // response does not permanently strip every link in the app.
+    pendingLinkIndex.catch(() => { pendingLinkIndex = null; });
+  }
+
+  return pendingLinkIndex;
+}
+
+/* -- Rendering a link ------------------------------------------------------------
+   Real anchors with real href values, because these are places you can go: a
+   middle click should open one in a tab, a long press should offer to copy it,
+   and Tab should reach it without this module binding a single key. A button
+   with a click handler is none of those things.
+
+   `jp` is the Japanese — set in --font-jp by css/links.css — and `gloss` is the
+   quiet second half. Both are optional; a link with no gloss is just the word.
+   ---------------------------------------------------------------------------- */
+function createEntryLink({ href, jp, gloss }) {
+  const link = document.createElement('a');
+  link.className = 'entry-link';
+  link.href = href;
+
+  if (jp) {
+    const label = document.createElement('span');
+    label.className = 'entry-link__jp';
+    label.lang = 'ja';
+    label.textContent = jp;
+    link.append(label);
+  }
+
+  if (gloss) {
+    const meaning = document.createElement('span');
+    meaning.className = 'entry-link__gloss';
+    meaning.textContent = gloss;
+    link.append(meaning);
+  }
+
+  return link;
+}
+
+/* A row of links, or nothing at all.
+
+   Returns null for an empty list rather than an empty section, and that is the
+   whole rule this app has about absence: a heading over nothing is a statement
+   that something is missing. No count in the title either — "Words (27)" turns
+   a way through the app into an inventory.
+
+   `title` may be null, for a caller that already has a heading of its own —
+   the kanji detail panel puts each group inside its own titled section, and a
+   second heading inside the first would be a label on a label. */
+function createLinkGroup(title, links) {
+  if (links.length === 0) return null;
+
+  const group = document.createElement('div');
+  group.className = 'entry-links';
+
+  if (title) {
+    const heading = document.createElement('p');
+    heading.className = 'entry-links__title';
+    heading.textContent = title;
+    group.append(heading);
+  }
+
+  const list = document.createElement('div');
+  list.className = 'entry-links__list';
+  list.append(...links);
+
+  group.append(list);
+  return group;
+}
+
+/* Bring a deep-linked entry into view and put focus on it.
+
+   Focus moves because the reader asked for this specific thing: router.js has
+   already focused the view's heading, which is right for `#kanji` and wrong for
+   `#kanji/kj-n5-001`. `preventScroll` keeps the browser from re-scrolling past
+   the centring below, and `instant` because this is an arrival rather than a
+   movement within a page the reader is already looking at — the same reasoning
+   router.js gives for its own scroll, and reset.css's reduced-motion rule
+   cannot reach a scroll started from JS.
+
+   Returns false when the id names nothing, so a stale or hand-typed link
+   leaves focus exactly where the router put it instead of throwing. */
+function revealEntry(element) {
+  if (!element) return false;
+  element.setAttribute('tabindex', '-1');
+  element.scrollIntoView({ block: 'center', behavior: 'instant' });
+  element.focus({ preventScroll: true });
+  return true;
+}
+
 /* The second half of every error message in the app. Named once so the six
    views can't describe the same failure six different ways. */
 const OFFLINE_HINT =
@@ -435,9 +574,13 @@ const OFFLINE_HINT =
 export {
   collectFacets,
   createContentLoader,
+  createEntryLink,
   createFacetChips,
   createIcon,
+  createLinkGroup,
   createSearchField,
+  loadLinkIndex,
+  revealEntry,
   describeLevelSpan,
   getViewContainer,
   formatCount,

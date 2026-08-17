@@ -34,7 +34,9 @@ import { createStudyControls } from './studyControls.js';
 import {
   collectFacets,
   createContentLoader,
+  createEntryLink,
   createFacetChips,
+  createLinkGroup,
   createSearchField,
   debounce,
   describeLevelSpan,
@@ -42,10 +44,14 @@ import {
   getViewContainer,
   levelBucketOf,
   loadIntoView,
+  loadLinkIndex,
+  revealEntry,
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
 } from './content.js';
+import { registerItemHandler } from './router.js';
+import { relatedKanji, routeTo, wordsUsingKanji } from './links.js';
 
 const DATA_URL = 'data/kanji.json';
 const VIEW_ID = 'kanji';
@@ -53,6 +59,12 @@ const VIEW_ID = 'kanji';
 /* -- Data --------------------------------------------------------------------------- */
 
 const loadKanji = createContentLoader(DATA_URL, 'kanji');
+
+/* Set by renderGrid once the grid is on screen, and read by the router's item
+   handler. A function rather than a stored id: the view is rendered once and
+   navigated to many times, and each arrival is a fresh question about which
+   entry to open. */
+let showEntry = null;
 
 
 /* -- Shared fields -------------------------------------------------------------------
@@ -199,39 +211,46 @@ function createExamplesBlock(entry) {
   return list;
 }
 
-/* Every related character is a chip that opens that character's own entry.
-   The section is built only from characters this dataset actually holds, and
-   returns null when that leaves nothing — renderDetail drops the whole
-   section rather than heading an empty box.
+/* Every related character is a link to that character's own entry.
 
-   A character not in the dataset is dropped rather than shown inert. It used
-   to render as an aria-disabled chip, which is a control that exists to be
-   unusable: "Related Kanji" is a row of ways into other entries, and a
-   character with no entry is not one of those. Counted rather than assumed —
-   of 521 related references across the file, zero point outside the 132
-   characters, so this branch changes nothing today and only decides what
-   happens if the data ever grows past the app. */
-function createRelatedBlock(entry, allEntries, onJump) {
-  const matches = (entry.related ?? [])
-    .map((character) => allEntries.find((candidate) => candidate.character === character))
-    .filter(Boolean);
+   These were chips — buttons with a click handler that swapped the panel in
+   place. They are anchors now, with `#kanji/<id>` in the href, and the
+   difference is not cosmetic: a chip cannot be middle-clicked into a new tab,
+   cannot be copied out of the page, and does not tell the reader where it
+   goes. Pressing one still swaps the panel in place, because the href points
+   at this same view and router.js hands the id straight back here.
 
-  if (matches.length === 0) return null;
+   A character with no entry of its own is dropped rather than shown inert:
+   "Related Kanji" is a row of ways into other entries, and a character with
+   nowhere to go is not one of those. Counted rather than assumed — of 521
+   related references across the file, zero point outside the 132 characters. */
+function createRelatedBlock(entry, index) {
+  const links = relatedKanji(index, entry.id).map((id) => {
+    const match = index.kanjiById.get(id);
+    return createEntryLink({ href: routeTo('kanji', id), jp: match.character, gloss: match.meaning });
+  });
 
-  const wrap = document.createElement('div');
-  wrap.className = 'kanji-detail__related';
+  return createLinkGroup(null, links);
+}
 
-  for (const match of matches) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'toggle-chip';
-    button.lang = 'ja';
-    button.textContent = match.character;
-    button.addEventListener('click', () => onJump(match));
-    wrap.append(button);
-  }
+/* The words that use this character.
 
-  return wrap;
+   The other half of the same relationship the app has held all along and never
+   drawn: 315 of these across the file, 119 of the 132 characters having at
+   least one. Ordered as vocabulary.json orders them, which is by level and
+   then by the order they were authored — near enough to "easiest first" to be
+   worth keeping, and not worth inventing a ranking for. */
+function createWordsBlock(entry, index) {
+  const links = wordsUsingKanji(index, entry.id).map((id) => {
+    const word = index.wordById.get(id);
+    return createEntryLink({
+      href: routeTo('vocabulary', id),
+      jp: word.kanji,
+      gloss: word.meaning,
+    });
+  });
+
+  return createLinkGroup(null, links);
 }
 
 function buildDetailPanel() {
@@ -270,25 +289,45 @@ function buildDetailPanel() {
   return { wrap, exit, character, tag, sections };
 }
 
-function renderDetail(elements, entry, level, allEntries, onJump) {
+function renderDetail(elements, entry, level) {
   elements.character.textContent = entry.character;
   elements.tag.textContent = level ?? '';
   elements.tag.hidden = !level;
 
-  /* Related Kanji is the one section that can be absent, so it is the one
-     built conditionally — 14 of the 132 entries have no related characters
-     and get a five-section panel instead of a six-section one. */
-  const related = createRelatedBlock(entry, allEntries, onJump);
-
   elements.sections.replaceChildren(
-    ...[
-      createDetailSection('Meaning', createTextBlock(entry.meaning)),
-      createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
-      createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
-      createDetailSection('Examples', createExamplesBlock(entry)),
-      related && createDetailSection('Related Kanji', related),
-    ].filter(Boolean),
+    createDetailSection('Meaning', createTextBlock(entry.meaning)),
+    createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
+    createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
+    createDetailSection('Examples', createExamplesBlock(entry)),
   );
+
+  /* The two link sections arrive when the index does, appended rather than
+     waited for. They need vocabulary.json, which the kanji view has no other
+     reason to fetch, and blocking the panel on 336 KB would mean the reader
+     stares at nothing to learn what 日 means.
+
+     `token` guards against the reader opening a second character before the
+     first one's links land: by then this render is stale, and its links belong
+     to a panel that is no longer on screen. */
+  const token = Symbol('detail');
+  elements.pending = token;
+
+  loadLinkIndex().then((index) => {
+    if (elements.pending !== token) return;
+
+    const words = createWordsBlock(entry, index);
+    const related = createRelatedBlock(entry, index);
+
+    /* Either can be absent and neither leaves a heading behind: 13 of the 132
+       characters have no word in the file that uses them, and 14 have no
+       related characters. */
+    if (words) elements.sections.append(createDetailSection('Words using this kanji', words));
+    if (related) elements.sections.append(createDetailSection('Related Kanji', related));
+  }).catch(() => {
+    /* A failed index is a panel with no link sections, which is the same
+       panel this view had before they existed. Nothing to report to the
+       reader: they asked what a character means, and that part arrived. */
+  });
 
   /* The panel replaces the grid in place, so opening one from the bottom of
      a 130-card grid used to leave the reader scrolled a long way down,
@@ -371,7 +410,7 @@ function renderGrid(container, data) {
     // Unhidden first: renderDetail moves focus to the panel's heading, and
     // focus() on a `hidden` element is silently dropped.
     detailElements.wrap.hidden = false;
-    renderDetail(detailElements, entry, getEntryLevel(entry), data.kanji, openDetail);
+    renderDetail(detailElements, entry, getEntryLevel(entry));
   }
 
   /* Focus goes back to the "View details" button that opened the panel, not
@@ -446,11 +485,25 @@ function renderGrid(container, data) {
 
   browse.append(searchWrap, levelWrap, summary, grid, empty);
   container.replaceChildren(browse, detailElements.wrap);
+
+  /* `#kanji/kj-n5-001` opens that character's panel rather than the grid.
+
+     Registered here, at the end of a successful render, because a handler that
+     fires before the grid exists has nothing to open. An id that names no
+     entry does nothing at all — the grid stays as it is and focus stays where
+     router.js put it, which is what a stale bookmark or a hand-typed hash
+     should do. */
+  showEntry = (itemId) => {
+    const entry = data.kanji.find((candidate) => candidate.id === itemId);
+    if (!entry) return;
+    openDetail(entry);
+    revealEntry(detailElements.character);
+  };
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
 
-async function initKanji() {
+async function initKanji(itemId) {
   const view = document.getElementById(VIEW_ID);
   if (!view) return;
 
@@ -461,6 +514,13 @@ async function initKanji() {
     errorTitle: 'Kanji ачаалагдсангүй.',
     errorDetail: `Тэмдэгтийн багц data/kanji.json дотор байгаа. ${OFFLINE_HINT}`,
   });
+
+  /* Both halves of arriving at an entry. The argument is the first arrival,
+     while this view is still being built and the router has no handler to call
+     yet; the handler is every arrival after that, when the view is already on
+     screen and only has to open the right panel. */
+  registerItemHandler(VIEW_ID, (id) => showEntry?.(id));
+  if (itemId) showEntry?.(itemId);
 }
 
 export { initKanji, loadKanji };

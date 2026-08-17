@@ -27,23 +27,69 @@ function registerView(viewId, initializer) {
   initializers.set(viewId, initializer);
 }
 
+/* -- Deep links ------------------------------------------------------------------
+   A route is `#<view>` or `#<view>/<item id>`. The second half names a thing
+   inside the view — a kanji, a word, a pattern, a lesson number — so a link can
+   point at an entry rather than at a section. Everything below is additive: a
+   bare `#kanji` parses to an empty item id and takes exactly the path it took
+   before.
+
+   Two mechanisms, because a view is initialized once and navigated to many
+   times:
+
+     the initializer's argument   the first arrival, while the view is still
+                                  building itself and has the id to hand
+     an item handler              every arrival after that, when the view is
+                                  already on screen and only has to move
+
+   A view registers its handler when it has finished rendering. Until then the
+   router has nothing to call, which is exactly why the first id goes through
+   the initializer instead of being delivered to a handler that does not exist
+   yet. */
+const itemHandlers = new Map();
+
+function registerItemHandler(viewId, handler) {
+  itemHandlers.set(viewId, handler);
+}
+
+function parseRoute() {
+  const raw = location.hash.slice(1);
+  const slash = raw.indexOf('/');
+  if (slash === -1) return { viewId: raw, itemId: '' };
+
+  /* decodeURIComponent throws on a malformed escape, and a hash is the one
+     part of a URL a reader can hand-edit or a chat client can mangle. A route
+     that cannot be decoded is a route with no item in it, not an exception. */
+  const encoded = raw.slice(slash + 1);
+  let itemId = encoded;
+  try {
+    itemId = decodeURIComponent(encoded);
+  } catch {
+    itemId = encoded;
+  }
+  return { viewId: raw.slice(0, slash), itemId };
+}
+
 /* Errors are logged rather than thrown: a view module that fails to
    initialize shouldn't stop the router from switching views, and each
    module already renders its own error state for the failures it expects. */
-function ensureInitialized(viewId) {
-  if (initialized.has(viewId)) return;
+function ensureInitialized(viewId, itemId) {
+  if (initialized.has(viewId)) return false;
   const initializer = initializers.get(viewId);
-  if (!initializer) return;
+  if (!initializer) return false;
 
   initialized.add(viewId);
   try {
-    const result = initializer();
+    const result = initializer(itemId);
     if (result && typeof result.catch === 'function') {
       result.catch((error) => console.error('[Bigu]', error));
     }
   } catch (error) {
     console.error('[Bigu]', error);
   }
+  // Told the caller the id has been handed to the initializer, so it isn't
+  // also delivered to a handler the view is about to register.
+  return true;
 }
 
 function getViews() {
@@ -83,8 +129,7 @@ function getHeading(viewId) {
   return document.getElementById(`${viewId}-heading`);
 }
 
-function resolveViewId(views) {
-  const requested = location.hash.slice(1);
+function resolveViewId(views, requested) {
   const isKnown = views.some((view) => view.id === requested);
   return isKnown ? requested : DEFAULT_VIEW;
 }
@@ -122,11 +167,18 @@ function render({ moveFocus = false } = {}) {
   const views = getViews();
   if (views.length === 0) return;
 
-  const activeId = resolveViewId(views);
+  const { viewId, itemId } = parseRoute();
+  const activeId = resolveViewId(views, viewId);
 
-  // Normalize an empty or unknown hash without adding a new history entry
-  if (location.hash.slice(1) !== activeId) {
-    history.replaceState(null, '', `#${activeId}`);
+  /* Normalize an empty or unknown hash without adding a new history entry.
+     The item id is part of what makes a route canonical — rewriting
+     `#kanji/kj-n5-001` to `#kanji` would strip the deep link out of the
+     address bar the moment it was opened, and out of the history entry the
+     back button is meant to return to. So the comparison is against the whole
+     route, and only a view the document does not have is rewritten. */
+  const canonical = activeId === viewId && itemId ? `${activeId}/${itemId}` : activeId;
+  if (location.hash.slice(1) !== canonical) {
+    history.replaceState(null, '', `#${canonical}`);
   }
 
   let activeView = null;
@@ -142,11 +194,24 @@ function render({ moveFocus = false } = {}) {
 
   // After the view is visible, so a module that measures or focuses
   // something on init isn't doing it inside a hidden section.
-  ensureInitialized(activeId);
+  const justInitialized = ensureInitialized(activeId, itemId);
 
+  /* Move focus to the view's heading first, then let the view move it again
+     onto the item. Doing it in that order means a route with no item behaves
+     exactly as it did, and a route with one lands on the entry rather than on
+     the top of the page — while a view that cannot find the id simply leaves
+     focus where the router put it, which is the same place it has always been.
+
+     Skipped when the initializer has just been handed the id: the view is
+     still building and will handle its own arrival. */
   if (moveFocus && activeView) {
     focusView(activeView);
     playEnter(activeView);
+  }
+
+  if (itemId && !justInitialized) {
+    const handler = itemHandlers.get(activeId);
+    if (handler) handler(itemId, { moveFocus });
   }
 }
 
@@ -195,4 +260,4 @@ function initRouter() {
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 }
 
-export { initRouter, registerView };
+export { initRouter, registerItemHandler, registerView };

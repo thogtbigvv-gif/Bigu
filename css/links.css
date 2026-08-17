@@ -1,0 +1,129 @@
+/* ==========================================================================
+   links.css
+   The layer that makes an entry a door.
+
+   Every one of these is an <a> with a real href — js/links.js resolves which
+   entries are reachable and the views render anchors — so they are already
+   keyboard-reachable, middle-clickable and copyable before a line of this file
+   applies. What is left is making a hundred of them not shout.
+
+   QUIET IS THE WHOLE SPEC. These sit under a kanji's meaning, beside a word,
+   below a sentence's translation, and there are 1,171 of them across the
+   dataset — 27 under 日 alone. Anything with a border, a background or a fill
+   would turn a dictionary entry into a wall of controls, which is the shape
+   this app has spent every task removing. So: --color-sumi, no box, and an
+   underline that is transparent until pointed at or focused.
+
+   Not the app's link colour either. typography.css sets bare `a` in
+   --color-shu, which is right for the one or two links in a paragraph of prose
+   and wrong for a row of thirty — the accent means "this one", and thirty of
+   them means nothing. These are ink, and the underline does the work.
+   ========================================================================== */
+
+.entry-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-sm);
+}
+
+/* The group's own label where a caller has no heading of its own. Sized and
+   coloured as an annotation, because it is one — the links are the content. */
+.entry-links__title {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+}
+
+/* Wrapping rows rather than a list: these are a set, and a set of short
+   Japanese labels reads as a row. No bullets, no separators — the gap is the
+   separator, and a middle dot between thirty items is thirty more marks. */
+.entry-links__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3xs) var(--space-sm);
+}
+
+/* One link. Baseline-aligned so the Japanese and its gloss sit on one line
+   like a dictionary run-in, not stacked like a card. */
+.entry-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
+  color: var(--color-sumi);
+  text-decoration: underline;
+  text-decoration-thickness: from-font;
+  text-decoration-color: transparent;
+  text-underline-offset: 0.2em;
+  transition:
+    color var(--transition-fast),
+    text-decoration-color var(--transition-fast);
+}
+
+/* Both states, and the same treatment for both: a reader tabbing through has
+   to see what a reader pointing sees. The focus ring is separate and still
+   the app's own — this only adds the underline. */
+.entry-link:focus-visible {
+  text-decoration-color: currentColor;
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+@media (hover: hover) {
+  .entry-link:hover {
+    text-decoration-color: currentColor;
+  }
+}
+
+/* The Japanese half, in the textbook hand every other piece of Japanese in the
+   app is set in. --font-jp first and the platform stack behind it, matching
+   the convention in kanji.css and vocabulary.css. */
+.entry-link__jp {
+  font-family: var(--font-jp), var(--font-jp-stack);
+}
+
+/* The gloss. Smaller and greyer, and it never takes the underline: underlining
+   a translation makes it look like a second link, and the whole anchor is
+   already one target. */
+.entry-link__gloss {
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+  text-decoration: none;
+}
+
+/* -- In place ------------------------------------------------------------------
+   Two hosts want a hairline above the row, for the same reason: the links are
+   a different kind of thing from what sits above them, and on a dense surface
+   a rule says that more quietly than a gap does.
+   ------------------------------------------------------------------------------ */
+
+/* Inside a vocabulary row, where the links follow the example sentence. */
+.vocab-card .entry-links {
+  margin-block-start: var(--space-2xs);
+}
+
+/* Inside an open sentence gloss in Reading. Set apart from the translation,
+   because the reader opened this panel to read the line rather than to leave
+   it — the way out sits below the answer, not beside it. */
+.reading-sentence__gloss .entry-links {
+  margin-block-start: var(--space-sm);
+  padding-block-start: var(--space-2xs);
+  border-block-start: 1px solid var(--color-line);
+}
+
+/* Phones. The gloss under each link is the first thing to go when a row of
+   links would otherwise wrap to one item per line: on a 360px screen a kanji
+   plus its Mongolian meaning is most of the width, and a column of thirty of
+   them is a list rather than a row. The Japanese stays — it is the part that
+   names where the link goes. */
+@media (max-width: 30rem) {
+  .reading-sentence__gloss .entry-link__gloss,
+  .vocab-card .entry-link__gloss {
+    display: none;
+  }
+
+  .entry-links__list {
+    gap: var(--space-3xs) var(--space-xs);
+  }
+}
