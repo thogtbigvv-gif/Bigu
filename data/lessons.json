@@ -2,6 +2,7 @@
   {
     "lesson": 1,
     "title": "はじめまして (Nice to meet you)",
+    "grammar": [],
     "words": [
       { "id": "l1-01", "word": "私", "reading": "わたし", "english": "би" },
       { "id": "l1-02", "word": "(お)名前", "reading": "なまえ", "english": "нэр" },
@@ -26,6 +27,7 @@
   {
     "lesson": 2,
     "title": "買い物・食事 (Shopping / Dining)",
+    "grammar": [],
     "words": [
       { "id": "l2-01", "word": "ここ", "reading": "ここ", "english": "энд" },
       { "id": "l2-02", "word": "そこ", "reading": "そこ", "english": "тэнд" },
@@ -51,6 +53,7 @@
   {
     "lesson": 3,
     "title": "スケジュール (Schedule)",
+    "grammar": [],
     "words": [
       { "id": "l3-01", "word": "週末", "reading": "しゅうまつ", "english": "амралтын өдөр" },
       { "id": "l3-02", "word": "今", "reading": "いま", "english": "одоо" },
@@ -76,6 +79,7 @@
   {
     "lesson": 4,
     "title": "私の国・町 (My Country / Town)",
+    "grammar": [],
     "words": [
       { "id": "l4-01", "word": "北", "reading": "きた", "english": "хойд" },
       { "id": "l4-02", "word": "南", "reading": "みなみ", "english": "өмнөд" },
@@ -101,6 +105,7 @@
   {
     "lesson": 5,
     "title": "休みの日 (Days Off)",
+    "grammar": [],
     "words": [
       { "id": "l5-01", "word": "天気", "reading": "てんき", "english": "цаг агаар" },
       { "id": "l5-02", "word": "服", "reading": "ふく", "english": "хувцас" },
@@ -123,6 +128,7 @@
   {
     "lesson": 6,
     "title": "一緒に行きませんか (Won't you go together?)",
+    "grammar": [],
     "words": [
       { "id": "l6-01", "word": "今週", "reading": "こんしゅう", "english": "энэ долоо хоног" },
       { "id": "l6-02", "word": "来週", "reading": "らいしゅう", "english": "ирэх долоо хоног" },
@@ -145,6 +151,7 @@
   {
     "lesson": 7,
     "title": "友達の家で (At a Friend's House)",
+    "grammar": [],
     "words": [
       { "id": "l7-01", "word": "交番", "reading": "こうばん", "english": "цагдаагийн будка" },
       { "id": "l7-02", "word": "上", "reading": "うえ", "english": "дээр" },
@@ -166,6 +173,7 @@
   {
     "lesson": 8,
     "title": "大切な人 (Important People)",
+    "grammar": [],
     "words": [
       { "id": "l8-01", "word": "家族", "reading": "かぞく", "english": "гэр бүл" },
       { "id": "l8-02", "word": "両親", "reading": "りょうしん", "english": "эцэг эх" },
@@ -187,6 +195,7 @@
   {
     "lesson": 9,
     "title": "好きなこと (Things I Like)",
+    "grammar": [],
     "words": [
       { "id": "l9-01", "word": "最近", "reading": "さいきん", "english": "сүүлийн үед" },
       { "id": "l9-02", "word": "泳ぎます", "reading": "およぎます", "english": "сэлэх" },
@@ -208,6 +217,7 @@
   {
     "lesson": 10,
     "title": "バスツアー (Bus Tour)",
+    "grammar": [],
     "words": [
       { "id": "l10-01", "word": "音", "reading": "おと", "english": "дуу авиа" },
       { "id": "l10-02", "word": "声", "reading": "こえ", "english": "дуу хоолой" },
@@ -229,6 +239,7 @@
   {
     "lesson": 11,
     "title": "私の生活 (My Life)",
+    "grammar": [],
     "words": [
       { "id": "l11-01", "word": "これから", "reading": "これから", "english": "одооноос" },
       { "id": "l11-02", "word": "頭", "reading": "あたま", "english": "толгой" },
@@ -250,6 +261,7 @@
   {
     "lesson": 12,
     "title": "病気・けが (Illness & Injuries)",
+    "grammar": [],
     "words": [
       { "id": "l12-01", "word": "けが", "reading": "けが", "english": "бэртэл" },
       { "id": "l12-02", "word": "食欲", "reading": "しょくよく", "english": "хоолны дуршил" },
@@ -271,6 +283,7 @@
   {
     "lesson": 13,
     "title": "私のおすすめ (My Recommendations)",
+    "grammar": [],
     "words": [
       { "id": "l13-01", "word": "おすすめ", "reading": "おすすめ", "english": "санал болгох зүйл" },
       { "id": "l13-02", "word": "切符", "reading": "きっぷ", "english": "тасалбар" },
@@ -292,6 +305,7 @@
   {
     "lesson": 14,
     "title": "国の習慣 (Customs of the Country)",
+    "grammar": [],
     "words": [
       { "id": "l14-01", "word": "習慣", "reading": "しゅうかん", "english": "зан заншил" },
       { "id": "l14-02", "word": "笑います", "reading": "わらいます", "english": "инээх" },
@@ -313,6 +327,7 @@
   {
     "lesson": 15,
     "title": "テレビ・雑誌から (From TV and Magazines)",
+    "grammar": [],
     "words": [
       { "id": "l15-01", "word": "最後", "reading": "さいご", "english": "сүүлчийн" },
       { "id": "l15-02", "word": "思い出", "reading": "おもいで", "english": "дурсамж" },
@@ -330,5 +345,215 @@
       { "id": "l15-14", "word": "始まります", "reading": "はじまります", "english": "эхлэх" },
       { "id": "l15-15", "word": "勝ちます", "reading": "かちます", "english": "ялах" }
     ]
+  },
+  {
+    "lesson": 16,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 17,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 18,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 19,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 20,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 21,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 22,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 23,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 24,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 25,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 26,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 27,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 28,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 29,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 30,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 31,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 32,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 33,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 34,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 35,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 36,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 37,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 38,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 39,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 40,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 41,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 42,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 43,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 44,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 45,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 46,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 47,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 48,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 49,
+    "title": "",
+    "grammar": [],
+    "words": []
+  },
+  {
+    "lesson": 50,
+    "title": "",
+    "grammar": [],
+    "words": []
   }
 ]

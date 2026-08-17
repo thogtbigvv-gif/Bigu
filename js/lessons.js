@@ -5,6 +5,13 @@
    Sits alongside vocabulary/grammar/kanji as reference material, not part
    of the practice deck.
 
+   The file is the みんなの日本語 spine, 1 to 50, and it is longer than what
+   has been written into it — the reader transcribes each lesson's words from
+   their own copy of the book as they study it. A lesson with no words is a
+   normal, permanent state of this view rather than a hole in the data, and
+   isWritten() below is the single test every part of this file asks before it
+   counts, labels, quizzes or chains a lesson.
+
    Each word has its own "Remember this" toggle, same shape and store as
    vocabulary/grammar/kanji's (review.js over storage.js's `progress` map,
    keyed by each word's `id`), so a lesson's progress survives a reload.
@@ -40,6 +47,25 @@ const QUIZ_MODE_SETTING_KEY = 'quizMode';
 /* -- Data ------------------------------------------------------------------------- */
 
 const loadLessons = createContentLoader(DATA_URL, 'lessons');
+
+/* -- Unwritten lessons ------------------------------------------------------------
+   The spine runs 1 to 50 because that is how far みんなの日本語 runs, and the
+   file is ahead of the reader: a lesson exists as a numbered place before
+   anything has been written into it.
+
+   That is a normal state, not a gap, and nothing in this view treats it as
+   one. An unwritten lesson has no title, no word count, no quiz, and is never
+   counted, never marked, never coloured. It is a number and a line saying
+   there is nothing in it yet. The reader is the only person who can fill it —
+   the words come out of a book they own, in their own words — so there is
+   also no button here inviting them to, because a button would make an empty
+   lesson a chore the app is waiting on rather than a page they have not
+   reached.
+   ---------------------------------------------------------------------------------- */
+
+function isWritten(lesson) {
+  return lesson.words.length > 0;
+}
 
 /* -- Progress ------------------------------------------------------------------------
    The shared schedule in review.js, same as every other view. Lesson word
@@ -175,10 +201,12 @@ function createWordRow(entry, onProgressChange) {
 function createLessonGroup(lesson, index, onQuiz) {
   const headerId = `lesson-${lesson.lesson}-header`;
   const bodyId = `lesson-${lesson.lesson}-body`;
+  const written = isWritten(lesson);
   const expanded = index === 0;
 
   const li = document.createElement('li');
   li.className = 'card card--interactive lesson-group';
+  if (!written) li.classList.add('lesson-group--unwritten');
 
   const heading = document.createElement('h2');
   heading.className = 'lesson-group__heading';
@@ -189,9 +217,12 @@ function createLessonGroup(lesson, index, onQuiz) {
   button.className = 'lesson-group__header';
   button.setAttribute('aria-controls', bodyId);
 
+  /* Just the number when there is nothing written down. Not "26." with a dot
+     left hanging where a title would go — the dot separates two things, and an
+     unwritten lesson is one thing. */
   const title = document.createElement('span');
   title.className = 'lesson-group__title';
-  title.textContent = `${lesson.lesson}. ${lesson.title}`;
+  title.textContent = written ? `${lesson.lesson}. ${lesson.title}` : String(lesson.lesson);
 
   const count = document.createElement('span');
   count.className = 'lesson-group__count meta';
@@ -201,8 +232,14 @@ function createLessonGroup(lesson, index, onQuiz) {
      ойд" half on a lesson nobody has touched: eighteen rows each reporting a
      zero is the "0/802" shape, a progress bar drawn in text, and it is on the
      one screen a reader sees before they have done anything at all. Once
-     there is something held, saying so is a report rather than a scoreboard. */
+     there is something held, saying so is a report rather than a scoreboard.
+
+     An unwritten lesson reports nothing at all, one step further on for the
+     same reason: "0 үг" is the size of a thing that is not there, and a column
+     of thirty-five zeroes down the back half of the list would read as
+     thirty-five failures rather than thirty-five pages not yet reached. */
   const updateCount = (records) => {
+    if (!written) return;
     const remembered = countRemembered(lesson.words, records);
     count.textContent = remembered > 0
       ? `${lesson.words.length} үг \u00b7 ${remembered} санах ойд`
@@ -221,14 +258,20 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   button.append(title, count, icon);
 
-  const quizButton = document.createElement('button');
-  quizButton.type = 'button';
-  quizButton.className = 'button button--secondary lesson-group__quiz-button';
-  quizButton.textContent = 'Quiz';
-  quizButton.setAttribute('aria-label', `Quiz lesson ${lesson.lesson}: ${lesson.title}`);
-  quizButton.addEventListener('click', () => onQuiz(lesson));
+  heading.append(button);
 
-  heading.append(button, quizButton);
+  /* No Quiz button on a lesson with no words. Not a disabled one — a round of
+     nothing is not a round, and a control that cannot do its job is worse than
+     no control. It appears by itself the moment the lesson has words in it. */
+  if (written) {
+    const quizButton = document.createElement('button');
+    quizButton.type = 'button';
+    quizButton.className = 'button button--secondary lesson-group__quiz-button';
+    quizButton.textContent = 'Quiz';
+    quizButton.setAttribute('aria-label', `Quiz lesson ${lesson.lesson}: ${lesson.title}`);
+    quizButton.addEventListener('click', () => onQuiz(lesson));
+    heading.append(quizButton);
+  }
 
   const body = document.createElement('div');
   body.id = bodyId;
@@ -236,9 +279,27 @@ function createLessonGroup(lesson, index, onQuiz) {
   body.setAttribute('role', 'region');
   body.setAttribute('aria-labelledby', headerId);
 
+  /* An unwritten lesson opens onto one line, in the register the rest of the
+     app uses when a surface has nothing on it. It says the words are not
+     written down yet and stops there: no "coming soon", because nothing is
+     coming on its own — the reader is the one who writes it, out of a book
+     they own — and nothing to press, because an empty lesson is a page not yet
+     reached rather than a chore the app is waiting on.
+
+     Built here rather than in buildRows: the laziness below exists to avoid
+     constructing a few hundred word rows nobody opened, and one paragraph is
+     not worth deferring. */
   const list = document.createElement('ul');
   list.className = 'lesson-word-list';
-  body.append(list);
+
+  if (written) {
+    body.append(list);
+  } else {
+    const note = document.createElement('p');
+    note.className = 'empty-state';
+    note.textContent = 'Энэ хичээлийн үгсийг хараахан тэмдэглээгүй байна.';
+    body.append(note);
+  }
 
   let rows = null;
 
@@ -302,9 +363,17 @@ function renderLessons(container, lessons) {
 
   const count = document.createElement('p');
   count.className = 'lessons-meta meta';
-  // The word total, not just the lesson count. "15 lessons" says nothing
-  // about the size of the commitment; the two numbers together are what a
-  // reader deciding whether to start actually wants.
+  /* The word total, not just the lesson count. "50 lessons" says nothing about
+     the size of the commitment; the two numbers together are what a reader
+     deciding whether to start actually wants.
+
+     Both are descriptions, not scores. The lesson count is the spine — 50,
+     matching both the book and the rows on screen, so it can be checked
+     against what is visible. The word total counts what is written down, which
+     is the smaller number, and the two are deliberately not shown as a
+     fraction: "15 of 50 written" is a completion figure, and how much of the
+     book has been transcribed is not something this screen has an opinion
+     about. */
   count.textContent = `${lessons.length} хичээл \u00b7 ${wordCount} үг`;
 
   const list = document.createElement('ul');
@@ -371,10 +440,17 @@ function renderLessons(container, lessons) {
     /* The one place in the app where "what comes next" is a fact rather
        than a suggestion: lessons are an ordered sequence, so the lesson
        after this one is real linkage and not a recommendation. The last
-       lesson has nothing after it and says so by offering nothing. */
+       lesson has nothing after it and says so by offering nothing.
+
+       "The next lesson" means the next one with words in it, not the next
+       number. Offering lesson 16 to someone who has just finished 15 would
+       hand them an empty round, and the sequence runs to 50 while what is
+       written down stops earlier — so the end of the written lessons is the
+       end of the chain, and it ends by offering nothing, exactly as the end
+       of the book always did. */
     onNextStep() {
       const at = lessons.indexOf(activeLesson);
-      const next = at === -1 ? null : lessons[at + 1];
+      const next = at === -1 ? null : lessons.slice(at + 1).find(isWritten);
       return next ? { go: () => runLesson(next) } : null;
     },
     onExit() {

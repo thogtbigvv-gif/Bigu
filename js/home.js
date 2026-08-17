@@ -266,9 +266,17 @@ function createSource(line, lessons) {
     if (!lesson) return null;
 
     wrap.append(element('p', 'home__source-meaning', `Lesson ${lesson.lesson}`));
-    const title = element('p', 'home__source-jp', lesson.title);
-    title.lang = 'ja';
-    wrap.append(title);
+    /* The lesson spine runs to 50 and the later ones have no title until the
+       reader writes one, so this can be empty — an empty <p> is a blank line
+       under "Lesson 26" that looks like something failed to load. Today's line
+       is drawn from the review pool, which only holds words, so a titleless
+       lesson cannot actually reach here; the guard is so that stays true by
+       construction rather than by coincidence. */
+    if (lesson.title) {
+      const title = element('p', 'home__source-jp', lesson.title);
+      title.lang = 'ja';
+      wrap.append(title);
+    }
     return wrap;
   }
 
