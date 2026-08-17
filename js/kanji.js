@@ -14,14 +14,20 @@
    (a dictionary entry, not alternate views of the same content), so the
    detail panel just stacks them and lets the page scroll.
 
-   Stroke Order and Animation need real per-character stroke-path data
-   (something like the KanjiVG dataset) that doesn't exist in kanji.json
-   yet, so both render a "coming soon" note for every entry today — same
-   empty-state language used elsewhere for not-yet-built stages. Examples
-   and Related Kanji are wired to real (optional) data fields now:
-   `examples` (falls back to the existing single `example`) and `related`
-   (an array of characters; each renders as a jump-to-that-kanji chip when
-   the character is found in this same dataset, plain text otherwise).
+   There were two more sections, Stroke Order and Animation, and both are
+   gone. They needed per-character stroke-path data — a KanjiVG-shaped
+   dataset — that kanji.json does not have and that nobody is going to author
+   by hand for 132 characters, each with its own ordered list of curves. They
+   rendered a "coming soon" note for every entry, which is to say they were
+   two headed sections whose only content was an apology, on the panel that
+   is supposed to be the app's dictionary entry.
+
+   What is left is what the data can answer: Meaning, On, Kun, Examples,
+   Related Kanji. `examples` falls back to the single `example` field, and
+   `related` is an array of characters, each rendered as a chip that jumps to
+   that character's own entry. 118 of the 132 entries carry one; the other 14
+   simply have no Related Kanji section, because a heading over an empty box
+   is the same apology in a smaller font.
    ========================================================================== */
 
 import { createStudyControls } from './studyControls.js';
@@ -186,13 +192,6 @@ function createTextBlock(text, { lang } = {}) {
   return p;
 }
 
-function createComingSoonBlock(message) {
-  const p = document.createElement('p');
-  p.className = 'empty-state';
-  p.textContent = message;
-  return p;
-}
-
 function createExamplesBlock(entry) {
   const list = document.createElement('div');
   list.className = 'kanji-detail__examples';
@@ -200,38 +199,36 @@ function createExamplesBlock(entry) {
   return list;
 }
 
-/* Each related character becomes a jump-to-entry chip when it exists in
-   this same dataset; otherwise it's just shown as plain text, since there's
-   nowhere for it to link to. */
-function createRelatedBlock(entry, allEntries, onJump) {
-  const related = entry.related ?? [];
+/* Every related character is a chip that opens that character's own entry.
+   The section is built only from characters this dataset actually holds, and
+   returns null when that leaves nothing — renderDetail drops the whole
+   section rather than heading an empty box.
 
-  if (related.length === 0) {
-    return createComingSoonBlock('Холбоотой ханз удахгүй нэмэгдэнэ.');
-  }
+   A character not in the dataset is dropped rather than shown inert. It used
+   to render as an aria-disabled chip, which is a control that exists to be
+   unusable: "Related Kanji" is a row of ways into other entries, and a
+   character with no entry is not one of those. Counted rather than assumed —
+   of 521 related references across the file, zero point outside the 132
+   characters, so this branch changes nothing today and only decides what
+   happens if the data ever grows past the app. */
+function createRelatedBlock(entry, allEntries, onJump) {
+  const matches = (entry.related ?? [])
+    .map((character) => allEntries.find((candidate) => candidate.character === character))
+    .filter(Boolean);
+
+  if (matches.length === 0) return null;
 
   const wrap = document.createElement('div');
   wrap.className = 'kanji-detail__related';
 
-  for (const character of related) {
-    const match = allEntries.find((candidate) => candidate.character === character);
-
-    if (match) {
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.className = 'toggle-chip';
-      button.lang = 'ja';
-      button.textContent = character;
-      button.addEventListener('click', () => onJump(match));
-      wrap.append(button);
-    } else {
-      const span = document.createElement('span');
-      span.className = 'toggle-chip';
-      span.lang = 'ja';
-      span.setAttribute('aria-disabled', 'true');
-      span.textContent = character;
-      wrap.append(span);
-    }
+  for (const match of matches) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'toggle-chip';
+    button.lang = 'ja';
+    button.textContent = match.character;
+    button.addEventListener('click', () => onJump(match));
+    wrap.append(button);
   }
 
   return wrap;
@@ -278,14 +275,19 @@ function renderDetail(elements, entry, level, allEntries, onJump) {
   elements.tag.textContent = level ?? '';
   elements.tag.hidden = !level;
 
+  /* Related Kanji is the one section that can be absent, so it is the one
+     built conditionally — 14 of the 132 entries have no related characters
+     and get a five-section panel instead of a six-section one. */
+  const related = createRelatedBlock(entry, allEntries, onJump);
+
   elements.sections.replaceChildren(
-    createDetailSection('Meaning', createTextBlock(entry.meaning)),
-    createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
-    createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
-    createDetailSection('Stroke Order', createComingSoonBlock('Зурлагын дарааллын зураг удахгүй нэмэгдэнэ.')),
-    createDetailSection('Animation', createComingSoonBlock('Зурлагын дарааллын хөдөлгөөнт дүрслэл удахгүй нэмэгдэнэ.')),
-    createDetailSection('Examples', createExamplesBlock(entry)),
-    createDetailSection('Related Kanji', createRelatedBlock(entry, allEntries, onJump)),
+    ...[
+      createDetailSection('Meaning', createTextBlock(entry.meaning)),
+      createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
+      createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
+      createDetailSection('Examples', createExamplesBlock(entry)),
+      related && createDetailSection('Related Kanji', related),
+    ].filter(Boolean),
   );
 
   /* The panel replaces the grid in place, so opening one from the bottom of

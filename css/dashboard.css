@@ -10,7 +10,9 @@
    step above the rest — every other view's title is at --text-lg (see the
    ladder in typography.css). That step is what tells a reader at a glance
    whether they're at home or inside a section; before it, the Dashboard and
-   "Shadowing is coming soon" rendered identically.
+   the Shadowing stub rendered identically. (That stub is gone now — it never
+   had audio to shadow — but the step is what stops any view's title from
+   reading like the app's own.)
 
    One step now, not two. This heading used to take the top of the scale
    outright, which made the word "Dashboard" the largest thing on the app's
@@ -239,7 +241,7 @@
    and at 39px that is already emphatic.
    ------------------------------------------------------------------------------------------- */
 .dashboard-streak__count {
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-2xl);
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;

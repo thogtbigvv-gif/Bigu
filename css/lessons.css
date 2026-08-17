@@ -90,6 +90,30 @@
   flex: 1;
 }
 
+/* -- A lesson not written down yet ---------------------------------------------
+   The spine runs to 50 and the reader transcribes each lesson from their own
+   copy of the book, so the back half of this list is numbers with nothing
+   behind them yet. That is a normal state of this view, and the whole
+   treatment is one step of grey: --color-sumi-faint, the same secondary ink
+   every quiet annotation in the app uses.
+
+   What it deliberately is not: no --color-shu, which in this app means "this
+   one" and would turn thirty-five unwritten lessons into thirty-five things
+   demanding attention. No dashed border, no reduced opacity, no italic, no
+   badge — every one of those reads as *broken* or *disabled*, and an unwritten
+   lesson is neither. It is a page not yet reached, and the row stays a row:
+   full size, full contrast on its number's shape, and it opens like any other.
+   ------------------------------------------------------------------------------- */
+.lesson-group--unwritten .lesson-group__title {
+  color: var(--color-sumi-faint);
+}
+
+/* The chevron comes down with it, so the row reads as one weight rather than a
+   grey label beside a black arrow. */
+.lesson-group--unwritten .lesson-group__icon {
+  color: var(--color-sumi-faint);
+}
+
 /* "18 words · 0 in memory" — the row's meta, and it inherits the header's font
    size unless told otherwise, which would have dragged it up to --text-lg
    alongside the title it annotates. */

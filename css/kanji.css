@@ -248,6 +248,24 @@
   color: var(--color-sumi);
 }
 
+/* The font-family above, said twice, because being an <h2> costs it.
+   typography.css sets `h1:lang(ja), h2:lang(ja), h3:lang(ja)` at 0-1-1 and the
+   class above is 0-1-0, so the specimen was painted in --font-display — the
+   gothic — while the comment above described a textbook hand it was not
+   getting. 136px of the glyph the whole view is about, in the one face the app
+   chose not to set Japanese in.
+
+   `.kanji-detail__character:lang(ja)` is 0-2-0 and clears the heading rule.
+
+   The same defeat takes `line-height: 1` with it and that is NOT fixed here:
+   the box measures 136×170, which is 136 × --leading-tight, not the 1 the rule
+   asks for. Restoring it would move the panel's layout, and this change is
+   scoped to which family wins so that anything that shifts is attributable to
+   the typeface. It is a real defect and it is still open. */
+.kanji-detail__character:lang(ja) {
+  font-family: var(--font-jp), var(--font-jp-stack);
+}
+
 .kanji-detail__sections {
   display: flex;
   flex-direction: column;

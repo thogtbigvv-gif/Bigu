@@ -90,7 +90,7 @@
   gap: var(--space-3xs);
   margin: 0;
   margin-inline-start: auto;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
   color: var(--color-sumi-faint);
@@ -436,7 +436,7 @@
 
 .quiz__hint {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-sm);
   color: var(--color-sumi-soft);
 }
@@ -572,7 +572,7 @@
   height: 1.5rem;
   border: var(--border-width) solid var(--color-line);
   border-radius: var(--radius-sm);
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-xs);
   color: var(--color-sumi-faint);
   /* Declared on the base so the box eases back out of hover as smoothly as it
@@ -967,7 +967,7 @@
    summary is above --text-base. */
 .quiz__summary-score {
   margin: 0;
-  font-family: var(--font-mono);
+  font-family: var(--font-mono-stack);
   font-size: var(--text-3xl);
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
