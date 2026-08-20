@@ -72,9 +72,9 @@ const QUICK_MODE = 'choose';
    first — which is precisely what the Review view's "Due today" deck is, so
    this is a true description rather than a convenient one. Minting a 'home'
    value instead would put an unknown string into the `mode` field of the
-   `bigu:bridge` session contract that summer-project already consumes, and
-   into DECK_LABELS' fallback path on the Dashboard and the Review history.
-   The bridge contract is not ours to widen from here. */
+   `bigu:bridge` event contract that summer-project consumes, and into
+   DECK_LABELS' fallback path on the Dashboard and the Review history. The
+   bridge contract is not ours to widen from here. */
 const QUICK_DECK = 'due';
 
 /* -- The hour ------------------------------------------------------------------------
@@ -433,9 +433,12 @@ function initHome() {
         // Keyboard shortcuts must not fire while another view is on screen.
         isActive: () => location.hash.slice(1) === VIEW_ID,
         /* The one path that logs a round in this app: the practice store
-           mints the id, bridge.js republishes it. Home does not touch the
-           bridge itself and does not award anything — it finishes a real
-           session and lets the existing pipeline carry it. */
+           mints the id, and bridge.js republishes it as an event under that
+           same id and redraws the status. Home does not touch the bridge
+           itself and does not award anything — it finishes a real session
+           and lets the existing pipeline carry it. No eventType, so the
+           round publishes as the `review.session` it is: a quick round is
+           the Review deck's own session, just shorter. */
         onFinish: ({ total, correct }) => {
           recordSession({ total, correct, mode: QUICK_DECK });
         },

@@ -4,7 +4,9 @@
    the app's own `nagi:` namespace, for anything else served from the same
    origin to read. Nothing here is read back into Bigu and nothing here
    changes how Bigu behaves — if no one is listening, this is a write into
-   a key nobody opens.
+   a key nobody opens. There is no UI for it, and it awards nothing: it
+   reports what the study stores already say, and computes no score of its
+   own.
 
    Same guarding rule as storage.js: every read and write is wrapped, so a
    quota error, disabled storage or corrupted JSON turns into `false`, not
@@ -14,17 +16,24 @@
    The shape is a contract, not an internal structure — it is versioned by
    `v` and must not be changed in place:
 
-     { v, app, updatedAt, due: { date, count }, sessions: [ … ] }
+     { v, app, updatedAt, status: { … }, events: [ … ] }
 
-   `sessions` is append-only, oldest first, capped at the newest 50, and
-   each entry carries the id the `practice` store already generated for
-   that round so a reader can dedupe on it.
+   `events` is append-only, oldest first, capped at the newest 50, and each
+   entry carries the id the `practice` store already generated for that
+   round so a reader can dedupe on it. `status` is a flat snapshot of
+   display-ready values — already-counted numbers and an already-formatted
+   date, so a reader can print them without knowing anything about how Bigu
+   schedules or what it stores.
+
+   Both publishers re-read the envelope, merge into it, bump `updatedAt` and
+   write once: publishing an event leaves the status exactly as it was found
+   and vice versa.
    ========================================================================== */
 
 const KEY = 'bigu:bridge';
-const VERSION = 1;
+const VERSION = 2;
 const APP = 'Bigu';
-const SESSION_LIMIT = 50;
+const EVENT_LIMIT = 50;
 
 /* -- Raw access ----------------------------------------------------------------- */
 
@@ -48,7 +57,8 @@ function writeRaw(key, value) {
 /* -- Local date -----------------------------------------------------------------
    Built from the local calendar fields, never from toISOString(): a round
    finished at 23:30 belongs to the day the reader just spent, not to
-   tomorrow in UTC.
+   tomorrow in UTC. The result is still an ISO-8601 calendar date, which is
+   what the reader prints.
    -------------------------------------------------------------------------------------- */
 
 function localDate(date = new Date()) {
@@ -65,7 +75,11 @@ function localDate(date = new Date()) {
    -------------------------------------------------------------------------------------- */
 
 function emptyState() {
-  return { v: VERSION, app: APP, updatedAt: 0, due: null, sessions: [] };
+  return { v: VERSION, app: APP, updatedAt: 0, status: null, events: [] };
+}
+
+function isPlainObject(value) {
+  return Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
 function readState() {
@@ -77,13 +91,13 @@ function readState() {
   } catch {
     return emptyState();
   }
-  if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return emptyState();
+  if (!isPlainObject(parsed)) return emptyState();
   const state = emptyState();
-  if (Array.isArray(parsed.sessions)) {
-    state.sessions = parsed.sessions.filter((entry) => entry && typeof entry === 'object' && !Array.isArray(entry));
+  if (Array.isArray(parsed.events)) {
+    state.events = parsed.events.filter(isPlainObject);
   }
-  if (parsed.due && typeof parsed.due === 'object' && !Array.isArray(parsed.due)) {
-    state.due = parsed.due;
+  if (isPlainObject(parsed.status)) {
+    state.status = parsed.status;
   }
   return state;
 }
@@ -101,26 +115,30 @@ function writeState(state) {
 
 /* -- Publishing ---------------------------------------------------------------------- */
 
-/* Appends one finished round. `id` is the id the practice store generated
-   for that same round, so a reader that has already seen it can skip it —
-   which is also why re-publishing the same id here is a no-op rather than
-   a second entry. */
-function publishSession({ id, mode, total, correct } = {}) {
+/* Appends one thing that happened. `id` is the id the practice store
+   generated for that same round, so a reader that has already seen it can
+   skip it — which is also why re-publishing the same id here is a no-op
+   rather than a second entry.
+
+   `value` is the one number worth showing next to the event and `detail`
+   the one line of text under it; both arrive already decided, because
+   choosing them is the publishing surface's job, not the reader's. */
+function publishEvent({ id, type, value, detail } = {}) {
   try {
-    if (!id) return false;
+    if (!id || !type) return false;
     const state = readState();
-    if (state.sessions.some((entry) => entry.id === id)) return true;
+    if (state.events.some((event) => event.id === id)) return true;
     const now = Date.now();
-    state.sessions.push({
+    state.events.push({
       id,
+      type,
       at: now,
       date: localDate(new Date(now)),
-      mode,
-      total,
-      correct,
+      value,
+      detail,
     });
-    if (state.sessions.length > SESSION_LIMIT) {
-      state.sessions = state.sessions.slice(-SESSION_LIMIT);
+    if (state.events.length > EVENT_LIMIT) {
+      state.events = state.events.slice(-EVENT_LIMIT);
     }
     return writeState(state);
   } catch {
@@ -128,16 +146,23 @@ function publishSession({ id, mode, total, correct } = {}) {
   }
 }
 
-/* Replaces the due snapshot outright — it describes today, so there is
-   nothing to merge with yesterday's. */
-function publishDue(count) {
+/* Replaces the status object outright — it describes how things stand right
+   now, so there is nothing to merge with how they stood an hour ago. Fields
+   that arrive undefined are dropped rather than written as null: a caller
+   with no streak to report publishes a status with no `streak` key, which
+   is a reader's cue to show nothing there rather than a zero. */
+function publishStatus(status = {}) {
   try {
+    const next = {};
+    for (const [field, value] of Object.entries(status)) {
+      if (value !== undefined) next[field] = value;
+    }
     const state = readState();
-    state.due = { date: localDate(), count };
+    state.status = next;
     return writeState(state);
   } catch {
     return false;
   }
 }
 
-export { publishSession, publishDue };
+export { publishEvent, publishStatus };

@@ -17,14 +17,21 @@
    Each finished round is logged to the practice store, tagged with its
    deck, for dashboard.js. A small history block reads that same store back
    to list the most recent rounds, refreshed after every one.
+
+   This file also owns the two writes to the `bigu:bridge` key — one event
+   per finished round, and the status snapshot — because it already owns
+   both the shared round logger and the review pool those figures are
+   counted over. Home and Lessons run rounds through the same logger, so all
+   three surfaces publish identically. Nothing is ever read back.
    ========================================================================== */
 
 import { practice, settings } from './storage.js';
-import { publishSession } from './bridge.js';
+import { publishEvent, publishStatus } from './bridge.js';
 import { getViewContainer } from './content.js';
 import { buildSession, countDue, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
 import { sessionSize } from './preferences.js';
+import { currentStreak, toDateKey } from './streak.js';
 import { loadVocabulary } from './vocabulary.js';
 import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
@@ -39,8 +46,8 @@ const HISTORY_LIMIT = 5;
    The four content decks and the flattened everything-pool built out of
    them. This was inline in initPractice and is lifted out because two other
    places need exactly the same answer and neither should be re-deriving it:
-   app.js publishes the bridge's due count over `everything` at boot, and
-   home.js asks whether anything is waiting and pulls its one line of
+   the bridge's status snapshot counts what's due and held over `everything`,
+   and home.js asks whether anything is waiting and pulls its one line of
    Japanese out of the same three sources.
 
    The promise is memoized rather than the value, same reasoning as
@@ -90,29 +97,85 @@ function loadReviewPool() {
 }
 
 /* -- Logging a finished round -------------------------------------------------------
-   The two writes every finished round in this app makes, in the order they
-   have to happen: the practice store generates the id, and the bridge
-   republishes that same id so anything reading `bigu:bridge` on this origin
-   can dedupe on it.
+   The three writes every finished round in this app makes, in the order
+   they have to happen: the practice store generates the id, the bridge
+   republishes that same id as an event so anything reading `bigu:bridge` on
+   this origin can dedupe on it, and the bridge's status snapshot is redrawn
+   because a graded round is exactly what changes it.
 
-   Lifted out of this module's own onFinish because Home now runs a short
-   round of its own and has to log it *identically* — a practice surface that
-   quietly skipped either write would be a session the reader did and the
-   Review history, the Dashboard and summer-project never heard about. It is
-   the same two lines it always was; what matters is that there is now one
-   copy of them for both callers rather than a second contract growing beside
-   the first.
+   Lifted out of this module's own onFinish because Home and Lessons both
+   run rounds of their own and have to log them *identically* — a practice
+   surface that quietly skipped any of the three would be a session the
+   reader did and the Review history, the Dashboard or summer-project never
+   heard about. What matters is that there is one copy of them for every
+   caller rather than a second contract growing beside the first.
+
+   `eventType` is the one thing a caller varies: the same round means
+   something slightly different published from Review than from a lesson, so
+   the reader on the other side is told which. Everything else about the
+   event is the same shape either way, because the round is the same round.
 
    A round ended before anything was graded logs nothing and says so by
    returning null. Same rule as before: reporting 0/0 is reporting nothing.
    ---------------------------------------------------------------------------------- */
-function recordSession({ total, correct, mode }) {
+function recordSession({ total, correct, mode, eventType = 'review.session' }) {
   if (!(total > 0)) return null;
   const record = practice.add({ total, correct, mode });
-  // Cannot throw — bridge.js swallows its own storage errors — and nothing
-  // depends on it having worked.
-  publishSession({ id: record.id, total, correct, mode });
+  // Neither can throw — bridge.js swallows its own storage errors — and
+  // nothing here depends on either having worked.
+  publishEvent({
+    id: record.id,
+    type: eventType,
+    value: correct,
+    detail: `${total} items \u00b7 ${correct} correct`,
+  });
+  publishStatusSnapshot();
   return record;
+}
+
+/* -- The bridge's status snapshot ----------------------------------------------------
+   How things stand right now, for the separate summer-project surface
+   served from the same origin: how much is waiting, when the reader last
+   studied, how much they are holding, and the streak the Dashboard would
+   show them. Published at boot and again after every graded round, since
+   those are the two moments any of it can have changed.
+
+   Display-ready values only, and nothing invented for the occasion. Each
+   number here is one the app already counts for its own screens — the
+   summed countDue() behind the Dashboard's Today card, its Memory figure,
+   its streak — so the reader on the other side prints them and no more.
+   There is no score, no level and no XP: Bigu does not compute one, and the
+   bridge is not the place to start.
+
+   A streak of zero is published as no streak at all rather than as 0. There
+   is a difference between "your run is broken" and "you have no run", and
+   only the first is worth a reader's screen space.
+
+   Fire and forget, deliberately. It waits on the four content files, so
+   awaiting it would hold whatever called it — at boot, the first paint of
+   Home — behind four fetches that nothing on screen needs. It cannot throw
+   into its caller: publishStatus() swallows its own storage errors, and a
+   failed fetch is logged and dropped here, because a browser that cannot
+   reach data/ still has an app to render.
+   ---------------------------------------------------------------------------------- */
+function publishStatusSnapshot() {
+  loadReviewPool()
+    .then((pool) => {
+      const counts = countDue(pool.everything);
+      const streak = currentStreak();
+      // Max rather than the last element: a restored backup writes the array
+      // back whole, and nothing guarantees the order it was saved in.
+      const lastStudiedAt = practice.getAll()
+        .reduce((latest, record) => Math.max(latest, record?.createdAt ?? 0), 0);
+
+      publishStatus({
+        dueCount: counts.due,
+        learnedCount: counts.remembered,
+        lastStudied: lastStudiedAt ? toDateKey(new Date(lastStudiedAt)) : undefined,
+        streak: streak > 0 ? streak : undefined,
+      });
+    })
+    .catch((error) => console.error('[Bigu]', error));
 }
 
 /* Where a finished round points next, per deck. Not a recommendation engine
@@ -489,4 +552,4 @@ async function initPractice() {
   }
 }
 
-export { initPractice, loadReviewPool, recordSession, DECK_LABELS };
+export { initPractice, loadReviewPool, recordSession, publishStatusSnapshot, DECK_LABELS };

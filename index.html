@@ -366,10 +366,10 @@
              nav row and is not the entry route any more; the hash still
              resolves and js/dashboard.js still renders it unchanged.
 
-             Its one side effect moved out with its nav row: publishDue()
-             used to be called from renderGrid(), so the bridge's due
-             snapshot was only written on visits to a view that is no longer
-             on the daily path. It is called from js/app.js at boot now.
+             Its one side effect moved out with its nav row: the bridge's
+             snapshot used to be published from renderGrid(), so it was only
+             written on visits to a view that is no longer on the daily
+             path. js/app.js publishes it at boot now.
 
              The heading and the "what's waiting for you" line form one hero
              block; dashboard.js fills the status line on every visit. -->
