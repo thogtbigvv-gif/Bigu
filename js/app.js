@@ -19,15 +19,13 @@ import { isAvailable as isStorageAvailable } from './storage.js';
 import { initTheme, bindToggleButton } from './theme.js';
 import { initRouter, registerView } from './router.js';
 import { initNav } from './navigation.js';
-import { publishDue } from './bridge.js';
-import { countDue } from './review.js';
 import { initHome } from './home.js';
 import { initDashboard } from './dashboard.js';
 import { initVocabulary } from './vocabulary.js';
 import { initGrammar } from './grammar.js';
 import { initKanji } from './kanji.js';
 import { initKakitori } from './kakitori.js';
-import { initPractice, loadReviewPool } from './practice.js';
+import { initPractice, publishStatusSnapshot } from './practice.js';
 import { initMemory } from './memory.js';
 import { initJournal } from './journal.js';
 import { initLessons } from './lessons.js';
@@ -47,32 +45,28 @@ function checkStorage() {
   }
 }
 
-/* -- The bridge's due snapshot ------------------------------------------------
-   One write to the `bigu:bridge` key saying how many items are due today,
+/* -- The bridge's status snapshot ------------------------------------------------
+   One write to the `bigu:bridge` key saying how things stand — what is due,
+   when the reader last studied, how much they are holding, their streak —
    for the separate summer-project surface served from the same origin. It
-   is the only thing this file publishes; the per-session records are
-   written by practice.js and lessons.js as each round ends, and neither is
-   touched here.
+   is the only thing this file publishes; the per-round events are published
+   by practice.js as each round ends, from whichever surface ran it, and
+   none of that is touched here.
 
-   This used to live inside dashboard.js's renderGrid(), which was correct
-   only for as long as the Dashboard was the view every visit started on.
-   It isn't any more — it has no nav row and is off the entry path — so
-   left there the due figure would have been written on a screen most
-   sessions never open, and the reader on the other side would have been
-   looking at a count from whenever they last happened to visit it.
+   Publishing it from boot rather than from a view is the whole point. It
+   used to live inside dashboard.js's renderGrid(), which was correct only
+   for as long as the Dashboard was the view every visit started on. It
+   isn't any more — it has no nav row and is off the entry path — so left
+   there the figures would have been written on a screen most sessions never
+   open, and the reader on the other side would have been looking at
+   whenever they last happened to visit it. Boot happens on every visit
+   regardless of where the Dashboard sits in the IA, or whether it exists.
 
-   Fire and forget, deliberately. It waits on the four content files, so
-   awaiting it in init() would hold the router — and therefore the first
-   paint of Home — behind four fetches that nothing on screen needs. It
-   cannot throw into the boot path: publishDue() swallows its own storage
-   errors, and a failed fetch is logged and dropped here, because a browser
-   that cannot reach data/ still has an app to render.
+   Fire and forget, deliberately: publishStatusSnapshot() waits on the four
+   content files and swallows its own errors, so calling it here cannot
+   throw into the boot path or hold the first paint of Home behind fetches
+   nothing on screen needs.
    ---------------------------------------------------------------------------- */
-function publishDueSnapshot() {
-  loadReviewPool()
-    .then((pool) => publishDue(countDue(pool.everything).due))
-    .catch((error) => console.error('[Bigu]', error));
-}
 
 /* -- Footer --------------------------------------------------------------------- */
 function initFooterYear() {
@@ -130,7 +124,7 @@ function init() {
   // After the router, so the first view is already rendering while the four
   // content files this needs are still in flight. Nothing on screen depends
   // on it.
-  publishDueSnapshot();
+  publishStatusSnapshot();
 
   // The header logo's own animation. Scoped entirely to the mark — it never
   // blocks the app, so where it sits in this order does not matter.

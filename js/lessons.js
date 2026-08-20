@@ -30,10 +30,16 @@
    One progress model is worth more than the separation was.
    ========================================================================== */
 
-import { practice, settings } from './storage.js';
-import { publishSession } from './bridge.js';
+import { settings } from './storage.js';
 import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from './review.js';
 import { createQuiz, createModePicker } from './quiz.js';
+/* practice.js imports this module's loadLessons for the review pool, so this
+   pairing is a cycle. It is a safe one and deliberately not worked around:
+   neither binding is touched while the modules evaluate — loadLessons runs
+   when the pool is first built, recordSession when a round ends — and the
+   alternative is lessons.js keeping a second copy of the logging path,
+   which is the duplication this import exists to remove. */
+import { recordSession } from './practice.js';
 import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
 
 const DATA_URL = 'data/lessons.json';
@@ -423,18 +429,24 @@ function renderLessons(container, lessons) {
       const records = snapshotRecords();
       for (const group of groups) group.refresh(records);
     },
-    /* Logged to the same store practice.js writes, tagged `lessons`. A
-       lesson round grades into the shared schedule like every other surface,
-       but it was the one that left no trace of having happened — the
-       Dashboard's "Last review" card and the Review view's recent list both
-       read this store, so a reader who only ever quizzed from Lessons was
-       told they had never reviewed. A round ended early still counts what
-       was graded, same rule as practice.js. */
+    /* Logged through practice.js's recordSession, tagged `lessons`. A lesson
+       round grades into the shared schedule like every other surface, but it
+       was the one that left no trace of having happened — the Dashboard's
+       "Last review" card and the Review view's recent list both read the
+       practice store, so a reader who only ever quizzed from Lessons was
+       told they had never reviewed. Going through the shared path rather
+       than writing the store directly is what keeps that true as the path
+       grows: it now also publishes the round to the bridge and redraws the
+       bridge's status, and a private copy here would have quietly stopped
+       short of both.
+
+       `lesson.quiz` rather than `review.session` is the only difference from
+       a round started in Review — same store, same schedule, same shape on
+       the bridge — because on the other side "you finished lesson seven" and
+       "you did your reviews" are worth telling apart. A round ended early
+       still counts what was graded, same rule as practice.js. */
     onFinish({ total, correct }) {
-      if (total > 0) {
-        const record = practice.add({ total, correct, mode: 'lessons' });
-        publishSession({ id: record.id, total, correct, mode: 'lessons' });
-      }
+      recordSession({ total, correct, mode: 'lessons', eventType: 'lesson.quiz' });
     },
     onNewRound: () => (activeLesson ? shuffled(activeLesson.words) : null),
     /* The one place in the app where "what comes next" is a fact rather

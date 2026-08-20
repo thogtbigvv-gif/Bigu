@@ -37,21 +37,9 @@ import { loadGrammar } from './grammar.js';
 import { loadKanji } from './kanji.js';
 import { loadLessons } from './lessons.js';
 import { DECK_LABELS } from './practice.js';
+import { collectStudyDays, computeStreak, toDateKey, todayKey } from './streak.js';
 
 const VIEW_ID = 'dashboard';
-
-/* -- Dates -------------------------------------------------------------------------- */
-
-function toDateKey(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function todayKey() {
-  return toDateKey(new Date());
-}
 
 const dateLabelFormatter = new Intl.DateTimeFormat('en', {
   month: 'short',
@@ -60,67 +48,6 @@ const dateLabelFormatter = new Intl.DateTimeFormat('en', {
 
 function formatSessionDate(timestamp) {
   return dateLabelFormatter.format(new Date(timestamp));
-}
-
-/* -- Study days -------------------------------------------------------------------------
-   Which calendar days count toward the streak. This used to read the
-   journal alone, which meant the app's hero number — biggest type on the
-   page, in the accent colour, first card in the grid — rewarded the one activity
-   most readers do least. Someone who reviewed a hundred cards a day for a
-   month saw a streak of zero, which is not just wrong, it's discouraging.
-
-   A day counts as studied if any of three things happened on it: a journal
-   entry was written, a review session was finished, or an item was put into
-   memory. All three are already timestamped in storage, so this needs no
-   new data — only for the streak to look at all of it. The set of kinds per
-   day is kept, not just the fact of one, so the card can say which.
-
-   The two dates on a record answer two different questions and were being
-   read as if they answered one. `lastSeen` moves on every single grade, so
-   reading it as "met a new word" put шинэ үг on a day the reader spent
-   entirely on revision — and, because it only ever holds the *latest* touch,
-   the day a word was actually first met vanished from the streak as soon as
-   that word came round again. `firstSeen` never moves, so it is the one that
-   means "new", and it recovers those days.
-   ------------------------------------------------------------------------------------------ */
-
-function collectStudyDays({ entries, sessions, records }) {
-  const days = new Map();
-
-  function mark(key, kind) {
-    if (!key) return;
-    if (!days.has(key)) days.set(key, new Set());
-    days.get(key).add(kind);
-  }
-
-  for (const entry of entries) mark(entry.date, 'тэмдэглэл');
-  for (const session of sessions) mark(toDateKey(new Date(session.createdAt)), 'давталт');
-  for (const record of records) {
-    if (!record) continue;
-    if (record.lastSeen) mark(toDateKey(new Date(record.lastSeen)), 'давталт');
-    if (record.firstSeen) mark(toDateKey(new Date(record.firstSeen)), 'шинэ үг');
-  }
-
-  return days;
-}
-
-/* Most recent unbroken run of study days. If today has nothing yet the count
-   starts from yesterday instead — the streak isn't broken until a full day
-   passes with nothing at all. */
-function computeStreak(days) {
-  const cursor = new Date();
-
-  if (!days.has(toDateKey(cursor))) {
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  let streak = 0;
-  while (days.has(toDateKey(cursor))) {
-    streak += 1;
-    cursor.setDate(cursor.getDate() - 1);
-  }
-
-  return streak;
 }
 
 /* -- First visit ----------------------------------------------------------------------------
@@ -591,14 +518,15 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
     { due: 0, new: 0, remembered: 0, total: 0 },
   );
 
-  /* The bridge's due snapshot used to be published from right here, on the
-     grounds that this was the one screen holding the figure across all four
+  /* The bridge's snapshot used to be published from right here, on the
+     grounds that this was the one screen holding the figures across all four
      decks and the one screen every visit started on. The second half of that
      stopped being true: this view has no nav row and is off the entry path,
      so publishing from it meant the summer-project surface went stale the
      moment a reader stopped opening a screen they have no reason to open.
-     js/app.js publishes it at boot instead — see publishDueSnapshot() there.
-     Nothing else about this view changed. */
+     js/app.js publishes at boot instead — see publishStatusSnapshot(), which
+     lives in practice.js beside the pool it counts over. Nothing else about
+     this view changed. */
 
   const entries = journal.getAll();
   const sessions = practice.getAll();
