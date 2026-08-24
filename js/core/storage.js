@@ -185,12 +185,59 @@ const sentences = createListStore('sentences');
    so un-keeping is a delete instead of a filter. */
 const favorites = createMapStore('favorites');
 
-function clearAll() {
-  const results = [
-    settings.clear(), progress.clear(), journal.clear(),
-    practice.clear(), favorites.clear(), sentences.clear(),
-  ];
-  return results.every(Boolean);
+/* -- The stores, as data -------------------------------------------------------------
+   Everything this app persists, in one list. It exists because the backup
+   card in settings.js described the same six stores three separate times —
+   once to export them, once to decide whether a file was a valid backup, and
+   once to write them back — and the three lists had already drifted. Two of
+   the stores were added after the backup format was, and each addition
+   needed remembering in all three places; `sentences` was missing from the
+   validator's list, which is the drift, not a hypothetical.
+
+   `kind` is what a valid value looks like. It is not decoration: restore
+   overwrites the reader's real data with whatever the file holds, and a
+   store handed the wrong kind falls back to empty — so an array where a map
+   belongs is not a rejected file, it is a wiped one. The check that stops
+   that is in settings.js and reads this field.
+
+   `required` marks the four stores the format shipped with. A backup taken
+   before `favorites` or `sentences` existed is still a perfectly good
+   backup, and demanding the newer keys would reject every file already on
+   a reader's disk.
+   ---------------------------------------------------------------------------------------- */
+
+const STORES = [
+  { name: 'settings', store: settings, kind: 'map', required: true },
+  { name: 'progress', store: progress, kind: 'map', required: true },
+  { name: 'journal', store: journal, kind: 'list', required: true },
+  { name: 'practice', store: practice, kind: 'list', required: true },
+  { name: 'favorites', store: favorites, kind: 'map', required: false },
+  { name: 'sentences', store: sentences, kind: 'list', required: false },
+];
+
+/* Whether a value is the kind a given store holds. The same question
+   readMap and readList ask of what they find in localStorage, asked of what
+   arrives in a backup file — one definition, so a value the restore accepts
+   is a value the store will actually keep. */
+function isStoreShaped(kind, value) {
+  return kind === 'list'
+    ? Array.isArray(value)
+    : Boolean(value) && typeof value === 'object' && !Array.isArray(value);
 }
 
-export { isAvailable, settings, progress, journal, practice, favorites, sentences, clearAll };
+function clearAll() {
+  return STORES.map(({ store }) => store.clear()).every(Boolean);
+}
+
+export {
+  isAvailable,
+  settings,
+  progress,
+  journal,
+  practice,
+  favorites,
+  sentences,
+  STORES,
+  isStoreShaped,
+  clearAll,
+};

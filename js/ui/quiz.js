@@ -1526,10 +1526,34 @@ function createQuiz({
 
   /* -- Lifecycle ------------------------------------------------------------------------- */
 
+  /* Anything this panel cannot ask about is dropped at the door.
+
+     adapterFor() has always been able to return null — an id whose prefix
+     no adapter claims has no adapter — and three places downstream called
+     `.front()` on the result anyway. The review pool filters, so the Review
+     view never sent one; a lesson quiz and Home's round pass their items
+     straight through, so a single mistyped id in data/lessons.json would
+     have taken down the round with "Cannot read properties of null" rather
+     than skipping one card.
+
+     One guard at the entry rather than three at the call sites: past this
+     line every item in the queue has an adapter, which is a thing the rest
+     of the module can then simply rely on. A round with nothing askable in
+     it does not open — it hands back to the surface that started it, the
+     same way an ended round does. */
   function run(items, { mode = state.mode, pool = items, title = state.title } = {}) {
+    const askable = items.filter((item) => deckKeyForItemId(item.id) !== null);
+    if (askable.length !== items.length) {
+      console.error(`[Bigu] ${items.length - askable.length} item(s) have no quiz adapter and were skipped`);
+    }
+    if (askable.length === 0) {
+      onExit();
+      return;
+    }
+
     state.mode = mode;
-    state.queue = items;
-    state.pool = pool.length >= CHOICE_COUNT ? pool : items;
+    state.queue = askable;
+    state.pool = pool.length >= CHOICE_COUNT ? pool : askable;
     state.index = 0;
     state.correct = 0;
     state.missed = [];

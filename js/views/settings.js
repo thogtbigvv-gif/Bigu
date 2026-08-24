@@ -17,12 +17,8 @@
    ========================================================================== */
 
 import {
-  settings,
-  progress,
-  journal,
-  practice,
-  favorites,
-  sentences,
+  STORES,
+  isStoreShaped,
   clearAll,
   isAvailable as isStorageAvailable,
 } from '../core/storage.js';
@@ -181,14 +177,7 @@ function buildBackupPayload() {
   return {
     app: 'Bigu',
     exportedAt: new Date().toISOString(),
-    data: {
-      settings: settings.getAll(),
-      progress: progress.getAll(),
-      journal: journal.getAll(),
-      practice: practice.getAll(),
-      favorites: favorites.getAll(),
-      sentences: sentences.getAll(),
-    },
+    data: Object.fromEntries(STORES.map(({ name, store }) => [name, store.getAll()])),
   };
 }
 
@@ -211,38 +200,73 @@ function downloadBackup() {
 
 /* -- Backup restore ---------------------------------------------------------------------
    The reverse of the export above: read a previously-downloaded JSON file,
-   confirm it's actually a Bigu backup with the core stores present, then
-   overwrite everything in localStorage in one go. This is destructive, so
-   it always asks for confirmation before touching a single key, and the
-   page reloads afterward so every view (not just this one) picks up the
-   restored data instead of running with whatever it already had in memory.
+   check that every store in it is the kind that store holds, then overwrite
+   everything in localStorage in one go. This is destructive, so it always
+   asks for confirmation before touching a single key, and the page reloads
+   afterward so every view (not just this one) picks up the restored data
+   instead of running with whatever it already had in memory.
+
+   Both halves are driven off STORES in core/storage.js rather than off a
+   list written out here. Export, validate and restore each used to name the
+   same six stores separately, and the three lists had already drifted.
    ------------------------------------------------------------------------------------------ */
 
-function isValidBackupPayload(payload) {
-  if (!payload || typeof payload !== 'object') return false;
-  if (payload.app !== 'Bigu') return false;
+/* What is wrong with this file, or null when nothing is.
+
+   It used to answer a narrower question — are the four original keys
+   present? — and presence was all it checked. That let a file through whose
+   `progress` was `null`, or an array, or the string "none", and restore then
+   handed it to a store whose replaceAll turns anything ill-shaped into an
+   empty one. The reader clicked Restore on a damaged file and was told
+   "Restored from backup" while their entire study history was overwritten
+   with `{}`. Of every failure in this app that is the one that cannot be
+   undone, and it was the one being reported as success.
+
+   So each store present in the file is checked against the kind it actually
+   holds, and a single wrong one rejects the whole file rather than being
+   quietly emptied. Returning the reason rather than a boolean is the other
+   half: "this does not look like a Bigu backup" is not something a reader
+   can act on when the file plainly is one and the problem is a single
+   corrupted key. */
+function describeBackupProblem(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return 'Энэ файл дотор Bigu-гийн нөөцийн бүтэц алга.';
+  }
+  if (payload.app !== 'Bigu') {
+    return 'Энэ нь Bigu-гийн нөөц файл биш бололтой.';
+  }
+
   const data = payload.data;
-  if (!data || typeof data !== 'object') return false;
-  // Four required, not five: `favorites` arrived after this format did, and
-  // a backup downloaded before it existed is still a perfectly good backup.
-  // Requiring the new key would have rejected every file already on disk.
-  return ['settings', 'progress', 'journal', 'practice'].every((storeKey) => storeKey in data);
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return 'Нөөцийн "data" хэсэг дутуу байна.';
+  }
+
+  for (const { name, kind, required } of STORES) {
+    const present = name in data;
+    if (!present) {
+      // A store the format gained later is allowed to be absent; one it
+      // shipped with is not, and its absence means a truncated file.
+      if (required) return `Нөөц дутуу байна: "${name}" хэсэг алга.`;
+      continue;
+    }
+    if (!isStoreShaped(kind, data[name])) {
+      return `Нөөцийн "${name}" хэсэг эвдэрсэн байна. Сэргээгээгүй — одоо байгаа өгөгдөл тань хэвээрээ.`;
+    }
+  }
+
+  return null;
 }
 
+/* Overwrites every store from a validated payload. Absent keys are passed
+   through as undefined on purpose: replaceAll reads that as "this file
+   predates the store" and writes the store's own empty value, which is the
+   correct reading of a backup taken before the store existed. Only reached
+   once describeBackupProblem has returned null, so no key present here is
+   the wrong kind. */
 function restoreBackup(payload) {
-  const { data } = payload;
-  settings.replaceAll(data.settings);
-  progress.replaceAll(data.progress);
-  journal.replaceAll(data.journal);
-  practice.replaceAll(data.practice);
-  // Absent in pre-favorites backups; replaceAll's own guard turns undefined
-  // into an empty map, which is the correct reading of "this file predates
-  // keeping things".
-  favorites.replaceAll(data.favorites);
-  // Same guard as favorites above: absent in any backup taken before this
-  // store existed, and replaceAll turns undefined into an empty list rather
-  // than writing garbage.
-  sentences.replaceAll(data.sentences);
+  for (const { name, store } of STORES) {
+    store.replaceAll(payload.data[name]);
+  }
 }
 
 function setRestoreStatus(statusEl, message, isError) {
@@ -264,8 +288,9 @@ function handleRestoreFile(file, statusEl, fileInput) {
       return;
     }
 
-    if (!isValidBackupPayload(payload)) {
-      setRestoreStatus(statusEl, 'Энэ нь Bigu-гийн нөөц файл биш бололтой.', true);
+    const problem = describeBackupProblem(payload);
+    if (problem) {
+      setRestoreStatus(statusEl, problem, true);
       fileInput.value = '';
       return;
     }
