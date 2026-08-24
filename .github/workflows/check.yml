@@ -1,0 +1,76 @@
+# Checks every push and pull request before it can reach main.
+#
+# Until this existed the only workflow in the repository was the deploy, so
+# the first thing to notice a broken import, a mistyped id or a data file
+# missing a required field was a reader opening that view on the live site.
+# Nothing was verified; everything was published.
+#
+# Four checks, cheapest first, so a typo fails in seconds rather than after
+# a browser download:
+#
+#   structure  every module parses, every import resolves, every named
+#              import exists on the module it names, every stylesheet is
+#              both linked and present
+#   content    every file in data/ against its schema, plus the invariants
+#              a schema cannot express — ids unique across the whole
+#              catalogue and routable to a deck
+#   unit       the study model, the streak, the storage guards, the bridge
+#              contract and the backup format
+#   browser    the real app in real Chromium, thirteen views, empty console
+#
+# The first three need nothing but Node. Only the last installs anything,
+# and it installs one package without writing it to a manifest — the app
+# still has no dependencies, and the repository still has no package.json.
+
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# Read the code and nothing else. This workflow publishes nothing.
+permissions:
+  contents: read
+
+# A new push supersedes the run in flight for the same ref. Unlike the
+# deploy, cancelling here costs nothing — the answer for the older commit
+# stopped mattering the moment a newer one arrived.
+concurrency:
+  group: check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Structure
+        run: node tools/check-structure.mjs
+
+      - name: Content
+        run: node tools/validate-data.mjs
+
+      - name: Unit tests
+        run: node --test "test/*.test.mjs"
+
+      # --no-save on purpose: this is a test harness, not a dependency of
+      # the site, and nothing in js/ may ever import it. The browser binary
+      # comes from playwright's own installer rather than the package.
+      - name: Install the browser harness
+        run: |
+          npm install --no-save playwright-core
+          npx --yes playwright@latest install --with-deps chromium
+
+      - name: Browser smoke test
+        run: node --test "test/browser/*.test.mjs"

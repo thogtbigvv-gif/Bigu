@@ -1,0 +1,5 @@
+# The app ships no dependencies and has no build step. node_modules appears
+# only when the browser smoke test is being run — `npm install --no-save
+# playwright-core`, which is what CI does — and is never part of the site.
+node_modules/
+package-lock.json

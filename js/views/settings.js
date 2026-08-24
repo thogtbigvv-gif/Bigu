@@ -16,12 +16,13 @@
    option a two-state button can't express.
    ========================================================================== */
 
+import { clearAll, isAvailable as isStorageAvailable } from '../core/storage.js';
 import {
-  STORES,
-  isStoreShaped,
-  clearAll,
-  isAvailable as isStorageAvailable,
-} from '../core/storage.js';
+  backupFilename,
+  buildBackupPayload,
+  describeBackupProblem,
+  restoreBackup,
+} from '../core/backup.js';
 import { setThemePreference, themePreference, THEME_CHANGE_EVENT } from '../core/theme.js';
 import { createStorageNotice, getViewContainer } from '../ui/content.js';
 import {
@@ -161,25 +162,11 @@ function createStudyCard() {
 
 /* -- Backup export ----------------------------------------------------------------------
    Everything this app knows lives only in this browser's localStorage, so
-   there's no server copy to fall back on if a cache gets cleared. This
-   bundles all five stores into one downloadable JSON file.
+   there's no server copy to fall back on if a cache gets cleared. The file
+   itself — what goes in it, and what makes an arriving one valid — is
+   core/backup.js. What is left here is the part that needs a document:
+   turning the payload into a download, and reading a chosen file back.
    ------------------------------------------------------------------------------------------ */
-
-function todayKey() {
-  const date = new Date();
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function buildBackupPayload() {
-  return {
-    app: 'Bigu',
-    exportedAt: new Date().toISOString(),
-    data: Object.fromEntries(STORES.map(({ name, store }) => [name, store.getAll()])),
-  };
-}
 
 function downloadBackup() {
   const payload = buildBackupPayload();
@@ -188,7 +175,7 @@ function downloadBackup() {
 
   const link = document.createElement('a');
   link.href = url;
-  link.download = `bigu-backup-${todayKey()}.json`;
+  link.download = backupFilename();
   document.body.append(link);
   link.click();
   link.remove();
@@ -199,75 +186,12 @@ function downloadBackup() {
 }
 
 /* -- Backup restore ---------------------------------------------------------------------
-   The reverse of the export above: read a previously-downloaded JSON file,
-   check that every store in it is the kind that store holds, then overwrite
+   Read a previously-downloaded JSON file, check it, then overwrite
    everything in localStorage in one go. This is destructive, so it always
    asks for confirmation before touching a single key, and the page reloads
    afterward so every view (not just this one) picks up the restored data
    instead of running with whatever it already had in memory.
-
-   Both halves are driven off STORES in core/storage.js rather than off a
-   list written out here. Export, validate and restore each used to name the
-   same six stores separately, and the three lists had already drifted.
    ------------------------------------------------------------------------------------------ */
-
-/* What is wrong with this file, or null when nothing is.
-
-   It used to answer a narrower question — are the four original keys
-   present? — and presence was all it checked. That let a file through whose
-   `progress` was `null`, or an array, or the string "none", and restore then
-   handed it to a store whose replaceAll turns anything ill-shaped into an
-   empty one. The reader clicked Restore on a damaged file and was told
-   "Restored from backup" while their entire study history was overwritten
-   with `{}`. Of every failure in this app that is the one that cannot be
-   undone, and it was the one being reported as success.
-
-   So each store present in the file is checked against the kind it actually
-   holds, and a single wrong one rejects the whole file rather than being
-   quietly emptied. Returning the reason rather than a boolean is the other
-   half: "this does not look like a Bigu backup" is not something a reader
-   can act on when the file plainly is one and the problem is a single
-   corrupted key. */
-function describeBackupProblem(payload) {
-  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
-    return 'Энэ файл дотор Bigu-гийн нөөцийн бүтэц алга.';
-  }
-  if (payload.app !== 'Bigu') {
-    return 'Энэ нь Bigu-гийн нөөц файл биш бололтой.';
-  }
-
-  const data = payload.data;
-  if (!data || typeof data !== 'object' || Array.isArray(data)) {
-    return 'Нөөцийн "data" хэсэг дутуу байна.';
-  }
-
-  for (const { name, kind, required } of STORES) {
-    const present = name in data;
-    if (!present) {
-      // A store the format gained later is allowed to be absent; one it
-      // shipped with is not, and its absence means a truncated file.
-      if (required) return `Нөөц дутуу байна: "${name}" хэсэг алга.`;
-      continue;
-    }
-    if (!isStoreShaped(kind, data[name])) {
-      return `Нөөцийн "${name}" хэсэг эвдэрсэн байна. Сэргээгээгүй — одоо байгаа өгөгдөл тань хэвээрээ.`;
-    }
-  }
-
-  return null;
-}
-
-/* Overwrites every store from a validated payload. Absent keys are passed
-   through as undefined on purpose: replaceAll reads that as "this file
-   predates the store" and writes the store's own empty value, which is the
-   correct reading of a backup taken before the store existed. Only reached
-   once describeBackupProblem has returned null, so no key present here is
-   the wrong kind. */
-function restoreBackup(payload) {
-  for (const { name, store } of STORES) {
-    store.replaceAll(payload.data[name]);
-  }
-}
 
 function setRestoreStatus(statusEl, message, isError) {
   statusEl.textContent = message;
