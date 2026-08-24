@@ -3,15 +3,53 @@
    Safe localStorage wrapper. Every read/write is guarded against browsers
    that throw (Safari private mode, storage disabled) and against corrupted
    JSON, so a bad value never crashes a feature — it just falls back.
-   Exposes three ready-made stores for the data this app actually needs:
-   settings (flat preferences), progress (per-item study state), and
-   journal (an ordered list of study-log entries).
+   Exposes one ready-made store per kind of data this app keeps: settings
+   (flat preferences), progress (per-item study state), favorites, and the
+   three ordered lists — journal, practice and sentences. All of them live
+   under the `bigu:` namespace; see the note on migrateLegacyKeys for what
+   happened to the one they used to live under.
    ========================================================================== */
 
-const NAMESPACE = 'nagi';
+/* -- The namespace -----------------------------------------------------------------
+   Every key this app owns is `bigu:<store>`.
+
+   It was `nagi:` — a name this project has not gone by for a long time,
+   left in place because renaming a persisted key is how you lose people's
+   data. Meanwhile bridge.js, written later, correctly used `bigu:bridge`.
+   So one origin held two namespaces for one app, and the one that matched
+   the app's name was the one belonging to an outside contract.
+
+   The migration below is the reason the rename is safe. It is a copy, not
+   a move: a legacy key is read across only when the new key does not exist
+   yet, and the old key is deliberately left where it is. That costs a few
+   kilobytes and buys two things — a reader who opens an older build of the
+   app finds their data exactly where that build looks for it, and a
+   migration that turns out to be wrong can be corrected in a later version
+   from the original, because nothing was destroyed to perform it.
+   ------------------------------------------------------------------------------------ */
+
+const NAMESPACE = 'bigu';
+const LEGACY_NAMESPACE = 'nagi';
+
+/* Named here rather than derived from the stores below, because the
+   migration has to run before any store is read and because a store that
+   is one day retired still has a legacy key worth carrying across. */
+const STORE_NAMES = ['settings', 'progress', 'journal', 'practice', 'sentences', 'favorites'];
 
 function buildKey(name) {
   return `${NAMESPACE}:${name}`;
+}
+
+function migrateLegacyKeys() {
+  for (const name of STORE_NAMES) {
+    const target = `${NAMESPACE}:${name}`;
+    // Never overwrite: once the app has written under the new name, that is
+    // the live copy and the legacy key is only history.
+    if (readRaw(target) !== null) continue;
+
+    const legacy = readRaw(`${LEGACY_NAMESPACE}:${name}`);
+    if (legacy !== null) writeRaw(target, legacy);
+  }
 }
 
 function createId() {
@@ -170,7 +208,15 @@ function createListStore(name) {
   };
 }
 
-/* -- App stores ----------------------------------------------------------------------- */
+/* -- App stores -----------------------------------------------------------------------
+   The migration runs first and exactly once, at module load, so no store
+   can be read before its legacy contents have been carried across. It
+   cannot throw: readRaw and writeRaw both swallow a browser that refuses
+   to store, and a migration that could not run leaves the reader with an
+   empty app rather than a broken one.
+   ---------------------------------------------------------------------------------------- */
+
+migrateLegacyKeys();
 
 const settings = createMapStore('settings');
 const progress = createMapStore('progress');
@@ -231,6 +277,7 @@ function clearAll() {
 
 export {
   isAvailable,
+  migrateLegacyKeys,
   settings,
   progress,
   journal,

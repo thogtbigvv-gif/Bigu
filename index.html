@@ -14,12 +14,24 @@
 
   <!-- Applies the reader's theme before any CSS or the module scripts run,
        so the page never flashes light before switching to dark. Mirrors
-       theme.js's own storedTheme()/systemTheme() logic — duplicated here,
-       not imported, because this has to run synchronously pre-paint. -->
+       js/core/theme.js's own storedTheme()/systemTheme() logic — duplicated
+       here, not imported, because this has to run synchronously pre-paint.
+
+       It reads the settings key directly, which makes it the one place
+       outside js/core/storage.js that knows a storage key by name — and
+       therefore the one place the namespace migration cannot reach, because
+       this runs before any module has loaded. So it falls back to the
+       legacy `nagi:` key itself. Without that, a returning reader's very
+       first paint after the rename would be the system theme rather than
+       theirs: a dark-mode reader on a light system would get one white
+       frame, which is precisely the flash this script exists to prevent.
+       The fallback can go once no reader is plausibly still carrying a
+       pre-rename key; the migration in storage.js writes the new one on
+       their first load either way. -->
   <script>
     (function () {
       try {
-        var raw = localStorage.getItem('nagi:settings');
+        var raw = localStorage.getItem('bigu:settings') || localStorage.getItem('nagi:settings');
         var theme = raw ? JSON.parse(raw).theme : null;
         if (theme !== 'light' && theme !== 'dark') {
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -29,22 +41,25 @@
     })();
   </script>
 
-  <!-- Installability. This app's whole retention model is a daily streak, so
-       it has to survive being added to a home screen: without these it gets
-       a blank icon and a white status bar fighting the dark theme.
+  <!-- Installability. Bigu is meant to be lived in daily, so it has to
+       survive being added to a home screen: without these it gets a blank
+       icon and a white status bar fighting the dark theme.
 
-       The two theme-color values below are stale: they still carry the retired
-       washi palette (#E9EBE4 / #1A1D1A) rather than the current grounds
-       (--color-paper, #FBFBF9 / #14161A). A <meta> cannot read a custom
-       property, so these are hand-copied and drifted when the palette changed.
-       Left alone here on purpose — this commit is a rename and may not move a
-       rendered value — but they, and manifest.json's matching pair, are wrong
-       and worth a commit of their own. -->
+       THE TWO VALUES BELOW ARE --color-paper, BY HAND. A <meta> cannot read
+       a custom property, so the ground colour is written out here, in
+       manifest.json, and in css/variables.css, and only the last of those
+       three is the source of truth. They had already drifted once: both
+       carried the retired washi palette (#E9EBE4 / #1A1D1A) long after the
+       grounds became #FBFBF9 and #14161A, so an installed Bigu painted its
+       status bar and splash in a colour the app itself no longer used
+       anywhere. If you change --color-paper, change these too — the app
+       looks correct in a browser tab either way, and wrong only once it is
+       installed, which is where nobody thinks to check. -->
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#E9EBE4" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#1A1D1A" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#FBFBF9" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)" />
 
   <!-- Three families, and both of the new ones are Japanese. Klee One is the
        textbook hand that carries headwords, kanji and example sentences; Zen

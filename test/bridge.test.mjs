@@ -33,10 +33,14 @@ describe('the envelope', () => {
     assert.ok(state.updatedAt > 0);
   });
 
-  test('lives outside the app\'s own namespace, so nothing in Bigu reads it by accident', () => {
+  /* `bigu:bridge` sits beside the app's own `bigu:<store>` keys but is not
+     one of them: nothing in storage.js knows about it, and nothing in Bigu
+     reads it back. Its shape is a contract with an outside surface. */
+  test('is not one of the app\'s stores', async () => {
+    const { STORES } = await import('../js/core/storage.js');
     publishStatus({ dueCount: 1 });
     assert.ok(localStorage.getItem(KEY));
-    assert.equal(localStorage.getItem('nagi:bridge'), null);
+    assert.equal(STORES.some((entry) => entry.name === 'bridge'), false);
   });
 });
 

@@ -182,6 +182,58 @@ async function checkStylesheets() {
   }
 }
 
+/* -- The ground colour, in the three places it has to be written ----------
+   --color-paper is the page ground, and a <meta> cannot read a custom
+   property — so the same two hex values are hand-copied into index.html's
+   theme-color tags and into manifest.json, and only css/variables.css is
+   the source of truth.
+
+   They had already drifted: both copies carried a retired palette long
+   after the grounds changed, so an installed Bigu painted its status bar
+   and splash screen in a colour the app no longer used. Nothing caught it
+   because nothing looks wrong in a browser tab — only once the app is
+   installed, which is where nobody thinks to check. A comment asking the
+   next editor to keep three files in sync is what allowed the drift; this
+   is the same request, enforced.
+   -------------------------------------------------------------------------- */
+async function checkGroundColours() {
+  const css = await readFile(path.join(ROOT, 'css', 'variables.css'), 'utf8');
+
+  /* The light ground is declared on the bare :root; the dark one under
+     :root[data-theme="dark"]. Reading them in document order is enough —
+     there are exactly two, and the light one comes first. */
+  const grounds = [...css.matchAll(/--color-paper:\s*(#[0-9A-Fa-f]{6})/g)].map((m) => m[1].toUpperCase());
+  if (grounds.length !== 2) {
+    problems.push(`css/variables.css: expected two --color-paper declarations, found ${grounds.length}`);
+    return;
+  }
+  const [light, dark] = grounds;
+
+  const html = await readFile(path.join(ROOT, 'index.html'), 'utf8');
+  const metas = new Map(
+    [...html.matchAll(/<meta name="theme-color" content="(#[0-9A-Fa-f]{6})" media="\(prefers-color-scheme: (light|dark)\)"/g)]
+      .map((m) => [m[2], m[1].toUpperCase()]),
+  );
+
+  for (const [scheme, expected] of [['light', light], ['dark', dark]]) {
+    const found = metas.get(scheme);
+    if (!found) problems.push(`index.html: no theme-color meta for prefers-color-scheme: ${scheme}`);
+    else if (found !== expected) {
+      problems.push(`index.html: the ${scheme} theme-color is ${found}, but --color-paper is ${expected}`);
+    }
+  }
+
+  const manifest = JSON.parse(await readFile(path.join(ROOT, 'manifest.json'), 'utf8'));
+  // A manifest carries no media queries, so both of its colours are the
+  // light ground — the one an install preview and a splash screen use.
+  for (const field of ['theme_color', 'background_color']) {
+    const found = String(manifest[field] ?? '').toUpperCase();
+    if (found !== light) {
+      problems.push(`manifest.json: ${field} is ${manifest[field]}, but the light --color-paper is ${light}`);
+    }
+  }
+}
+
 const files = [
   ...await glob(path.join(ROOT, 'js'), '.js'),
   ...await glob(path.join(ROOT, 'tools'), '.mjs'),
@@ -201,6 +253,7 @@ for (const file of files) {
 }
 await checkEntryPoint();
 await checkStylesheets();
+await checkGroundColours();
 
 if (problems.length > 0) {
   console.error(`\n${problems.length} structural problem(s):\n`);
@@ -209,4 +262,4 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`✓ ${files.length} modules parse; every import, named export and stylesheet resolves`);
+console.log(`✓ ${files.length} modules parse; every import, named export, stylesheet and ground colour resolves`);

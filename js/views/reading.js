@@ -218,7 +218,7 @@ function createSentence(sentence, index, onToggle) {
 
 /* 縦書き, per session and defaulting off. Module scope rather than the settings
    store on purpose: it is a way of looking at a passage, not a preference about
-   the app, and persisting it would mean a new key in nagi:settings for a mode a
+   the app, and persisting it would mean a new key in bigu:settings for a mode a
    reader turns on to try a page and off again. It survives tab switches and the
    pager because it lives out here; it does not survive a reload.
 

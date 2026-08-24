@@ -82,7 +82,7 @@ Two axes, and they do different jobs.
 
 **Lesson is the spine.** The catalogue follows みんなの日本語 lesson order,
 because that is the order the learner actually meets the language in. Lessons
-1–25 are populated; 26–50 are being filled in by hand as they are studied.
+1–15 are populated; 16–50 are being filled in by hand as they are studied.
 This is the honest measure of "where I am".
 
 **JLPT level is a tag.** Useful for filtering when you want to drill a band,
@@ -248,7 +248,7 @@ pip install cairosvg && python3 tools/build-icons.py
 - **Cross-linking** — the layer that turns entries into doors. Currently the
   only navigation between views is view-level; no entry links to another entry.
   This is the highest-priority work.
-- **Lessons 26–50** — the spine exists; the content is being written by hand.
+- **Lessons 16–50** — the spine exists; the content is being written by hand.
 - **Level tags for vocabulary and grammar** — present for kanji, absent
   elsewhere. Being filled in rather than guessed.
 

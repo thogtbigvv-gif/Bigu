@@ -1,8 +1,10 @@
 /* ==========================================================================
    bridge.js
-   A one-way publish of study activity to a single localStorage key outside
-   the app's own `nagi:` namespace, for anything else served from the same
-   origin to read. Nothing here is read back into Bigu and nothing here
+   A one-way publish of study activity to a single localStorage key beside
+   the app's own `bigu:<store>` keys, for anything else served from the same
+   origin to read. `bigu:bridge` is deliberately not a store: nothing in
+   storage.js knows about it, nothing in Bigu reads it back, and its shape
+   is a contract with an outside surface rather than an internal structure. Nothing here is read back into Bigu and nothing here
    changes how Bigu behaves — if no one is listening, this is a write into
    a key nobody opens. There is no UI for it, and it awards nothing: it
    reports what the study stores already say, and computes no score of its
