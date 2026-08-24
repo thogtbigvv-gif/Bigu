@@ -18,7 +18,7 @@
    ========================================================================== */
 
 import { isRemembered, setRemembered } from '../study/review.js';
-import { createFavoriteButton } from '../study/favorites.js';
+import { createFavoriteButton } from './favoriteButton.js';
 
 /* Returns the button plus its own sync(), because the state it displays can
    change from anywhere — a review round, a lesson quiz, a slip on #memory —

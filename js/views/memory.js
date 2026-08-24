@@ -49,7 +49,8 @@ import {
   snapshotRecords,
   strengthOf,
 } from '../study/review.js';
-import { createFavoriteButton, favoriteIds } from '../study/favorites.js';
+import { favoriteIds } from '../study/favorites.js';
+import { createFavoriteButton } from '../ui/favoriteButton.js';
 import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
 import { practice } from '../core/storage.js';
 import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';

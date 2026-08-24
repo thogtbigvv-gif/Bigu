@@ -182,6 +182,90 @@ async function checkStylesheets() {
   }
 }
 
+/* -- Layers ----------------------------------------------------------------
+   js/ is five directories and the dependency arrow runs one way. A module
+   may import from its own layer or from one it is allowed to depend on;
+   nothing beneath views/ may import a view.
+
+   This is the rule that stops the app from tangling itself back up. It had
+   already been broken once in the obvious direction — six modules imported
+   *views* to reach a JSON file, so the Dashboard depended on the Vocabulary
+   screen — and once in a quieter one: study/favorites.js imported a drawing
+   helper in order to build a button, which made the study layer the only
+   place below the UI that touched the DOM.
+
+   Neither would have been caught by review a second time. Both are caught
+   here in milliseconds.
+
+   data/ and study/ may each import the other, which is the one bidirectional
+   pair and is deliberate: the catalogue asks study/decks.js which items are
+   studiable, and study/session.js asks the catalogue for the pool it counts
+   over. Neither module imports the other one back, so there is no cycle —
+   which is checked separately below.
+   -------------------------------------------------------------------------- */
+const LAYERS = {
+  core: ['core'],
+  data: ['core', 'data', 'study'],
+  study: ['core', 'data', 'study'],
+  ui: ['core', 'data', 'study', 'ui'],
+  views: ['core', 'data', 'study', 'ui', 'views'],
+  // js/app.js is the entry point and wires everything together.
+  app: ['core', 'data', 'study', 'ui', 'views', 'app'],
+};
+
+function layerOf(file) {
+  const parts = path.relative(path.join(ROOT, 'js'), file).split(path.sep);
+  return parts.length > 1 ? parts[0] : 'app';
+}
+
+function checkLayers(file, source) {
+  const from = layerOf(file);
+  const allowed = LAYERS[from];
+  if (!allowed) {
+    fail(file, `sits in an unknown layer "${from}" — add it to LAYERS or move the file`);
+    return;
+  }
+
+  for (const match of source.matchAll(SPECIFIER)) {
+    const specifier = match[1] ?? match[2];
+    if (!specifier?.startsWith('.')) continue;
+
+    const to = layerOf(path.resolve(path.dirname(file), specifier));
+    if (!allowed.includes(to)) {
+      fail(file, `is in js/${from}/ and imports from js/${to}/, which that layer may not depend on`);
+    }
+  }
+}
+
+/* -- Cycles ----------------------------------------------------------------
+   An import cycle in ES modules does not error — it leaves one of the two
+   modules holding an uninitialised binding, which surfaces as a
+   `Cannot access '<name>' before initialization` at whatever moment the
+   wrong one happened to load first. That is a hard bug to read and a
+   trivial one to prevent.
+   -------------------------------------------------------------------------- */
+function checkCycles(graph) {
+  const visited = new Set();
+  const stack = [];
+
+  function walk(file) {
+    const at = stack.indexOf(file);
+    if (at !== -1) {
+      const cycle = [...stack.slice(at), file].map((f) => path.relative(ROOT, f)).join(' → ');
+      problems.push(`import cycle: ${cycle}`);
+      return;
+    }
+    if (visited.has(file)) return;
+
+    visited.add(file);
+    stack.push(file);
+    for (const next of graph.get(file) ?? []) walk(next);
+    stack.pop();
+  }
+
+  for (const file of [...graph.keys()].sort()) walk(file);
+}
+
 /* -- The ground colour, in the three places it has to be written ----------
    --color-paper is the page ground, and a <meta> cannot read a custom
    property — so the same two hex values are hand-copied into index.html's
@@ -247,10 +331,24 @@ for (const file of files) {
   exportsByFile.set(file, exportsOf(await readFile(file, 'utf8')));
 }
 
+/* file -> the files it imports, for the cycle walk. */
+const graph = new Map();
+
 for (const file of files) {
+  const source = await readFile(file, 'utf8');
+
   checkSyntax(file);
   await checkImports(file, exportsByFile);
+  if (file.startsWith(path.join(ROOT, 'js'))) checkLayers(file, source);
+
+  graph.set(file, [...source.matchAll(SPECIFIER)]
+    .map((match) => match[1] ?? match[2])
+    .filter((specifier) => specifier?.startsWith('.'))
+    .map((specifier) => path.resolve(path.dirname(file), specifier))
+    .filter((target) => existsSync(target)));
 }
+
+checkCycles(graph);
 await checkEntryPoint();
 await checkStylesheets();
 await checkGroundColours();
@@ -262,4 +360,6 @@ if (problems.length > 0) {
   process.exit(1);
 }
 
-console.log(`✓ ${files.length} modules parse; every import, named export, stylesheet and ground colour resolves`);
+console.log(
+  `✓ ${files.length} modules parse; imports, named exports, layers, stylesheets and ground colours all resolve; no cycles`,
+);

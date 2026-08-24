@@ -1,7 +1,6 @@
 /* ==========================================================================
-   favorites.js
-   The one expression of "I want to keep this" in the app, and the small
-   control that sets it.
+   study/favorites.js
+   The one expression of "I want to keep this" in the app.
 
    Kept items are the only collection on #memory the reader curates by hand;
    every other shelf there is derived from the schedule. That distinction is
@@ -12,15 +11,21 @@
 
    Separate store, separate concept: keeping a word says nothing about
    whether you remember it, so this never touches progress/review state.
+
+   The control that sets it is js/ui/favoriteButton.js. The two were one
+   file, which made this the only module below the UI layer that built DOM
+   — and meant the study layer imported a drawing helper in order to
+   express a fact about the reader's own collection.
    ========================================================================== */
 
 import { favorites } from '../core/storage.js';
-import { createIcon } from '../ui/content.js';
 
 function isFavorite(itemId) {
   return Boolean(favorites.get(itemId, false));
 }
 
+/* Returns the new state, so the caller does not have to read back what it
+   just wrote to know which way the toggle went. */
 function toggleFavorite(itemId) {
   const next = !isFavorite(itemId);
   if (next) favorites.set(itemId, true);
@@ -28,55 +33,11 @@ function toggleFavorite(itemId) {
   return next;
 }
 
+/* Every kept id in one read, for a screen that asks about many at once.
+   isFavorite is right for a single card and wrong for a shelf, where it
+   turns one question into hundreds of full parses of the store. */
 function favoriteIds() {
   return new Set(Object.keys(favorites.getAll()));
 }
 
-/* -- The control ---------------------------------------------------------------------
-   A 栞 (shiori — bookmark): a strip of paper with a notch cut out of the
-   bottom, which is what a bookmark looks like in a Japanese book and what
-   this app's paper vocabulary already suggests. Icon-only, because it sits
-   beside a text chip on every card and two labelled controls in a row would
-   make neither of them the obvious one.
-
-   aria-pressed + a real label rather than a title attribute: the state has
-   to be announced, and title text is skipped by most screen readers and
-   never reachable by touch at all.
-   -------------------------------------------------------------------------------------- */
-
-function createFavoriteButton(itemId, onChange) {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.className = 'favorite-button';
-
-  const icon = createIcon('favorite-button__icon', [
-    ['path', { d: 'M4 2.5h8v11l-4-3-4 3z' }],
-  ]);
-
-  const label = document.createElement('span');
-  label.className = 'sr-only';
-
-  button.append(icon, label);
-
-  function sync() {
-    const kept = isFavorite(itemId);
-    button.setAttribute('aria-pressed', String(kept));
-    label.textContent = kept ? 'Kept — remove from Kept' : 'Keep this';
-  }
-
-  button.addEventListener('click', (event) => {
-    // Slips on #memory put this inside a row that is itself clickable; a
-    // keep must never also open the slip.
-    event.stopPropagation();
-    toggleFavorite(itemId);
-    sync();
-    if (onChange) onChange();
-  });
-
-  sync();
-  return button;
-}
-
-/* isFavorite and toggleFavorite are the button's own internals — every
-   caller in the app uses the control, not the pair of functions behind it. */
-export { favoriteIds, createFavoriteButton };
+export { isFavorite, toggleFavorite, favoriteIds };
