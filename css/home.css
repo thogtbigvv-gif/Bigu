@@ -292,7 +292,7 @@
 }
 
 /* -- Quick practice ------------------------------------------------------------------------
-   The panel is js/quiz.js's own — the same markup, the same CSS, the same
+   The panel is js/ui/quiz.js's own — the same markup, the same CSS, the same
    round Review and Lessons play. Nothing is restyled here; the slot exists
    only so the room can be rebuilt around a live panel without destroying it.
    ------------------------------------------------------------------------------------------ */

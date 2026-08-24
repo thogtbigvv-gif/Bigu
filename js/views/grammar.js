@@ -6,10 +6,9 @@
    append DOM building — only the card fields differ.
    ========================================================================== */
 
-import { createStudyControls } from './studyControls.js';
+import { createStudyControls } from '../ui/studyControls.js';
 import {
   collectFacets,
-  createContentLoader,
   createFacetChips,
   createSearchField,
   debounce,
@@ -22,14 +21,13 @@ import {
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
-} from './content.js';
+} from '../ui/content.js';
+import { loadGrammar } from '../data/catalogue.js';
 
-const DATA_URL = 'data/grammar.json';
 const VIEW_ID = 'grammar';
 
 /* -- Data --------------------------------------------------------------------------- */
 
-const loadGrammar = createContentLoader(DATA_URL, 'grammar');
 
 
 /* -- Card building --------------------------------------------------------------------- */
@@ -246,4 +244,4 @@ async function initGrammar() {
   });
 }
 
-export { initGrammar, loadGrammar };
+export { initGrammar };

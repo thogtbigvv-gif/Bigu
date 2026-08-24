@@ -22,22 +22,19 @@
    browser does not belong in a grid of stat cards.
    ========================================================================== */
 
-import { journal, practice, isAvailable as isStorageAvailable } from './storage.js';
+import { journal, practice, isAvailable as isStorageAvailable } from '../core/storage.js';
 import {
   createStorageNotice,
   formatCount,
   getViewContainer,
   loadIntoView,
   OFFLINE_HINT,
-} from './content.js';
-import { dailyGoal } from './preferences.js';
-import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from './review.js';
-import { loadVocabulary } from './vocabulary.js';
-import { loadGrammar } from './grammar.js';
-import { loadKanji } from './kanji.js';
-import { loadLessons } from './lessons.js';
-import { DECK_LABELS } from './practice.js';
-import { collectStudyDays, computeStreak, toDateKey, todayKey } from './streak.js';
+} from '../ui/content.js';
+import { dailyGoal } from '../core/preferences.js';
+import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from '../study/review.js';
+import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';
+import { DECK_LABELS } from '../study/decks.js';
+import { collectStudyDays, computeStreak, toDateKey, todayKey } from '../study/streak.js';
 
 const VIEW_ID = 'dashboard';
 

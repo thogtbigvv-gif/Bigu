@@ -30,9 +30,9 @@ import {
   getViewContainer,
   loadIntoView,
   OFFLINE_HINT,
-} from './content.js';
-import { loadKanji } from './kanji.js';
-import { sentences as sentenceStore, isAvailable as isStorageAvailable } from './storage.js';
+} from '../ui/content.js';
+import { loadKanji } from '../data/catalogue.js';
+import { sentences as sentenceStore, isAvailable as isStorageAvailable } from '../core/storage.js';
 
 const VIEW_ID = 'ichibun';
 

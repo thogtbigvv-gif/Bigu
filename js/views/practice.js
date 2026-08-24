@@ -4,214 +4,42 @@
    which deck the next round draws from, what the schedule says is waiting
    in it, and a log of recent rounds.
 
-   The quiz itself is js/quiz.js — the same panel the per-lesson quiz uses,
-   so a round plays identically wherever it was started from. This file used
-   to carry its own card layout, reveal/grade flow, and summary, which was
-   half of a second near-identical implementation in lessons.js.
+   The quiz itself is js/ui/quiz.js — the same panel the per-lesson quiz
+   uses, so a round plays identically wherever it was started from. This
+   file used to carry its own card layout, reveal/grade flow, and summary,
+   which was half of a second near-identical implementation in lessons.js.
 
-   Session contents come from review.js: due items first, oldest due date
-   first, then items not yet met. That's the whole behavioural difference
-   from the shuffle this used to do — what you see is what the schedule says
-   is ready, not a random handful of whatever isn't ticked off yet.
+   Session contents come from study/review.js: due items first, oldest due
+   date first, then items not yet met. That's the whole behavioural
+   difference from the shuffle this used to do — what you see is what the
+   schedule says is ready, not a random handful of whatever isn't ticked off
+   yet.
 
-   Each finished round is logged to the practice store, tagged with its
-   deck, for dashboard.js. A small history block reads that same store back
-   to list the most recent rounds, refreshed after every one.
+   Everything a *different* surface also needs has been lifted out of here,
+   and the difference is worth stating because this file used to be four
+   modules wearing one name. The decks it draws from are js/data/catalogue.js;
+   what a deck is called and where it leads is js/study/decks.js; logging a
+   finished round and republishing the bridge status is js/study/session.js.
+   Three other surfaces run rounds — Home, a lesson quiz, and boot itself —
+   and all three used to import this view, the Review screen, to reach them.
 
-   This file also owns the two writes to the `bigu:bridge` key — one event
-   per finished round, and the status snapshot — because it already owns
-   both the shared round logger and the review pool those figures are
-   counted over. Home and Lessons run rounds through the same logger, so all
-   three surfaces publish identically. Nothing is ever read back.
+   What is left is the screen: pick a deck, see what the schedule says is
+   waiting in it, start, and read back the last few rounds.
    ========================================================================== */
 
-import { practice, settings } from './storage.js';
-import { publishEvent, publishStatus } from './bridge.js';
-import { getViewContainer } from './content.js';
-import { buildSession, countDue, snapshotRecords } from './review.js';
-import { createQuiz, createModePicker, ADAPTERS, deckKeyForItemId } from './quiz.js';
-import { sessionSize } from './preferences.js';
-import { currentStreak, toDateKey } from './streak.js';
-import { loadVocabulary } from './vocabulary.js';
-import { loadGrammar } from './grammar.js';
-import { loadKanji } from './kanji.js';
-import { loadLessons } from './lessons.js';
+import { practice, settings } from '../core/storage.js';
+import { getViewContainer } from '../ui/content.js';
+import { loadReviewPool } from '../data/catalogue.js';
+import { buildSession, countDue, snapshotRecords } from '../study/review.js';
+import { DECK_KEYS, DECK_LABELS, DECK_NEXT } from '../study/decks.js';
+import { recordSession } from '../study/session.js';
+import { createQuiz, createModePicker } from '../ui/quiz.js';
+import { sessionSize } from '../core/preferences.js';
 
 const VIEW_ID = 'practice';
 const DECK_SETTING_KEY = 'practiceMode';
 const QUIZ_MODE_SETTING_KEY = 'quizMode';
 const HISTORY_LIMIT = 5;
-
-/* -- The review pool ---------------------------------------------------------------
-   The four content decks and the flattened everything-pool built out of
-   them. This was inline in initPractice and is lifted out because two other
-   places need exactly the same answer and neither should be re-deriving it:
-   the bridge's status snapshot counts what's due and held over `everything`,
-   and home.js asks whether anything is waiting and pulls its one line of
-   Japanese out of the same three sources.
-
-   The promise is memoized rather than the value, same reasoning as
-   content.js's own loaders: the three callers start within a frame of each
-   other, so caching the resolved arrays would only close the window after
-   the first build had finished. One build, whoever asks first. A failure
-   drops the cache so a later caller really does retry.
-   ---------------------------------------------------------------------------------- */
-
-let pendingPool = null;
-
-function loadReviewPool() {
-  if (!pendingPool) {
-    pendingPool = (async () => {
-      const [vocabData, grammarData, kanjiData, lessonData] = await Promise.all([
-        loadVocabulary(),
-        loadGrammar(),
-        loadKanji(),
-        loadLessons(),
-      ]);
-
-      const lessonWords = lessonData.flatMap((lesson) => lesson.words);
-      const vocabulary = vocabData.words;
-      const grammar = grammarData.points;
-      const kanji = kanjiData.kanji;
-
-      return {
-        // The lessons as authored, not only their flattened words: Home
-        // names the lesson a word came from, and a word row carries its
-        // lesson only in the shape of its own id.
-        lessons: lessonData,
-        lessonWords,
-        vocabulary,
-        grammar,
-        kanji,
-        // Only what the quiz can actually ask about: an id whose prefix no
-        // adapter claims would reach buildQuestion with no adapter behind it.
-        everything: [...lessonWords, ...vocabulary, ...grammar, ...kanji]
-          .filter((item) => deckKeyForItemId(item.id) !== null),
-      };
-    })();
-
-    pendingPool.catch(() => { pendingPool = null; });
-  }
-
-  return pendingPool;
-}
-
-/* -- Logging a finished round -------------------------------------------------------
-   The three writes every finished round in this app makes, in the order
-   they have to happen: the practice store generates the id, the bridge
-   republishes that same id as an event so anything reading `bigu:bridge` on
-   this origin can dedupe on it, and the bridge's status snapshot is redrawn
-   because a graded round is exactly what changes it.
-
-   Lifted out of this module's own onFinish because Home and Lessons both
-   run rounds of their own and have to log them *identically* — a practice
-   surface that quietly skipped any of the three would be a session the
-   reader did and the Review history, the Dashboard or summer-project never
-   heard about. What matters is that there is one copy of them for every
-   caller rather than a second contract growing beside the first.
-
-   `eventType` is the one thing a caller varies: the same round means
-   something slightly different published from Review than from a lesson, so
-   the reader on the other side is told which. Everything else about the
-   event is the same shape either way, because the round is the same round.
-
-   A round ended before anything was graded logs nothing and says so by
-   returning null. Same rule as before: reporting 0/0 is reporting nothing.
-   ---------------------------------------------------------------------------------- */
-function recordSession({ total, correct, mode, eventType = 'review.session' }) {
-  if (!(total > 0)) return null;
-  const record = practice.add({ total, correct, mode });
-  // Neither can throw — bridge.js swallows its own storage errors — and
-  // nothing here depends on either having worked.
-  publishEvent({
-    id: record.id,
-    type: eventType,
-    value: correct,
-    detail: `${total} items \u00b7 ${correct} correct`,
-  });
-  publishStatusSnapshot();
-  return record;
-}
-
-/* -- The bridge's status snapshot ----------------------------------------------------
-   How things stand right now, for the separate summer-project surface
-   served from the same origin: how much is waiting, when the reader last
-   studied, how much they are holding, and the streak the Dashboard would
-   show them. Published at boot and again after every graded round, since
-   those are the two moments any of it can have changed.
-
-   Display-ready values only, and nothing invented for the occasion. Each
-   number here is one the app already counts for its own screens — the
-   summed countDue() behind the Dashboard's Today card, its Memory figure,
-   its streak — so the reader on the other side prints them and no more.
-   There is no score, no level and no XP: Bigu does not compute one, and the
-   bridge is not the place to start.
-
-   A streak of zero is published as no streak at all rather than as 0. There
-   is a difference between "your run is broken" and "you have no run", and
-   only the first is worth a reader's screen space.
-
-   Fire and forget, deliberately. It waits on the four content files, so
-   awaiting it would hold whatever called it — at boot, the first paint of
-   Home — behind four fetches that nothing on screen needs. It cannot throw
-   into its caller: publishStatus() swallows its own storage errors, and a
-   failed fetch is logged and dropped here, because a browser that cannot
-   reach data/ still has an app to render.
-   ---------------------------------------------------------------------------------- */
-function publishStatusSnapshot() {
-  loadReviewPool()
-    .then((pool) => {
-      const counts = countDue(pool.everything);
-      const streak = currentStreak();
-      // Max rather than the last element: a restored backup writes the array
-      // back whole, and nothing guarantees the order it was saved in.
-      const lastStudiedAt = practice.getAll()
-        .reduce((latest, record) => Math.max(latest, record?.createdAt ?? 0), 0);
-
-      publishStatus({
-        dueCount: counts.due,
-        learnedCount: counts.remembered,
-        lastStudied: lastStudiedAt ? toDateKey(new Date(lastStudiedAt)) : undefined,
-        streak: streak > 0 ? streak : undefined,
-      });
-    })
-    .catch((error) => console.error('[Bigu]', error));
-}
-
-/* Where a finished round points next, per deck. Not a recommendation engine
-   and deliberately not a guess: each deck already knows which reference view
-   its own items came from, so "continue" means the shelf you were just
-   drawing from. The two live pools have no shelf of their own — "Due today"
-   spans the whole catalogue, so it offers the beginner on-ramp, and "Tricky
-   ones" is by definition about what the reader is holding badly, so it
-   offers the screen that is about exactly that. */
-const DECK_NEXT = {
-  lessons: '#lessons',
-  vocabulary: '#vocabulary',
-  grammar: '#grammar',
-  kanji: '#kanji',
-  due: '#lessons',
-  mistakes: '#memory',
-};
-
-/* "Due today" leads: it's the deck that answers the question the Dashboard
-   just asked, and the one a reader should be in on most days. The four
-   content decks are the same four ADAPTERS in quiz.js; "Due today" and
-   "Tricky ones" are live pools rather than decks of their own. */
-const DECK_KEYS = ['due', 'lessons', 'vocabulary', 'grammar', 'kanji', 'mistakes'];
-
-/* Exported: dashboard.js labels saved sessions with the deck they were
-   drawn from, and it kept its own copy of this table. Two copies meant one
-   deck under two names — "Tricky ones" on this screen, "Review mistakes" on
-   the Dashboard — for the same round. */
-const DECK_LABELS = {
-  due: 'Due today',
-  lessons: ADAPTERS.lessons.label,
-  vocabulary: ADAPTERS.vocabulary.label,
-  grammar: ADAPTERS.grammar.label,
-  kanji: ADAPTERS.kanji.label,
-  mistakes: 'Tricky ones',
-};
 
 /* Roughly how long a round takes, at a shade over ten seconds a card — the
    pace of reading a question, picking one of four and glancing at the
@@ -552,4 +380,4 @@ async function initPractice() {
   }
 }
 
-export { initPractice, loadReviewPool, recordSession, publishStatusSnapshot, DECK_LABELS };
+export { initPractice };

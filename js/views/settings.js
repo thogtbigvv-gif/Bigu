@@ -25,9 +25,9 @@ import {
   sentences,
   clearAll,
   isAvailable as isStorageAvailable,
-} from './storage.js';
-import { setThemePreference, themePreference, THEME_CHANGE_EVENT } from './theme.js';
-import { createStorageNotice, getViewContainer } from './content.js';
+} from '../core/storage.js';
+import { setThemePreference, themePreference, THEME_CHANGE_EVENT } from '../core/theme.js';
+import { createStorageNotice, getViewContainer } from '../ui/content.js';
 import {
   DAILY_GOALS,
   SESSION_SIZES,
@@ -35,7 +35,7 @@ import {
   sessionSize,
   setDailyGoal,
   setSessionSize,
-} from './preferences.js';
+} from '../core/preferences.js';
 
 const VIEW_ID = 'settings';
 

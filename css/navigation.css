@@ -4,9 +4,9 @@
    off-canvas drawer on mobile, plus the skip link. Quiet by default —
    a line marks state, not a filled background or shadow, same as the
    rest of the app. "Study" is a disclosure toggle with its own
-   collapsible submenu; [aria-current="page"] is set by js/router.js
+   collapsible submenu; [aria-current="page"] is set by js/core/router.js
    on whichever view is active, [aria-expanded]/.is-open are set by
-   js/navigation.js.
+   js/ui/navigation.js.
    ========================================================================== */
 
 /* -- Skip link (revealed only on keyboard focus) -----------------------------------
@@ -353,7 +353,7 @@
 }
 
 /* -- Backdrop -------------------------------------------------------------------------
-   Hidden via the native [hidden] attribute (toggled in js/navigation.js);
+   Hidden via the native [hidden] attribute (toggled in js/ui/navigation.js);
    only ever shown below the 1024px line, when the drawer is open.
 
    The fade is driven by the attribute itself rather than by a class, which is
@@ -585,7 +585,7 @@
   /* Out of the way while the drawer is open, rather than dimmed behind the
      backdrop and inert. "More" is the control that opened the drawer; leaving
      it on screen but dead is the exact failure the header toggle already had
-     once (see the inert note in js/navigation.js). Gone is honest. */
+     once (see the inert note in js/ui/navigation.js). Gone is honest. */
   .site-nav.is-open ~ .thumb-nav {
     transform: translateY(100%);
     /* …and its exit, timed to the drawer's entrance for the same reason. */

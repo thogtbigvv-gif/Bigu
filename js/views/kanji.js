@@ -30,10 +30,9 @@
    is the same apology in a smaller font.
    ========================================================================== */
 
-import { createStudyControls } from './studyControls.js';
+import { createStudyControls } from '../ui/studyControls.js';
 import {
   collectFacets,
-  createContentLoader,
   createFacetChips,
   createSearchField,
   debounce,
@@ -45,14 +44,13 @@ import {
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
-} from './content.js';
+} from '../ui/content.js';
+import { loadKanji } from '../data/catalogue.js';
 
-const DATA_URL = 'data/kanji.json';
 const VIEW_ID = 'kanji';
 
 /* -- Data --------------------------------------------------------------------------- */
 
-const loadKanji = createContentLoader(DATA_URL, 'kanji');
 
 
 /* -- Shared fields -------------------------------------------------------------------
@@ -154,7 +152,7 @@ function createCard(entry, level, onOpenDetail) {
 
   /* One vocabulary across the app: a kanji is held in memory or it isn't,
      said the same way a word or a grammar pattern is — see
-     js/studyControls.js. The bookmark beside it is the same control too. */
+     js/ui/studyControls.js. The bookmark beside it is the same control too. */
   item.append(
     head,
     meaning,
@@ -302,7 +300,7 @@ function renderDetail(elements, entry, level, allEntries, onJump) {
 }
 
 /* -- Search/filter -------------------------------------------------------------------
-   Same substring-match-and-hide approach as vocabulary.js/grammar.js —
+   Same substring-match-and-hide approach as vocabulary.js/views/grammar.js —
    matches against the character, meaning, and both readings.
    -------------------------------------------------------------------------------------- */
 
@@ -463,4 +461,4 @@ async function initKanji() {
   });
 }
 
-export { initKanji, loadKanji };
+export { initKanji };

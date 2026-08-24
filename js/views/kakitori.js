@@ -39,8 +39,8 @@ import {
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
-} from './content.js';
-import { loadKanji } from './kanji.js';
+} from '../ui/content.js';
+import { loadKanji } from '../data/catalogue.js';
 
 const VIEW_ID = 'kakitori';
 

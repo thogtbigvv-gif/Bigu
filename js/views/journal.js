@@ -6,7 +6,7 @@
    this module never touches localStorage directly.
    ========================================================================== */
 
-import { journal } from './storage.js';
+import { journal } from '../core/storage.js';
 
 const VIEW_ID = 'journal';
 

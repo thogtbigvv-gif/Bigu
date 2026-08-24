@@ -260,7 +260,7 @@
   gap: var(--space-lg);
 }
 
-/* The incoming view's entrance — see playEnter() in js/router.js. Opacity plus
+/* The incoming view's entrance — see playEnter() in js/core/router.js. Opacity plus
    a small rise: enough to read as "this arrived", small enough that it never
    delays the reader from acting on what arrived.
 

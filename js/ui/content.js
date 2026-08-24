@@ -1,48 +1,19 @@
 /* ==========================================================================
-   content.js
-   Shared machinery behind every reference view: the "fetch once, cache in
-   memory, fail loudly" loader, the skeleton shown while that fetch is in
-   flight, the retryable error state shown when it fails, and the search
-   field that sits above each list. Each of these existed as four or five
-   near-identical copies across vocabulary.js, grammar.js, kanji.js,
-   lessons.js, reading.js, and dashboard.js; they live here once instead so
-   the five views can't drift apart.
+   ui/content.js
+   Shared machinery behind every reference view: the skeleton shown while a
+   fetch is in flight, the retryable error state shown when it fails, the
+   search field and facet chips that sit above each list, and the load cycle
+   that sequences the three. Each of these existed as four or five
+   near-identical copies across vocabulary, grammar, kanji, lessons, reading
+   and dashboard; they live here once instead so the views can't drift apart.
+
+   The fetching itself is not here. It used to be — a `createContentLoader`
+   factory each view called with its own URL — which put the app's only
+   knowledge of where content lives inside its UI-widget module, and left
+   five views each holding a loader that six other modules had to reach
+   through them to use. That is js/data/catalogue.js now. This file draws
+   things; it does not know what data/ contains.
    ========================================================================== */
-
-/* Returns a load() function scoped to one JSON file: the first call
-   fetches, every call after that gets the same result. A failed or non-OK
-   fetch throws a labeled error (e.g. "Failed to load vocabulary (404)") so
-   the caller's own try/catch can show its own message. The failed promise is
-   dropped, so a retry after a failure really does re-fetch.
-
-   The *promise* is what's cached, not the value it resolves to. Caching the
-   value only closes the window after the first fetch has finished, and the
-   app opens several of these at once — practice.js and dashboard.js each
-   load all four content files on init — so two views starting together both
-   found an empty cache and both fetched the same file. One request per file
-   now, whoever asks first. */
-function createContentLoader(url, label) {
-  let pending = null;
-
-  return function load() {
-    if (!pending) {
-      pending = (async () => {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`Failed to load ${label} (${response.status})`);
-        }
-        return response.json();
-      })();
-
-      // Cleared on failure only: a rejected promise handed to every later
-      // caller would turn one bad response into a permanently broken view,
-      // and the error states here all offer a retry button.
-      pending.catch(() => { pending = null; });
-    }
-
-    return pending;
-  };
-}
 
 /* -- View plumbing --------------------------------------------------------------------
    Every view module opened with the same six lines: look for its own
@@ -434,7 +405,6 @@ const OFFLINE_HINT =
    error state the first time someone reaches for it. */
 export {
   collectFacets,
-  createContentLoader,
   createFacetChips,
   createIcon,
   createSearchField,

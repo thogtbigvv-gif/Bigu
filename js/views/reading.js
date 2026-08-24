@@ -51,7 +51,6 @@
 
 import {
   collectFacets,
-  createContentLoader,
   createFacetChips,
   describeLevelSpan,
   levelBucketOf,
@@ -59,12 +58,11 @@ import {
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
-} from './content.js';
+} from '../ui/content.js';
+import { loadReading } from '../data/catalogue.js';
 
-const DATA_URL = 'data/reading.json';
 const VIEW_ID = 'reading';
 
-const loadReading = createContentLoader(DATA_URL, 'reading');
 
 /* Each passage carries its own `level`, optional — reading.json used to
    state one level for the whole file, which stopped being true the moment

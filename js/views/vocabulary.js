@@ -20,11 +20,10 @@
    something you scroll to the end of.
    ========================================================================== */
 
-import { isRemembered } from './review.js';
-import { createStudyControls } from './studyControls.js';
+import { isRemembered } from '../study/review.js';
+import { createStudyControls } from '../ui/studyControls.js';
 import {
   collectFacets,
-  createContentLoader,
   createFacetChips,
   createSearchField,
   debounce,
@@ -37,9 +36,9 @@ import {
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
-} from './content.js';
+} from '../ui/content.js';
+import { loadVocabulary } from '../data/catalogue.js';
 
-const DATA_URL = 'data/vocabulary.json';
 const VIEW_ID = 'vocabulary';
 
 /* How many cards exist in the document at once, and how many more each
@@ -50,7 +49,6 @@ const PAGE_SIZE = 24;
 
 /* -- Data ------------------------------------------------------------------------- */
 
-const loadVocabulary = createContentLoader(DATA_URL, 'vocabulary');
 
 /* -- Card building -------------------------------------------------------------------- */
 
@@ -370,4 +368,4 @@ async function initVocabulary() {
   });
 }
 
-export { initVocabulary, loadVocabulary };
+export { initVocabulary };

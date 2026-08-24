@@ -119,9 +119,9 @@
          1024px (toggled by #site-nav-mobile-toggle in the header below).
          "Learn" and "Practice" are disclosure toggles, not links — each only
          expands and collapses its own submenu. Behavior lives in
-         js/navigation.js, which binds every .site-nav__item--parent it finds
+         js/ui/navigation.js, which binds every .site-nav__item--parent it finds
          rather than one named group; active-link highlighting (aria-current)
-         is set by js/router.js.
+         is set by js/core/router.js.
 
          Every row here goes somewhere real. Six of the original thirteen
          (Listening, Conversation, Shadowing, Search, Profile, Settings-as-
@@ -231,7 +231,7 @@
                with two sparkles off its upper right. Drawn inline like every
                other icon in the app (nav chevron, theme toggle, hamburger) so
                it stays crisp at any size and each part can be animated on its
-               own — js/logoIntro.js plays them in sequence.
+               own — js/ui/logoIntro.js plays them in sequence.
 
                The blues are literal here rather than tokens on purpose: this
                is brand artwork, not themed UI chrome, and it must read the
@@ -354,7 +354,7 @@
              focuses `#<view>-heading` on every navigation so a keyboard or
              screen-reader reader lands at the top of what they asked for,
              and reads its text for the document title. .sr-only keeps both
-             true without drawing anything. Built by js/home.js. -->
+             true without drawing anything. Built by js/views/home.js. -->
         <section id="home" class="view" aria-labelledby="home-heading">
           <h1 id="home-heading" class="sr-only">Home</h1>
         </section>
@@ -364,7 +364,7 @@
              summer-project dashboard's subject, which reads it out of the
              `bigu:bridge` key rather than out of this screen. So it has no
              nav row and is not the entry route any more; the hash still
-             resolves and js/dashboard.js still renders it unchanged.
+             resolves and js/views/dashboard.js still renders it unchanged.
 
              Its one side effect moved out with its nav row: the bridge's
              snapshot used to be published from renderGrid(), so it was only
@@ -408,7 +408,7 @@
         </section>
 
         <!-- Everything the reader has met, sorted by how much of it is left
-             rather than by whether it was ticked off. Built by js/memory.js;
+             rather than by whether it was ticked off. Built by js/views/memory.js;
              the shelves, the week strip and the ink are all derived from the
              same progress records the Review deck grades into. -->
         <section id="memory" class="view" hidden aria-labelledby="memory-heading">
@@ -450,7 +450,7 @@
              backup/restore used to live on the Dashboard, which is a status
              surface — a restore that overwrites every store in the browser
              and reloads the page does not belong in a grid of stat cards.
-             Built by js/settings.js. -->
+             Built by js/views/settings.js. -->
         <section id="settings" class="view" hidden aria-labelledby="settings-heading">
           <h1 id="settings-heading">Settings</h1>
         </section>
@@ -477,7 +477,7 @@
          demonstrably the same navigation at two sizes rather than two
          navigations that happen to agree.
 
-         A sibling of .app-shell__content, not a child of it: js/navigation.js
+         A sibling of .app-shell__content, not a child of it: js/ui/navigation.js
          marks the content regions `inert` while the drawer is open, and the
          bar has to be outside that to slide itself away cleanly — see the
          .site-nav.is-open ~ .thumb-nav rule in navigation.css.

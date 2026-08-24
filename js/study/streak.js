@@ -13,7 +13,7 @@
    Nothing about the rule changed in the move.
    ========================================================================== */
 
-import { journal, practice } from './storage.js';
+import { journal, practice } from '../core/storage.js';
 import { snapshotRecords } from './review.js';
 
 /* Local calendar fields, never toISOString(): a session finished at 23:30

@@ -48,14 +48,11 @@ import {
   grade as gradeItem,
   snapshotRecords,
   strengthOf,
-} from './review.js';
-import { createFavoriteButton, favoriteIds } from './favorites.js';
-import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
-import { practice } from './storage.js';
-import { loadVocabulary } from './vocabulary.js';
-import { loadGrammar } from './grammar.js';
-import { loadKanji } from './kanji.js';
-import { loadLessons } from './lessons.js';
+} from '../study/review.js';
+import { createFavoriteButton, favoriteIds } from '../study/favorites.js';
+import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
+import { practice } from '../core/storage.js';
+import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';
 
 const VIEW_ID = 'memory';
 

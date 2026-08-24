@@ -355,7 +355,7 @@
 /* -- Study controls row ---------------------------------------------------------------
    The "Remember this" chip and the 栞 bookmark side by side at the foot of
    every study card — vocabulary, grammar, kanji. Built by
-   js/studyControls.js; the four views used to each define this row under
+   js/ui/studyControls.js; the four views used to each define this row under
    their own class name with the same two declarations.
    ------------------------------------------------------------------------------------ */
 .study-controls {

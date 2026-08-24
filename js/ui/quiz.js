@@ -39,7 +39,8 @@
    same schedule. Nothing here reads or writes storage directly.
    ========================================================================== */
 
-import { grade as gradeItem, describeNextReview, getRecord, shuffled } from './review.js';
+import { grade as gradeItem, describeNextReview, getRecord, shuffled } from '../study/review.js';
+import { deckKeyForItemId } from '../study/decks.js';
 
 /* Four is Quizlet's number and it's the right one: three distractors is
    enough that guessing is clearly worse than knowing (25%), and few enough
@@ -91,6 +92,11 @@ const HAS_KANJI = /[一-鿿]/;
 
    These replace the near-identical deck adapters that lived in practice.js
    and the separate hand-rolled card in lessons.js.
+
+   An adapter is how a deck is *asked about*, not what it is called. The
+   names — and the id-to-deck routing that picks the adapter in the first
+   place — are in study/decks.js, so a module that needs to print the word
+   "Kanji" does not have to import the quiz to get it.
    -------------------------------------------------------------------------------------- */
 
 function jpSpan(text) {
@@ -166,7 +172,6 @@ function factsList(facts) {
 
 const ADAPTERS = {
   lessons: {
-    label: 'Lessons',
     question: 'Энэ үг ямар утгатай вэ?',
     noun: 'үг',
     front: (item) => furigana(item.word, item.reading),
@@ -179,7 +184,6 @@ const ADAPTERS = {
   },
 
   vocabulary: {
-    label: 'Vocabulary',
     question: 'Энэ үг ямар утгатай вэ?',
     noun: 'үг',
     front: (item) => (item.kanji ? furigana(item.kanji, item.kana) : jpSpan(item.kana)),
@@ -192,7 +196,6 @@ const ADAPTERS = {
   },
 
   grammar: {
-    label: 'Grammar',
     question: 'Энэ хэлбэр ямар утгатай вэ?',
     noun: 'хэлбэр',
     front: (item) => {
@@ -210,7 +213,6 @@ const ADAPTERS = {
   },
 
   kanji: {
-    label: 'Kanji',
     question: 'Энэ ханз ямар утгатай вэ?',
     noun: 'ханз',
     front: (item) => jpSpan(item.character),
@@ -227,23 +229,6 @@ const ADAPTERS = {
     ],
   },
 };
-
-/* Lesson ids are l1-01, l2-14, … — tested first because "l" is a looser
-   match than the prefixes below it. Vocabulary ids carry any level prefix
-   (n5-0001 … n1-…), so the pattern matches the whole ladder rather than
-   the one prefix the earliest word list happened to use.
-
-   The prefix in an id is history, not a level: an id is the key every
-   progress and review record in localStorage is stored under, so it never
-   changes once written, even when the entry's actual level says otherwise.
-   Read the entry's own level, never its id. */
-function deckKeyForItemId(id) {
-  if (/^l\d+-/.test(id)) return 'lessons';
-  if (/^n[1-5]-/.test(id)) return 'vocabulary';
-  if (id.startsWith('gr-')) return 'grammar';
-  if (id.startsWith('kj-')) return 'kanji';
-  return null;
-}
 
 function adapterFor(item) {
   const key = deckKeyForItemId(item.id);
@@ -1755,7 +1740,7 @@ function createModePicker(initialMode, onChange) {
   return { wrap, get mode() { return current; } };
 }
 
-/* `furigana` joins the list for js/home.js, which sets one real word from
+/* `furigana` joins the list for js/views/home.js, which sets one real word from
    data/ as the first thing on the entry screen and has to draw its reading
    the way the rest of the app does — ruby over the word, and no ruby at all
    when the word and its reading are the same string. It was that or a third
@@ -1767,7 +1752,6 @@ export {
   furigana,
   ADAPTERS,
   MODES,
-  deckKeyForItemId,
   adapterFor,
   buildQuestion,
   supportedTypes,

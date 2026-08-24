@@ -15,25 +15,26 @@
    builds the first time the reader actually goes there.
    ========================================================================== */
 
-import { isAvailable as isStorageAvailable } from './storage.js';
-import { initTheme, bindToggleButton } from './theme.js';
-import { initRouter, registerView } from './router.js';
-import { initNav } from './navigation.js';
-import { initHome } from './home.js';
-import { initDashboard } from './dashboard.js';
-import { initVocabulary } from './vocabulary.js';
-import { initGrammar } from './grammar.js';
-import { initKanji } from './kanji.js';
-import { initKakitori } from './kakitori.js';
-import { initPractice, publishStatusSnapshot } from './practice.js';
-import { initMemory } from './memory.js';
-import { initJournal } from './journal.js';
-import { initLessons } from './lessons.js';
-import { initReading } from './reading.js';
-import { initIchibun } from './ichibun.js';
-import { initSettings } from './settings.js';
-import { initIntro } from './logoIntro.js';
-import { initKeyboard } from './keyboard.js';
+import { isAvailable as isStorageAvailable } from './core/storage.js';
+import { initTheme, bindToggleButton } from './core/theme.js';
+import { initRouter, registerView } from './core/router.js';
+import { initNav } from './ui/navigation.js';
+import { initHome } from './views/home.js';
+import { initDashboard } from './views/dashboard.js';
+import { initVocabulary } from './views/vocabulary.js';
+import { initGrammar } from './views/grammar.js';
+import { initKanji } from './views/kanji.js';
+import { initKakitori } from './views/kakitori.js';
+import { initPractice } from './views/practice.js';
+import { initMemory } from './views/memory.js';
+import { initJournal } from './views/journal.js';
+import { initLessons } from './views/lessons.js';
+import { initReading } from './views/reading.js';
+import { initIchibun } from './views/ichibun.js';
+import { initSettings } from './views/settings.js';
+import { initIntro } from './ui/logoIntro.js';
+import { initKeyboard } from './ui/keyboard.js';
+import { publishStatusSnapshot } from './study/session.js';
 
 /* -- Storage ------------------------------------------------------------------
    Confirms localStorage actually works (Safari private mode and locked-down

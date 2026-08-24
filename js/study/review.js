@@ -19,7 +19,7 @@
    a memory is estimated to be left right now, decaying between reviews. The
    ladder alone can only say "due" or "not due", which is a switch; a learner
    needs to see the slope, because the slope is the thing they're actually
-   working against. #memory (js/memory.js) is built on it.
+   working against. #memory (js/views/memory.js) is built on it.
 
    Everything is stored in storage.js's existing `progress` map, one record
    per item id. The persisted shape gained three fields (firstSeen, reviews,
@@ -27,7 +27,7 @@
    read correctly — see normalizeRecord().
    ========================================================================== */
 
-import { progress } from './storage.js';
+import { progress } from '../core/storage.js';
 
 const DAY = 86400000;
 

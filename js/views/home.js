@@ -6,7 +6,7 @@
    Home is the learning layer and only the learning layer. Progression — XP,
    levels, ranks, skill percentages, missions — belongs to the separate
    summer-project surface, which reads this app's activity out of the
-   `bigu:bridge` key written by js/bridge.js. Nothing here counts, awards or
+   `bigu:bridge` key written by js/core/bridge.js. Nothing here counts, awards or
    displays any of it. Home's one question is "what can I learn right now?",
    and everything on the screen is an answer to it.
 
@@ -20,7 +20,7 @@
                     way in both places.
 
      これを練習する  the primary action, and a real one. It runs a short round
-                    in the app's own quiz — the same js/quiz.js panel Review
+                    in the app's own quiz — the same js/ui/quiz.js panel Review
                     and Lessons run, the same grading into review.js's
                     schedule — seeded with today's item and topped up by
                     buildSession(). When it ends it is logged through
@@ -43,11 +43,13 @@
    key, no new schema, no second progress model.
    ========================================================================== */
 
-import { journal, practice as practiceStore } from './storage.js';
-import { buildSession, countDue, snapshotRecords } from './review.js';
-import { ADAPTERS, createQuiz, deckKeyForItemId, furigana } from './quiz.js';
-import { loadReviewPool, recordSession } from './practice.js';
-import { getViewContainer } from './content.js';
+import { journal, practice as practiceStore } from '../core/storage.js';
+import { buildSession, countDue, snapshotRecords } from '../study/review.js';
+import { ADAPTERS, createQuiz, furigana } from '../ui/quiz.js';
+import { deckKeyForItemId } from '../study/decks.js';
+import { loadReviewPool } from '../data/catalogue.js';
+import { recordSession } from '../study/session.js';
+import { getViewContainer } from '../ui/content.js';
 
 const VIEW_ID = 'home';
 

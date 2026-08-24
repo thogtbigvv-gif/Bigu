@@ -18,7 +18,7 @@
    Each lesson group also has its own "Quiz" button: a round scoped to that
    lesson's word list, shown in place of the list.
 
-   The quiz is js/quiz.js — the same panel, the same two study modes, and
+   The quiz is js/ui/quiz.js — the same panel, the same two study modes, and
    the same grading the Review deck uses, rather than the separate
    implementation that used to live here.
 
@@ -30,19 +30,19 @@
    One progress model is worth more than the separation was.
    ========================================================================== */
 
-import { settings } from './storage.js';
-import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from './review.js';
-import { createQuiz, createModePicker } from './quiz.js';
+import { settings } from '../core/storage.js';
+import { isRemembered, rememberedCount, setRemembered, shuffled, snapshotRecords } from '../study/review.js';
+import { createQuiz, createModePicker } from '../ui/quiz.js';
 /* practice.js imports this module's loadLessons for the review pool, so this
    pairing is a cycle. It is a safe one and deliberately not worked around:
    neither binding is touched while the modules evaluate — loadLessons runs
    when the pool is first built, recordSession when a round ends — and the
    alternative is lessons.js keeping a second copy of the logging path,
    which is the duplication this import exists to remove. */
-import { recordSession } from './practice.js';
-import { createContentLoader, createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from './content.js';
+import { recordSession } from '../study/session.js';
+import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
+import { loadLessons } from '../data/catalogue.js';
 
-const DATA_URL = 'data/lessons.json';
 const VIEW_ID = 'lessons';
 
 /* Shared with practice.js: how you like to study is one preference, not one
@@ -52,7 +52,6 @@ const QUIZ_MODE_SETTING_KEY = 'quizMode';
 
 /* -- Data ------------------------------------------------------------------------- */
 
-const loadLessons = createContentLoader(DATA_URL, 'lessons');
 
 /* -- Unwritten lessons ------------------------------------------------------------
    The spine runs 1 to 50 because that is how far みんなの日本語 runs, and the
@@ -347,7 +346,7 @@ function createLessonGroup(lesson, index, onQuiz) {
 }
 
 /* -- Quiz --------------------------------------------------------------------------------
-   One lesson at a time, run by the shared quiz in js/quiz.js — the same
+   One lesson at a time, run by the shared quiz in js/ui/quiz.js — the same
    panel, the same two study modes, and the same grading the Review deck
    uses. This module used to carry its own reveal/grade/summary
    implementation, near-identical to practice.js's, which is most of why
@@ -496,4 +495,4 @@ async function initLessons() {
   });
 }
 
-export { initLessons, loadLessons };
+export { initLessons };

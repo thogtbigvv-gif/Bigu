@@ -14,8 +14,8 @@
    whether you remember it, so this never touches progress/review state.
    ========================================================================== */
 
-import { favorites } from './storage.js';
-import { createIcon } from './content.js';
+import { favorites } from '../core/storage.js';
+import { createIcon } from '../ui/content.js';
 
 function isFavorite(itemId) {
   return Boolean(favorites.get(itemId, false));
