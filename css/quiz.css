@@ -1,6 +1,6 @@
 /* ==========================================================================
    quiz.css
-   The shared quiz panel built by js/quiz.js — used by both the Review deck
+   The shared quiz panel built by js/ui/quiz.js — used by both the Review deck
    and the per-lesson quiz. Replaces the two separate sets of quiz styles
    that used to live in practice.css and lessons.css.
 
@@ -141,7 +141,7 @@
      this is everything else that moves it — the drag, the lean it settles
      into, the exit — so the two never fight over one transform.
 
-     js/quiz.js writes --drag and --drag-tilt during a swipe and leaves them in
+     js/ui/quiz.js writes --drag and --drag-tilt during a swipe and leaves them in
      place when the swipe grades the card, which is what lets the lean below
      pick the card up exactly where the thumb dropped it rather than snapping
      it back through centre first. */
@@ -204,7 +204,7 @@
    number to keep in sync with SWIPE_GRADE_DISTANCE.
 
    It outlives the gesture. Once a card is graded — flicked or by button —
-   js/quiz.js pins the progress at 1 and leaves data-toward in place, so the
+   js/ui/quiz.js pins the progress at 1 and leaves data-toward in place, so the
    edge the card is leaning towards stays lit while the verdict is read. The
    correct-answer ring below blooms above this and settles back onto it.
    ------------------------------------------------------------------------------------------ */
@@ -243,7 +243,7 @@
 }
 
 /* Facing the card front again between questions is not an animation — see
-   faceFront() in js/quiz.js for why turning back would show the reader the
+   faceFront() in js/ui/quiz.js for why turning back would show the reader the
    next question's answer.
 
    It covers the scene as well as the inner, because the scene is where the
@@ -363,7 +363,7 @@
 }
 
 /* -- The question itself -------------------------------------------------------------
-   Three shapes, set by js/quiz.js on the element, because the quiz no longer
+   Three shapes, set by js/ui/quiz.js on the element, because the quiz no longer
    asks only one kind of question. A single word is a specimen and is shown
    at specimen size; a sentence is prose and has to be readable as prose; a
    Mongolian gloss being asked back in Japanese is neither, and putting it at
@@ -806,7 +806,7 @@
 /* -- The item, in its parts ---------------------------------------------------------------
    Shared by the back of a flipped card and the checked-answer panel, so the
    round teaches the same thing whichever mode it was studied in. Only rows
-   with something in them are built (see factsList in js/quiz.js), so this
+   with something in them are built (see factsList in js/ui/quiz.js), so this
    never renders an empty label or a dash standing in for missing data.
    ------------------------------------------------------------------------------------------ */
 .quiz__detail-block {

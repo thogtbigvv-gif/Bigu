@@ -342,7 +342,7 @@
               640px because a 16rem sidebar leaves a tablet-portrait page too
               narrow for the 20rem card grids inside it.
 
-   Mirrored in js/navigation.js's MOBILE_QUERY — change both together.
+   Mirrored in js/ui/navigation.js's MOBILE_QUERY — change both together.
    ------------------------------------------------------------------------------------ */
 
 /* -- Dark theme overrides ---------------------------------------------------------

@@ -1,6 +1,6 @@
 /* ==========================================================================
    settings.css
-   Styles for the #settings view built by js/settings.js. Card chrome comes
+   Styles for the #settings view built by js/views/settings.js. Card chrome comes
    from cards.css's .card — only the content inside each group (the choice
    row, the action stack, the destructive-action warning) is defined here.
    ========================================================================== */

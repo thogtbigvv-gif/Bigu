@@ -2,7 +2,7 @@
    intro.css
    The logo's own micro-animation. Everything is scoped to .brand__mark — no
    overlay, no full-screen takeover, nothing that blocks the app while it
-   runs. js/logoIntro.js adds .brand__mark--playing to start it, on first load
+   runs. js/ui/logoIntro.js adds .brand__mark--playing to start it, on first load
    and again whenever the reader clicks the mark.
 
    Each part animates on its own so the logo assembles rather than simply

@@ -182,7 +182,7 @@
 }
 
 /* Placement only. The row itself — the chip, the bookmark, and the flex that
-   pairs them — is .study-controls in buttons.css, built by js/studyControls.js.
+   pairs them — is .study-controls in buttons.css, built by js/ui/studyControls.js.
    Pushed to the foot of the entry so the control line sits on one baseline
    across a row of entries of different heights. */
 .vocab-card__controls {

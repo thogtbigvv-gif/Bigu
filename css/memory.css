@@ -1,6 +1,6 @@
 /* ==========================================================================
    memory.css
-   Styles for the #memory view built by js/memory.js.
+   Styles for the #memory view built by js/views/memory.js.
 
    The whole sheet is one idea: ink on paper, at four densities. Nothing here
    introduces a colour — every value is --color-sumi, --color-line or

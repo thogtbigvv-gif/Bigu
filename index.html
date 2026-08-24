@@ -14,12 +14,24 @@
 
   <!-- Applies the reader's theme before any CSS or the module scripts run,
        so the page never flashes light before switching to dark. Mirrors
-       theme.js's own storedTheme()/systemTheme() logic — duplicated here,
-       not imported, because this has to run synchronously pre-paint. -->
+       js/core/theme.js's own storedTheme()/systemTheme() logic — duplicated
+       here, not imported, because this has to run synchronously pre-paint.
+
+       It reads the settings key directly, which makes it the one place
+       outside js/core/storage.js that knows a storage key by name — and
+       therefore the one place the namespace migration cannot reach, because
+       this runs before any module has loaded. So it falls back to the
+       legacy `nagi:` key itself. Without that, a returning reader's very
+       first paint after the rename would be the system theme rather than
+       theirs: a dark-mode reader on a light system would get one white
+       frame, which is precisely the flash this script exists to prevent.
+       The fallback can go once no reader is plausibly still carrying a
+       pre-rename key; the migration in storage.js writes the new one on
+       their first load either way. -->
   <script>
     (function () {
       try {
-        var raw = localStorage.getItem('nagi:settings');
+        var raw = localStorage.getItem('bigu:settings') || localStorage.getItem('nagi:settings');
         var theme = raw ? JSON.parse(raw).theme : null;
         if (theme !== 'light' && theme !== 'dark') {
           theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -29,22 +41,25 @@
     })();
   </script>
 
-  <!-- Installability. This app's whole retention model is a daily streak, so
-       it has to survive being added to a home screen: without these it gets
-       a blank icon and a white status bar fighting the dark theme.
+  <!-- Installability. Bigu is meant to be lived in daily, so it has to
+       survive being added to a home screen: without these it gets a blank
+       icon and a white status bar fighting the dark theme.
 
-       The two theme-color values below are stale: they still carry the retired
-       washi palette (#E9EBE4 / #1A1D1A) rather than the current grounds
-       (--color-paper, #FBFBF9 / #14161A). A <meta> cannot read a custom
-       property, so these are hand-copied and drifted when the palette changed.
-       Left alone here on purpose — this commit is a rename and may not move a
-       rendered value — but they, and manifest.json's matching pair, are wrong
-       and worth a commit of their own. -->
+       THE TWO VALUES BELOW ARE --color-paper, BY HAND. A <meta> cannot read
+       a custom property, so the ground colour is written out here, in
+       manifest.json, and in css/variables.css, and only the last of those
+       three is the source of truth. They had already drifted once: both
+       carried the retired washi palette (#E9EBE4 / #1A1D1A) long after the
+       grounds became #FBFBF9 and #14161A, so an installed Bigu painted its
+       status bar and splash in a colour the app itself no longer used
+       anywhere. If you change --color-paper, change these too — the app
+       looks correct in a browser tab either way, and wrong only once it is
+       installed, which is where nobody thinks to check. -->
   <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#E9EBE4" media="(prefers-color-scheme: light)" />
-  <meta name="theme-color" content="#1A1D1A" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#FBFBF9" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)" />
 
   <!-- Three families, and both of the new ones are Japanese. Klee One is the
        textbook hand that carries headwords, kanji and example sentences; Zen
@@ -119,9 +134,9 @@
          1024px (toggled by #site-nav-mobile-toggle in the header below).
          "Learn" and "Practice" are disclosure toggles, not links — each only
          expands and collapses its own submenu. Behavior lives in
-         js/navigation.js, which binds every .site-nav__item--parent it finds
+         js/ui/navigation.js, which binds every .site-nav__item--parent it finds
          rather than one named group; active-link highlighting (aria-current)
-         is set by js/router.js.
+         is set by js/core/router.js.
 
          Every row here goes somewhere real. Six of the original thirteen
          (Listening, Conversation, Shadowing, Search, Profile, Settings-as-
@@ -231,7 +246,7 @@
                with two sparkles off its upper right. Drawn inline like every
                other icon in the app (nav chevron, theme toggle, hamburger) so
                it stays crisp at any size and each part can be animated on its
-               own — js/logoIntro.js plays them in sequence.
+               own — js/ui/logoIntro.js plays them in sequence.
 
                The blues are literal here rather than tokens on purpose: this
                is brand artwork, not themed UI chrome, and it must read the
@@ -354,7 +369,7 @@
              focuses `#<view>-heading` on every navigation so a keyboard or
              screen-reader reader lands at the top of what they asked for,
              and reads its text for the document title. .sr-only keeps both
-             true without drawing anything. Built by js/home.js. -->
+             true without drawing anything. Built by js/views/home.js. -->
         <section id="home" class="view" aria-labelledby="home-heading">
           <h1 id="home-heading" class="sr-only">Home</h1>
         </section>
@@ -364,7 +379,7 @@
              summer-project dashboard's subject, which reads it out of the
              `bigu:bridge` key rather than out of this screen. So it has no
              nav row and is not the entry route any more; the hash still
-             resolves and js/dashboard.js still renders it unchanged.
+             resolves and js/views/dashboard.js still renders it unchanged.
 
              Its one side effect moved out with its nav row: the bridge's
              snapshot used to be published from renderGrid(), so it was only
@@ -408,7 +423,7 @@
         </section>
 
         <!-- Everything the reader has met, sorted by how much of it is left
-             rather than by whether it was ticked off. Built by js/memory.js;
+             rather than by whether it was ticked off. Built by js/views/memory.js;
              the shelves, the week strip and the ink are all derived from the
              same progress records the Review deck grades into. -->
         <section id="memory" class="view" hidden aria-labelledby="memory-heading">
@@ -450,7 +465,7 @@
              backup/restore used to live on the Dashboard, which is a status
              surface — a restore that overwrites every store in the browser
              and reloads the page does not belong in a grid of stat cards.
-             Built by js/settings.js. -->
+             Built by js/views/settings.js. -->
         <section id="settings" class="view" hidden aria-labelledby="settings-heading">
           <h1 id="settings-heading">Settings</h1>
         </section>
@@ -477,7 +492,7 @@
          demonstrably the same navigation at two sizes rather than two
          navigations that happen to agree.
 
-         A sibling of .app-shell__content, not a child of it: js/navigation.js
+         A sibling of .app-shell__content, not a child of it: js/ui/navigation.js
          marks the content regions `inert` while the drawer is open, and the
          bar has to be outside that to slide itself away cleanly — see the
          .site-nav.is-open ~ .thumb-nav rule in navigation.css.

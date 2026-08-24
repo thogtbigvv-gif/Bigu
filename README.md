@@ -82,7 +82,7 @@ Two axes, and they do different jobs.
 
 **Lesson is the spine.** The catalogue follows みんなの日本語 lesson order,
 because that is the order the learner actually meets the language in. Lessons
-1–25 are populated; 26–50 are being filled in by hand as they are studied.
+1–15 are populated; 16–50 are being filled in by hand as they are studied.
 This is the honest measure of "where I am".
 
 **JLPT level is a tag.** Useful for filtering when you want to drill a band,
@@ -188,10 +188,27 @@ semantic landmarks, real buttons, `aria-expanded` / `aria-controls` /
 
 HTML5 · CSS3 · JavaScript (native ES modules) · JSON
 
-No frameworks, no build step, no dependencies. Styles are split into modules
-under `css/`, with every colour, size and spacing value declared once in
-`css/variables.css`. Keeping it this light is what makes it possible to change
-the whole app's character by editing one file.
+No frameworks, no build step, no dependencies. What the browser is served is
+what is in the repository.
+
+Styles are split into modules under `css/`, with every colour, size and
+spacing value declared once in `css/variables.css` — keeping it this light is
+what makes it possible to change the whole app's character by editing one
+file. Scripts are split into five layers under `js/`, with the dependency
+arrow running one way:
+
+```
+js/core/     storage, router, theme, preferences, bridge, backup
+js/data/     the catalogue loaders and the shape guards
+js/study/    the review model, streak, decks, session
+js/ui/       shared widgets — content, quiz, nav, keyboard
+js/views/    the thirteen screens
+```
+
+Nothing below `views/` imports from `views/`. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+is the full account: the layers and why the arrow runs that way, how data
+flows from a JSON file to a graded card, what is permanent about the stored
+shapes, and what to do when adding a view, a content file or a store.
 
 ---
 
@@ -212,6 +229,31 @@ Your progress lives in this browser's `localStorage` and never leaves the
 device. **Settings → Backup** downloads all of it as JSON and restores from it.
 If the browser won't allow storage at all — private browsing, or site data
 blocked — the app says so rather than silently forgetting everything.
+
+### Checks
+
+Four, cheapest first. CI runs all of them on every push and pull request; the
+first three need nothing but Node.
+
+```
+node tools/check-structure.mjs         # modules parse, imports and exports resolve
+node tools/validate-data.mjs           # every content file against its schema
+node --test "test/*.test.mjs"          # the study model, storage, bridge, backup
+node --test "test/browser/*.test.mjs"  # the app itself, in real Chromium
+```
+
+The last one needs a browser and skips without one:
+
+```
+npm install --no-save playwright-core && npx playwright install chromium
+```
+
+`--no-save`, and there is no `package.json`: the app has no dependencies and
+the browser harness is a test tool, not one of them.
+
+Since the app has no build step, the first check is the one doing the work a
+compiler would otherwise do — a wrong import path or a renamed export is
+nothing at all until a reader opens the view that needs it.
 
 ### Deployment
 
@@ -248,7 +290,7 @@ pip install cairosvg && python3 tools/build-icons.py
 - **Cross-linking** — the layer that turns entries into doors. Currently the
   only navigation between views is view-level; no entry links to another entry.
   This is the highest-priority work.
-- **Lessons 26–50** — the spine exists; the content is being written by hand.
+- **Lessons 16–50** — the spine exists; the content is being written by hand.
 - **Level tags for vocabulary and grammar** — present for kanji, absent
   elsewhere. Being filled in rather than guessed.
 

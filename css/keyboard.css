@@ -3,7 +3,7 @@
    The two things keyboard movement adds to the page: a focus ring on the rows
    J and K walk, and the shortcut list.
 
-   No new colours. Selection is focus (see js/keyboard.js), so the "selected"
+   No new colours. Selection is focus (see js/ui/keyboard.js), so the "selected"
    state here is the app's own --focus-ring on an element that could not
    previously receive focus — the same indicator, in the same token, that every
    control in Bigu already uses. Nothing about how the ring behaves changes;
@@ -11,7 +11,7 @@
    ========================================================================== */
 
 /* -- The rows -----------------------------------------------------------------
-   :focus-visible, not :focus. js/keyboard.js focuses these programmatically
+   :focus-visible, not :focus. js/ui/keyboard.js focuses these programmatically
    with tabindex="-1", and the browser's own heuristic is what decides whether
    that focus deserves a ring: pressing J is a keyboard interaction and draws
    one, while a click that happens to land on a row does not. That is exactly

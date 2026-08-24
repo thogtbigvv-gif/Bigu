@@ -342,7 +342,7 @@
 
 /* -- First visit ----------------------------------------------------------------------
    Shown in place of the whole grid on a first visit — see the note above
-   createWelcome() in js/dashboard.js. Full width and given real vertical
+   createWelcome() in js/views/dashboard.js. Full width and given real vertical
    room: it is the only thing on the screen, and a welcome squeezed into a
    stat tile's proportions would read as another stat tile.
    ------------------------------------------------------------------------------------ */
@@ -502,4 +502,4 @@
 }
 
 /* Backup/restore used to be a fourth card here. It lives in settings.css
-   now — see the note at the top of js/settings.js. */
+   now — see the note at the top of js/views/settings.js. */

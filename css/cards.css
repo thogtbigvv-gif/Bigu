@@ -230,7 +230,7 @@
 /* -- Loading skeleton -------------------------------------------------------------
    Stands in for content between first paint and the fetch resolving, in
    the shape of whatever grid is coming — see the shape table in
-   js/content.js. Built from --color-line so it reads as structure rather
+   js/ui/content.js. Built from --color-line so it reads as structure rather
    than as content, and pulses slowly enough to say "working" without
    drawing the eye. reset.css's global prefers-reduced-motion rule already
    collapses the animation, so no separate query is needed here.

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bigu.app/schema/lessons.schema.json",
+  "title": "Bigu lesson content",
+  "description": "Shape of a data/lessons.json file, as loaded by js/views/lessons.js. This is the one content file that is a bare array rather than an object with an updatedAt — a lesson is a place in the textbook, so the file is the spine itself with nothing wrapped around it.",
+  "type": "array",
+  "items": { "$ref": "#/$defs/lesson" },
+  "$defs": {
+    "lesson": {
+      "type": "object",
+      "required": ["lesson", "title", "words"],
+      "properties": {
+        "lesson": {
+          "type": "integer",
+          "description": "The textbook lesson number, following みんなの日本語 order. This is the lesson's identity — lessons carry no id, because they are not studiable items and never become a progress-store key."
+        },
+        "title": {
+          "type": "string",
+          "description": "Lesson title, conventionally the Japanese followed by a gloss in parentheses. May be an empty string: the spine runs to lesson 50 and is filled in by hand as each is studied, so an untitled lesson is a lesson not yet written down. That is a normal state in this app rather than a gap to be closed under pressure, and the schema does not treat it as an error."
+        },
+        "grammar": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Optional list of grammar points introduced by this lesson, as plain strings. May be empty for a lesson whose grammar has not been written down yet."
+        },
+        "words": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/word" },
+          "description": "The lesson's own word list. May be empty — a lesson not yet written down appears without content, which is a normal state rather than a gap. It must still be an array: the flattened pool every study surface draws from is built out of these lists, so one missing takes the whole review pool with it."
+        }
+      }
+    },
+    "word": {
+      "type": "object",
+      "required": ["id", "word", "reading", "english"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Unique id in the form \"l<lesson>-<nn>\", e.g. \"l12-04\". Used as the progress-store key, and the prefix js/study/decks.js routes to the lessons deck — an id in any other shape is an item no round will ever ask about."
+        },
+        "word": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The headword as written, kanji included where the textbook uses them."
+        },
+        "reading": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Kana reading. Equal to `word` for words already written in kana — the quiz reads that equality as \"there is no separate reading\" and draws no furigana."
+        },
+        "english": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The gloss the reader is learning. Named `english` for historical reasons; the catalogue's glosses are Mongolian, and the field name is left alone because it is read by js/ui/quiz.js's lessons adapter and appears in every backup ever downloaded."
+        }
+      }
+    }
+  },
+  "examples": [
+    [
+      {
+        "lesson": 1,
+        "title": "はじめまして (Nice to meet you)",
+        "grammar": [],
+        "words": [
+          { "id": "l1-01", "word": "私", "reading": "わたし", "english": "би" }
+        ]
+      }
+    ]
+  ]
+}
