@@ -1,0 +1,143 @@
+/* ==========================================================================
+   doors.css
+   The cross-links: a row of ways out of one entry into another, and the
+   mark on the entry a reader arrives at.
+
+   Built by js/ui/doors.js and used on six surfaces — a kanji's words, a
+   word's kanji, a lesson word's kanji, a grammar example's kanji, a
+   passage's kanji, and a pasted character's entry. One sheet, because a
+   door is one thing wherever it is drawn: the day it reads differently on
+   two screens is the day it stops being obvious that it is a door.
+
+   A door is NOT a .toggle-chip, though it stands next to one on several
+   cards. A chip is a switch with two states and it fills solid when it is
+   on; a door has one state and going through it leaves the screen. They
+   share a size and a radius so a card doesn't turn into a jumble of
+   different pills, and nothing else: the door carries the accent on its
+   face rather than in a fill, so a row of them reads as a line of links —
+   which is what it is — rather than as a row of controls waiting to be
+   pressed.
+   ========================================================================== */
+
+.doors {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-sm);
+}
+
+/* What the row is, said once above it. Meta weight, because the doors are
+   the content here and the label is the caption on them — "Words that use
+   this" set at reading size would be louder than the words themselves. */
+.doors__label {
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-sumi-faint);
+}
+
+.doors__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+}
+
+/* -- A door ------------------------------------------------------------------
+   Two lines at most: the Japanese, and the gloss under it. `align-items:
+   baseline` is wrong here and `center` is right — the two lines are one
+   block, and a door holding only a character has to sit level with one
+   holding a word and a meaning.
+   ---------------------------------------------------------------------------- */
+.door {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-3xs) var(--space-2xs);
+  min-height: 2.75rem;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--color-sumi);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  transition:
+    background-color var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.door__face {
+  font-family: var(--font-jp-stack);
+  font-size: var(--text-base);
+  line-height: var(--leading-tight);
+}
+
+.door__gloss {
+  font-size: var(--text-xs);
+  color: var(--color-sumi-faint);
+  line-height: var(--leading-tight);
+}
+
+@media (hover: hover) {
+  .door:hover {
+    border-color: var(--color-shu);
+    color: var(--color-shu);
+    background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-paper-raised));
+  }
+
+  /* The gloss follows the face into the accent rather than staying grey.
+     Half the door changing colour reads as a rendering fault. */
+  .door:hover .door__gloss {
+    color: inherit;
+  }
+}
+
+.door:active {
+  transform: translateY(var(--lift-press));
+  transition-timing-function: var(--ease-spring);
+}
+
+.door:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+  box-shadow: var(--focus-halo);
+}
+
+/* The rest of a capped row. Sized down to the doors it opens onto, since it
+   is a smaller statement than any of the app's real actions. */
+.doors__more {
+  align-self: flex-start;
+  padding: var(--space-3xs) var(--space-sm);
+  font-size: var(--text-sm);
+}
+
+/* -- Arrival -----------------------------------------------------------------
+   The entry a door led to, marked for a few seconds so the reader can see
+   which of eight hundred rows they were sent to.
+
+   Static, and that is the point. reset.css collapses every animation to
+   0.01ms under prefers-reduced-motion, so a highlight that faded would be
+   invisible to exactly the readers who most need to be told where they
+   landed. js/ui/doors.js takes the class off on a timer instead.
+
+   scroll-margin-top matches the one layout.css gives headings, for the same
+   reason: the header is sticky, and an element scrolled flush to the top of
+   the viewport is an element scrolled underneath it.
+   ---------------------------------------------------------------------------- */
+.is-arrival {
+  outline: 2px solid var(--color-shu);
+  outline-offset: 4px;
+  border-radius: var(--radius-sm);
+  scroll-margin-top: var(--space-3xl);
+}
+
+/* An arrival is a destination, not a control: it takes focus so a keyboard
+   reader lands on it, and the browser's own focus ring on top of the mark
+   above would be two rings around one thing. */
+.is-arrival:focus,
+.is-arrival:focus-visible {
+  outline: 2px solid var(--color-shu);
+  outline-offset: 4px;
+  box-shadow: var(--focus-halo);
+}

@@ -18,6 +18,15 @@
    which is also the honest reading of what a reader wants here: a
    vocabulary list is somewhere you look a word up or browse a little, not
    something you scroll to the end of.
+
+   Each card carries a row of doors into the kanji it is spelled with, and
+   the view answers to `#vocabulary/n5-001` by finding that word and putting
+   it on screen. The two go together: a kanji screen sends the reader to a
+   word that uses it, and paging is exactly what stands in the way of that
+   arriving anywhere — the linked word is the 380th match and the document
+   holds 24 of them. So the reveal below pages forward to it, and drops any
+   filter that would have excluded it, rather than landing the reader on a
+   list that does not contain what they followed a link to read.
    ========================================================================== */
 
 import { isRemembered } from '../study/review.js';
@@ -37,7 +46,9 @@ import {
   NO_LEVEL,
   OFFLINE_HINT,
 } from '../ui/content.js';
-import { loadVocabulary } from '../data/catalogue.js';
+import { createDoorRow, revealEntry } from '../ui/doors.js';
+import { loadVocabulary, loadLinkIndex } from '../data/catalogue.js';
+import { onRouteTarget } from '../core/router.js';
 
 const VIEW_ID = 'vocabulary';
 
@@ -89,11 +100,31 @@ function createExample(example) {
   return wrap;
 }
 
+/* The kanji inside a headword, as doors. Read off the link index rather than
+   written into vocabulary.json: what a word is spelled with is a fact about
+   its own headword, and the day a word is added it is linked, because being
+   linked is not a field anybody has to remember to fill in.
+
+   A word written in kana alone contributes no characters and gets no row,
+   which is the ordinary case for a good part of the list rather than a gap
+   in it. */
+function createKanjiDoors(word, links) {
+  return createDoorRow({
+    label: 'Kanji',
+    doors: links.kanjiIn(word.kanji).map((entry) => ({
+      view: 'kanji',
+      target: entry.id,
+      headword: entry.character,
+      gloss: entry.meaning,
+    })),
+  });
+}
+
 /* Two controls, two different questions: the chip answers "do I hold this?"
    (schedule state), the bookmark answers "do I want this?" (a choice). Both
    come from studyControls.js so this card, a grammar point, a kanji, and a
    lesson word all say it the same way. */
-function createCard(word, level, onProgressChange) {
+function createCard(word, level, links, onProgressChange) {
   const item = document.createElement('li');
   /* No `card`. A vocabulary entry is a row in a dense two-column list now, not
      a surface — see vocabulary.css. Dropping the class is the honest way to say
@@ -136,6 +167,10 @@ function createCard(word, level, onProgressChange) {
   });
 
   item.append(head, meaning, createExample(word.example), row);
+
+  const doors = createKanjiDoors(word, links);
+  if (doors) item.append(doors);
+
   return item;
 }
 
@@ -260,7 +295,7 @@ function renderList(container, data) {
   }
 
   function cardFor(row) {
-    if (!row.item) row.item = createCard(row.word, row.level, onCardProgressChange);
+    if (!row.item) row.item = createCard(row.word, row.level, data.links, onCardProgressChange);
     return row.item;
   }
 
@@ -348,9 +383,52 @@ function renderList(container, data) {
   });
   more.addEventListener('click', showMore);
 
+  /* Every filter back to nothing, in one place. Pressed chips are cleared as
+     well as the field, because a reveal that only cleared the search would
+     still be unable to show a word two levels away from whatever chip the
+     reader last pressed. */
+  function clearFilters() {
+    searchInput.value = '';
+    selectedTags.clear();
+    for (const button of facetButtons) button.setAttribute('aria-pressed', 'false');
+    rememberedToggle.setAttribute('aria-pressed', 'false');
+    applyFilter();
+  }
+
+  /* Arriving from a door. Three things stand between a word's id and the
+     reader seeing it, and each of them is a state this view is normally right
+     to be in: a filter that excludes it, a search that excludes it, and the
+     page boundary that excludes almost everything.
+
+     The filters are dropped only when they are actually hiding the word — a
+     reader who followed a link to a word already in front of them keeps the
+     list they had. Paging forward always happens, because a card that is not
+     in the document cannot be scrolled to.
+
+     An id nothing matches leaves the list exactly as it was. That is a
+     retired entry or an old bookmark, and the right answer to it is the word
+     list, not an error. */
+  function revealWord(id) {
+    const row = rows.find((candidate) => candidate.word.id === id);
+    if (!row) return;
+
+    if (!matched.includes(row)) clearFilters();
+
+    const at = matched.indexOf(row);
+    if (at === -1) return;
+    while (shown <= at) showMore();
+
+    revealEntry(cardFor(row));
+  }
+
   applyFilter();
 
   container.replaceChildren(filters, facetWrap, summary, list, empty, more);
+
+  // After the list is in the document: revealEntry scrolls to the card and
+  // moves focus onto it, and neither works on an element that has not been
+  // laid out. Same reason kanji.js subscribes at the end of its own render.
+  onRouteTarget(VIEW_ID, revealWord);
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
@@ -361,7 +439,13 @@ async function initVocabulary() {
 
   await loadIntoView(getViewContainer(view, 'vocab-content'), {
     skeleton: 'card-grid',
-    load: loadVocabulary,
+    // The link index alongside the words, so a card can name the kanji it is
+    // spelled with. It never rejects (see catalogue.js), so a missing
+    // kanji.json costs this view its door rows and nothing else.
+    load: async () => {
+      const [data, links] = await Promise.all([loadVocabulary(), loadLinkIndex()]);
+      return { ...data, links };
+    },
     render: renderList,
     errorTitle: 'Vocabulary ачаалагдсангүй.',
     errorDetail: `Үгийн жагсаалт data/vocabulary.json дотор байгаа. ${OFFLINE_HINT}`,

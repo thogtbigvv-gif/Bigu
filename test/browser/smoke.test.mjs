@@ -15,6 +15,11 @@
    more would make it a brittle mirror of the DOM; asking this much makes a
    whole-app rename safe.
 
+   The three tests at the foot of this file are the one exception, and they
+   earn it: cross-linking spans the router, two views and a derived index, so
+   the only place its failure is visible is a browser that has actually
+   followed a door from one screen to another.
+
    The one thing here that is not zero-dependency, which is why it lives in
    its own directory rather than beside the unit tests: `node --test
    "test/*.test.mjs"` runs the whole logic suite with nothing installed, and
@@ -192,5 +197,60 @@ describe('the app in a browser', { skip: found.reason }, () => {
     await page.evaluate(() => { window.location.hash = '#no-such-view'; });
     await page.waitForFunction(() => window.location.hash === '#home');
     assert.equal(await page.evaluate(() => document.getElementById('home').hidden), false);
+  });
+
+  /* Cross-linking end to end, which is the one part of it nothing else can
+     see. The unit tests prove the index finds the right words and that an
+     address parses; only a browser can show that following a door actually
+     puts the entry it named on screen — through a router, a view that was
+     never opened, a fetch, and a list that pages. */
+  test('a deep link opens one entry rather than its list', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#kanji/kj-n5-001'; });
+    await page.waitForFunction(() => document.querySelector('.kanji-detail')?.hidden === false, null, { timeout: 5000 });
+
+    assert.equal(await page.textContent('.kanji-detail__character'), '日');
+    assert.equal(
+      await page.evaluate(() => document.querySelector('.kanji-browse').hidden),
+      true,
+      'the grid should be behind the panel, not beside it',
+    );
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  test('a door leads to the entry it names, on another view, and marks it on arrival', async () => {
+    const before = problems.length;
+
+    const door = await page.waitForSelector('.kanji-detail .door', { timeout: 5000 });
+    const href = await door.getAttribute('href');
+    assert.match(href, /^#(vocabulary|lessons|kanji)\/[\w-]+$/, 'a door points at one entry on one view');
+
+    await door.click();
+    await page.waitForFunction((hash) => window.location.hash === hash, href, { timeout: 5000 });
+
+    /* The arrival mark is what says *which* row was linked to, on a screen
+       showing hundreds of near-identical ones. js/ui/doors.js takes it off
+       again after three seconds, so this is a race the test would rather not
+       run: five seconds is the wait for it to appear, not for it to stay. */
+    const arrival = await page.waitForSelector('.is-arrival', { timeout: 5000 });
+    assert.ok(await arrival.isVisible(), 'the linked entry should be on screen, not filtered out or unpaged');
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  test('a deep link to an entry that is not in the catalogue lands on the list, not an error', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#kanji/kj-no-such-entry'; });
+    await page.waitForFunction(() => !document.getElementById('kanji')?.hidden);
+
+    assert.equal(
+      await page.evaluate(() => document.querySelector('.kanji-browse').hidden),
+      false,
+      'a retired id or an old bookmark is a normal arrival at the grid',
+    );
+    assert.equal(await page.evaluate(() => Boolean(document.querySelector('.error-state'))), false);
+    assert.deepEqual(problems.slice(before), []);
   });
 });

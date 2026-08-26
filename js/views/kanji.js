@@ -23,11 +23,27 @@
    is supposed to be the app's dictionary entry.
 
    What is left is what the data can answer: Meaning, On, Kun, Examples,
-   Related Kanji. `examples` falls back to the single `example` field, and
-   `related` is an array of characters, each rendered as a chip that jumps to
-   that character's own entry. 118 of the 132 entries carry one; the other 14
-   simply have no Related Kanji section, because a heading over an empty box
-   is the same apology in a smaller font.
+   Words, In lessons, Related Kanji. `examples` falls back to the single
+   `example` field, and `related` is an array of characters, each rendered as
+   a door into that character's own entry. 118 of the 132 entries carry one;
+   the other 14 simply have no Related Kanji section, because a heading over
+   an empty box is the same apology in a smaller font.
+
+   Words and In lessons are the two sections that were not written by hand.
+   They are read off data/links.js — every word in the catalogue whose
+   headword contains this character — and they are the half of cross-linking
+   that only a kanji screen can offer: a word can name the characters inside
+   it by looking at itself, but a character has no way of knowing what uses
+   it without asking the whole catalogue. 132 characters, 47 words behind the
+   busiest of them, and not one reference written into kanji.json.
+
+   THE PANEL IS THE ROUTE NOW, which is the other change here. Opening a
+   detail sets `#kanji/kj-n5-001` and the panel is drawn in answer to that,
+   rather than the panel being opened directly and the address left saying
+   `#kanji`. Every way in goes through the same door: a card's own button, a
+   Related Kanji chip, a link from a word on another screen, a bookmark, a
+   reload. Backing out clears the entry from the address, so coming back to
+   this screen lands on the grid rather than on whatever was last open.
    ========================================================================== */
 
 import { createStudyControls } from '../ui/studyControls.js';
@@ -45,7 +61,9 @@ import {
   NO_LEVEL,
   OFFLINE_HINT,
 } from '../ui/content.js';
-import { loadKanji } from '../data/catalogue.js';
+import { createDoorRow } from '../ui/doors.js';
+import { loadKanji, loadLinkIndex } from '../data/catalogue.js';
+import { activeViewId, clearRouteTarget, onRouteTarget, parseRoute, routeTo } from '../core/router.js';
 
 const VIEW_ID = 'kanji';
 
@@ -209,27 +227,60 @@ function createExamplesBlock(entry) {
    of 521 related references across the file, zero point outside the 132
    characters, so this branch changes nothing today and only decides what
    happens if the data ever grows past the app. */
-function createRelatedBlock(entry, allEntries, onJump) {
+function createRelatedBlock(entry, allEntries) {
   const matches = (entry.related ?? [])
     .map((character) => allEntries.find((candidate) => candidate.character === character))
     .filter(Boolean);
 
-  if (matches.length === 0) return null;
+  /* Doors rather than the buttons this used to build. Visually a smaller
+     change than it sounds — they sat in a row and jumped to another entry
+     either way — but a button jumped *in place*, leaving the address on
+     `#kanji` no matter how many characters deep the reader had walked. Three
+     related characters in and the Back button took them out of the app. */
+  return createDoorRow({
+    doors: matches.map((match) => ({ view: VIEW_ID, target: match.id, headword: match.character })),
+  });
+}
 
-  const wrap = document.createElement('div');
-  wrap.className = 'kanji-detail__related';
+/* -- The words behind a character -------------------------------------------
+   Read off the link index, not out of kanji.json. Two rows rather than one,
+   because a vocabulary entry and a lesson word are not the same kind of
+   thing: one is an entry in the dictionary half of the app, the other is a
+   line in a numbered lesson of a book the reader owns, and the door to each
+   should say which it is before it is pressed.
 
-  for (const match of matches) {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'toggle-chip';
-    button.lang = 'ja';
-    button.textContent = match.character;
-    button.addEventListener('click', () => onJump(match));
-    wrap.append(button);
-  }
+   The gloss under each door is the entry's own meaning, trimmed. A door is a
+   label on a room, not the room: enough to recognise the word by, and short
+   enough that twelve of them still read as a row.
+   ---------------------------------------------------------------------------- */
 
-  return wrap;
+const GLOSS_LIMIT = 18;
+
+function trimGloss(text) {
+  const value = String(text ?? '').trim();
+  return value.length > GLOSS_LIMIT ? `${value.slice(0, GLOSS_LIMIT - 1)}…` : value;
+}
+
+function createWordsBlock(entry, links) {
+  return createDoorRow({
+    doors: links.usesOf(entry.character).words.map((word) => ({
+      view: 'vocabulary',
+      target: word.id,
+      headword: word.kanji || word.kana,
+      gloss: trimGloss(word.meaning),
+    })),
+  });
+}
+
+function createLessonWordsBlock(entry, links) {
+  return createDoorRow({
+    doors: links.usesOf(entry.character).lessonWords.map(({ word, lesson }) => ({
+      view: 'lessons',
+      target: word.id,
+      headword: word.word,
+      gloss: `${lesson.lesson}. ${trimGloss(word.english)}`,
+    })),
+  });
 }
 
 function buildDetailPanel() {
@@ -268,15 +319,21 @@ function buildDetailPanel() {
   return { wrap, exit, character, tag, sections };
 }
 
-function renderDetail(elements, entry, level, allEntries, onJump) {
+function renderDetail(elements, entry, level, allEntries, links) {
   elements.character.textContent = entry.character;
   elements.tag.textContent = level ?? '';
   elements.tag.hidden = !level;
 
-  /* Related Kanji is the one section that can be absent, so it is the one
-     built conditionally — 14 of the 132 entries have no related characters
-     and get a five-section panel instead of a six-section one. */
-  const related = createRelatedBlock(entry, allEntries, onJump);
+  /* Three of the seven sections can be absent, and each is built
+     conditionally for the same reason: 14 of the 132 entries have no related
+     characters, a character can appear in no word the catalogue holds, and
+     the link index answers nothing at all when the files behind it failed to
+     load. A panel of four sections, or five, or seven, is a panel showing
+     what there is — a heading over an empty box is an apology in a smaller
+     font, which is what took Stroke Order and Animation out of here. */
+  const words = createWordsBlock(entry, links);
+  const lessonWords = createLessonWordsBlock(entry, links);
+  const related = createRelatedBlock(entry, allEntries);
 
   elements.sections.replaceChildren(
     ...[
@@ -284,6 +341,8 @@ function renderDetail(elements, entry, level, allEntries, onJump) {
       createDetailSection('On', createTextBlock(entry.onyomi || '—', { lang: 'ja' })),
       createDetailSection('Kun', createTextBlock(entry.kunyomi || '—', { lang: 'ja' })),
       createDetailSection('Examples', createExamplesBlock(entry)),
+      words && createDetailSection('Words', words),
+      lessonWords && createDetailSection('In lessons', lessonWords),
       related && createDetailSection('Related Kanji', related),
     ].filter(Boolean),
   );
@@ -369,7 +428,7 @@ function renderGrid(container, data) {
     // Unhidden first: renderDetail moves focus to the panel's heading, and
     // focus() on a `hidden` element is silently dropped.
     detailElements.wrap.hidden = false;
-    renderDetail(detailElements, entry, getEntryLevel(entry), data.kanji, openDetail);
+    renderDetail(detailElements, entry, getEntryLevel(entry), data.kanji, data.links);
   }
 
   /* Focus goes back to the "View details" button that opened the panel, not
@@ -388,6 +447,11 @@ function renderGrid(container, data) {
     browse.hidden = false;
     if (restoreFocus) lastOpener?.focus();
     lastOpener = null;
+    // The address stops naming an entry that is no longer on screen. Without
+    // this, backing out of 日 left the reader on `#kanji/kj-n5-001`, and the
+    // next arrival at this view — a nav click, a reload, the Back button —
+    // would open 日 again over the grid they asked for.
+    clearRouteTarget(VIEW_ID);
   }
 
   detailElements.exit.addEventListener('click', () => closeDetail());
@@ -396,19 +460,28 @@ function renderGrid(container, data) {
   // drawer — one key means "back out of this" everywhere in the app.
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    if (location.hash.slice(1) !== VIEW_ID) return;
+    if (activeViewId() !== VIEW_ID) return;
     closeDetail();
   });
 
-  // Leaving the view and coming back should land on the grid. Without this
-  // the panel was still open on return, showing one character with no sign
-  // that a list of 132 was behind it.
-  window.addEventListener('hashchange', () => closeDetail({ restoreFocus: false }));
+  /* Leaving the view and coming back should land on the grid. Without this
+     the panel was still open on return, showing one character with no sign
+     that a list of 132 was behind it.
+
+     Every navigation except one: a hash still naming an entry on this screen
+     is a reader moving *between* entries — a Related Kanji door, a link from
+     a word on another screen — and the router has already reopened the panel
+     on the new one by the time this runs. Closing it here would shut the
+     door they just went through. */
+  window.addEventListener('hashchange', () => {
+    const route = parseRoute(location.hash);
+    if (route.viewId === VIEW_ID && route.target) return;
+    closeDetail({ restoreFocus: false });
+  });
 
   function cardFor(row) {
     if (!row.item) {
-      row.item = createCard(row.entry, row.level, (entry) =>
-        openDetail(entry, row.item.querySelector('.kanji-card__detail-button')));
+      row.item = createCard(row.entry, row.level, (entry) => routeTo(VIEW_ID, entry.id));
     }
     return row.item;
   }
@@ -444,6 +517,27 @@ function renderGrid(container, data) {
 
   browse.append(searchWrap, levelWrap, summary, grid, empty);
   container.replaceChildren(browse, detailElements.wrap);
+
+  /* Last, and after the panel is in the document rather than before it. Where
+     every way into the detail converges: a card's own button, a Related Kanji
+     door, a word linking back from another screen, a bookmarked URL. Each
+     sets the address, and this draws whatever the address names.
+
+     Registered here because opening the panel ends by moving focus into it,
+     and focus() on an element that is not yet in the document is silently
+     dropped — subscribing three lines earlier would have left a reader who
+     followed a link looking at the top of the page instead of at the
+     character they asked for.
+
+     An id the catalogue no longer holds is not an error — a retired entry, a
+     mistyped link, a bookmark older than the data — and it lands on the grid,
+     which is where a reader who asked for a kanji that isn't there should be
+     standing. */
+  onRouteTarget(VIEW_ID, (id) => {
+    const row = rows.find((candidate) => candidate.entry.id === id);
+    if (!row) return;
+    openDetail(row.entry, cardFor(row).querySelector('.kanji-card__detail-button'));
+  });
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
@@ -454,7 +548,14 @@ async function initKanji() {
 
   await loadIntoView(getViewContainer(view, 'kanji-content'), {
     skeleton: 'compact-grid',
-    load: loadKanji,
+    /* The link index alongside the characters. It never rejects — see
+       catalogue.js — so pairing it with loadKanji here cannot turn a missing
+       lesson file into this view's error state; at worst the panel comes up
+       without its Words and In lessons sections. */
+    load: async () => {
+      const [data, links] = await Promise.all([loadKanji(), loadLinkIndex()]);
+      return { ...data, links };
+    },
     render: renderGrid,
     errorTitle: 'Kanji ачаалагдсангүй.',
     errorDetail: `Тэмдэгтийн багц data/kanji.json дотор байгаа. ${OFFLINE_HINT}`,

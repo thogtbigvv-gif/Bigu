@@ -50,6 +50,7 @@ import { deckKeyForItemId } from '../study/decks.js';
 import { loadReviewPool } from '../data/catalogue.js';
 import { recordSession } from '../study/session.js';
 import { getViewContainer } from '../ui/content.js';
+import { activeViewId } from '../core/router.js';
 
 const VIEW_ID = 'home';
 
@@ -433,7 +434,7 @@ function initHome() {
     if (!quiz) {
       quiz = createQuiz({
         // Keyboard shortcuts must not fire while another view is on screen.
-        isActive: () => location.hash.slice(1) === VIEW_ID,
+        isActive: () => activeViewId() === VIEW_ID,
         /* The one path that logs a round in this app: the practice store
            mints the id, and bridge.js republishes it as an event under that
            same id and redraws the status. Home does not touch the bridge
@@ -573,7 +574,7 @@ function initHome() {
   // mid-round — the room is hidden then, and replacing it under a live quiz
   // would be the only visible effect.
   window.addEventListener('hashchange', () => {
-    if (location.hash.slice(1) !== VIEW_ID) return;
+    if (activeViewId() !== VIEW_ID) return;
     if (quiz && !quiz.element.hidden) return;
     render().catch((error) => console.error('[Bigu]', error));
   });

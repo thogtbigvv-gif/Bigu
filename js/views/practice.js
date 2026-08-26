@@ -35,6 +35,7 @@ import { DECK_KEYS, DECK_LABELS, DECK_NEXT } from '../study/decks.js';
 import { recordSession } from '../study/session.js';
 import { createQuiz, createModePicker } from '../ui/quiz.js';
 import { sessionSize } from '../core/preferences.js';
+import { activeViewId } from '../core/router.js';
 
 const VIEW_ID = 'practice';
 const DECK_SETTING_KEY = 'practiceMode';
@@ -140,7 +141,7 @@ function initController(elements, decks) {
   });
 
   const quiz = createQuiz({
-    isActive: () => location.hash.slice(1) === VIEW_ID,
+    isActive: () => activeViewId() === VIEW_ID,
     onGrade: updateStatus,
     onFinish({ total, correct }) {
       // A round ended early still counts what was graded — the schedule
@@ -315,7 +316,7 @@ function initController(elements, decks) {
   // are re-read on the way back in, but never mid-round, where replacing
   // the intro under an active quiz would be the only visible effect.
   window.addEventListener('hashchange', () => {
-    if (location.hash.slice(1) !== VIEW_ID) return;
+    if (activeViewId() !== VIEW_ID) return;
     if (!quiz.element.hidden) return;
     updateStatus();
     renderHistory();

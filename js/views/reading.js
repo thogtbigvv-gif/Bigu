@@ -59,7 +59,8 @@ import {
   NO_LEVEL,
   OFFLINE_HINT,
 } from '../ui/content.js';
-import { loadReading } from '../data/catalogue.js';
+import { createDoorRow } from '../ui/doors.js';
+import { loadReading, loadLinkIndex } from '../data/catalogue.js';
 
 const VIEW_ID = 'reading';
 
@@ -81,6 +82,7 @@ function getPassageLevel(passage) {
 const STAGES = [
   { id: 'article', label: 'Article' },
   { id: 'translation', label: 'Translation' },
+  { id: 'kanji', label: 'Kanji' },
 ];
 
 /* -- What the passage itself can tell us -------------------------------------------
@@ -406,6 +408,63 @@ function createTranslationPanel(passage) {
   return wrap;
 }
 
+/* -- Kanji ---------------------------------------------------------------------------
+   The third stage, and the one the app's second principle asks for by name:
+   a reading passage should open into the entries for what is in it.
+
+   It was already half-built and nobody could reach it. The card above each
+   passage has counted its distinct kanji since the day passageStats() was
+   written — that number is on screen right now — and every one of those
+   characters has an entry in a catalogue one screen away, with no way to get
+   from one to the other. So this stage is the count made pressable: the same
+   characters, in the order they appear in the text, each a door into its own
+   entry.
+
+   Nothing is authored for it and nothing is added to reading.json. The
+   passage is read straight through, which is why it stays right as passages
+   are written: a text added tonight has its kanji stage tonight.
+
+   Characters the catalogue does not hold are simply absent, and that is the
+   difference between this and the passage card's figure. The card counts what
+   is in the text; this stage draws what the app can explain, and the two are
+   not the same number. A door that does not open is worse than no door — the
+   same rule that took the placeholder stages out of this file.
+   -------------------------------------------------------------------------------------- */
+
+function createKanjiPanel(passage, links) {
+  const wrap = document.createElement('div');
+  wrap.className = 'reading-stage__body';
+
+  const text = passage.sentences.map((sentence) => sentence.jp).join('');
+  const doors = createDoorRow({
+    doors: links.kanjiIn(text).map((entry) => ({
+      view: 'kanji',
+      target: entry.id,
+      headword: entry.character,
+      gloss: entry.meaning,
+    })),
+    // Every character in the passage, not the first twelve of them. This is
+    // the one door row in the app whose whole point is completeness: it
+    // stands for "what is in this text", and a capped one would be answering
+    // a different question.
+    limit: Infinity,
+  });
+
+  if (doors) {
+    wrap.append(doors);
+  } else {
+    /* Neither an error nor a gap. A passage can be written entirely in kana,
+       and a passage whose kanji are all outside the 132 the catalogue holds
+       is the ordinary state of a text met in the wild. */
+    const empty = document.createElement('p');
+    empty.className = 'empty-state';
+    empty.textContent = 'Энэ бичвэрийн ханзнаас багцад алга.';
+    wrap.append(empty);
+  }
+
+  return wrap;
+}
+
 /* One builder per stage, keyed by the same ids STAGES declares — so the tab
    row and the panel cannot disagree about what exists. There is no default
    branch: STAGES is the only thing that puts an id into circulation, and a
@@ -413,12 +472,19 @@ function createTranslationPanel(passage) {
    during the change that added it, not a "coming soon" note shipped to a
    reader. */
 const STAGE_PANELS = {
-  article: (passage, state, onChange) => createArticlePanel(passage, state, onChange),
+  article: (passage, { state, onChange }) => createArticlePanel(passage, state, onChange),
   translation: (passage) => createTranslationPanel(passage),
+  kanji: (passage, { links }) => createKanjiPanel(passage, links),
 };
 
-function buildStagePanel(stageId, passage, state, onChange) {
-  return STAGE_PANELS[stageId](passage, state, onChange);
+/* One options object rather than three positional arguments, because the
+   three stages want different halves of it — the Article needs the reading
+   state and a way to report progress, the Kanji panel needs the link index
+   and neither of the others — and a builder taking `(passage, state, onChange,
+   links)` with two of them always undefined is a signature that lies about
+   what a stage is. */
+function buildStagePanel(stageId, passage, options) {
+  return STAGE_PANELS[stageId](passage, options);
 }
 
 /* -- Passage list ------------------------------------------------------------------- */
@@ -611,7 +677,7 @@ function buildStageFlow() {
   };
 }
 
-function createStageController(elements, rows, onExit) {
+function createStageController(elements, rows, links, onExit) {
   let index = -1;
   let stageId = STAGES[0].id;
 
@@ -685,7 +751,7 @@ function createStageController(elements, rows, onExit) {
     if (!passage) return;
 
     elements.panel.replaceChildren(
-      buildStagePanel(stageId, passage, state, renderProgress),
+      buildStagePanel(stageId, passage, { state, links, onChange: renderProgress }),
     );
   }
 
@@ -813,7 +879,7 @@ function renderList(container, data) {
   );
 
   const stageElements = buildStageFlow();
-  const stageController = createStageController(stageElements, rows, () => {
+  const stageController = createStageController(stageElements, rows, data.links, () => {
     stageController.close();
     levelWrap.hidden = levelButtons.length === 0;
     summary.hidden = false;
@@ -865,7 +931,13 @@ async function initReading() {
 
   await loadIntoView(getContentContainer(view), {
     skeleton: 'card-grid',
-    load: loadReading,
+    // The link index alongside the passages, for the Kanji stage. It never
+    // rejects (catalogue.js), so a missing kanji.json leaves that one stage
+    // saying it has nothing rather than taking the whole view down.
+    load: async () => {
+      const [data, links] = await Promise.all([loadReading(), loadLinkIndex()]);
+      return { ...data, links };
+    },
     render: renderList,
     errorTitle: 'Reading ачаалагдсангүй.',
     errorDetail: `Бичвэрийн багц data/reading.json дотор байгаа. ${OFFLINE_HINT}`,

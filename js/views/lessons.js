@@ -41,7 +41,9 @@ import { createQuiz, createModePicker } from '../ui/quiz.js';
    which is the duplication this import exists to remove. */
 import { recordSession } from '../study/session.js';
 import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
-import { loadLessons } from '../data/catalogue.js';
+import { createDoorRow, revealEntry } from '../ui/doors.js';
+import { loadLessons, loadLinkIndex } from '../data/catalogue.js';
+import { activeViewId, onRouteTarget } from '../core/router.js';
 
 const VIEW_ID = 'lessons';
 
@@ -166,9 +168,14 @@ function createProgressMark(entry, onChange) {
   return { button, sync };
 }
 
-function createWordRow(entry, onProgressChange) {
+function createWordRow(entry, links, onProgressChange) {
   const item = document.createElement('li');
   item.className = 'lesson-word';
+  /* The row's own id, so a link from elsewhere in the app can find it. A
+     lesson word is the only entry in the catalogue whose screen does not
+     list it until a disclosure is opened, which is why the address has to
+     reach the row rather than the group. */
+  item.dataset.wordId = entry.id;
 
   const { button, sync } = createProgressMark(entry, onProgressChange);
 
@@ -184,6 +191,15 @@ function createWordRow(entry, onProgressChange) {
   meaning.textContent = entry.english;
 
   body.append(head, meaning);
+
+  /* The kanji in the word, as doors. This is the door the lesson spine was
+     missing: the words a reader is actually working through are here, in the
+     order the book teaches them, and until now a character in one of them
+     was a shape on the page with the app's own 132-entry kanji catalogue one
+     screen away and no way to get there. */
+  const doors = createKanjiDoors(entry, links);
+  if (doors) body.append(doors);
+
   item.append(button, body);
   return { item, sync };
 }
@@ -203,7 +219,33 @@ function createWordRow(entry, onProgressChange) {
    view the reader never opens never builds its DOM"), one level down.
    -------------------------------------------------------------------------------------- */
 
-function createLessonGroup(lesson, index, onQuiz) {
+/* Same row of doors the vocabulary and grammar cards carry, built off the
+   same index. A lesson word's headword is under `word` rather than `kanji`;
+   data/links.js reads either, so nothing here has to know that.
+
+   THE CHARACTERS ALONE, WITH NO CAPTION AND NO MEANING UNDER THEM, which is
+   where this row differs from the one on a vocabulary card. A card is a
+   surface with room on it and carries three doors at most; a lesson is
+   eighteen words in a three-column list, and the same row drawn the same way
+   there put a "Kanji" caption and a line of Mongolian under every one of
+   them — four times the height, eighteen identical captions, and a list
+   nobody could scan any more. The lesson list is the app's most beginner-
+   facing screen and its density is the thing that makes it usable.
+
+   What the characters lose is a meaning the reader is one tap from anyway,
+   and the row keeps the only job it has here: to say "these are the pieces,
+   and each one goes somewhere". */
+function createKanjiDoors(entry, links) {
+  return createDoorRow({
+    doors: links.kanjiIn(entry.word).map((match) => ({
+      view: 'kanji',
+      target: match.id,
+      headword: match.character,
+    })),
+  });
+}
+
+function createLessonGroup(lesson, index, links, onQuiz) {
   const headerId = `lesson-${lesson.lesson}-header`;
   const bodyId = `lesson-${lesson.lesson}-body`;
   const written = isWritten(lesson);
@@ -310,7 +352,7 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   function buildRows() {
     if (rows) return;
-    rows = lesson.words.map((entry) => createWordRow(entry, updateCount));
+    rows = lesson.words.map((entry) => createWordRow(entry, links, updateCount));
     list.append(...rows.map((row) => row.item));
   }
 
@@ -330,6 +372,21 @@ function createLessonGroup(lesson, index, onQuiz) {
 
   return {
     element: li,
+    lesson,
+
+    /* Open this group and hand back the row for one word, building the rows
+       if this is the first time the group has been opened. A deep link is
+       the one caller: everything else here opens a group because the reader
+       pressed its header.
+
+       Returns null for a word this lesson does not hold, which keeps the
+       caller's search honest — it asks each group in turn rather than
+       trusting an id's prefix to name a lesson. */
+    reveal(wordId) {
+      setExpanded(true);
+      return list.querySelector(`[data-word-id="${wordId}"]`);
+    },
+
     // Only what's on screen needs re-syncing; a group that has never been
     // opened has no marks to correct, and will read the store when it does
     // open. The count in the header always refreshes, because that is
@@ -360,7 +417,7 @@ function createLessonGroup(lesson, index, onQuiz) {
 
 /* -- Rendering ------------------------------------------------------------------------- */
 
-function renderLessons(container, lessons) {
+function renderLessons(container, { lessons, links }) {
   const wordCount = lessons.reduce((sum, lesson) => sum + lesson.words.length, 0);
 
   const intro = document.createElement('div');
@@ -417,7 +474,7 @@ function renderLessons(container, lessons) {
   }
 
   const quiz = createQuiz({
-    isActive: () => location.hash.slice(1) === VIEW_ID,
+    isActive: () => activeViewId() === VIEW_ID,
     // A round changes the same records the lesson rows display, so the list
     // behind the panel is brought back into agreement as it happens rather
     // than being left showing what was true before the round.
@@ -472,12 +529,34 @@ function renderLessons(container, lessons) {
   });
 
   groups.push(
-    ...lessons.map((lesson, index) => createLessonGroup(lesson, index, runLesson)),
+    ...lessons.map((lesson, index) => createLessonGroup(lesson, index, links, runLesson)),
   );
 
   list.append(...groups.map((group) => group.element));
 
   container.replaceChildren(intro, list, quiz.element);
+
+  /* Arriving from a door — a kanji screen sending the reader to a word in
+     the book, or a bookmarked `#lessons/l7-12`.
+
+     Two states have to be undone first, and both are states this view is
+     normally right to be in. A round in progress hides the whole list, so it
+     is closed the same way the reader would close it, through the quiz's own
+     exit rather than by un-hiding things behind its back. And the word's
+     group is almost certainly collapsed — only the first opens by default —
+     so it is opened, which is also what builds its rows.
+
+     A word no lesson holds leaves the screen exactly as it was: an old
+     bookmark or a retired id, and the lesson list is the right answer to it. */
+  onRouteTarget(VIEW_ID, (wordId) => {
+    const group = groups.find((candidate) => candidate.lesson.words.some((word) => word.id === wordId));
+    if (!group) return;
+
+    if (list.hidden) quiz.close();
+
+    const element = group.reveal(wordId);
+    if (element) revealEntry(element);
+  });
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
@@ -488,7 +567,15 @@ async function initLessons() {
 
   await loadIntoView(getViewContainer(view, 'lessons-content'), {
     skeleton: 'rows',
-    load: loadLessons,
+    /* Two things, where every other view loads one: lessons.json is a bare
+       array rather than a `{ updatedAt, … }` object, so there is nothing to
+       spread the index into and the pair is named instead. The index never
+       rejects (catalogue.js), so a missing kanji.json costs the word rows
+       their doors and nothing else. */
+    load: async () => {
+      const [lessons, links] = await Promise.all([loadLessons(), loadLinkIndex()]);
+      return { lessons, links };
+    },
     render: renderLessons,
     errorTitle: 'Lessons ачаалагдсангүй.',
     errorDetail: `Хичээлийн жагсаалт data/lessons.json дотор байгаа. ${OFFLINE_HINT}`,

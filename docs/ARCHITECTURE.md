@@ -37,9 +37,9 @@ below `views/` may import from `views/`.
 | Layer | Holds | May import |
 |---|---|---|
 | `core/` | storage, router, theme, preferences, bridge, backup | `core` |
-| `data/` | the catalogue loaders, the shape guards | `core`, `data`, `study` |
+| `data/` | the catalogue loaders, the shape guards, the link index | `core`, `data`, `study` |
 | `study/` | the review model, streak, decks, favorites, session | `core`, `data`, `study` |
-| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton | `core`, `data`, `study`, `ui` |
+| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors | `core`, `data`, `study`, `ui` |
 | `views/` | the thirteen screens | anything |
 
 `data/` and `study/` may each import the other — the one bidirectional pair,
@@ -102,6 +102,35 @@ first-render: `app.js` registers one initializer per view, and the router
 runs each the first time its view becomes active. A view the reader never
 opens never fetches its data or builds its DOM.
 
+**The route grammar is two segments.** `#view`, and `#view/entry-id`. The
+second is the app's addressing scheme for a single entry — `#kanji/kj-n5-001`,
+`#vocabulary/n5-001`, `#lessons/l7-12` — and it is what makes cross-linking
+possible at all: before it, the only thing this app could name was a screen,
+so a door had nowhere to point no matter what the views drew.
+
+A target is a catalogue id, so nothing is encoded or decoded: ids are ASCII and
+pass through a hash untouched. A target naming no entry is a normal arrival at
+the view's own list, never an error — that is a retired id or an old bookmark,
+and the list is the right answer to it.
+
+The router does not know how a view *reveals* an entry, and must not: a kanji
+opens a panel, a word pages a list forward and drops a filter, a lesson expands
+a disclosure. It says which entry was asked for and each view answers in its
+own vocabulary:
+
+- `activeViewId()` — which view is on screen. Every module that used to read
+  `location.hash.slice(1)` itself calls this instead; those comparisons all
+  broke the day a hash could carry a second segment.
+- `onRouteTarget(viewId, handler)` — a subscription, not an argument. A view
+  registers **after** its first render, because revealing an entry ends by
+  moving focus onto it and `focus()` on an element not yet in the document is
+  silently dropped. The router tells a late subscriber about the navigation it
+  missed, and tells each handler about one navigation at most once.
+- `routeTo(viewId, target)` — go to an entry. An unchanged hash fires no
+  `hashchange`, so it counts as a navigation of its own and redelivers.
+- `clearRouteTarget(viewId)` — drop the entry, keep the view, for a panel the
+  reader can close from inside it.
+
 A view module is therefore called **exactly once**. Anything that must
 refresh when the reader comes back (`dashboard`, `practice`, `memory`,
 `home`) listens for `hashchange` itself.
@@ -117,6 +146,9 @@ data/*.json
 js/data/catalogue.js ──► js/data/shape.js   (is this file usable?)
     │
     ├──► views/         render a list
+    ├──► loadLinkIndex() ──► js/data/links.js  (what leads where?)
+    │                              │
+    │                              └──► js/ui/doors.js ──► #view/entry-id
     └──► loadReviewPool()
              │
              ▼
@@ -140,10 +172,81 @@ the view's ordinary retryable error state. It is deliberately shallow — the
 deep check is `tools/validate-data.mjs`, which runs in CI over every field.
 Do not move CI's work into the browser.
 
+**The link index is the one loader that never rejects.** A view's own content
+failing to load is that view's error state — the reader asked for the word
+list, and an empty screen with a retry is the honest answer. A *door* failing
+to load is not: the reader asked for a kanji, the kanji is on screen, and the
+only thing missing is the row of words underneath it. So `loadLinkIndex()`
+resolves to an index that knows nothing, every door row asks it what it holds,
+and each of them draws nothing.
+
 **A round is logged in one place.** `study/session.js` writes the practice
 record, republishes it as a bridge event under the same id, and redraws the
 bridge status. Three surfaces run rounds — Review, a lesson quiz, and
 Home — and all three call it, so none of them can log a round differently.
+
+---
+
+## Cross-linking
+
+Bigu's second principle is that every entry leads somewhere. Three things have
+to be true for that, and they are in three different layers:
+
+```
+data/links.js      what is related to what      (derived, never authored)
+core/router.js     how an entry is addressed    (#view/entry-id)
+ui/doors.js        what a link looks like       (a row of doors, and arriving)
+```
+
+**Nothing in `data/` holds a reference to anything else in `data/`, and nothing
+should.** Every relation the principle describes is already present as a shape:
+駅 is inside ～駅 because the string contains the character. `data/links.js`
+reads those shapes once — every headword in vocabulary and every lesson word,
+against the 132 characters kanji.json holds — and answers three questions:
+
+- `kanjiIn(text)` — the kanji entries in a headword, an example sentence, or a
+  whole passage. The same question at three scales, which is why it takes text
+  rather than an entry.
+- `usesOf(character)` — the vocabulary words and the lesson words spelled with
+  it, kept apart, because the door to each is labelled differently.
+- `lessonOf(wordId)` — the lesson a word was written down in, read from the
+  lesson that holds it rather than off the id's prefix.
+
+Deriving rather than authoring is what makes this survivable in a hand-written
+catalogue. A word transcribed tonight is linked tonight; a link can never point
+at an entry that has since been retired; and nobody has to remember to fill in
+a field. It also fixes the scope of what can be claimed: **a link is a
+character in a headword that the kanji catalogue has an entry for, and nothing
+else.** No guessing and no segmenting — the argument `ichibun.js` makes about
+morphological analysis applies with more force here, because a missing link is
+a door that was never drawn while a wrong one is a door onto the wrong room,
+and the reader cannot tell them apart.
+
+`js/ui/doors.js` draws them. A door is an `<a href>` and not a button, so it
+can be copied, opened in a new tab and backed out of; the click handler exists
+only for the case the browser cannot help with, a door pointing at where the
+reader already is. `createDoorRow` returns **null** when there is nothing to
+draw, so every caller reads as `const row = createDoorRow(…); if (row) …` and
+"no doors" and "no section" are the same statement. `revealEntry` is the other
+end: it scrolls, focuses, and marks the entry for three seconds with a static
+outline — static because reset.css collapses animation to 0.01ms under
+`prefers-reduced-motion`, so a fading highlight would be invisible to exactly
+the readers who need it most.
+
+### Adding a door
+
+1. Ask the index the question — usually `links.kanjiIn(headword)`.
+2. Build a `createDoorRow({ label, doors })`, where each door is
+   `{ view, target, headword, gloss }`. Append it only if it came back non-null.
+3. If the destination view cannot yet reveal an entry, give it an
+   `onRouteTarget(VIEW_ID, …)` at the **end** of its render, and make that
+   handler undo whatever state is hiding the entry — a filter, a page boundary,
+   a collapsed group, a running quiz — but only when that state is actually
+   hiding it. A reader who followed a link to something already on screen keeps
+   the list they had.
+4. Whichever view now needs the index, load it beside its own content:
+   `Promise.all([loadX(), loadLinkIndex()])`. It never rejects, so this cannot
+   turn a missing kanji.json into that view's error state.
 
 ---
 
@@ -240,7 +343,9 @@ may ever import it.
   what it is for.
 - **logic** — the failure that does not throw. The review ladder schedules
   something wrong and nobody finds out for a month, so every function there
-  takes `now` and is checked exactly.
+  takes `now` and is checked exactly. The same argument covers the link index:
+  a wrong link draws a door the reader will believe, because the app has no
+  other opinion to offer them.
 - **browser** — the failure nothing else can see. Thirteen views, each must
   open, render something, and log nothing.
 
@@ -261,7 +366,12 @@ stylesheet at the end of the `<link>` run, and `'x'` in the `VIEWS` list in
 loader in `js/data/catalogue.js` with a shape guard, and an entry in
 `FILES` in `tools/validate-data.mjs`. If its entries are studiable, they
 need an id prefix `deckKeyForItemId` recognises and a deck in
-`js/study/decks.js`.
+`js/study/decks.js`. If its entries are spelled with kanji, add them to
+`buildLinkIndex` in `js/data/links.js` — an entry outside the index is an
+entry no door can reach.
+
+**A door.** See *Cross-linking* above; it is four steps and none of them is in
+`data/`.
 
 **A store.** One row in `STORES` in `js/core/storage.js` — `required: false`,
 because every backup already on a reader's disk predates it. Add its name
