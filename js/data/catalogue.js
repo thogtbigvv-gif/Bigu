@@ -35,6 +35,7 @@
    ========================================================================== */
 
 import { requireEntries, requireLessons } from './shape.js';
+import { buildLinkIndex } from './links.js';
 import { deckKeyForItemId } from '../study/decks.js';
 
 /* -- The loader -------------------------------------------------------------
@@ -128,6 +129,60 @@ function loadReviewPool() {
   return pendingPool;
 }
 
+/* -- The link index ----------------------------------------------------------
+   Cross-linking's one loader. It wants three of the five files at once —
+   kanji to know what a character is, vocabulary and lessons to know what
+   uses it — and every surface that draws a door needs the same answer, so
+   the index is built once and memoized like everything else here.
+
+   IT NEVER REJECTS, WHICH IS THE ONE PLACE THIS FILE DIFFERS FROM THE
+   LOADERS ABOVE. A view's own content failing to load is that view's error
+   state: the reader asked for the word list, and an empty screen with a
+   retry is the honest answer. A *door* failing to load is not — the reader
+   asked for a kanji, the kanji is on screen, and the only thing missing is
+   the row of words underneath it. Rejecting here would mean any one of three
+   files taking six views down with it, so instead the failure resolves to an
+   index that knows nothing, every door row asks it what it holds, and each
+   of them draws nothing. Absence is a normal state; a retry button under a
+   kanji entry because the lesson file is malformed is not.
+
+   The cache is dropped when the index comes back empty so a later caller
+   really does re-try, same rule as the loaders above — an index built from a
+   catalogue that did load is never empty, since kanji.json is the file that
+   fills it.
+   ---------------------------------------------------------------------------- */
+
+let pendingLinks = null;
+
+function loadLinkIndex() {
+  if (!pendingLinks) {
+    pendingLinks = (async () => {
+      try {
+        const [kanjiData, vocabData, lessonData] = await Promise.all([
+          loadKanji(),
+          loadVocabulary(),
+          loadLessons(),
+        ]);
+
+        return buildLinkIndex({
+          kanji: kanjiData.kanji,
+          vocabulary: vocabData.words,
+          lessons: lessonData,
+        });
+      } catch (error) {
+        console.error('[Bigu]', error);
+        return buildLinkIndex();
+      }
+    })();
+
+    pendingLinks.then((index) => {
+      if (index.size === 0) pendingLinks = null;
+    });
+  }
+
+  return pendingLinks;
+}
+
 export {
   loadVocabulary,
   loadGrammar,
@@ -135,4 +190,5 @@ export {
   loadLessons,
   loadReading,
   loadReviewPool,
+  loadLinkIndex,
 };

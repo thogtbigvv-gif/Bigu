@@ -347,3 +347,21 @@
     margin-inline-start: -0.5rem;
   }
 }
+
+/* -- The kanji under a word ------------------------------------------------------
+   js/ui/doors.js builds this row, and the sheet it comes with is written for a
+   card: a label above it and a comfortable margin, both right on a vocabulary
+   entry with room around it. A lesson word is a line in a three-column list,
+   and eighteen of them per lesson — the shared spacing put the characters a
+   full step away from the word they belong to and stretched every lesson to
+   several screens. Pulled in close here, where they read as part of the word
+   rather than as a section under it.
+   ------------------------------------------------------------------------------- */
+.lesson-word .doors {
+  margin-block-start: var(--space-3xs);
+}
+
+.lesson-word .door {
+  min-height: 2rem;
+  padding-block: 2px;
+}

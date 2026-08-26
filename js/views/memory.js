@@ -53,6 +53,7 @@ import { favoriteIds } from '../study/favorites.js';
 import { createFavoriteButton } from '../ui/favoriteButton.js';
 import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
 import { practice } from '../core/storage.js';
+import { activeViewId } from '../core/router.js';
 import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';
 
 const VIEW_ID = 'memory';
@@ -917,7 +918,7 @@ async function initMemory() {
   // rather than showing whatever was true when it first rendered. Anything
   // else would make the one screen about decay the one screen that's stale.
   window.addEventListener('hashchange', () => {
-    if (location.hash.slice(1) === VIEW_ID) render();
+    if (activeViewId() === VIEW_ID) render();
   });
 }
 

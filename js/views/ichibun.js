@@ -23,6 +23,15 @@
    a word it was not given, and nothing here calls out. The app can explain a
    character when data/kanji.json holds it and says so plainly when it does
    not.
+
+   WHAT IT CAN DO IS HAND THE CHARACTER BACK TO THE REST OF THE APP. A lookup
+   here used to end at four lines in a panel — meaning, readings, one example
+   — and that was the end of the road for a character the reader had gone out
+   of their way to bring in. The panel now carries doors: into the character's
+   full entry, and into the words in the catalogue that are spelled with it.
+   The line from a drama arrives as a stranger and leaves attached to
+   everything the reader has already studied, which is the entire reason this
+   view exists.
    ========================================================================== */
 
 import {
@@ -31,7 +40,8 @@ import {
   loadIntoView,
   OFFLINE_HINT,
 } from '../ui/content.js';
-import { loadKanji } from '../data/catalogue.js';
+import { createDoorRow } from '../ui/doors.js';
+import { loadKanji, loadLinkIndex } from '../data/catalogue.js';
 import { sentences as sentenceStore, isAvailable as isStorageAvailable } from '../core/storage.js';
 
 const VIEW_ID = 'ichibun';
@@ -148,9 +158,15 @@ function createEntryPanel() {
   const absent = document.createElement('p');
   absent.className = 'ichibun__entry-absent';
 
-  panel.append(head, meaning, readings, example, absent);
+  /* The doors, rebuilt per lookup. Their own container so replacing them is
+     one call and cannot disturb the four fields above, which are written into
+     rather than rebuilt. */
+  const doors = document.createElement('div');
+  doors.className = 'ichibun__entry-doors';
 
-  function show(char, entry) {
+  panel.append(head, meaning, readings, example, absent, doors);
+
+  function show(char, entry, links) {
     panel.hidden = false;
     head.textContent = char;
 
@@ -165,6 +181,7 @@ function createEntryPanel() {
          and most of what a reader pastes will not be in it; saying so plainly
          is the whole message. */
       absent.textContent = 'Энэ тэмдэгт багцад алга.';
+      doors.replaceChildren();
       return;
     }
 
@@ -183,6 +200,39 @@ function createEntryPanel() {
     } else {
       example.hidden = true;
     }
+
+    /* Two ways on, and both are the character's own. The first is its full
+       entry — everything this panel had to leave out, which for a character
+       the reader stopped on is most of what they want. The second is where
+       else in the catalogue they have already met it, vocabulary and lesson
+       words together, because at this point in the app the question is not
+       which file a word came from but whether it is familiar. */
+    const uses = links.usesOf(entry.character);
+    doors.replaceChildren(
+      ...[
+        createDoorRow({
+          label: 'Kanji',
+          doors: [{ view: 'kanji', target: entry.id, headword: entry.character, gloss: entry.meaning }],
+        }),
+        createDoorRow({
+          label: 'Words',
+          doors: [
+            ...uses.words.map((word) => ({
+              view: 'vocabulary',
+              target: word.id,
+              headword: word.kanji || word.kana,
+              gloss: word.meaning,
+            })),
+            ...uses.lessonWords.map(({ word, lesson }) => ({
+              view: 'lessons',
+              target: word.id,
+              headword: word.word,
+              gloss: `${lesson.lesson}. ${word.english}`,
+            })),
+          ],
+        }),
+      ].filter(Boolean),
+    );
   }
 
   function clear() {
@@ -285,7 +335,7 @@ function renderIchibun(container, data) {
       el.classList.remove('is-picked');
     }
     if (button) button.classList.add('is-picked');
-    entry.show(char, byCharacter.get(char) ?? null);
+    entry.show(char, byCharacter.get(char) ?? null, data.links);
   }
 
   function analyse(text) {
@@ -408,7 +458,13 @@ async function initIchibun() {
 
   await loadIntoView(getViewContainer(view, 'ichibun-content'), {
     skeleton: 'rows',
-    load: loadKanji,
+    // The link index alongside the characters, so a lookup can lead somewhere.
+    // It never rejects (catalogue.js): at worst the panel comes up with the
+    // four lines it always had and no doors under them.
+    load: async () => {
+      const [data, links] = await Promise.all([loadKanji(), loadLinkIndex()]);
+      return { ...data, links };
+    },
     render: renderIchibun,
     errorTitle: 'Ханзны багц ачаалагдсангүй.',
     errorDetail: `Тэмдэгтийн багц data/kanji.json дотор байгаа. ${OFFLINE_HINT}`,

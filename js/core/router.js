@@ -7,6 +7,26 @@
    It also owns first-render: app.js registers one initializer per view and
    this module runs each the first time its view becomes active, so a view
    the reader never opens never fetches its data or builds its DOM.
+
+   THE ROUTE GRAMMAR IS TWO SEGMENTS: `#view` and `#view/entry-id`. The
+   second is what makes an entry reachable from outside the screen it lives
+   on — a kanji linking to a word that uses it, a word linking to the kanji
+   inside it — and it is the whole mechanism behind cross-linking. Before it,
+   the only address in this app was a screen, so "everything is a door" could
+   not be built no matter what the views drew: there was nowhere for a door
+   to point.
+
+   A target is a catalogue id and nothing else, which is why nothing here
+   encodes or decodes one. Ids are ASCII (`n5-001`, `kj-n5-001`, `l7-12`) and
+   pass through a hash untouched; a target that is not an id simply matches
+   no entry and the view lands on its list, which is the same thing that
+   happens when an id is retired from the data. A wrong deep link is a normal
+   arrival, never an error state.
+
+   The router does not know how a view reveals an entry — a kanji opens a
+   panel, a word pages a list, a lesson expands a group. It only says *which*
+   entry was asked for, through onRouteTarget, and each view answers in its
+   own vocabulary.
    ========================================================================== */
 
 /* Where an empty or unrecognised hash lands. This used to be the Dashboard,
@@ -83,10 +103,113 @@ function getHeading(viewId) {
   return document.getElementById(`${viewId}-heading`);
 }
 
+/* -- The route grammar ------------------------------------------------------
+   `#view` or `#view/entry-id`. Split on the first slash only, so a target
+   containing one is handed on whole rather than quietly truncated — the
+   second segment is the view's business, not this file's.
+
+   Pure, and takes the hash rather than reading it, because that is the half
+   of routing worth testing without a document.
+   -------------------------------------------------------------------------- */
+function parseRoute(hash) {
+  const raw = String(hash ?? '').replace(/^#/, '');
+  const slash = raw.indexOf('/');
+  if (slash === -1) return { viewId: raw, target: null };
+
+  // A trailing slash and nothing after it is `#view`, not `#view/''`.
+  return { viewId: raw.slice(0, slash), target: raw.slice(slash + 1) || null };
+}
+
+/* The hash a route should be written as. One function, so the two places
+   that construct one — normalizing on render, and routeTo below — cannot
+   disagree about the shape and bounce the URL between them. */
+function hashFor(viewId, target) {
+  return target ? `#${viewId}/${target}` : `#${viewId}`;
+}
+
+/* Which view is on screen, for the modules that used to read
+   `location.hash.slice(1)` themselves. Every one of those comparisons broke
+   the day a hash could carry a second segment: `#vocabulary/n5-001` is the
+   Vocabulary view, and a view asking "is this me?" by string equality
+   against the whole hash would have answered no on its own screen — and
+   quietly, since each of those checks guards a refresh or a keystroke rather
+   than anything that throws. */
+function activeViewId() {
+  return parseRoute(location.hash).viewId;
+}
+
 function resolveViewId(views) {
-  const requested = location.hash.slice(1);
-  const isKnown = views.some((view) => view.id === requested);
-  return isKnown ? requested : DEFAULT_VIEW;
+  const { viewId } = parseRoute(location.hash);
+  const isKnown = views.some((view) => view.id === viewId);
+  return isKnown ? viewId : DEFAULT_VIEW;
+}
+
+/* -- Delivering a target ----------------------------------------------------
+   A view is initialized once and then lives; a deep link can arrive at any
+   moment after that, including at boot while the view's own fetch is still
+   in flight. So this is a subscription rather than an argument: a view calls
+   onRouteTarget once it has content to reveal, and is told the target it
+   missed as well as every one that arrives later.
+
+   `serial` counts navigations, and one handler is told about one navigation
+   at most once. That is what lets both delivery paths exist without
+   double-firing: render() offers the target to whoever is already listening,
+   and a view registering afterwards — the ordinary case, since a view
+   registers after its first render, which is after its fetch — is offered
+   the same navigation's target on subscribing.
+   -------------------------------------------------------------------------- */
+const targetHandlers = new Map();
+const deliveredAt = new Map();
+let serial = 0;
+
+function deliver(handler, viewId) {
+  const route = parseRoute(location.hash);
+  if (!route.target || route.viewId !== viewId) return;
+  if (deliveredAt.get(handler) === serial) return;
+
+  deliveredAt.set(handler, serial);
+  // Same reasoning as ensureInitialized: one view's failure to reveal an
+  // entry is not a reason to stop routing.
+  try {
+    handler(route.target);
+  } catch (error) {
+    console.error('[Bigu]', error);
+  }
+}
+
+function onRouteTarget(viewId, handler) {
+  let handlers = targetHandlers.get(viewId);
+  if (!handlers) {
+    handlers = new Set();
+    targetHandlers.set(viewId, handlers);
+  }
+  handlers.add(handler);
+  deliver(handler, viewId);
+}
+
+/* Go to an entry. Setting the hash is enough whenever it changes, because
+   the browser then fires hashchange and render() does the rest — but a door
+   pointing at where the reader already is changes nothing, and doing nothing
+   is the wrong answer for a control that was just pressed. So an unchanged
+   hash counts as a navigation of its own and the target is redelivered. */
+function routeTo(viewId, target = null) {
+  const next = hashFor(viewId, target);
+  if (location.hash === next) {
+    serial += 1;
+    for (const handler of targetHandlers.get(viewId) ?? []) deliver(handler, viewId);
+    return;
+  }
+  location.hash = next;
+}
+
+/* Drop the entry from the address, keeping the view. For a view whose
+   revealed entry can be closed from inside it — the kanji detail panel backs
+   out to its grid — the URL would otherwise go on naming an entry that is no
+   longer on screen, and coming back to that view would open it again. */
+function clearRouteTarget(viewId) {
+  const route = parseRoute(location.hash);
+  if (route.viewId !== viewId || !route.target) return;
+  history.replaceState(null, '', hashFor(viewId, null));
 }
 
 function updateDocumentTitle(viewId) {
@@ -123,10 +246,17 @@ function render({ moveFocus = false } = {}) {
   if (views.length === 0) return;
 
   const activeId = resolveViewId(views);
+  serial += 1;
 
-  // Normalize an empty or unknown hash without adding a new history entry
-  if (location.hash.slice(1) !== activeId) {
-    history.replaceState(null, '', `#${activeId}`);
+  /* Normalize an empty or unknown hash without adding a new history entry.
+     The target survives normalization only when the view it was addressed to
+     is the one that resolved — `#nope/n5-001` names no screen, so it lands on
+     Home carrying nothing, rather than handing Home an entry it has never
+     heard of. */
+  const { viewId: requestedId, target } = parseRoute(location.hash);
+  const canonical = hashFor(activeId, requestedId === activeId ? target : null);
+  if (location.hash !== canonical) {
+    history.replaceState(null, '', canonical);
   }
 
   let activeView = null;
@@ -148,6 +278,17 @@ function render({ moveFocus = false } = {}) {
     focusView(activeView);
     playEnter(activeView);
   }
+
+  /* Last, and after the focus move above rather than before it. A deep link
+     ends with the reader looking at one entry, so the view's own reveal is
+     the final word on where focus and scroll should be — offered the target
+     any earlier, it would put the reader on the entry and then the line above
+     would pull them back to the top of the screen.
+
+     Only whoever is already listening. A view opening for the first time is
+     not listening yet — its fetch has not resolved — and picks the same
+     target up when it subscribes. */
+  for (const handler of targetHandlers.get(activeId) ?? []) deliver(handler, activeId);
 }
 
 /* A 150ms fade on the incoming view. Switching views is the one moment in this
@@ -195,4 +336,4 @@ function initRouter() {
   requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'instant' }));
 }
 
-export { initRouter, registerView };
+export { initRouter, registerView, activeViewId, parseRoute, routeTo, onRouteTarget, clearRouteTarget };

@@ -358,6 +358,16 @@
    kanji.js builds it, the detail panel behind "View details" shows it in full,
    and on a 358px page an example sentence under a headword is what turns a
    scannable list back into a flip-book.
+
+   SCOPED TO THE GRID, WHICH IT WAS NOT. The detail panel builds its Examples
+   section out of the same .kanji-card__example blocks the grid rows use, so
+   an unscoped rule here hid them there too — and on every phone the panel's
+   Examples heading stood over an empty box. That is the exact shape of thing
+   this file went to the trouble of deleting twice (Stroke Order, Animation:
+   "a heading over an empty box is an apology in a smaller font"), reintroduced
+   by a selector rather than by a decision, and invisible on the desktop width
+   anyone would check it at. The comment above has claimed the panel showed
+   them in full the whole time.
    ------------------------------------------------------------------------------------ */
 @media (max-width: 480px) {
   .kanji-card {
@@ -373,7 +383,7 @@
     contain-intrinsic-size: none auto 9rem;
   }
 
-  .kanji-card__example {
+  .kanji-grid .kanji-card__example {
     display: none;
   }
 

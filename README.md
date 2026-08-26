@@ -26,9 +26,8 @@ are one axis, not the purpose. Material the exam has no opinion about keeps
 its place instead of being squeezed into a level it never had.
 
 **Meeting Japanese, not just filing it.** Anything you read, write, or look up
-should lead somewhere else. A word should reach its kanji; a kanji should
-reach the words that use it; a sentence should be something you can bring in
-from outside and keep.
+leads somewhere else. A word reaches its kanji; a kanji reaches the words that
+use it; a sentence is something you can bring in from outside and keep.
 
 ---
 
@@ -54,13 +53,16 @@ tells you where you should be.
 An entry that leads nowhere is a page in a book. An entry that leads somewhere
 is an environment.
 
-Every word should reach the kanji inside it. Every kanji should reach the words
-that use it, and the lesson it belongs to. Every reading passage should open
-into the entries for what's in it. Every grammar pattern should reach a real
-sentence that uses it.
+Every word reaches the kanji inside it. Every kanji reaches the words that use
+it and the lessons it turns up in. Every reading passage opens into the entries
+for what's in it. A character pasted in from outside reaches its full entry and
+everything already studied that is spelled with it.
 
-*This is the current focus of development and is not finished — see
-[Status](#status).*
+None of that is written down anywhere. Not one entry in `data/` holds a
+reference to another: the links are read off the headwords, so a word
+transcribed tonight is linked tonight, and a link can never point at an entry
+that has since been retired. What the app cannot explain it does not offer — a
+door that doesn't open is worse than no door.
 
 ### 3. You should be able to make something, not only read something
 
@@ -92,6 +94,11 @@ shown as unlabelled rather than guessed at.
 
 Neither axis produces a percentage, a completion state, or a target.
 
+**And an entry has an address.** `#kanji/kj-n5-001` is one character;
+`#vocabulary/n5-001` is one word. Every link between entries is one of these,
+so following one is real navigation — it can be bookmarked, opened in a new
+tab, and backed out of with the browser's own Back button.
+
 ---
 
 ## Features
@@ -108,7 +115,11 @@ Memory.
 notes where a pattern needs one.
 
 **漢字 Kanji** — Meanings, on'yomi and kun'yomi, example vocabulary, and a
-detail panel per character.
+detail panel per character — which is also where a character shows what it is
+part of: every word in the catalogue spelled with it, every lesson it appears
+in, and the related characters beside it. This is the half of the linking only
+a kanji screen can offer, since a character has no way of knowing what uses it
+without asking the whole catalogue.
 
 **📚 Lessons** — The textbook spine. Each lesson holds its own word list. A
 lesson not yet written down simply appears without content — a normal state,
@@ -116,15 +127,18 @@ not a gap to be filled under pressure.
 
 ### Immerse
 
-**📚 Reading** — Passages with per-sentence readings and a translation view
-beside the article view. Includes 縦書き, a per-session vertical writing mode,
+**📚 Reading** — Passages with per-sentence readings, a translation view beside
+the article view, and a third view listing the kanji in the passage — each one
+a way into its own entry. Includes 縦書き, a per-session vertical writing mode,
 because that is how the language is actually set on a page — the measure and
 leading are tuned for extended reading rather than for scanning a UI.
 
 **一文 Sentence capture** — Paste any Japanese you meet outside the app. It is
 broken into characters, each one tappable to look up against the kanji
-catalogue, and a sentence can be kept. This is the door that lets the wild
-language in.
+catalogue, and a sentence can be kept. A character the catalogue holds leads on
+to its full entry and to the words already studied that use it, so a line from a
+drama arrives as a stranger and leaves attached to everything else. This is the
+door that lets the wild language in.
 
 ### Produce
 
@@ -199,9 +213,9 @@ arrow running one way:
 
 ```
 js/core/     storage, router, theme, preferences, bridge, backup
-js/data/     the catalogue loaders and the shape guards
+js/data/     the catalogue loaders, the shape guards, the link index
 js/study/    the review model, streak, decks, session
-js/ui/       shared widgets — content, quiz, nav, keyboard
+js/ui/       shared widgets — content, quiz, nav, keyboard, doors
 js/views/    the thirteen screens
 ```
 
@@ -238,7 +252,7 @@ first three need nothing but Node.
 ```
 node tools/check-structure.mjs         # modules parse, imports and exports resolve
 node tools/validate-data.mjs           # every content file against its schema
-node --test "test/*.test.mjs"          # the study model, storage, bridge, backup
+node --test "test/*.test.mjs"          # the study model, storage, links, routes, backup
 node --test "test/browser/*.test.mjs"  # the app itself, in real Chromium
 ```
 
@@ -286,17 +300,24 @@ pip install cairosvg && python3 tools/build-icons.py
 
 🚧 Active development. Honest about what isn't done:
 
+**Done, and the shape it took**
+- **Cross-linking** — entries have addresses (`#kanji/kj-n5-001`) and the links
+  between them are derived from the headwords rather than authored. Words reach
+  their kanji; a kanji reaches its words, its lessons and its related
+  characters; a passage reaches the kanji in it; a pasted character reaches all
+  of it. `docs/ARCHITECTURE.md` has the account.
+
 **In progress**
-- **Cross-linking** — the layer that turns entries into doors. Currently the
-  only navigation between views is view-level; no entry links to another entry.
-  This is the highest-priority work.
 - **Lessons 16–50** — the spine exists; the content is being written by hand.
+  Each lesson written is also, now, a lesson linked.
 - **Level tags for vocabulary and grammar** — present for kanji, absent
   elsewhere. Being filled in rather than guessed.
 
 **Unresolved**
-- Several placeholder stages remain in Reading and Kanji. Each will either be
-  built or removed — a door that doesn't open is worse than no door.
+- Linking is character-level, because that is what can be derived honestly. A
+  word does not yet reach a *grammar pattern* it demonstrates, and a passage
+  does not reach the vocabulary entries for the words in it — both need
+  segmentation, which needs a tokenizer this app does not have.
 - Stroke order and stroke animation need per-character data the catalogue
   doesn't have.
 

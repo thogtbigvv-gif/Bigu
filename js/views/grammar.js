@@ -22,7 +22,9 @@ import {
   NO_LEVEL,
   OFFLINE_HINT,
 } from '../ui/content.js';
-import { loadGrammar } from '../data/catalogue.js';
+import { createDoorRow, revealEntry } from '../ui/doors.js';
+import { loadGrammar, loadLinkIndex } from '../data/catalogue.js';
+import { onRouteTarget } from '../core/router.js';
 
 const VIEW_ID = 'grammar';
 
@@ -71,7 +73,28 @@ function createExample(example) {
   return wrap;
 }
 
-function createCard(point, level) {
+/* The kanji a pattern and its example are written with. Read off both,
+   deduped by the index, because the two are one thing on the card: the
+   pattern is what is being taught and the example is where it is being used,
+   and a reader stopped by a character does not care which half of the entry
+   it came from.
+
+   It is the example that makes this worth drawing. A grammar point is the
+   one entry in the catalogue whose Japanese is mostly a full sentence, and a
+   sentence is exactly where a learner meets a character they cannot read. */
+function createKanjiDoors(point, links) {
+  return createDoorRow({
+    label: 'Kanji',
+    doors: links.kanjiIn(`${point.pattern}${point.example.jp}`).map((entry) => ({
+      view: 'kanji',
+      target: entry.id,
+      headword: entry.character,
+      gloss: entry.meaning,
+    })),
+  });
+}
+
+function createCard(point, level, links) {
   const item = document.createElement('li');
   item.className = 'card grammar-card';
   item.dataset.pointId = point.id;
@@ -113,6 +136,10 @@ function createCard(point, level) {
      than a word you have "learned". Built by studyControls.js now, so the
      four views can't drift back apart. */
   item.append(createStudyControls(point.id, { className: 'grammar-card__controls' }).row);
+
+  const doors = createKanjiDoors(point, links);
+  if (doors) item.append(doors);
+
   return item;
 }
 
@@ -178,7 +205,7 @@ function renderList(container, data) {
     point,
     tags: getPointTags(point),
     bucket: levelBucketOf(getPointLevel(point)),
-    item: createCard(point, getPointLevel(point)),
+    item: createCard(point, getPointLevel(point), data.links),
   }));
   list.append(...rows.map((row) => row.item));
 
@@ -224,9 +251,35 @@ function renderList(container, data) {
       applyFilter();
     });
   });
+  /* Arriving from a door — a grammar point linked from somewhere else in the
+     app, or a bookmarked `#grammar/gr-001`. Simpler than the same job in
+     vocabulary.js, because this list is not paged: every card is already in
+     the document and the only thing that can be hiding one is a filter.
+
+     The filters are dropped only when they are actually hiding it. A reader
+     who followed a link to a pattern already on screen keeps the list they
+     had, which is the rule everywhere a reveal touches state the reader set. */
+  function revealPoint(id) {
+    const row = rows.find((candidate) => candidate.point.id === id);
+    if (!row) return;
+
+    if (row.item.hidden) {
+      searchInput.value = '';
+      selectedTags.clear();
+      for (const button of categoryButtons) button.setAttribute('aria-pressed', 'false');
+      applyFilter();
+    }
+
+    revealEntry(row.item);
+  }
+
   applyFilter();
 
   container.replaceChildren(searchWrap, categoryWrap, summary, list, empty);
+
+  // After the list is in the document; revealEntry scrolls and focuses, and
+  // neither reaches an element that has not been laid out yet.
+  onRouteTarget(VIEW_ID, revealPoint);
 }
 
 /* -- Init ---------------------------------------------------------------------------------- */
@@ -237,7 +290,12 @@ async function initGrammar() {
 
   await loadIntoView(getViewContainer(view, 'grammar-content'), {
     skeleton: 'list',
-    load: loadGrammar,
+    // The link index alongside the patterns. It never rejects (catalogue.js),
+    // so a missing kanji.json costs this view its door rows and nothing else.
+    load: async () => {
+      const [data, links] = await Promise.all([loadGrammar(), loadLinkIndex()]);
+      return { ...data, links };
+    },
     render: renderList,
     errorTitle: 'Grammar ачаалагдсангүй.',
     errorDetail: `Хэлбэрийн жагсаалт data/grammar.json дотор байгаа. ${OFFLINE_HINT}`,

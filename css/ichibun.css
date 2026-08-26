@@ -361,3 +361,18 @@
     gap: var(--space-2xs);
   }
 }
+
+/* -- Where a looked-up character leads ------------------------------------------
+   The door rows under the entry: the character's own full entry, and the words
+   in the catalogue spelled with it. A plain column, because .doors already
+   carries its own spacing and the panel around it is a flex column — the one
+   thing this container is for is letting show() replace both rows in a single
+   call without touching the four fields above them.
+
+   The panel's own gap is deliberately not doubled up here. A lookup that
+   comes back with doors is the same panel with more in it, not a taller
+   component with a new section in it.
+   ----------------------------------------------------------------------------- */
+.ichibun__entry-doors:empty {
+  display: none;
+}

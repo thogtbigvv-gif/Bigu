@@ -31,6 +31,7 @@ import {
   OFFLINE_HINT,
 } from '../ui/content.js';
 import { dailyGoal } from '../core/preferences.js';
+import { activeViewId } from '../core/router.js';
 import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from '../study/review.js';
 import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';
 import { DECK_LABELS } from '../study/decks.js';
@@ -594,7 +595,7 @@ async function initDashboard() {
   // adds to the history. All of it is re-read on the way back in rather than
   // showing whatever was true the one time this ran at boot.
   window.addEventListener('hashchange', () => {
-    if (location.hash.slice(1) === VIEW_ID) render();
+    if (activeViewId() === VIEW_ID) render();
   });
 }
 
