@@ -10,13 +10,15 @@
 #
 #   structure  every module parses, every import resolves, every named
 #              import exists on the module it names, every stylesheet is
-#              both linked and present
+#              both linked and present, every shipped file is in the
+#              service worker's precache list and vice versa
 #   content    every file in data/ against its schema, plus the invariants
 #              a schema cannot express — ids unique across the whole
 #              catalogue and routable to a deck
 #   unit       the study model, the streak, the storage guards, the bridge
 #              contract and the backup format
-#   browser    the real app in real Chromium, thirteen views, empty console
+#   browser    the real app in real Chromium: thirteen views with an empty
+#              console, and the installed app opening with the network off
 #
 # The first three need nothing but Node. Only the last installs anything,
 # and it installs one package without writing it to a manifest — the app
@@ -72,5 +74,7 @@ jobs:
           npm install --no-save playwright-core
           npx --yes playwright@latest install --with-deps chromium
 
-      - name: Browser smoke test
+      # Both browser files: the thirteen views, and the installed app with
+      # the network switched off.
+      - name: Browser tests
         run: node --test "test/browser/*.test.mjs"

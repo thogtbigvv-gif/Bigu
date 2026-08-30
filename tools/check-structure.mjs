@@ -318,6 +318,87 @@ async function checkGroundColours() {
   }
 }
 
+/* -- The offline cache ----------------------------------------------------
+   sw.js names every file an installed Bigu needs, as a literal list, and
+   the list is maintained by hand for the same reason index.html's <link>
+   run is: there is no build step to derive one.
+
+   That makes it exactly as fragile as the stylesheet run, and worse in one
+   respect — a mistake here is invisible in every browser that is online.
+   A path with no file behind it fails `cache.addAll`, which fails the whole
+   install, which means no offline app at all and no error anywhere a
+   developer would see it. A file on disk that nobody precached is the
+   quieter half: the app works, installs, passes every other check, and then
+   one view is blank on the underground.
+
+   So both directions again, over everything the browser is served:
+   stylesheets, modules and content. The one entry with no file behind it is
+   './', which is the document itself.
+   -------------------------------------------------------------------------- */
+function precachedPaths(source, name) {
+  const list = source.match(new RegExp(`const ${name} = \\[([\\s\\S]*?)\\];`));
+  if (!list) {
+    problems.push(`sw.js: no ${name} list found — the offline cache cannot be checked`);
+    return [];
+  }
+  return [...list[1].matchAll(/'([^']+)'/g)].map((match) => match[1].replace(/^\.\//, ''));
+}
+
+async function checkServiceWorker() {
+  const worker = path.join(ROOT, 'sw.js');
+  if (!existsSync(worker)) {
+    problems.push('sw.js: missing — without a service worker Bigu is not installable and has no offline copy');
+    return;
+  }
+
+  // It is not in js/, so the sweep below never sees it. It is still shipped.
+  checkSyntax(worker);
+
+  const source = await readFile(worker, 'utf8');
+  const precached = new Set([...precachedPaths(source, 'SHELL'), ...precachedPaths(source, 'CONTENT')]);
+
+  if (!precached.has('')) {
+    problems.push("sw.js: the shell does not precache './' — an installed Bigu would have no document offline");
+  }
+
+  for (const entry of precached) {
+    if (entry !== '' && !existsSync(path.join(ROOT, entry))) {
+      problems.push(`sw.js: precaches "${entry}", which does not exist — cache.addAll rejects, and nothing is cached at all`);
+    }
+  }
+
+  const shipped = [
+    ...await glob(path.join(ROOT, 'css'), '.css'),
+    ...await glob(path.join(ROOT, 'js'), '.js'),
+    ...await glob(path.join(ROOT, 'data'), '.json'),
+  ].map((file) => path.relative(ROOT, file).split(path.sep).join('/'));
+
+  for (const file of shipped) {
+    // Schemas are read by tools/validate-data.mjs in CI and never by the app.
+    if (file.startsWith('data/schema/')) continue;
+    if (!precached.has(file)) {
+      problems.push(`${file}: on disk but never precached by sw.js — it would be missing offline`);
+    }
+  }
+
+  /* The manifest's icons are the other half of installability, and the one
+     part of it a reader sees before they have installed anything: a broken
+     path there is an install prompt with no picture in it. */
+  const manifest = JSON.parse(await readFile(path.join(ROOT, 'manifest.json'), 'utf8'));
+  const iconSources = [
+    ...(manifest.icons ?? []),
+    ...(manifest.shortcuts ?? []).flatMap((shortcut) => shortcut.icons ?? []),
+  ].map((icon) => icon.src);
+
+  for (const src of new Set(iconSources)) {
+    if (!existsSync(path.join(ROOT, src))) {
+      problems.push(`manifest.json: declares the icon "${src}", which does not exist`);
+    } else if (!precached.has(src)) {
+      problems.push(`manifest.json: declares the icon "${src}", which sw.js does not precache`);
+    }
+  }
+}
+
 const files = [
   ...await glob(path.join(ROOT, 'js'), '.js'),
   ...await glob(path.join(ROOT, 'tools'), '.mjs'),
@@ -352,6 +433,7 @@ checkCycles(graph);
 await checkEntryPoint();
 await checkStylesheets();
 await checkGroundColours();
+await checkServiceWorker();
 
 if (problems.length > 0) {
   console.error(`\n${problems.length} structural problem(s):\n`);
@@ -361,5 +443,5 @@ if (problems.length > 0) {
 }
 
 console.log(
-  `✓ ${files.length} modules parse; imports, named exports, layers, stylesheets and ground colours all resolve; no cycles`,
+  `✓ ${files.length} modules parse; imports, named exports, layers, stylesheets, ground colours and the offline cache all resolve; no cycles`,
 );

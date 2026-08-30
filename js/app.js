@@ -17,6 +17,8 @@
 
 import { isAvailable as isStorageAvailable } from './core/storage.js';
 import { initTheme, bindToggleButton } from './core/theme.js';
+import { initServiceWorker } from './core/serviceWorker.js';
+import { initInstall } from './core/install.js';
 import { initRouter, registerView } from './core/router.js';
 import { initNav } from './ui/navigation.js';
 import { initHome } from './views/home.js';
@@ -34,6 +36,7 @@ import { initIchibun } from './views/ichibun.js';
 import { initSettings } from './views/settings.js';
 import { initIntro } from './ui/logoIntro.js';
 import { initKeyboard } from './ui/keyboard.js';
+import { initUpdateBanner } from './ui/updateBanner.js';
 import { publishStatusSnapshot } from './study/session.js';
 
 /* -- Storage ------------------------------------------------------------------
@@ -109,6 +112,18 @@ function init() {
   bindToggleButton(document.getElementById('theme-toggle'));
   checkStorage();
   initFooterYear();
+
+  /* Installability, first of the three because one of them cannot wait:
+     `beforeinstallprompt` fires early, once, and is gone — a listener bound
+     any later than boot misses it on most visits, and Settings would then
+     have no button to offer on a browser that was perfectly willing to
+     install. The other two are ordered behind it out of tidiness rather
+     than need; the worker registers itself on `load`, well after all of
+     this, and the banner only draws if that worker later finds an update.
+     See js/core/install.js and js/core/serviceWorker.js. */
+  initInstall();
+  initServiceWorker();
+  initUpdateBanner();
 
   for (const [viewId, initializer] of Object.entries(VIEW_INITIALIZERS)) {
     registerView(viewId, initializer);

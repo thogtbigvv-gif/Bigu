@@ -1,0 +1,121 @@
+/* ==========================================================================
+   install.css
+   The two pieces of interface that exist only because Bigu can be installed:
+   the update banner (js/ui/updateBanner.js) and the install card's own
+   parts inside Settings (js/views/settings.js).
+
+   One sheet rather than two, and it is the last one linked in index.html —
+   the banner floats above everything the other sheets draw, and the card is
+   a variation on Settings rather than a new kind of thing, so both want to
+   be the last word.
+   ========================================================================== */
+
+/* -- The update banner -------------------------------------------------------------
+   Bottom of the screen and floating, on the same reasoning as the thumb bar
+   itself: on a phone this is the reachable half, and the banner is an offer
+   rather than a demand. It sits *under* the drawer (50) and its backdrop
+   (40) and above the thumb bar (35), so opening the navigation covers it
+   rather than fighting it.
+
+   Not fixed to the very bottom on a phone, because that is where the thumb
+   bar already is. It rides directly above it, which is also why it uses the
+   same --thumb-nav-height layout.css uses to keep content clear of the bar
+   — one number, three uses, one place to change it.
+   ------------------------------------------------------------------------------------ */
+.app-update {
+  position: fixed;
+  z-index: 38;
+  inset-inline: var(--space-sm);
+  bottom: calc(var(--space-sm) + env(safe-area-inset-bottom));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-xs);
+  max-width: 32rem;
+  margin-inline: auto;
+  padding: var(--space-xs) var(--space-sm);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+  background-color: var(--glass-surface);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  backdrop-filter: blur(var(--glass-blur)) saturate(1.6);
+  box-shadow: var(--shadow-md);
+  --rise: 8px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
+}
+
+/* The glass ground is a nicety; a browser without it still needs the bar to
+   be opaque, or the page reads straight through the one thing on screen
+   asking for an answer. Same fallback the thumb bar takes. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .app-update {
+    background-color: var(--color-paper-raised);
+  }
+}
+
+@media (max-width: 768px) {
+  .app-update {
+    bottom: calc(var(--thumb-nav-height) + env(safe-area-inset-bottom) + var(--space-2xs));
+  }
+}
+
+.app-update__message {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi);
+}
+
+.app-update__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2xs);
+}
+
+/* The banner is small and its two buttons sit side by side inside it, so
+   they take the compact end of the button scale rather than the full
+   form-control height the rest of the app uses. */
+.app-update__action {
+  padding-block: var(--space-3xs);
+  padding-inline: var(--space-xs);
+  min-height: 2.25rem;
+  font-size: var(--text-sm);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-update {
+    animation: none;
+  }
+}
+
+/* -- The install card -------------------------------------------------------------
+   Everything here is a variation on what Settings already draws — a
+   paragraph of --color-sumi-faint meta and a button in .settings__actions —
+   with one addition: the steps iOS readers get instead of a button, because
+   Safari has no install event and the only way in is through the share
+   sheet. A numbered list, because it is a sequence of taps and prose about
+   which menu holds which icon is exactly the thing a reader skims past.
+   ------------------------------------------------------------------------------------ */
+.settings-install__steps {
+  /* reset.css strips the numbers from every list in the app and asks for
+     them back by class where they are wanted. Here they are the content:
+     the reader is being told the order to tap three things in. */
+  list-style: decimal;
+  margin: var(--space-2xs) 0 0 0;
+  padding-inline-start: var(--space-md);
+  font-size: var(--text-sm);
+  color: var(--color-sumi-soft);
+}
+
+.settings-install__steps > li + li {
+  margin-block-start: var(--space-3xs);
+}
+
+/* The line that says where things stand — installed, or what the reader just
+   chose. Same construction as the backup card's status line, including the
+   entrance it gets for free from being un-hidden. */
+.settings-install__status {
+  margin: 0;
+  --rise: 4px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) backwards;
+}

@@ -15,6 +15,11 @@ No framework, no build step, no runtime dependencies. `index.html` links
 the stylesheets by hand and loads exactly one module, `js/app.js`. What the
 browser is served is what is in the repository.
 
+Two files sit outside `js/` because they have to: `manifest.json` and
+`sw.js`, which are what make Bigu installable. A service worker cannot
+control pages above its own URL, so `sw.js` is at the root or it is
+nothing — see *Installing, and offline* below.
+
 That is a real constraint, not a boast. It means:
 
 - **Nothing is compiled, so nothing is checked by compiling.** A wrong
@@ -36,10 +41,10 @@ below `views/` may import from `views/`.
 
 | Layer | Holds | May import |
 |---|---|---|
-| `core/` | storage, router, theme, preferences, bridge, backup | `core` |
+| `core/` | storage, router, theme, preferences, bridge, backup, the service worker, install | `core` |
 | `data/` | the catalogue loaders, the shape guards, the link index | `core`, `data`, `study` |
 | `study/` | the review model, streak, decks, favorites, session | `core`, `data`, `study` |
-| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors | `core`, `data`, `study`, `ui` |
+| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors, the update banner | `core`, `data`, `study`, `ui` |
 | `views/` | the thirteen screens | anything |
 
 `data/` and `study/` may each import the other — the one bidirectional pair,
@@ -50,7 +55,9 @@ module imports another one back, so there is no cycle.
 **`core/`** is the machinery with no opinion about Japanese. `storage.js`
 is the only module that knows a localStorage key by name (with one
 deliberate exception — see *Storage* below). `bridge.js` writes to an
-outside contract and is never read back.
+outside contract and is never read back. `serviceWorker.js` and `install.js`
+hold the two halves of being installable and neither touches the DOM — the
+banner and the Settings card that draw them are `ui/` and `views/`.
 
 **`data/`** is the only place that knows where content lives. Every loader
 is here; no view owns one. This matters more than it sounds: the loaders
@@ -284,6 +291,68 @@ current ones.
 
 ---
 
+## Installing, and offline
+
+Bigu is a progressive web app, and the reason is the same one behind
+everything else here: it is meant to be lived in daily. Daily includes the
+days with no signal, and a home-screen icon that opens an error page is
+worse than a bookmark.
+
+Three files, and each does a separate job:
+
+```
+manifest.json            what the installed app is called, coloured and shaped
+sw.js                    what is cached, and what is served when the network is gone
+js/core/serviceWorker.js registration, and the update a running app must be offered
+js/core/install.js       whether an install can be offered, and the one gesture
+```
+
+**Everything is precached, not a fallback page.** `sw.js` lists every
+stylesheet, every module and all five content files, and fetches them on
+install. Anything less would give a reader an app that opens offline and
+then cannot show them a word.
+
+**The list is hand-written, and `tools/check-structure.mjs` keeps it
+honest** — both directions, exactly like the stylesheet run in
+`index.html`. A path with no file fails `cache.addAll`, which fails the
+install, which means no offline app at all and no error where anyone would
+see it; a file with no entry is one blank view on the underground. Adding a
+module, a stylesheet or a content file means adding a line to `SHELL`.
+
+**Every response is stale-while-revalidate, and the cache is not versioned
+per deploy.** There is no build step, so no filename ever carries a hash and
+there is nothing to bump automatically — and a version constant somebody has
+to remember to bump ships stale within a month. So the cached copy is served
+immediately and refetched behind it: a deploy lands on the reader's *next*
+open. `CACHE_VERSION` in `sw.js` describes that strategy, not the content;
+bump it when what is cached or how it is matched changes.
+
+**The update flow exists because an installed app never reloads.** A tab
+picks up a deploy by being reopened. A home-screen app is resumed rather
+than opened and its hash router never navigates, so a new build could sit in
+the cache unused indefinitely. `js/core/serviceWorker.js` reports a waiting
+worker, `js/ui/updateBanner.js` offers it, and the swap happens on a press —
+never underneath a reader mid-round.
+
+**`controllerchange` fires for two different reasons and only one of them is
+an update.** The other is `clients.claim()` on a first visit, and reloading
+on that one means every reader's first visit silently reloads itself. The
+guard is that the reload only happens when `applyUpdate()` asked for it.
+
+**Whether an install can be offered is the browser's answer, not ours.**
+Chromium fires `beforeinstallprompt`, which `js/core/install.js` catches *at
+boot* — it fires once, early, and a listener bound when the Settings view
+first renders would miss it on most visits. Safari has never implemented it
+and never says whether a site is installable, so iOS gets the three taps
+written out instead of a button. Both live in the Install card in Settings.
+
+**Only `test/browser/offline.test.mjs` can see any of this work.** The
+scope, the navigation fallback and a rejected `addAll` all look identical to
+a working app right up until the network goes away, which is the moment
+nobody is testing.
+
+---
+
 ## Content
 
 Five hand-written files in `data/`, each with a schema beside it in
@@ -315,10 +384,10 @@ Four commands, cheapest first. CI runs all four on every push and pull
 request (`.github/workflows/check.yml`).
 
 ```
-node tools/check-structure.mjs        # parses, imports, exports, sheets, colours
+node tools/check-structure.mjs        # parses, imports, exports, sheets, colours, precache
 node tools/validate-data.mjs          # every content file, every id
 node --test "test/*.test.mjs"         # the logic suite, no browser needed
-node --test "test/browser/*.test.mjs" # thirteen views in real Chromium
+node --test "test/browser/*.test.mjs" # thirteen views in real Chromium, and the app offline
 ```
 
 The last needs a browser and **skips** without one:
@@ -337,7 +406,8 @@ may ever import it.
 - **structure** — the failure the missing build step creates. A moved
   module, a renamed export, an unlinked stylesheet, a layer reaching
   upward, an import cycle, a theme colour that no longer matches
-  `--color-paper`.
+  `--color-paper`, a file `sw.js` forgot to precache or precaches without
+  it existing.
 - **content** — the failure hand-authoring creates. It found nothing on the
   day it was written and will find something on some later day; that is
   what it is for.
@@ -347,7 +417,8 @@ may ever import it.
   a wrong link draws a door the reader will believe, because the app has no
   other opinion to offer them.
 - **browser** — the failure nothing else can see. Thirteen views, each must
-  open, render something, and log nothing.
+  open, render something, and log nothing — and, in the second file, an
+  installed app that still opens with the network switched off.
 
 Run the app the way the README says (`python3 -m http.server 8000`) for
 anything visual. `fetch` will not work off the filesystem.
@@ -359,12 +430,14 @@ anything visual. `fetch` will not work off the filesystem.
 **A view.** Add a `<section id="x" class="view" hidden aria-labelledby="x-heading">`
 to `index.html` with an `<h1 id="x-heading">`, a module at `js/views/x.js`
 exporting `initX()`, a row in `VIEW_INITIALIZERS` in `js/app.js`, a
-stylesheet at the end of the `<link>` run, and `'x'` in the `VIEWS` list in
-`test/browser/smoke.test.mjs`. The router needs nothing.
+stylesheet at the end of the `<link>` run, both new files in `SHELL` in
+`sw.js`, and `'x'` in the `VIEWS` list in `test/browser/smoke.test.mjs`. The
+router needs nothing.
 
 **A content file.** Add the JSON, a schema beside it in `data/schema/`, a
-loader in `js/data/catalogue.js` with a shape guard, and an entry in
-`FILES` in `tools/validate-data.mjs`. If its entries are studiable, they
+loader in `js/data/catalogue.js` with a shape guard, an entry in `FILES` in
+`tools/validate-data.mjs`, and a line in `CONTENT` in `sw.js` so it is on
+the device before the reader needs it. If its entries are studiable, they
 need an id prefix `deckKeyForItemId` recognises and a deck in
 `js/study/decks.js`. If its entries are spelled with kanji, add them to
 `buildLinkIndex` in `js/data/links.js` — an entry outside the index is an

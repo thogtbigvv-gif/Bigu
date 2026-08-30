@@ -61,6 +61,28 @@
   <meta name="theme-color" content="#FBFBF9" media="(prefers-color-scheme: light)" />
   <meta name="theme-color" content="#14161A" media="(prefers-color-scheme: dark)" />
 
+  <!-- iOS reads none of the manifest's display fields on an older phone and
+       only some of them on a new one, so the three tags below are what
+       actually decide whether an installed Bigu opens as an app or as a
+       Safari window with a bookmark in it. Android and desktop Chrome take
+       the same instruction from `mobile-web-app-capable`.
+
+       The status bar is `default` — an opaque bar in the page's own ground
+       colour — rather than `black-translucent`, which would slide the
+       document up underneath the clock. The layout already pads for the
+       safe areas (see the viewport note at the top of this file) so
+       translucent would render correctly, but it would also put the
+       header's own hairline behind the status bar on every phone with a
+       notch, for no gain on a screen that is mostly text.
+
+       apple-mobile-web-app-title is the name under the icon. Without it iOS
+       uses <title>, which here is "ビグ Bigu — a place to learn Japanese" and
+       would be truncated to something like "ビグ Bigu —". -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Bigu" />
+
   <!-- Three families, and both of the new ones are Japanese. Klee One is the
        textbook hand that carries headwords, kanji and example sentences; Zen
        Kaku Gothic New is the gothic under all UI copy and headings. They
@@ -119,6 +141,7 @@
   <link rel="stylesheet" href="css/ichibun.css" />
   <link rel="stylesheet" href="css/doors.css" />
   <link rel="stylesheet" href="css/keyboard.css" />
+  <link rel="stylesheet" href="css/install.css" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
