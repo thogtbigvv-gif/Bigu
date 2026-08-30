@@ -8,11 +8,19 @@
        file is fetched outside the page, so it can't read css/variables.css,
        and a home-screen icon has to look the same whichever theme the
        reader is in. #E9EBE4 is the retired washi ground and no longer matches
-       the page it sits against (--color-paper is #FBFBF9); it is left alone
-       because changing it means re-rendering the PNGs, which is its own
-       commit. Keep #3b8bca in step with the mark in index.html.
+       the page it sits against (the color-paper token is #FBFBF9); it is
+       left alone because changing it means re-rendering the PNGs, which is
+       its own commit. Keep #3b8bca in step with the mark in index.html.
 
-       Rendered to PNG at 180/192/512 by tools/build-icons.py. -->
+       That token is named without its leading dashes on purpose. An XML
+       comment may not contain a double hyphen, and while a browser's HTML
+       parser forgives it, every real XML parser refuses the file — which
+       included the one inside cairosvg, so for as long as the name was
+       written in full here, tools/build-icons.py could not render the icon
+       it is entirely about.
+
+       Rendered to PNG at 180/192/512, and inset for Android's launcher
+       masks at 192/512, by tools/build-icons.py. -->
   <rect width="64" height="64" fill="#E9EBE4" />
 
   <g transform="translate(6.5 6.5) scale(0.79)">

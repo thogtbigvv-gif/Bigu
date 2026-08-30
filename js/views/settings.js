@@ -1,7 +1,8 @@
 /* ==========================================================================
    settings.js
-   Renders the #settings view: appearance, and the two-way JSON backup
-   (download + restore) of everything in localStorage.
+   Renders the #settings view: appearance, how a round is shaped, putting
+   Bigu on the home screen, and the two-way JSON backup (download + restore)
+   of everything in localStorage.
 
    Both used to live elsewhere — appearance only as the header's icon toggle,
    backup as a card in the Dashboard grid. The Dashboard is a status surface,
@@ -24,6 +25,12 @@ import {
   restoreBackup,
 } from '../core/backup.js';
 import { setThemePreference, themePreference, THEME_CHANGE_EVENT } from '../core/theme.js';
+import {
+  installPlatform,
+  installState,
+  onInstallStateChange,
+  promptInstall,
+} from '../core/install.js';
 import { createStorageNotice, getViewContainer } from '../ui/content.js';
 import {
   DAILY_GOALS,
@@ -157,6 +164,119 @@ function createStudyCard() {
   });
 
   card.append(sizeLabel, sizeNote, sizeGroup, goalLabel, goalNote, goalGroup);
+  return card;
+}
+
+/* -- Install ------------------------------------------------------------------------
+   Bigu is a daily habit or it is nothing, and a daily habit does not live
+   behind a browser tab and a typed URL. On a home screen it opens in one
+   tap, fills the screen the layout was actually designed for, and — because
+   sw.js has the whole app cached — opens on a train with no signal at all.
+   That is worth one card rather than leaving readers to find "Add to Home
+   Screen" in a menu they have never opened.
+
+   The card has three faces, and which one it shows is the browser's answer
+   rather than ours (see js/core/install.js). Chrome hands over a real
+   install event, so it gets a button. Safari has never implemented that
+   event, so iOS gets the three taps written out. And inside the installed
+   app there is nothing to offer, so it says so and stops.
+
+   It redraws itself on the state changing, because all three transitions
+   happen while the reader is looking at this screen: the event can arrive
+   late, the install can complete in the browser's own UI, and a desktop
+   install switches display-mode under the open page.
+   ------------------------------------------------------------------------------------ */
+
+const INSTALL_DESCRIPTION =
+  'Bigu-г утасныхаа дэлгэц дээр нэмбэл нэг товшилтоор нээгдэж, хөтчийн мөргүйгээр бүтэн дэлгэцээр ажиллана. Нэмсний дараа интернэт байхгүй үед ч нээгдэнэ — бүх хичээл, үг, ханз, тэмдэглэл нь таны төхөөрөмж дээр хадгалагдсан байдаг.';
+
+const IOS_STEPS = [
+  'Доод талын Хуваалцах (Share) товчийг дарна.',
+  '"Add to Home Screen" / "Нүүр дэлгэцэд нэмэх"-ийг сонгоно.',
+  'Баруун дээд буланд "Add" гэж баталгаажуулна.',
+];
+
+const OTHER_HINT =
+  'Хөтчийнхөө цэсийг нээгээд "Install app" эсвэл "Add to Home screen" гэснийг сонгоно уу. Зарим хөтөч хэсэг ашигласны дараа энэ боломжийг санал болгодог.';
+
+function createInstallCard() {
+  const card = createCard('Install', 'settings-install-heading');
+
+  const description = document.createElement('p');
+  description.className = 'meta';
+  description.textContent = INSTALL_DESCRIPTION;
+
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'button button--secondary';
+  button.textContent = 'Install Bigu';
+
+  const steps = document.createElement('ol');
+  steps.className = 'settings-install__steps';
+  for (const text of IOS_STEPS) {
+    const item = document.createElement('li');
+    item.textContent = text;
+    steps.append(item);
+  }
+
+  const hint = document.createElement('p');
+  hint.className = 'meta';
+  hint.textContent = OTHER_HINT;
+
+  const status = document.createElement('p');
+  status.className = 'meta settings-install__status';
+  status.setAttribute('aria-live', 'polite');
+  status.hidden = true;
+
+  /* Only the button is an action. The steps, the hint and the status line
+     are prose about what to do next, and putting them inside
+     .settings__actions gave the card a stack of paragraphs indented as if
+     each were a control. */
+  const actions = document.createElement('div');
+  actions.className = 'settings__actions';
+  actions.append(button);
+
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    const outcome = await promptInstall();
+    button.disabled = false;
+
+    if (outcome === 'dismissed') {
+      /* The browser's install event is spent once it has been answered, so
+         the button goes with it and the hint underneath takes over. The
+         line therefore points at the browser's own menu rather than at a
+         button that is no longer there. */
+      status.textContent = 'Одоохондоо нэмсэнгүй. Хөтчийн цэснээс хэдийд ч нэмж болно.';
+      status.hidden = false;
+    }
+    /* 'accepted' needs no line of its own: the browser installs, fires
+       appinstalled, and sync() below replaces the whole card with the
+       sentence that says it is done. */
+  });
+
+  function sync() {
+    const state = installState();
+    const platform = installPlatform();
+
+    button.hidden = state !== 'ready';
+    // …and the row with it, or an empty flex box keeps its own margin.
+    actions.hidden = button.hidden;
+    steps.hidden = !(state === 'unavailable' && platform === 'ios');
+    hint.hidden = !(state === 'unavailable' && platform !== 'ios');
+
+    if (state === 'installed') {
+      description.textContent =
+        'Bigu суулгагдсан байна. Интернэтгүй үед ч нээгдэх ба шинэчлэлт нь дараагийн нээлтэд өөрөө ирнэ.';
+      status.hidden = true;
+    } else {
+      description.textContent = INSTALL_DESCRIPTION;
+    }
+  }
+
+  sync();
+  onInstallStateChange(sync);
+
+  card.append(description, actions, steps, hint, status);
   return card;
 }
 
@@ -395,13 +515,14 @@ function initSettings() {
   if (!view) return;
 
   /* Order runs from the everyday to the irreversible: how it looks, how it
-     studies, how to keep a copy, how to let go of everything. The one
-     destructive action on this screen is last, which is both the
-     conventional place for it and the furthest point from where a reader
-     lands. */
+     studies, where it lives, how to keep a copy, how to let go of
+     everything. The one destructive action on this screen is last, which is
+     both the conventional place for it and the furthest point from where a
+     reader lands. */
   const sections = [
     createAppearanceCard(),
     createStudyCard(),
+    createInstallCard(),
     createBackupCard(),
     createResetCard(),
   ];

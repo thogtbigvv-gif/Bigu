@@ -2,28 +2,70 @@
   "name": "Bigu — a place to learn Japanese",
   "short_name": "Bigu",
   "description": "Тайван, хувийн япон хэлний орчин: үг, ханз, хэл зүй, унших, давтах, тэмдэглэл — хэлний үндсэн суурьнаас нь дээшээ. Нэг шалгалтын өдөрт биш, өдөр бүр амьдрахад зориулж хийсэн.",
+  "lang": "mn",
+  "dir": "ltr",
   "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait-primary",
   "background_color": "#FBFBF9",
   "theme_color": "#FBFBF9",
+  "categories": ["education", "books"],
   "icons": [
     {
       "src": "icons/icon.svg",
       "sizes": "any",
-      "type": "image/svg+xml"
+      "type": "image/svg+xml",
+      "purpose": "any"
     },
     {
       "src": "icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
       "src": "icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Review",
+      "short_name": "Review",
+      "description": "Өнөөдөр давтах ээлжийн зүйлс",
+      "url": "./#practice",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Memory",
+      "short_name": "Memory",
+      "description": "Санах ойд юу байгааг харах",
+      "url": "./#memory",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Journal",
+      "short_name": "Journal",
+      "description": "Өнөөдрийн тэмдэглэл бичих",
+      "url": "./#journal",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
     }
   ]
 }

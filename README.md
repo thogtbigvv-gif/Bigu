@@ -171,8 +171,15 @@ finish.
 reachable from the keyboard, with a shortcut list available in-app. An
 environment you can move through quickly is a more comfortable one.
 
-**⚙️ Settings** — Appearance (system, light, dark), cards per round, backup and
-restore as JSON, and start over.
+**📲 Install** — Bigu is a progressive web app: added to a phone's home screen
+it opens in one tap, fills the screen with no browser chrome, and works with
+the network off. The whole app — every screen, every word, kanji and lesson —
+is cached on the device, so a train with no signal is a normal place to study.
+**Settings → Install** does it on Android and desktop, and writes out the three
+taps on iOS.
+
+**⚙️ Settings** — Appearance (system, light, dark), cards per round, installing
+to the home screen, backup and restore as JSON, and start over.
 
 ---
 
@@ -212,12 +219,16 @@ file. Scripts are split into five layers under `js/`, with the dependency
 arrow running one way:
 
 ```
-js/core/     storage, router, theme, preferences, bridge, backup
+js/core/     storage, router, theme, preferences, bridge, backup, install
 js/data/     the catalogue loaders, the shape guards, the link index
 js/study/    the review model, streak, decks, session
 js/ui/       shared widgets — content, quiz, nav, keyboard, doors
 js/views/    the thirteen screens
 ```
+
+`sw.js` sits at the repository root rather than in `js/`, because a service
+worker can only control pages at or below its own URL. With `manifest.json` it
+is what makes Bigu installable and what serves the app offline.
 
 Nothing below `views/` imports from `views/`. **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
 is the full account: the layers and why the arrow runs that way, how data
@@ -244,16 +255,34 @@ device. **Settings → Backup** downloads all of it as JSON and restores from it
 If the browser won't allow storage at all — private browsing, or site data
 blocked — the app says so rather than silently forgetting everything.
 
+### Installing it on a phone
+
+Open the site in a phone browser and add it to the home screen — **Settings →
+Install** inside Bigu offers the button where the browser supports one
+(Android, Chromium desktop) and writes out the share-sheet steps on iOS, where
+Safari has no install event to offer.
+
+Installed, Bigu runs from its own cache: `sw.js` precaches every stylesheet,
+module and content file the first time it is opened, so it starts with no
+network at all. Updates arrive quietly — each file is served from the cache and
+refetched behind it, so a deploy lands on the next open — and an installed app
+that is resumed rather than reopened is offered a *Шинэчлэх* banner when a new
+version has finished downloading.
+
+Service workers need a secure context, so this works on the deployed site and
+on `localhost` (browsers treat it as secure) but not over a plain-HTTP LAN
+address.
+
 ### Checks
 
 Four, cheapest first. CI runs all of them on every push and pull request; the
 first three need nothing but Node.
 
 ```
-node tools/check-structure.mjs         # modules parse, imports and exports resolve
+node tools/check-structure.mjs         # modules parse, imports, exports and the offline cache resolve
 node tools/validate-data.mjs           # every content file against its schema
 node --test "test/*.test.mjs"          # the study model, storage, links, routes, backup
-node --test "test/browser/*.test.mjs"  # the app itself, in real Chromium
+node --test "test/browser/*.test.mjs"  # the app itself, in real Chromium — including with the network off
 ```
 
 The last one needs a browser and skips without one:
@@ -288,7 +317,9 @@ commit.
 
 ### Regenerating the app icons
 
-The PNGs in `icons/` are rendered from `icons/icon.svg`:
+The PNGs in `icons/` are rendered from `icons/icon.svg` — the touch icon, the
+two manifest sizes, and two maskable copies inset for Android's launcher
+masks:
 
 ```
 pip install cairosvg && python3 tools/build-icons.py
