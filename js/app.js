@@ -37,7 +37,7 @@ import { initSettings } from './views/settings.js';
 import { initIntro } from './ui/logoIntro.js';
 import { initKeyboard } from './ui/keyboard.js';
 import { initUpdateBanner } from './ui/updateBanner.js';
-import { publishStatusSnapshot } from './study/session.js';
+import { publishHistory, publishStatusSnapshot } from './study/session.js';
 
 /* -- Storage ------------------------------------------------------------------
    Confirms localStorage actually works (Safari private mode and locked-down
@@ -52,10 +52,12 @@ function checkStorage() {
 /* -- The bridge's status snapshot ------------------------------------------------
    One write to the `bigu:bridge` key saying how things stand — what is due,
    when the reader last studied, how much they are holding, their streak —
-   for the separate summer-project surface served from the same origin. It
-   is the only thing this file publishes; the per-round events are published
-   by practice.js as each round ends, from whichever surface ran it, and
-   none of that is touched here.
+   for the separate summer-project surface served from the same origin,
+   alongside one offer of the rounds the practice store already holds. Both
+   are boot's business only because both are about the whole browser rather
+   than any one screen; a round as it finishes is still published by
+   study/session.js from whichever surface ran it, and none of that is
+   touched here.
 
    Publishing it from boot rather than from a view is the whole point. It
    used to live inside dashboard.js's renderGrid(), which was correct only
@@ -139,7 +141,16 @@ function init() {
 
   // After the router, so the first view is already rendering while the four
   // content files this needs are still in flight. Nothing on screen depends
-  // on it.
+  // on either.
+  //
+  // The history first and the status second, in that order: the log is the
+  // part that can be behind — a restore, a cleared key or an older contract
+  // leaves the practice store holding rounds the bridge never saw — and
+  // publishing it before the snapshot means the reader is never handed a
+  // "last studied" date with no round behind it. It reads localStorage and
+  // returns; on every visit but the first it finds nothing new and writes
+  // nothing at all.
+  publishHistory();
   publishStatusSnapshot();
 
   // The header logo's own animation. Scoped entirely to the mark — it never

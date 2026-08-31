@@ -15,7 +15,7 @@
    ========================================================================== */
 
 import { practice } from '../core/storage.js';
-import { publishEvent, publishStatus } from '../core/bridge.js';
+import { publishEvent, publishEvents, publishStatus } from '../core/bridge.js';
 import { loadReviewPool } from '../data/catalogue.js';
 import { countDue } from './review.js';
 import { currentStreak, toDateKey } from './streak.js';
@@ -51,6 +51,50 @@ function recordSession({ total, correct, mode, eventType = 'review.session' }) {
   publishStatusSnapshot();
 
   return record;
+}
+
+/* -- Republishing the rounds the store already holds ---------------------------------
+   The event log is a copy, and the practice store is the original. They
+   agree as long as every round is published as it finishes, which is what
+   recordSession() does — and they stop agreeing the moment the store gains
+   history the bridge never watched arrive:
+
+     a restored backup    the file's rounds land in the store whole, and
+                          the key is cleared with the rest of this
+                          browser's data before the reload
+     a cleared key        site data wiped, a reader clearing one key by
+                          hand, a browser evicting it
+     a version change     an envelope from an older contract is dropped
+                          rather than relabelled (see core/bridge.js)
+
+   In all three the store still knows exactly what happened, so the bridge
+   is rebuilt from it rather than left with a hole in it. Offered at boot,
+   every boot: publishing an id the log already carries is a no-op, so on an
+   ordinary visit this adds nothing and writes nothing.
+
+   Oldest first, because that is the order the log is kept in, and only the
+   newest EVENT_LIMIT survive the cap anyway. `type` is reconstructed the
+   one way it honestly can be — from the deck the round was run against,
+   which is the same thing the live publishers tag it with — so a lesson
+   quiz republished out of the store still arrives on the other side as a
+   lesson quiz rather than as a review.
+   ---------------------------------------------------------------------------------- */
+function publishHistory() {
+  try {
+    const rounds = practice.getAll()
+      .filter((record) => record && record.id && record.total > 0)
+      .sort((a, b) => (a.createdAt ?? 0) - (b.createdAt ?? 0));
+
+    return publishEvents(rounds.map((record) => ({
+      id: record.id,
+      type: record.mode === 'lessons' ? 'lesson.quiz' : 'review.session',
+      at: record.createdAt,
+      value: record.correct,
+      detail: `${record.total} items · ${record.correct} correct`,
+    })));
+  } catch {
+    return false;
+  }
 }
 
 /* -- The bridge's status snapshot ----------------------------------------------------
@@ -97,4 +141,4 @@ function publishStatusSnapshot() {
     .catch((error) => console.error('[Bigu]', error));
 }
 
-export { recordSession, publishStatusSnapshot };
+export { recordSession, publishHistory, publishStatusSnapshot };

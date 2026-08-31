@@ -53,6 +53,7 @@ import { favoriteIds } from '../study/favorites.js';
 import { createFavoriteButton } from '../ui/favoriteButton.js';
 import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
 import { practice } from '../core/storage.js';
+import { publishStatusSnapshot } from '../study/session.js';
 import { activeViewId } from '../core/router.js';
 import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';
 
@@ -855,6 +856,16 @@ function renderMemory(container, datasets) {
      disappearing entirely as you finish it is disorienting. */
   const handlers = {
     onGraded: (slip) => {
+      /* Memory is the one surface that grades without a round: a slip turned
+         over here writes to the same schedule the quiz does, so what is due
+         and what is held have both just changed, and nothing else was going
+         to say so. Left out, the surface reading `bigu:bridge` kept the
+         figures from boot until the reader happened to finish a quiz — a
+         due count counting down on this screen and standing still on that
+         one. Only the status: an event is a round, and this deliberately
+         isn't one. It cannot throw and nothing below waits on it. */
+      publishStatusSnapshot();
+
       const list = slip.parentElement;
       const shelf = slip.closest('.memory-shelf');
       slip.remove();

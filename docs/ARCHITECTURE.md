@@ -191,6 +191,9 @@ and each of them draws nothing.
 record, republishes it as a bridge event under the same id, and redraws the
 bridge status. Three surfaces run rounds — Review, a lesson quiz, and
 Home — and all three call it, so none of them can log a round differently.
+Grading a card in Memory is the one graded thing that is not a round: it
+redraws the bridge status and publishes no event, because there is no
+session there to report.
 
 ---
 
@@ -278,6 +281,33 @@ server copy.
   theme script in `index.html` reads `bigu:settings` directly, because it
   must run synchronously before any module loads. If you change how the
   theme is persisted, change it in both places.
+
+### The bridge is not a store
+
+`bigu:bridge` sits beside the `bigu:<store>` keys and is not one of them.
+Nothing in `storage.js` knows about it, it is not in `STORES`, it is not in
+a backup file, and nothing in Bigu ever reads it back. It is a one-way
+publish of what the reader has been studying, for the separate
+summer-project surface served from the same origin — and its shape is a
+*contract with something outside this repository*, versioned by `v` and not
+changed in place. **[docs/BRIDGE.md](BRIDGE.md)** is that contract, written
+for the reader on the other side.
+
+Three consequences worth knowing before touching it:
+
+- **No screen in this app would ever look wrong if the shape broke.** The
+  only symptom is on a surface this repository cannot see, which is why
+  `test/bridge.test.mjs` tests the envelope harder than its size suggests.
+- **`clearAll()` cannot reach it**, because it walks `STORES`. The two
+  moments this browser's history stops being the history the key describes
+  — Start over, and a restore from a backup file — call `clearBridge()`
+  themselves, in `views/settings.js`.
+- **The log is a copy and the practice store is the original.** They drift
+  whenever the store gains rounds the bridge did not watch arrive, so
+  `publishHistory()` offers the whole store at every boot and every id
+  already published is skipped. A republish that adds nothing writes
+  nothing, which is what keeps `updatedAt` meaning "when something last
+  changed".
 
 ### Persisted shapes are permanent
 

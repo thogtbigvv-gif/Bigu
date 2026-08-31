@@ -235,6 +235,16 @@ is the full account: the layers and why the arrow runs that way, how data
 flows from a JSON file to a graded card, what is permanent about the stored
 shapes, and what to do when adding a view, a content file or a store.
 
+One thing Bigu writes is not for Bigu. `js/core/bridge.js` publishes what
+the reader has been studying — what is due, when they last studied, the
+rounds they have finished — to a single `bigu:bridge` key, for the separate
+summer-project surface served from the same origin to read. It is one-way
+and it is a copy: nothing in Bigu reads it back, nothing here behaves
+differently because of it, and it invents no score, level or XP of its own.
+Its shape is a contract with something outside this repository, so it is
+versioned and never changed in place. **[docs/BRIDGE.md](docs/BRIDGE.md)**
+is that contract, written for the reader on the other side.
+
 ---
 
 ## Running locally

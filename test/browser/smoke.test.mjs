@@ -172,6 +172,39 @@ describe('the app in a browser', { skip: found.reason }, () => {
     assert.deepEqual(problems.slice(before), []);
   });
 
+  /* The bridge is the other thing whose failure is invisible from inside
+     this app: nothing in Bigu reads `bigu:bridge` back, so a boot that
+     stopped publishing it, or published a shape the contract does not
+     describe, would look exactly like a working app from every screen. The
+     unit suite tests the envelope; only a real boot tests that the envelope
+     is written at all — it waits on four fetches and a router that has to
+     have handed off first. See docs/BRIDGE.md. */
+  test('boot publishes the bridge, in the shape the contract describes', async () => {
+    const payload = await page.waitForFunction(() => {
+      const raw = localStorage.getItem('bigu:bridge');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed.status ? parsed : null;
+    }, null, { timeout: 5000 }).then((handle) => handle.jsonValue());
+
+    assert.equal(payload.v, 2, 'a reader checks the version before anything else');
+    assert.equal(payload.app, 'Bigu');
+    assert.ok(payload.updatedAt > 0);
+    assert.ok(Array.isArray(payload.events), 'an empty log is still a log');
+
+    assert.equal(typeof payload.status.dueCount, 'number');
+    assert.equal(typeof payload.status.learnedCount, 'number');
+    /* A reader prints what is there and nothing for what is not; a null
+       would be printed as a value. A fresh browser has no streak and no last
+       studied date, and says so by carrying neither key. */
+    assert.equal(
+      Object.values(payload.status).some((value) => value === null),
+      false,
+      'an absent figure is an absent key, never null',
+    );
+    assert.equal('streak' in payload.status, false, 'no rounds studied here yet');
+  });
+
   test('a deep link to an entry that is not in the catalogue lands on the list, not an error', async () => {
     const before = problems.length;
 
