@@ -280,155 +280,9 @@
   color: var(--color-sumi-soft);
 }
 
-/* -- Daily goal ----------------------------------------------------------------------
-   Only rendered when the reader has set one (see preferences.js). A line of
-   plain text over a hairline that fills — the same rule-not-spotlight
-   vocabulary the rest of the app uses, and deliberately not a ring, a
-   badge, or a percentage. It turns moss once the goal is met and then says
-   nothing further about it: the point is to notice, not to be congratulated.
-   ------------------------------------------------------------------------------------ */
-.dashboard-goal {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xs);
-  margin-block-start: var(--space-sm);
-  max-width: 18rem;
-}
-
-.dashboard-goal__label {
-  margin: 0;
-}
-
-.dashboard-goal__track {
-  height: 2px;
-  border-radius: 999px;
-  background-color: var(--color-line);
-  overflow: hidden;
-}
-
-/* Draws itself on arrival instead of appearing already filled. The rule is the
-   only thing on the Dashboard that reports the day's own progress, and a bar
-   that is simply *there* when the page paints tells the reader a number where
-   watching it travel tells them they moved it.
-
-   scaleX with a left origin, so it is a compositor transform and not a width —
-   and the same `to` is written out explicitly that memory.css's wash needs, so
-   the fill survives --progress being updated in place.
-
-   --duration-base, like everything else. This used to run at --duration-slow
-   on the grounds that it happens once a visit and nothing waits behind it,
-   which was true and still left a bar sliding across the screen for the better
-   part of half a second. A meter filling is the most literal "UI animating"
-   motion in the app; at 250ms it reads as the value settling into place. */
-.dashboard-goal__fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background-color: var(--color-shu);
-  transform-origin: left center;
-  transform: scaleX(var(--progress, 0));
-  transition: transform var(--transition-base);
-  animation: dashboard-goal-fill var(--duration-base) var(--ease-entrance) both;
-}
-
-@keyframes dashboard-goal-fill {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(var(--progress, 0)); }
-}
-
-.dashboard-goal__fill.is-met {
-  background-color: var(--color-moss);
-}
-
-/* -- First visit ----------------------------------------------------------------------
-   Shown in place of the whole grid on a first visit — see the note above
-   createWelcome() in js/views/dashboard.js. Full width and given real vertical
-   room: it is the only thing on the screen, and a welcome squeezed into a
-   stat tile's proportions would read as another stat tile.
-   ------------------------------------------------------------------------------------ */
-.dashboard-welcome {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-md);
-  padding: var(--space-xl);
-}
-
-.dashboard-welcome__kicker {
-  margin: 0;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-medium);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-sumi-faint);
-}
-
-/* The display face, at the size the Dashboard heading itself uses one step
-   down. This is the app introducing itself, which is the one other place a
-   sentence earns the serif. */
-.dashboard-welcome__heading {
-  margin: 0;
-  max-width: 24ch;
-  font-size: var(--text-xl);
-}
-
-/* Three columns of equal weight rather than a numbered list running down
-   the page: the three steps are a loop, not a ranking, and side by side
-   they can be read in one glance. */
-.dashboard-welcome__steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: var(--space-lg);
-  margin: var(--space-2xs) 0 0;
-  padding: var(--space-lg) 0 0;
-  list-style: none;
-  border-top: var(--border-width) solid var(--color-line);
-}
-
-.dashboard-welcome__step {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3xs);
-}
-
-/* 出会う / 思い出す / 薄れる — the step's own name in Japanese, sitting above
-   its English title the way the shelf headings on #memory do. It is the
-   app's subject matter used as its own ornament, which is cheaper and more
-   honest than an icon set. */
-.dashboard-welcome__step-mark {
-  margin: 0;
-  font-family: var(--font-display), var(--font-jp-stack);
-  font-size: var(--text-md);
-  line-height: var(--leading-tight);
-  color: var(--color-shu);
-}
-
-.dashboard-welcome__step-title {
-  margin: 0;
-  font-weight: var(--weight-medium);
-  color: var(--color-sumi);
-}
-
-.dashboard-welcome__step-body {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-sumi-soft);
-}
-
-.dashboard-welcome__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2xs);
-  margin-block-start: var(--space-2xs);
-}
-
-.dashboard-welcome__foot {
-  padding-block-start: var(--space-md);
-  border-top: var(--border-width) solid var(--color-line);
-}
-
-.dashboard-welcome__note {
-  margin: 0;
-}
+/* The daily-goal line that used to be styled here went with its builder to
+   css/practice.css: a goal is reported on the screen where rounds are run,
+   not on one with no nav row. See createGoalLine in js/views/practice.js. */
 
 .dashboard-card__status {
   margin-block-start: auto;
@@ -484,19 +338,11 @@
     padding-block-start: var(--space-md);
     border-top: var(--border-width) solid var(--color-line);
   }
-
-  .dashboard-welcome {
-    padding: var(--space-lg);
-  }
 }
 
 @media (max-width: 480px) {
   .dashboard-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-md);
-  }
-
-  .dashboard-welcome__steps {
     gap: var(--space-md);
   }
 }

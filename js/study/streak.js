@@ -29,6 +29,29 @@ function todayKey() {
   return toDateKey(new Date());
 }
 
+/* -- Today's count ------------------------------------------------------------------------
+   How many items the reader has actually reviewed today, for the daily goal
+   they may have set in Settings. Read off the progress records' own
+   `lastSeen` rather than from a counter of its own, so it needs no new
+   stored state and stays correct across a restored backup — the same trick
+   the streak beside it uses.
+
+   It was inline in dashboard.js, on the screen the goal line used to live
+   on. The line is drawn on Review now (a screen with a nav row), and this
+   moved here rather than moving with it: what the reader did on which day
+   is this module's subject, and a view counting days for itself is exactly
+   what the note at the top of this file is about.
+   ------------------------------------------------------------------------------------------ */
+
+function countReviewedToday(records = snapshotRecords()) {
+  const today = todayKey();
+  let reviewed = 0;
+  for (const record of records.values()) {
+    if (record.lastSeen && toDateKey(new Date(record.lastSeen)) === today) reviewed += 1;
+  }
+  return reviewed;
+}
+
 /* -- Study days -------------------------------------------------------------------------
    A day counts as studied if any of three things happened on it: a journal
    entry was written, a review session was finished, or an item was put into
@@ -101,4 +124,4 @@ function currentStreak() {
   }));
 }
 
-export { toDateKey, todayKey, collectStudyDays, computeStreak, currentStreak };
+export { toDateKey, todayKey, countReviewedToday, collectStudyDays, computeStreak, currentStreak };

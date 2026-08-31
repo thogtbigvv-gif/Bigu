@@ -44,7 +44,7 @@ below `views/` may import from `views/`.
 | `core/` | storage, router, theme, preferences, bridge, backup, the service worker, install | `core` |
 | `data/` | the catalogue loaders, the shape guards, the link index | `core`, `data`, `study` |
 | `study/` | the review model, streak, decks, favorites, session | `core`, `data`, `study` |
-| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors, the update banner | `core`, `data`, `study`, `ui` |
+| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors, the first-run card, the update banner | `core`, `data`, `study`, `ui` |
 | `views/` | the thirteen screens | anything |
 
 `data/` and `study/` may each import the other — the one bidirectional pair,
@@ -194,6 +194,35 @@ Home — and all three call it, so none of them can log a round differently.
 Grading a card in Memory is the one graded thing that is not a round: it
 redraws the bridge status and publishes no event, because there is no
 session there to report.
+
+---
+
+## What a screen may promise
+
+Home is the entry route and the Dashboard is off the map — it has no nav row
+and nothing links to it, though `#dashboard` still resolves and still
+renders. That decision holds, and it has one rule attached to it:
+
+**A screen nobody can reach may summarise, but it may not be the only place
+something is said.** A summary nobody sees is a summary nobody needed. A
+warning, an explanation, or the reported half of a setting is different: the
+reader is owed it, and owing it on an unreachable screen is the same as not
+saying it.
+
+Three things were on the wrong side of that line, all of them left there by
+the move to Home rather than written there:
+
+| What | Was | Is |
+|---|---|---|
+| The storage warning — this browser will not keep your work | Dashboard, Settings, 一文 | …and Home |
+| The first-run explanation — 出会う, 思い出す, 薄れる | Dashboard | `ui/firstRun.js`, drawn by Home and the Dashboard |
+| The daily-goal line, set in Settings | Dashboard | Review |
+
+`ui/firstRun.js` is the shared one rather than a copy on each screen, and it
+builds no surface of its own: the Dashboard adds `.card` because that screen
+is a grid of cards, Home appends it bare because that screen has no boxes on
+it. `isFirstVisit` lives beside it for the same reason — Home and the
+Dashboard each had their own copy, agreeing by coincidence.
 
 ---
 

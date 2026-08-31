@@ -142,6 +142,7 @@
   <link rel="stylesheet" href="css/doors.css" />
   <link rel="stylesheet" href="css/keyboard.css" />
   <link rel="stylesheet" href="css/install.css" />
+  <link rel="stylesheet" href="css/first-run.css" />
 </head>
 <body>
   <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -409,6 +410,17 @@
              snapshot used to be published from renderGrid(), so it was only
              written on visits to a view that is no longer on the daily
              path. js/app.js publishes it at boot now.
+
+             So did everything here that was addressed to the reader rather
+             than reporting to them. A screen with no nav row can hold a
+             summary nobody has to see; it cannot hold the app's own
+             explanation of itself, a warning that this browser will lose
+             their work, or the one line reporting a goal they set in
+             Settings. The first two are on Home now — the screen people
+             actually land on — and the goal line is on Review, where rounds
+             are run. The explanation is shared rather than moved
+             (js/ui/firstRun.js), so this screen still greets a reader who
+             arrives here first.
 
              The heading and the "what's waiting for you" line form one hero
              block; dashboard.js fills the status line on every visit. -->

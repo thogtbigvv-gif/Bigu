@@ -155,7 +155,7 @@ function createStudyCard() {
   const goalNote = document.createElement('p');
   goalNote.className = 'meta';
   goalNote.textContent =
-    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Dashboard дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu үүнийг өөрөө тогтоохгүй.';
+    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Review дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu үүнийг өөрөө тогтоохгүй.';
 
   const { group: goalGroup } = createChoiceRow({
     options: DAILY_GOALS.map((value) => ({ value, label: value === 0 ? 'No goal' : String(value) })),

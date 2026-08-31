@@ -222,7 +222,7 @@ arrow running one way:
 js/core/     storage, router, theme, preferences, bridge, backup, install
 js/data/     the catalogue loaders, the shape guards, the link index
 js/study/    the review model, streak, decks, session
-js/ui/       shared widgets — content, quiz, nav, keyboard, doors
+js/ui/       shared widgets — content, quiz, nav, keyboard, doors, first run
 js/views/    the thirteen screens
 ```
 

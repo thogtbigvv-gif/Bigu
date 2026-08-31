@@ -43,13 +43,14 @@
    key, no new schema, no second progress model.
    ========================================================================== */
 
-import { journal, practice as practiceStore } from '../core/storage.js';
+import { journal, practice as practiceStore, isAvailable as isStorageAvailable } from '../core/storage.js';
 import { buildSession, countDue, snapshotRecords } from '../study/review.js';
 import { ADAPTERS, createQuiz, furigana } from '../ui/quiz.js';
 import { deckKeyForItemId } from '../study/decks.js';
 import { loadReviewPool } from '../data/catalogue.js';
 import { recordSession } from '../study/session.js';
-import { getViewContainer } from '../ui/content.js';
+import { createStorageNotice, getViewContainer } from '../ui/content.js';
+import { createFirstRun, isFirstVisit } from '../ui/firstRun.js';
 import { activeViewId } from '../core/router.js';
 
 const VIEW_ID = 'home';
@@ -204,13 +205,6 @@ function lastLesson(records) {
   }
 
   return best ? best.lesson : null;
-}
-
-/* Nothing in any store, which is also true after a reader clears their data
-   or opens the app in a second browser — both of which are, from the app's
-   side, exactly a first visit. A flag would be wrong in all three cases. */
-function isFirstVisit(records, sessions) {
-  return records.size === 0 && journal.getAll().length === 0 && sessions.length === 0;
 }
 
 /* -- Small pieces ---------------------------------------------------------------------- */
@@ -480,7 +474,7 @@ function initHome() {
 
     const records = snapshotRecords();
     const sessions = practiceStore.getAll();
-    const firstVisit = isFirstVisit(records, sessions);
+    const firstVisit = isFirstVisit({ records, entries: journal.getAll(), sessions });
 
     room.replaceChildren();
     room.hidden = false;
@@ -520,6 +514,27 @@ function initHome() {
     aside.append(createShelf());
     room.append(desk, aside);
 
+    /* Below the desk and the shelf, across both columns.
+
+       Two things a reader used to be told only on the Dashboard, which is
+       the screen this app took off its own map — it has no nav row and
+       nothing links to it, so both of these were being kept where nobody
+       could find them. Home is where people land, so this is where they
+       belong.
+
+       The warning first, and above everything it can be above: a browser
+       that refuses to store is the one failure that loses a reader's
+       evening, and they need to know before they spend it rather than after.
+
+       Then the app's own explanation of itself — 出会う, 思い出す, 薄れる —
+       on a first visit only, and gone for good the moment anything is
+       studied. Bare, with no card around it: this screen has no boxes on it
+       (see the note at the top of css/home.css), and the two doors it
+       offers are the reason the first-visit Lessons button that used to sit
+       under the practice action is no longer needed. */
+    if (!isStorageAvailable()) room.prepend(createStorageNotice());
+    if (firstVisit) room.append(createFirstRun());
+
     /* -- What needs the catalogue --------------------------------------------- */
     try {
       pool = await loadReviewPool();
@@ -547,16 +562,6 @@ function initHome() {
     start.textContent = 'これを練習する';
     start.addEventListener('click', () => startQuickRound(line.item));
     actions.append(start);
-
-    // First visit only: the reader has no idea yet that there are fifteen
-    // lessons behind the shelf, so the on-ramp gets named once.
-    if (firstVisit) {
-      const lessons = document.createElement('a');
-      lessons.className = 'button button--secondary';
-      lessons.href = '#lessons';
-      lessons.textContent = 'Lessons';
-      actions.append(lessons);
-    }
 
     desk.append(actions, element('p', 'home__actions-note meta', 'Богино дасгал — эндээс шууд.'));
 

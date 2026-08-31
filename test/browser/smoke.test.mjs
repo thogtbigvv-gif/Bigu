@@ -172,6 +172,43 @@ describe('the app in a browser', { skip: found.reason }, () => {
     assert.deepEqual(problems.slice(before), []);
   });
 
+  /* Home is where people land, so it is where the app has to explain itself.
+     This is a whole-app assertion rather than a DOM mirror: the card is built
+     in js/ui/firstRun.js, drawn by two views, and shown on the condition that
+     every store is empty — which is exactly what a fresh browser profile is,
+     and what no unit test can stand in for. Before it was drawn here it was
+     drawn only on #dashboard, a route with no nav row and nothing linking to
+     it, so a first-time reader was never once shown it. */
+  test('a first-time reader is told what the app is, on the screen they land on', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#home'; });
+    await page.waitForFunction(() => !document.getElementById('home')?.hidden);
+    const card = await page.waitForSelector('#home .first-run', { timeout: 5000 });
+
+    const text = (await card.textContent()).replace(/\s+/g, ' ');
+    for (const verb of ['出会う', '思い出す', '薄れる']) {
+      assert.ok(text.includes(verb), `the explanation should carry ${verb}`);
+    }
+
+    /* Bare on this screen. home.css says in as many words that nothing here
+       gets a box drawn round it; the Dashboard adds the card surface itself. */
+    assert.equal(
+      await page.evaluate(() => document.querySelector('#home .first-run').classList.contains('card')),
+      false,
+      'Home draws the explanation without card chrome',
+    );
+
+    /* Two real doors, and the only ones on the card: they are why the
+       first-visit "Lessons" button under the practice action came out. */
+    assert.deepEqual(
+      await page.evaluate(() => [...document.querySelectorAll('#home .first-run__actions a')].map((a) => a.getAttribute('href'))),
+      ['#lessons', '#vocabulary'],
+    );
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
   /* The bridge is the other thing whose failure is invisible from inside
      this app: nothing in Bigu reads `bigu:bridge` back, so a boot that
      stopped publishing it, or published a shape the contract does not

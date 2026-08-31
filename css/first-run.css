@@ -1,0 +1,117 @@
+/* ==========================================================================
+   first-run.css
+   The three-verb explanation a reader sees once — see js/ui/firstRun.js.
+
+   Two screens draw it and neither owns it. The Dashboard puts it inside a
+   `.card`, because that screen is made of cards; Home appends it bare,
+   because home.css says nothing on that screen gets a box drawn round it.
+   So there is no surface here — no background, no border, no radius, no
+   padding of its own. Everything below is the arrangement of the content,
+   which is the same in both rooms.
+   ========================================================================== */
+
+.first-run {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+/* The card path needs the room a card gives its contents. Home's own
+   spacing already surrounds it, so the padding is asked for by the surface
+   rather than carried by the content. */
+.card.first-run {
+  padding: var(--space-xl);
+}
+
+.first-run__kicker {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-sumi-faint);
+}
+
+/* The display face. This is the app introducing itself, which is the one
+   other place a sentence earns the serif. */
+.first-run__heading {
+  margin: 0;
+  max-width: 24ch;
+  font-size: var(--text-xl);
+}
+
+/* Three columns of equal weight rather than a numbered list running down
+   the page: the three steps are a loop, not a ranking, and side by side
+   they can be read in one glance. */
+.first-run__steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--space-lg);
+  margin: var(--space-2xs) 0 0;
+  padding: var(--space-lg) 0 0;
+  list-style: none;
+  border-top: var(--border-width) solid var(--color-line);
+}
+
+.first-run__step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3xs);
+}
+
+/* 出会う / 思い出す / 薄れる — the step's own name in Japanese, sitting above
+   its English title the way the shelf headings on #memory do. It is the
+   app's subject matter used as its own ornament, which is cheaper and more
+   honest than an icon set. */
+.first-run__step-mark {
+  margin: 0;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-shu);
+}
+
+.first-run__step-title {
+  margin: 0;
+  font-weight: var(--weight-medium);
+  color: var(--color-sumi);
+}
+
+.first-run__step-body {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-sumi-soft);
+}
+
+.first-run__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2xs);
+  margin-block-start: var(--space-2xs);
+}
+
+.first-run__foot {
+  padding-block-start: var(--space-md);
+  border-top: var(--border-width) solid var(--color-line);
+}
+
+.first-run__note {
+  margin: 0;
+}
+
+/* -- Narrow widths ---------------------------------------------------------------------
+   The same two steps down the two rooms take: a card gives its contents
+   less room, and the three columns — already stacked by the auto-fit at
+   this width — sit closer together.
+   ------------------------------------------------------------------------------------ */
+@media (max-width: 768px) {
+  .card.first-run {
+    padding: var(--space-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .first-run__steps {
+    gap: var(--space-md);
+  }
+}

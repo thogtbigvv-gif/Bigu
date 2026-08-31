@@ -92,6 +92,7 @@ const SHELL = [
   './css/doors.css',
   './css/keyboard.css',
   './css/install.css',
+  './css/first-run.css',
 
   './js/app.js',
   './js/core/backup.js',
@@ -113,6 +114,7 @@ const SHELL = [
   './js/ui/content.js',
   './js/ui/doors.js',
   './js/ui/favoriteButton.js',
+  './js/ui/firstRun.js',
   './js/ui/keyboard.js',
   './js/ui/logoIntro.js',
   './js/ui/navigation.js',
