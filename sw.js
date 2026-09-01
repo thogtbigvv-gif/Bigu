@@ -109,6 +109,7 @@ const SHELL = [
   './js/data/shape.js',
   './js/study/decks.js',
   './js/study/favorites.js',
+  './js/study/puzzle.js',
   './js/study/review.js',
   './js/study/session.js',
   './js/study/streak.js',

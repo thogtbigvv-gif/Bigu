@@ -398,6 +398,18 @@
   max-width: 28ch;
 }
 
+/* A sentence the reader is working *from* rather than reading: the Build
+   mode's prompt is the Mongolian translation of the Japanese being
+   assembled. Same measure as the Japanese sentence above it and the
+   interface face, because that is what it is written in — set in the
+   textbook hand it reads as Cyrillic in a Japanese book. */
+.quiz__front[data-shape="translation"] {
+  font-family: var(--font-body-stack);
+  font-size: var(--text-lg);
+  line-height: var(--leading-normal);
+  max-width: 30ch;
+}
+
 .quiz__front[data-shape="phrase"] {
   font-family: inherit;
   font-size: var(--text-xl);
@@ -425,7 +437,14 @@
    element and the wrong default colours — a yellow highlighter in a paper
    palette — so it takes the app's own accent as an underline instead of a
    fill, which also survives being read in dark mode. */
+/* Whole, or not at all. `overflow-wrap: anywhere` on the sentence around it
+   is right for Japanese — a line of kana breaks anywhere and that is how the
+   script is set — and wrong for the one run the question is *about*: できます
+   split across two lines as できま / す。is the answer being asked about,
+   torn in half, in the one place the eye is meant to land. An inline-block
+   wraps as a unit and moves to the next line whole. */
 .quiz__target {
+  display: inline-block;
   background-color: transparent;
   color: var(--color-shu);
   text-decoration: underline;
@@ -1178,5 +1197,140 @@
   .quiz__missed-meaning {
     margin-inline-start: 0;
     text-align: start;
+  }
+}
+
+/* -- Build mode ---------------------------------------------------------------------
+   The answer being assembled, the pieces still to place, and the check. See
+   the note beside the tray in js/ui/quiz.js for why these are buttons rather
+   than something to drag.
+   ------------------------------------------------------------------------------------ */
+.quiz__build {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  width: 100%;
+  max-width: var(--quiz-measure);
+  margin-inline: auto;
+}
+
+.quiz__build[hidden] {
+  display: none;
+}
+
+/* The line the answer is written on. It holds its height while empty — a
+   tray that jumps upward as the first piece lands is a tray that moves out
+   from under the finger about to press it again — and carries a rule under
+   it, the same "you are writing here" mark the journal's composer uses. */
+.quiz__build-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3xs);
+  width: 100%;
+  min-height: 4.25rem;
+  padding: var(--space-2xs);
+  border-block-end: var(--border-width) solid var(--color-line);
+}
+
+.quiz__build-empty {
+  font-size: var(--text-sm);
+  color: var(--color-sumi-faint);
+}
+
+.quiz__build-tray {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+  width: 100%;
+}
+
+.quiz__build-tray[hidden] {
+  display: none;
+}
+
+/* One piece. Sized from the type rather than fixed, so a sentence chunk and
+   a single character are the same object at two widths instead of two
+   controls that happen to look alike. */
+.quiz__piece {
+  min-height: 2.75rem;
+  padding: var(--space-2xs) var(--space-sm);
+  font-family: var(--font-jp), var(--font-jp-stack);
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+  color: var(--color-sumi);
+  background-color: var(--color-paper-raised);
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    background-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .quiz__piece:not(:disabled):hover {
+    border-color: var(--color-sumi-faint);
+    transform: translateY(var(--lift-card));
+  }
+}
+
+.quiz__piece:not(:disabled):active {
+  transform: translateY(var(--lift-press));
+}
+
+/* A placed piece is part of a sentence being written, so it loses the tile
+   chrome and keeps only enough of a ground to say it can be taken back. */
+.quiz__piece--placed {
+  background-color: transparent;
+  border-color: transparent;
+  border-block-end-color: var(--color-line);
+  border-radius: var(--radius-sm);
+  padding-inline: var(--space-3xs);
+}
+
+/* Checked. Marked per piece rather than per answer — see checkBuild — with
+   the app's two verdict colours and nothing else: no icons, no shake. */
+.quiz__piece.is-right {
+  color: var(--color-moss);
+  border-block-end-color: var(--color-moss);
+}
+
+.quiz__piece.is-wrong {
+  color: var(--color-shu);
+  border-block-end-color: var(--color-shu);
+}
+
+.quiz__piece:disabled {
+  cursor: default;
+}
+
+.quiz__build-check {
+  min-width: 8rem;
+}
+
+/* A word is built out of single characters and a sentence out of chunks, and
+   a one-character tile at a chunk's padding is a tall thin sliver. The
+   character shape gets a squarer cell. */
+.quiz__build[data-shape="word"] .quiz__piece--tray {
+  min-width: 3.25rem;
+  padding-inline: var(--space-2xs);
+  font-size: var(--text-xl);
+}
+
+@media (max-width: 480px) {
+  .quiz__piece {
+    font-size: var(--text-md);
+    padding-inline: var(--space-2xs);
+  }
+
+  .quiz__build[data-shape="word"] .quiz__piece--tray {
+    min-width: 2.75rem;
+    font-size: var(--text-lg);
   }
 }

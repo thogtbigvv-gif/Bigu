@@ -43,7 +43,7 @@ below `views/` may import from `views/`.
 |---|---|---|
 | `core/` | storage, router, theme, preferences, bridge, backup, the service worker, install | `core` |
 | `data/` | the catalogue loaders, the shape guards, the link index | `core`, `data`, `study` |
-| `study/` | the review model, streak, decks, favorites, session | `core`, `data`, `study` |
+| `study/` | the review model, streak, decks, favorites, session, the build puzzle | `core`, `data`, `study` |
 | `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors, the first-run card, the update banner | `core`, `data`, `study`, `ui` |
 | `views/` | the thirteen screens | anything |
 

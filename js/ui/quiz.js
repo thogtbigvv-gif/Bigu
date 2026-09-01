@@ -21,6 +21,14 @@
                whose meanings are long enough that four of them on screen
                at once is a wall of text.
 
+     Build   — the answer arrives in pieces, in the wrong order, and putting
+               it back is the question. The other two modes are answerable
+               without ever producing a word: one offers the answer among
+               four, the other asks the reader to grade their own memory of
+               it. This one asks them to spell it. What the pieces are and
+               when an item has any is study/puzzle.js; this file draws the
+               tray and checks the order.
+
    Choose no longer asks the same thing every time. A word is not one fact,
    it is a small web of them — a shape, a reading, a meaning, and a place in
    a sentence — and a quiz that only ever walks one edge of that web trains
@@ -40,6 +48,7 @@
    ========================================================================== */
 
 import { grade as gradeItem, describeNextReview, getRecord, shuffled } from '../study/review.js';
+import { buildPuzzle } from '../study/puzzle.js';
 import { deckKeyForItemId } from '../study/decks.js';
 
 /* Four is Quizlet's number and it's the right one: three distractors is
@@ -61,6 +70,7 @@ const CORRECT_PAUSE_MS = 650;
 const MODES = [
   { id: 'choose', label: 'Choose', hint: 'Дөрвөн хариулт, шалгаж өгнө' },
   { id: 'flip', label: 'Flip', hint: 'Картыг эргүүлж хариултыг нь харна' },
+  { id: 'build', label: 'Build', hint: 'Хэсгүүдээс нь эвлүүлж бичнэ' },
 ];
 
 /* CJK ideographs. Used to decide whether a word has anything to *read* —
@@ -647,6 +657,45 @@ function gradeLabel(text) {
   return span;
 }
 
+/* -- Build questions --------------------------------------------------------------------
+   The puzzle for one item, or null when it has none. The pieces and the
+   order come from study/puzzle.js; what this adds is the two things that are
+   the quiz's business rather than the model's — which shape to try first,
+   and the shape of the object the panel renders.
+
+   Sentence first once the schedule says the item is past its first meetings,
+   word before that. Same ladder chooseType climbs: recognise it, produce it,
+   then produce it inside a sentence.
+   -------------------------------------------------------------------------------------- */
+function buildPuzzleQuestion(item) {
+  const adapter = adapterFor(item);
+  if (!adapter) return null;
+
+  const { level } = getRecord(item.id);
+  const puzzle = buildPuzzle(
+    {
+      japanese: adapter.japanese(item),
+      reading: adapter.reading(item),
+      meaning: adapter.meaning(item),
+      sentence: adapter.sentence(item),
+    },
+    { prefer: level > 0 ? 'sentence' : 'word' },
+  );
+  if (!puzzle) return null;
+
+  return {
+    ...puzzle,
+    type: `build.${puzzle.shape}`,
+    /* The card's front carries the prompt the reader works from — a gloss
+       for a word, a translation for a sentence — so the small line above it
+       says what to do with it rather than repeating it. */
+    promptLabel: puzzle.shape === 'sentence' ? 'Өгүүлбэрийг эвлүүлнэ үү' : 'Үгийг эвлүүлнэ үү',
+    // Read by showFeedback: a build answer is always Japanese, and always
+    // worth printing when it was missed.
+    answerIsJapanese: true,
+  };
+}
+
 /* -- Markup -------------------------------------------------------------------------------
    One panel covering both modes; the parts a mode doesn't use are hidden
    rather than rebuilt, so switching modes between rounds never rebuilds
@@ -771,6 +820,47 @@ function buildPanel() {
   options.className = 'quiz__options';
   options.setAttribute('role', 'group');
   options.setAttribute('aria-label', 'Answers');
+
+  /* Build mode. Two rows and a control: the line being assembled, the tray
+     of pieces still to place, and the check. The line is above the tray
+     because that is the reading order of the thing being built — what you
+     have so far, then what is left.
+
+     Both rows hold buttons rather than draggable tiles. Drag is the obvious
+     gesture and the wrong one here: it is the least reliable interaction on
+     a phone, it needs a fallback for keyboards anyway, and tapping a piece
+     to place it and tapping it again to take it back is the same two
+     actions with none of that. */
+  const build = document.createElement('div');
+  build.className = 'quiz__build';
+  build.hidden = true;
+
+  const buildLine = document.createElement('div');
+  buildLine.className = 'quiz__build-line';
+  buildLine.setAttribute('role', 'group');
+  buildLine.setAttribute('aria-label', 'Хариулт');
+
+  /* The line has to hold its height while it is empty, or the tray jumps
+     upward the moment the first piece is placed. A rule under it says where
+     the answer is being written the way the journal's does. */
+  const buildLineEmpty = document.createElement('span');
+  buildLineEmpty.className = 'quiz__build-empty';
+  buildLineEmpty.textContent = 'Хэсгүүдийг дарж эндээс эхлүүлнэ';
+
+  buildLine.append(buildLineEmpty);
+
+  const buildTray = document.createElement('div');
+  buildTray.className = 'quiz__build-tray';
+  buildTray.setAttribute('role', 'group');
+  buildTray.setAttribute('aria-label', 'Хэсгүүд');
+
+  const buildCheck = document.createElement('button');
+  buildCheck.type = 'button';
+  buildCheck.className = 'button button--primary quiz__build-check';
+  buildCheck.textContent = 'Check';
+  buildCheck.disabled = true;
+
+  build.append(buildLine, buildTray, buildCheck);
 
   /* Flip mode. No "Show answer" button any more — the card is the control,
      and two things on one screen doing the same thing reads as a bug. */
@@ -920,7 +1010,7 @@ function buildPanel() {
 
   const round = document.createElement('div');
   round.className = 'quiz__round';
-  round.append(bar, head, scene, options, grade, feedbackSlot);
+  round.append(bar, head, scene, options, build, grade, feedbackSlot);
 
   panel.append(round, summary);
 
@@ -928,7 +1018,8 @@ function buildPanel() {
     panel, round, bar, barFill, title, count, countIndex, countTotal, countSpoken, exitButton,
     scene, cardInner, card, prompt, front, hint, flipHint,
     cardBack, answerJp, answer, answerDetail,
-    options, grade, missButton, knewButton,
+    options, build, buildLine, buildLineEmpty, buildTray, buildCheck,
+    grade, missButton, knewButton,
     feedbackSlot, feedback, verdict, verdictMark, verdictText, verdictTiming,
     answerLine, answerLineValue, detail, continueButton,
     summary, summaryScore, summaryText,
@@ -1215,6 +1306,93 @@ function createQuiz({
 
   initDrag();
 
+  /* -- Build mode -------------------------------------------------------------------
+     The tray and the line are one array each, and the DOM is drawn from
+     them. Holding the state as pieces rather than as buttons is what makes
+     "take that one back" a splice rather than a hunt through the document
+     for the element that was clicked.
+     ---------------------------------------------------------------------------------- */
+
+  const buildState = { placed: [], tray: [] };
+
+  function pieceButton(piece, index, onPress, extraClass) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `quiz__piece ${extraClass}`;
+    button.lang = 'ja';
+    button.textContent = piece;
+    button.addEventListener('click', () => onPress(index));
+    return button;
+  }
+
+  function renderBuild() {
+    const shape = state.question?.shape ?? 'word';
+    el.build.dataset.shape = shape;
+
+    el.buildLine.replaceChildren(
+      ...(buildState.placed.length === 0
+        ? [el.buildLineEmpty]
+        : buildState.placed.map((piece, index) =>
+          pieceButton(piece, index, takeBack, 'quiz__piece--placed'))),
+    );
+
+    el.buildTray.replaceChildren(
+      ...buildState.tray.map((piece, index) =>
+        pieceButton(piece, index, place, 'quiz__piece--tray')),
+    );
+
+    // The check is offered only once there is a complete answer to check.
+    // A partial one is not wrong, it is unfinished, and grading it as wrong
+    // would be the app marking a reader down for its own impatience.
+    el.buildCheck.disabled = buildState.tray.length > 0 || state.answered;
+    el.buildTray.hidden = buildState.tray.length === 0;
+  }
+
+  function place(index) {
+    if (state.answered) return;
+    const [piece] = buildState.tray.splice(index, 1);
+    if (piece === undefined) return;
+    buildState.placed.push(piece);
+    renderBuild();
+  }
+
+  function takeBack(index) {
+    if (state.answered) return;
+    const [piece] = buildState.placed.splice(index, 1);
+    if (piece === undefined) return;
+    buildState.tray.push(piece);
+    renderBuild();
+  }
+
+  function undoLast() {
+    if (buildState.placed.length === 0) return;
+    takeBack(buildState.placed.length - 1);
+  }
+
+  /* Checked against the order, not against the joined string. Two pieces
+     that happen to spell the same thing in either order — a sentence with a
+     repeated chunk — are both right, and comparing the strings is what says
+     so; comparing positions would mark one of them wrong for a difference
+     the reader cannot see. */
+  function checkBuild() {
+    if (state.answered || buildState.tray.length > 0) return;
+    const expected = state.question?.answer ?? [];
+    const right = buildState.placed.length === expected.length
+      && buildState.placed.every((piece, index) => piece === expected[index]);
+
+    /* Every piece is marked, not only the answer as a whole: a sentence
+       assembled with two chunks swapped is mostly right, and a reader who is
+       told "wrong" and nothing else has to diff two lines of Japanese by eye
+       to find out where. */
+    for (const [index, button] of [...el.buildLine.children].entries()) {
+      button.disabled = true;
+      button.classList.add(buildState.placed[index] === expected[index] ? 'is-right' : 'is-wrong');
+    }
+
+    el.buildCheck.disabled = true;
+    answer(right);
+  }
+
   function renderCard() {
     const item = currentItem();
     const adapter = adapterFor(item);
@@ -1224,12 +1402,46 @@ function createQuiz({
     /* Flip asks one question and always the same one — recall this, then
        say whether you did. The question types are Choose's, because they
        depend on being *checked*: nobody can honestly self-grade "which of
-       these four is the reading". */
-    state.question = flipMode ? null : buildQuestion(item, state.pool);
+       these four is the reading".
 
-    el.prompt.textContent = flipMode ? 'Үүнийг мэдэх үү?' : state.question.prompt;
-    el.front.replaceChildren(flipMode ? adapter.front(item) : state.question.front);
-    el.front.dataset.shape = flipMode ? 'word' : state.question.shape;
+       Build asks its own, and falls back to Choose's for an item that has no
+       puzzle in it — a one-character word with no spaced example. Falling
+       back rather than skipping: the item is due, the reader asked for a
+       round of ten, and dropping it would quietly shorten the round and
+       leave the schedule holding an item the reader was never asked. */
+    const puzzle = state.mode === 'build' ? buildPuzzleQuestion(item) : null;
+    const buildMode = Boolean(puzzle);
+    state.question = flipMode ? null : (puzzle ?? buildQuestion(item, state.pool));
+
+    if (buildMode) {
+      buildState.placed = [];
+      buildState.tray = [...state.question.pieces];
+    }
+
+    el.prompt.textContent = flipMode
+      ? 'Үүнийг мэдэх үү?'
+      : (buildMode ? state.question.promptLabel : state.question.prompt);
+
+    /* A build question's front is the prompt itself — the gloss, or the
+       translation of the sentence being assembled — rather than a node the
+       question types built. Set as text, and not in the Japanese face: what
+       is on the card is the thing the reader is working *from*, and every
+       character of Japanese in this question is down in the tray. */
+    if (buildMode) {
+      el.front.replaceChildren(state.question.prompt);
+    } else {
+      el.front.replaceChildren(flipMode ? adapter.front(item) : state.question.front);
+    }
+    /* The two front shapes this mode uses are the ones the question types
+       already have names for: a gloss is a `phrase` (recall asks with one),
+       and a translation of a whole sentence is a `translation` — the same
+       measure as a Japanese `sentence` but set in the interface face,
+       because it is Mongolian. */
+    el.front.dataset.shape = flipMode
+      ? 'word'
+      : (buildMode
+        ? (state.question.shape === 'sentence' ? 'translation' : 'phrase')
+        : state.question.shape);
 
     const hintText = flipMode ? adapter.hint(item) : state.question.hint;
     el.hint.textContent = hintText;
@@ -1264,17 +1476,25 @@ function createQuiz({
     clearMark();
     faceFront();
 
+    /* Cleared, not merely hidden, in every branch: options or pieces built
+       for the previous card are stale answers to a question that is no
+       longer on screen, and the keyboard shortcuts index straight into
+       these lists. */
+    el.grade.hidden = true;
+
     if (flipMode) {
-      // Cleared, not merely hidden: options built for a previous Choose round
-      // are stale answers to a question that is no longer on screen, and the
-      // keyboard shortcuts index straight into this list.
       el.options.replaceChildren();
       el.options.hidden = true;
-      el.grade.hidden = true;
+      el.build.hidden = true;
+    } else if (buildMode) {
+      el.options.replaceChildren();
+      el.options.hidden = true;
+      el.build.hidden = false;
+      renderBuild();
     } else {
       renderOptions(state.question);
       el.options.hidden = false;
-      el.grade.hidden = true;
+      el.build.hidden = true;
     }
 
     setProgress();
@@ -1330,7 +1550,13 @@ function createQuiz({
        for: the answer was だいがく, and the back of the card carries it only
        as furigana over the word. */
     const question = state.question;
-    const showAnswer = !knewIt && state.mode === 'choose' && question?.answerIsJapanese;
+    /* Choose and Build both, and for the same reason: neither one's card back
+       spells out the thing that was actually asked. A missed reading question
+       needs the reading printed, and a sentence assembled in the wrong order
+       needs the right order printed — the marks on the pieces say *where* it
+       went wrong and nothing says what it should have been. Flip is absent
+       because its answer is already on the card the reader is looking at. */
+    const showAnswer = !knewIt && state.mode !== 'flip' && question?.answerIsJapanese;
     el.answerLine.hidden = !showAnswer;
     if (showAnswer) el.answerLineValue.textContent = question.answerText;
 
@@ -1373,7 +1599,20 @@ function createQuiz({
       state.missed.push(item);
     }
 
-    if (state.mode === 'choose') {
+    /* Branched on what is actually on screen rather than on the mode. Build
+       falls back to a Choose question for an item with no puzzle in it, and
+       a round in build mode is then answering options — asked by mode, that
+       card took neither branch and ended with its options unmarked and its
+       card unturned. */
+    if (!el.build.hidden) {
+      /* The pieces stay on screen with their marks — the line the reader
+         assembled is the thing the verdict is about, and clearing it would
+         answer "where did I go wrong" by removing the evidence. The card
+         turns as it does in Choose, so the word itself is still shown. */
+      for (const button of el.buildTray.children) button.disabled = true;
+      el.buildCheck.disabled = true;
+      turnToAnswer();
+    } else if (!el.options.hidden) {
       for (const button of el.options.children) {
         button.disabled = true;
         const isAnswer = button.dataset.correct === 'true';
@@ -1594,6 +1833,7 @@ function createQuiz({
 
   el.missButton.addEventListener('click', () => answer(false, null));
   el.knewButton.addEventListener('click', () => answer(true, null));
+  el.buildCheck.addEventListener('click', checkBuild);
   el.continueButton.addEventListener('click', advance);
   el.exitButton.addEventListener('click', endRound);
 
@@ -1666,7 +1906,36 @@ function createQuiz({
       return;
     }
 
-    if (state.mode === 'choose') {
+    /* Keyed off what is on screen, not off the mode, for the same reason the
+       grading branch is: a build round falls back to a Choose question for
+       an item with no puzzle in it, and those cards are answered with the
+       number keys. Asked by mode, the digits would have gone nowhere and
+       Space would have tried to flip a card that has no back turned to it.
+
+       Build first, because it is the branch with something other than digits
+       to claim: Backspace takes the last piece back, Enter checks once the
+       tray is empty — the same Enter that moves on from the verdict a moment
+       later — and the digits place the nth piece still in the tray. */
+    if (!el.build.hidden) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        checkBuild();
+        return;
+      }
+      if (event.key === 'Backspace') {
+        event.preventDefault();
+        undoLast();
+        return;
+      }
+      const index = Number(event.key) - 1;
+      if (index >= 0 && index < buildState.tray.length) {
+        event.preventDefault();
+        place(index);
+      }
+      return;
+    }
+
+    if (!el.options.hidden) {
       const index = Number(event.key) - 1;
       if (index >= 0 && index < el.options.children.length) {
         event.preventDefault();

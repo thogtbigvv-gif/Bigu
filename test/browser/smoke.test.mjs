@@ -323,6 +323,103 @@ describe('the app in a browser', { skip: found.reason }, () => {
     assert.equal('streak' in payload.status, false, 'no rounds studied here yet');
   });
 
+  /* After the bridge test, deliberately: this one finishes a round, and a
+     round is exactly what the bridge's status snapshot reports. Run before
+     it, it left a streak on a key the test above asserts is quiet. */
+  /* Build mode, end to end. The pieces come from study/puzzle.js, which its
+     own suite covers; what only a browser can answer is whether the tray,
+     the line and the check add up to a question that can be asked and got
+     right — and whether the round then moves on the way the other two modes
+     do. Driven from the keyboard rather than by clicking, because the
+     bindings are the half most likely to rot: a build round that fell back
+     to a Choose question used to leave the number keys pointing at nothing,
+     which is also why the loop below walks past those cards rather than
+     assuming the first one has a puzzle in it. */
+  test('a build round assembles an answer and grades it', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#practice'; });
+    await page.waitForFunction(() => !document.getElementById('practice')?.hidden);
+
+    // Through the mode picker, the way a reader picks it: the view read the
+    // stored mode once, when it was built.
+    const picked = await page.evaluate(() => {
+      const button = [...document.querySelectorAll('#practice .quiz-modes button')]
+        .find((el) => el.textContent.trim() === 'Build');
+      if (button) button.click();
+      return Boolean(button);
+    });
+    assert.equal(picked, true, 'Build is offered as a study mode');
+
+    await page.waitForSelector('#practice .practice__start:not([hidden])', { timeout: 5000 });
+    await page.click('#practice .practice__start');
+    await page.waitForSelector('.quiz:not([hidden])', { timeout: 5000 });
+
+    /* Walk to the first card that actually has a puzzle. An item with a
+       one-character headword and no spaced example has none, and the mode
+       asks it a Choose question instead of skipping it. */
+    let onBuildCard = false;
+    for (let card = 0; card < 8 && !onBuildCard; card += 1) {
+      await page.waitForTimeout(250);
+      onBuildCard = await page.evaluate(() => {
+        const build = document.querySelector('.quiz__build');
+        return Boolean(build) && !build.hidden;
+      });
+      if (onBuildCard) break;
+
+      // A fallback card: answer it and move on.
+      await page.keyboard.press('1');
+      await page.waitForSelector('.quiz__feedback:not([hidden])', { timeout: 5000 });
+      await page.keyboard.press('Enter');
+    }
+
+    assert.equal(onBuildCard, true, 'a round in Build mode reaches a card with a puzzle in it');
+
+    const shape = await page.evaluate(() => document.querySelector('.quiz__build').dataset.shape);
+    assert.ok(['word', 'sentence'].includes(shape), `unexpected puzzle shape ${shape}`);
+
+    // The check is offered only once every piece is placed: a partial answer
+    // is unfinished, not wrong.
+    assert.equal(await page.evaluate(() => document.querySelector('.quiz__build-check').disabled), true);
+
+    /* Digits place the nth piece still in the tray, so pressing 1 as many
+       times as there are pieces empties it in the order it was shuffled
+       into — which is almost never the right order, and does not need to be:
+       what is being tested is that the answer can be completed and checked. */
+    const pieces = await page.evaluate(() => document.querySelectorAll('.quiz__piece--tray').length);
+    assert.ok(pieces >= 2, 'a puzzle is at least two pieces');
+    for (let i = 0; i < pieces; i += 1) await page.keyboard.press('1');
+
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.quiz__piece--placed').length), pieces);
+    assert.equal(await page.evaluate(() => document.querySelector('.quiz__build-check').disabled), false);
+
+    // Backspace takes the last one back, and the check goes away with it.
+    await page.keyboard.press('Backspace');
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.quiz__piece--placed').length), pieces - 1);
+    assert.equal(await page.evaluate(() => document.querySelector('.quiz__build-check').disabled), true);
+
+    await page.keyboard.press('1');
+    await page.keyboard.press('Enter');
+
+    await page.waitForSelector('.quiz__feedback:not([hidden])', { timeout: 5000 });
+
+    /* Every piece carries its own verdict, so a sentence with two chunks
+       swapped says where it went wrong rather than only that it did. */
+    const marks = await page.evaluate(() => [...document.querySelectorAll('.quiz__piece--placed')]
+      .map((el) => el.classList.contains('is-right') || el.classList.contains('is-wrong')));
+    assert.equal(marks.length, pieces);
+    assert.deepEqual(marks, marks.map(() => true), 'each placed piece is marked');
+
+    // Out of the round, so the views that follow start where they expect to.
+    await page.evaluate(() => {
+      const exit = document.querySelector('.quiz__exit');
+      if (exit) exit.click();
+    });
+    await page.waitForTimeout(300);
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
   test('a deep link to an entry that is not in the catalogue lands on the list, not an error', async () => {
     const before = problems.length;
 

@@ -154,8 +154,18 @@ decide.
 
 **🎯 Review** — Spaced repetition. Every graded item gets a due date, and the
 interval widens (1 → 3 → 7 → 14 → 30 days) as you recall it, narrowing when
-you don't. Sessions draw from what's actually due, oldest first. Self-graded:
-reveal, then "I knew it" or "Still learning". Round length is yours.
+you don't. Sessions draw from what's actually due, oldest first. Round length
+is yours, and so is how you're asked:
+
+- **Choose** — four answers, checked for you. It varies what it asks, too: a
+  word is a shape, a reading, a meaning and a place in a sentence, and the
+  question you get depends on how well the schedule says you already hold it.
+- **Flip** — the classic flashcard. Recall it, reveal, then say whether you
+  knew it.
+- **Build** — the answer arrives in pieces, in the wrong order, and putting it
+  back is the question. A sentence is cut at the spaces its example is already
+  written with; a word is cut into characters. The other two modes can be
+  answered without ever producing a word — this one asks you to spell it.
 
 **🖌 Memory** — What the studying leaves behind. Memory strength is a
 continuous estimate of how much of a word you still hold, halving over that
