@@ -166,6 +166,10 @@ is yours, and so is how you're asked:
   back is the question. A sentence is cut at the spaces its example is already
   written with; a word is cut into characters. The other two modes can be
   answered without ever producing a word — this one asks you to spell it.
+- **Mix** — not a fourth way of asking but the other three, one per card,
+  chosen by how well the schedule says you hold each item: recognise it, then
+  produce it, then recall it with nothing on screen to recognise. A word met
+  four times should have been met four different ways.
 
 **🖌 Memory** — What the studying leaves behind. Memory strength is a
 continuous estimate of how much of a word you still hold, halving over that

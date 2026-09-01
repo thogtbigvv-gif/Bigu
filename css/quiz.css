@@ -742,12 +742,21 @@
    nothing and cost a permanent 10rem of empty screen under every unanswered
    question.
    ------------------------------------------------------------------------------------------ */
+/* Arrives rather than appears. Everything else in this panel that comes and
+   goes travels — the card turns, the graded card leaves the way it was
+   thrown, the pieces slide between the tray and the line — and the block
+   carrying the verdict was the one thing that simply existed, a hundred
+   pixels of text materialising under the reader's answer. rise-in is the
+   app's own entrance (layout.css) and reset.css collapses it under
+   prefers-reduced-motion with everything else. */
 .quiz__feedback {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
   text-align: center;
+  --rise: 8px;
+  animation: rise-in var(--duration-base) var(--ease-entrance) both;
 }
 
 .quiz__verdict {
@@ -1240,6 +1249,10 @@
   color: var(--color-sumi-faint);
 }
 
+/* Every piece, from the first press to the last: placing one marks it used
+   rather than taking it out, so this row never changes size and the Check
+   button under it never moves. See the note beside buildState in
+   js/ui/quiz.js. */
 .quiz__build-tray {
   display: flex;
   flex-wrap: wrap;
@@ -1247,10 +1260,6 @@
   justify-content: center;
   gap: var(--space-2xs);
   width: 100%;
-}
-
-.quiz__build-tray[hidden] {
-  display: none;
 }
 
 /* One piece. Sized from the type rather than fixed, so a sentence chunk and
@@ -1308,6 +1317,19 @@
 
 .quiz__piece:disabled {
   cursor: default;
+}
+
+/* A piece that is already in the line. It keeps its place and its size — that
+   is the whole point of leaving it here — and gives up everything else: the
+   ground, the edge and most of the ink, so the row reads as what is left to
+   place rather than as a row of controls half of which do nothing. */
+.quiz__piece--tray.is-used {
+  background-color: transparent;
+  border-color: transparent;
+  border-style: dashed;
+  border-color: var(--color-line);
+  color: var(--color-sumi-faint);
+  opacity: 0.45;
 }
 
 .quiz__build-check {

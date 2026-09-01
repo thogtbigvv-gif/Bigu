@@ -29,6 +29,12 @@
                when an item has any is study/puzzle.js; this file draws the
                tray and checks the order.
 
+     Mix     — not a fourth form but the other three, one per card, chosen by
+               how well the schedule says each item is held. Picking one mode
+               for a whole round asks twenty questions in one direction; this
+               asks the same twenty from whichever direction the item is
+               ready for. See formForCard.
+
    Choose no longer asks the same thing every time. A word is not one fact,
    it is a small web of them — a shape, a reading, a meaning, and a place in
    a sentence — and a quiz that only ever walks one edge of that web trains
@@ -71,6 +77,7 @@ const MODES = [
   { id: 'choose', label: 'Choose', hint: 'Дөрвөн хариулт, шалгаж өгнө' },
   { id: 'flip', label: 'Flip', hint: 'Картыг эргүүлж хариултыг нь харна' },
   { id: 'build', label: 'Build', hint: 'Хэсгүүдээс нь эвлүүлж бичнэ' },
+  { id: 'mix', label: 'Mix', hint: 'Гурвыг сольж, санамсаргүй асууна' },
 ];
 
 /* CJK ideographs. Used to decide whether a word has anything to *read* —
@@ -696,6 +703,43 @@ function buildPuzzleQuestion(item) {
   };
 }
 
+/* -- The form of a card ------------------------------------------------------------------
+   Which of the three ways to ask this particular item, this time. Only Mix
+   calls it; the other three modes are the answer to their own question.
+
+   The ladder is the one the question types already climb, and the one the
+   review schedule itself is built on: recognise it, then produce it, then
+   recall it with nothing on screen to recognise.
+
+     level 0    Choose. The item is new or was just missed, and the only fair
+                question about a word you have not met is a checked one —
+                nobody can honestly self-grade a word they are meeting for
+                the first time, and nobody can spell it either.
+     level 1-2  Choose or Build. Something to produce, with the recognition
+                question still in the mix.
+     level 3+   Any of the three. An item held this well has earned the
+                unaided question, and Flip is the only one of the three that
+                asks it.
+
+   Build is offered rather than guaranteed: renderCard falls back to a Choose
+   question for an item with no puzzle in it, so a form picked here is a
+   preference, not a promise.
+   -------------------------------------------------------------------------------------- */
+
+const MIX_FORMS = {
+  0: ['choose'],
+  1: ['choose', 'build'],
+  2: ['choose', 'build'],
+};
+
+const MIX_FORMS_HELD = ['choose', 'flip', 'build'];
+
+function formForCard(item) {
+  const { level } = getRecord(item.id);
+  const forms = MIX_FORMS[Math.max(level, 0)] ?? MIX_FORMS_HELD;
+  return forms[Math.floor(Math.random() * forms.length)];
+}
+
 /* -- Markup -------------------------------------------------------------------------------
    One panel covering both modes; the parts a mode doesn't use are hidden
    rather than rebuilt, so switching modes between rounds never rebuilds
@@ -1063,7 +1107,13 @@ function createQuiz({
   const el = buildPanel();
 
   const state = {
+    /* Two different things, and they used to be one. `mode` is what the
+       reader picked before the round — including 'mix', which is not a form
+       a card can be in — and `form` is what the card on screen actually is.
+       Every branch below that asks "is this a flip card" asks `form`; only
+       the picker, the round record and the mix rule read `mode`. */
     mode: 'choose',
+    form: 'choose',
     queue: [],
     pool: [],
     index: 0,
@@ -1174,13 +1224,13 @@ function createQuiz({
      forbids, and a button a reader can Tab to but cannot see is the bug this
      app already fixed once in the nav drawer. It also can't be turned twice. */
   function syncFaces() {
-    el.card.disabled = state.mode !== 'flip' || state.flipped;
+    el.card.disabled = state.form !== 'flip' || state.flipped;
     el.card.setAttribute('aria-hidden', String(state.flipped));
     el.cardBack.setAttribute('aria-hidden', String(!state.flipped));
   }
 
   function flip() {
-    if (state.mode !== 'flip' || state.flipped || state.answered) return;
+    if (state.form !== 'flip' || state.flipped || state.answered) return;
     turnToAnswer();
     el.grade.hidden = false;
     // The answer, not the buttons: this is what the reader just asked for, and
@@ -1246,7 +1296,7 @@ function createQuiz({
     let startY = null;
     let claimed = false;
 
-    const canDrag = () => state.mode === 'flip' && state.flipped && !state.answered;
+    const canDrag = () => state.form === 'flip' && state.flipped && !state.answered;
 
     el.scene.addEventListener('touchstart', (event) => {
       if (!canDrag() || event.touches.length !== 1) {
@@ -1313,7 +1363,24 @@ function createQuiz({
      for the element that was clicked.
      ---------------------------------------------------------------------------------- */
 
-  const buildState = { placed: [], tray: [] };
+  /* The pieces never leave the tray. They are laid out once, in the order
+     they were shuffled into, and placing one marks it used rather than
+     removing it — so the tray is the same size and the pieces are in the
+     same places from the first press to the last.
+
+     Taking them out was the obvious model and the one that moves the ground
+     under the reader: the tray shrank as it emptied and the Check button
+     climbed seventy pixels up the screen, arriving under the finger reaching
+     for it. It also renumbered the keyboard shortcuts on every press — "the
+     third piece" meant something different each time.
+
+     So `pieces` is fixed and `placed` holds indexes into it. The line is
+     rendered from those indexes, which is also what makes taking one back a
+     splice rather than a hunt through the document for the element that was
+     clicked.
+     ---------------------------------------------------------------------------------- */
+
+  const buildState = { pieces: [], placed: [] };
 
   function pieceButton(piece, index, onPress, extraClass) {
     const button = document.createElement('button');
@@ -1332,36 +1399,81 @@ function createQuiz({
     el.buildLine.replaceChildren(
       ...(buildState.placed.length === 0
         ? [el.buildLineEmpty]
-        : buildState.placed.map((piece, index) =>
-          pieceButton(piece, index, takeBack, 'quiz__piece--placed'))),
+        : buildState.placed.map((pieceIndex, slot) =>
+          pieceButton(buildState.pieces[pieceIndex], slot, takeBack, 'quiz__piece--placed'))),
     );
 
     el.buildTray.replaceChildren(
-      ...buildState.tray.map((piece, index) =>
-        pieceButton(piece, index, place, 'quiz__piece--tray')),
+      ...buildState.pieces.map((piece, index) => {
+        const button = pieceButton(piece, index, place, 'quiz__piece--tray');
+        if (buildState.placed.includes(index)) {
+          button.classList.add('is-used');
+          button.disabled = true;
+        }
+        return button;
+      }),
     );
 
     // The check is offered only once there is a complete answer to check.
     // A partial one is not wrong, it is unfinished, and grading it as wrong
     // would be the app marking a reader down for its own impatience.
-    el.buildCheck.disabled = buildState.tray.length > 0 || state.answered;
-    el.buildTray.hidden = buildState.tray.length === 0;
+    el.buildCheck.disabled = buildState.placed.length < buildState.pieces.length || state.answered;
+  }
+
+  /* The line is rebuilt on every move, so the piece the reader just pressed is
+     a different element in a different place by the time they see it. This is
+     the same first/last/invert/play the rest of the app gets from CSS: the new
+     element starts where the pressed one is standing and travels to where it
+     now is, which is the difference between a piece moving and a piece
+     appearing somewhere else.
+
+     Read off the tokens rather than written here as numbers, so it moves on
+     the same curve and in the same time as everything else. Reduced motion is
+     honoured by the query rather than by reset.css, because a Web Animation is
+     not a CSS animation and that rule cannot reach it. */
+  const REDUCED_MOTION = '(prefers-reduced-motion: reduce)';
+
+  function motionToken(name, fallback) {
+    const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return value || fallback;
+  }
+
+  function slideFrom(from, element) {
+    if (!from || !element || window.matchMedia?.(REDUCED_MOTION).matches) return;
+    if (typeof element.animate !== 'function') return;
+
+    const to = element.getBoundingClientRect();
+    const dx = Math.round(from.left - to.left);
+    const dy = Math.round(from.top - to.top);
+    if (dx === 0 && dy === 0) return;
+
+    element.animate(
+      [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+      {
+        duration: Number.parseFloat(motionToken('--duration-fast', '150ms')) || 150,
+        easing: motionToken('--ease-entrance', 'cubic-bezier(0.16, 1, 0.3, 1)'),
+      },
+    );
   }
 
   function place(index) {
     if (state.answered) return;
-    const [piece] = buildState.tray.splice(index, 1);
-    if (piece === undefined) return;
-    buildState.placed.push(piece);
+    if (index < 0 || index >= buildState.pieces.length) return;
+    if (buildState.placed.includes(index)) return;
+
+    const from = el.buildTray.children[index]?.getBoundingClientRect();
+    buildState.placed.push(index);
     renderBuild();
+    slideFrom(from, el.buildLine.lastElementChild);
   }
 
-  function takeBack(index) {
+  function takeBack(slot) {
     if (state.answered) return;
-    const [piece] = buildState.placed.splice(index, 1);
-    if (piece === undefined) return;
-    buildState.tray.push(piece);
+    const from = el.buildLine.children[slot]?.getBoundingClientRect();
+    const [pieceIndex] = buildState.placed.splice(slot, 1);
+    if (pieceIndex === undefined) return;
     renderBuild();
+    slideFrom(from, el.buildTray.children[pieceIndex]);
   }
 
   function undoLast() {
@@ -1375,10 +1487,11 @@ function createQuiz({
      so; comparing positions would mark one of them wrong for a difference
      the reader cannot see. */
   function checkBuild() {
-    if (state.answered || buildState.tray.length > 0) return;
+    if (state.answered || buildState.placed.length < buildState.pieces.length) return;
     const expected = state.question?.answer ?? [];
-    const right = buildState.placed.length === expected.length
-      && buildState.placed.every((piece, index) => piece === expected[index]);
+    const assembled = buildState.placed.map((index) => buildState.pieces[index]);
+    const right = assembled.length === expected.length
+      && assembled.every((piece, index) => piece === expected[index]);
 
     /* Every piece is marked, not only the answer as a whole: a sentence
        assembled with two chunks swapped is mostly right, and a reader who is
@@ -1386,7 +1499,7 @@ function createQuiz({
        to find out where. */
     for (const [index, button] of [...el.buildLine.children].entries()) {
       button.disabled = true;
-      button.classList.add(buildState.placed[index] === expected[index] ? 'is-right' : 'is-wrong');
+      button.classList.add(assembled[index] === expected[index] ? 'is-right' : 'is-wrong');
     }
 
     el.buildCheck.disabled = true;
@@ -1396,7 +1509,12 @@ function createQuiz({
   function renderCard() {
     const item = currentItem();
     const adapter = adapterFor(item);
-    const flipMode = state.mode === 'flip';
+
+    // What this card is. In Mix it is decided per card; otherwise it is the
+    // mode the reader picked, unchanged.
+    state.form = state.mode === 'mix' ? formForCard(item) : state.mode;
+
+    const flipMode = state.form === 'flip';
     state.answered = false;
 
     /* Flip asks one question and always the same one — recall this, then
@@ -1409,13 +1527,13 @@ function createQuiz({
        back rather than skipping: the item is due, the reader asked for a
        round of ten, and dropping it would quietly shorten the round and
        leave the schedule holding an item the reader was never asked. */
-    const puzzle = state.mode === 'build' ? buildPuzzleQuestion(item) : null;
+    const puzzle = state.form === 'build' ? buildPuzzleQuestion(item) : null;
     const buildMode = Boolean(puzzle);
     state.question = flipMode ? null : (puzzle ?? buildQuestion(item, state.pool));
 
     if (buildMode) {
+      buildState.pieces = [...state.question.pieces];
       buildState.placed = [];
-      buildState.tray = [...state.question.pieces];
     }
 
     el.prompt.textContent = flipMode
@@ -1556,12 +1674,12 @@ function createQuiz({
        needs the right order printed — the marks on the pieces say *where* it
        went wrong and nothing says what it should have been. Flip is absent
        because its answer is already on the card the reader is looking at. */
-    const showAnswer = !knewIt && state.mode !== 'flip' && question?.answerIsJapanese;
+    const showAnswer = !knewIt && state.form !== 'flip' && question?.answerIsJapanese;
     el.answerLine.hidden = !showAnswer;
     if (showAnswer) el.answerLineValue.textContent = question.answerText;
 
     // Flip already carries it on the back of the card.
-    const detail = state.mode === 'flip' ? null : detailBlock(currentItem(), question?.answerText);
+    const detail = state.form === 'flip' ? null : detailBlock(currentItem(), question?.answerText);
     el.detail.replaceChildren(...(detail ? [detail] : []));
 
     /* A right answer moves on by itself — being made to confirm something
@@ -1583,7 +1701,31 @@ function createQuiz({
          so a keyboard reader is on the right control and Enter advances; the
          page simply stays where the reader was looking. */
       el.continueButton.focus({ preventScroll: true });
+      revealContinue();
     }
+  }
+
+  /* The one scroll this panel makes, and the smallest one that works.
+
+     Everything a missed question has to say arrives below the options — the
+     verdict, the right answer, the entry itself and the button that moves on
+     — and on a 1000px window the button lands ten pixels past the bottom of
+     it. So the reader read the answer and then had to go looking for the way
+     out of it, on every card they got wrong.
+
+     `block: 'nearest'` is the whole point: it scrolls by the minimum that
+     puts the button on screen and does nothing at all when it already is,
+     which keeps the card the reader is reading as far up the window as it
+     can. Smoothly, because this happens while they are reading — and
+     instantly when they have asked for less motion, since a reader who turned
+     animation off still needs the button. */
+  function revealContinue() {
+    if (el.continueButton.hidden) return;
+    const reduced = window.matchMedia?.(REDUCED_MOTION).matches;
+    el.continueButton.scrollIntoView({
+      behavior: reduced ? 'auto' : 'smooth',
+      block: 'nearest',
+    });
   }
 
   function answer(knewIt, chosenButton) {
@@ -1927,8 +2069,11 @@ function createQuiz({
         undoLast();
         return;
       }
+      /* The nth piece in the tray, which is the same nth piece all the way
+         through the question — the tray does not renumber itself as it is
+         used, so a reader can read the row once and type the answer. */
       const index = Number(event.key) - 1;
-      if (index >= 0 && index < buildState.tray.length) {
+      if (index >= 0 && index < buildState.pieces.length) {
         event.preventDefault();
         place(index);
       }
