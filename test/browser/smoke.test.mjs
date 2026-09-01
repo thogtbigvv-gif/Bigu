@@ -209,6 +209,87 @@ describe('the app in a browser', { skip: found.reason }, () => {
     assert.deepEqual(problems.slice(before), []);
   });
 
+  /* The two reference screens, and the one assertion that is about being able
+     to *find* something rather than about rendering. Both were flat runs in
+     the order their files were written — eight hundred words twenty-four at a
+     time, and a hundred and thirty-two kanji as full-height rows — and both
+     are now a structure a reader can cross in one press. That structure is
+     derived at render time from the data (js/data/kana.js), so it is exactly
+     the kind of thing that can quietly stop happening. */
+  test('the vocabulary list is filed in kana rows, all of it in the document', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#vocabulary'; });
+    await page.waitForFunction(() => !document.getElementById('vocabulary')?.hidden);
+    await page.waitForSelector('#vocabulary .vocab-section:not([hidden])', { timeout: 5000 });
+
+    const state = await page.evaluate(() => ({
+      sections: [...document.querySelectorAll('#vocabulary .vocab-section:not([hidden])')].map((s) => s.id),
+      rows: document.querySelectorAll('#vocabulary .vocab-row').length,
+      marks: document.querySelectorAll('#vocabulary .vocab-index__mark').length,
+      firstThree: [...document.querySelectorAll('#vocabulary .vocab-row__word')]
+        .slice(0, 3).map((el) => el.textContent),
+    }));
+
+    assert.equal(state.sections[0], 'vocab-row-a', 'the list opens at あ');
+    assert.deepEqual(state.sections.at(-1), 'vocab-row-wa', 'and ends at わ');
+    assert.equal(state.marks, 10, 'ten marks on the index rail, one per row');
+    // Every word, not a page of them: the "Show more" boundary is what made
+    // the end of the list unreachable.
+    assert.ok(state.rows > 800, `expected the whole catalogue in the document, saw ${state.rows}`);
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  test('a vocabulary row opens in place rather than being a card', async () => {
+    const before = problems.length;
+
+    const face = await page.waitForSelector('#vocabulary .vocab-row__face', { timeout: 5000 });
+    assert.equal(await face.getAttribute('aria-expanded'), 'false');
+
+    await face.click();
+    await page.waitForFunction(
+      () => document.querySelector('#vocabulary .vocab-row__face')?.getAttribute('aria-expanded') === 'true',
+      null,
+      { timeout: 5000 },
+    );
+    // The detail is built on the press, not with the row.
+    assert.ok(
+      await page.evaluate(() => Boolean(document.querySelector('#vocabulary .vocab-row__detail'))),
+      'the example and controls arrive when the row is opened',
+    );
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  test('the kanji browse is a chart of characters, banded by level', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#kanji'; });
+    await page.waitForFunction(() => !document.getElementById('kanji')?.hidden);
+    await page.waitForSelector('#kanji .kanji-tile', { timeout: 5000 });
+
+    const state = await page.evaluate(() => ({
+      tiles: document.querySelectorAll('#kanji .kanji-tile').length,
+      bands: [...document.querySelectorAll('#kanji .kanji-band__label')].map((el) => el.textContent),
+    }));
+
+    assert.ok(state.tiles > 100, `expected the whole chart, saw ${state.tiles} tiles`);
+    assert.ok(state.bands.length > 0, 'the chart is banded by level');
+
+    // A tile is the route into the entry, the same as every other way in.
+    await page.click('#kanji .kanji-tile__face');
+    await page.waitForFunction(() => /^#kanji\/.+/.test(window.location.hash), null, { timeout: 5000 });
+    await page.waitForSelector('#kanji .kanji-detail:not([hidden])', { timeout: 5000 });
+
+    // …and backing out of it leaves the chart, not a panel with no way home.
+    await page.evaluate(() => { window.location.hash = '#kanji'; });
+    await page.waitForFunction(() => document.querySelector('.kanji-detail')?.hidden === true, null, { timeout: 5000 });
+    await page.waitForSelector('#kanji .kanji-tile', { timeout: 5000 });
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
   /* The bridge is the other thing whose failure is invisible from inside
      this app: nothing in Bigu reads `bigu:bridge` back, so a boot that
      stopped publishing it, or published a shape the contract does not

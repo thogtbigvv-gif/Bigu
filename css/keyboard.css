@@ -23,9 +23,9 @@
    ring sits tight; a reading card and a lesson group are real cards with
    padding of their own and can afford the app's usual 2px.
    ----------------------------------------------------------------------------- */
-.vocab-card:focus-visible,
+.vocab-row:focus-visible,
 .grammar-card:focus-visible,
-.kanji-card:focus-visible,
+.kanji-tile:focus-visible,
 .reading-card:focus-visible,
 .lesson-group:focus-visible,
 .memory-slip:focus-visible {
@@ -34,8 +34,8 @@
   border-radius: var(--radius-sm);
 }
 
-.vocab-card:focus-visible,
-.kanji-card:focus-visible {
+.vocab-row:focus-visible,
+.kanji-tile:focus-visible {
   outline-offset: 4px;
 }
 

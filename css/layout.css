@@ -368,10 +368,10 @@
    ------------------------------------------------------------------------------- */
 .stagger,
 .dashboard-grid,
-.dashboard-welcome__steps,
-.vocab-list,
+.first-run__steps,
+.vocab-rows,
 .grammar-list,
-.kanji-grid,
+.kanji-chart__grid,
 .kanji-detail__sections,
 .reading-list,
 .lessons-list,

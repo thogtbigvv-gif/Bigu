@@ -104,6 +104,7 @@ const SHELL = [
   './js/core/storage.js',
   './js/core/theme.js',
   './js/data/catalogue.js',
+  './js/data/kana.js',
   './js/data/links.js',
   './js/data/shape.js',
   './js/study/decks.js',
