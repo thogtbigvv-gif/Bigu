@@ -343,6 +343,26 @@
     max-width: 60rem;
     margin-inline: auto;
     padding-block-start: var(--space-lg);
+    /* The room sits *in* the page rather than clinging to the top of it. A
+       returning reader's Home is one kanji, one button and a short shelf —
+       four hundred pixels of content at the top of a laptop screen with the
+       rest of the page empty beneath it, which is the vertical version of
+       the emptiness the two columns above were chosen to fix.
+
+       align-content, not align-items: it centres the grid's *rows* inside
+       the height below, and does nothing at all once the content is taller
+       than that — a first visit, with the explanation under the desk, simply
+       fills the space and grows past it. The subtraction is the header, the
+       footer and the main region's own padding; dvh so a phone browser's
+       collapsing toolbar cannot make it overflow (the rule is above the
+       phone breakpoint anyway, which leaves tablets in landscape). */
+    min-height: calc(100vh - 17rem);
+    min-height: calc(100dvh - 17rem);
+    align-content: center;
+    /* Optically centred, which is a little above the middle: a block of type
+       placed on the exact centre of a page reads as having sunk. The padding
+       is inside the min-height, so it lifts the rows by half of itself. */
+    padding-block-end: var(--space-3xl);
   }
 
   .home__desk {
@@ -362,8 +382,14 @@
     grid-row: 1;
   }
 
+  /* Specimen size, the same --text-3xl the quiz gives a word it is asking
+     about and the kanji list gives a character (see the note in quiz.css).
+     This is the one thing the screen is about and it was set two steps below
+     the size the app gives the same word twenty pixels into a round — the
+     wide scale exists so that the subject of a screen can be much larger
+     than everything around it, and Home was the screen not spending it. */
   .home__jp {
-    font-size: var(--text-2xl);
+    font-size: var(--text-3xl);
   }
 
   .home__aside {

@@ -147,6 +147,13 @@
   white-space: nowrap;
 }
 
+/* An empty slot must take no room at all. The intro is a flex column with a
+   gap, so a childless <div> still bought itself one gap between the status
+   line and the start button — a goal nobody set, spacing the screen. */
+.practice__goal-slot:empty {
+  display: none;
+}
+
 /* -- The daily goal ----------------------------------------------------------------------
    Only rendered when the reader has set one (see preferences.js). A line of
    plain text over a hairline that fills — the same rule-not-spotlight
@@ -218,3 +225,43 @@
    and Home now, and css/first-run.css holds its arrangement. What stays
    here is the one line about how it sits on *this* screen — inside a card,
    because that is what this screen is made of. */
+
+/* -- Wide screens ------------------------------------------------------------------------
+   Same composition as Home and the Journal, at the same 1024px line: what
+   you are about to do on the left, what you have already done beside it.
+   Stacked, this screen was a 38rem card at the top of a 1150px page with the
+   log below it and half the width unused.
+
+   The quiz spans both columns, and has to: it renders between the intro and
+   the history, it carries its own measure (38rem widening to 52rem — see the
+   note at the top of this file), and a round confined to a 34rem track would
+   be the one component in the app that changed width depending on which
+   screen started it. Nothing else is on screen while it runs, so the columns
+   beside it are empty anyway.
+   ------------------------------------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  .practice {
+    display: grid;
+    grid-template-columns: minmax(0, 34rem) minmax(15rem, 1fr);
+    grid-auto-rows: min-content;
+    column-gap: var(--space-3xl);
+    row-gap: var(--space-lg);
+    align-items: start;
+    max-width: 62rem;
+  }
+
+  .practice__intro {
+    grid-column: 1;
+    max-width: none;
+  }
+
+  .practice__history {
+    grid-column: 2;
+    max-width: none;
+  }
+
+  .practice > .quiz {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}

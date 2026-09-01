@@ -27,6 +27,28 @@
   flex-direction: column;
 }
 
+/* Two of those columns once there is room for two, and not before. The
+   argument above is about the *shape* of a row — a glyph in its own column
+   with its annotations beside it, scannable in a way a grid of centred cards
+   is not — and that shape is unchanged here; there are simply two runs of it
+   side by side, which is the same call vocabulary.css makes for the same
+   reason. Below this width a single run already fills the line, and one row
+   of a hundred and thirty-two is a very long page.
+
+   1280px, not the 1024px sidebar line: at 1024 the page inside the sidebar is
+   too narrow for a 7rem glyph column plus readings twice over, and the
+   annotations would start wrapping mid-reading. No row gap, and rows stretch
+   by the grid's default, so each card's hairline runs straight across to meet
+   its neighbour's the way the single column's always have. */
+@media (min-width: 1280px) {
+  .kanji-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-3xl);
+    row-gap: 0;
+  }
+}
+
 
 /* -- Level facets ---------------------------------------------------------------------
    The chip row above the grid, matching the one vocabulary and grammar
