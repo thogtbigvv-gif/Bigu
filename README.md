@@ -154,8 +154,22 @@ decide.
 
 **🎯 Review** — Spaced repetition. Every graded item gets a due date, and the
 interval widens (1 → 3 → 7 → 14 → 30 days) as you recall it, narrowing when
-you don't. Sessions draw from what's actually due, oldest first. Self-graded:
-reveal, then "I knew it" or "Still learning". Round length is yours.
+you don't. Sessions draw from what's actually due, oldest first. Round length
+is yours, and so is how you're asked:
+
+- **Choose** — four answers, checked for you. It varies what it asks, too: a
+  word is a shape, a reading, a meaning and a place in a sentence, and the
+  question you get depends on how well the schedule says you already hold it.
+- **Flip** — the classic flashcard. Recall it, reveal, then say whether you
+  knew it.
+- **Build** — the answer arrives in pieces, in the wrong order, and putting it
+  back is the question. A sentence is cut at the spaces its example is already
+  written with; a word is cut into characters. The other two modes can be
+  answered without ever producing a word — this one asks you to spell it.
+- **Mix** — not a fourth way of asking but the other three, one per card,
+  chosen by how well the schedule says you hold each item: recognise it, then
+  produce it, then recall it with nothing on screen to recognise. A word met
+  four times should have been met four different ways.
 
 **🖌 Memory** — What the studying leaves behind. Memory strength is a
 continuous estimate of how much of a word you still hold, halving over that
@@ -222,7 +236,7 @@ arrow running one way:
 js/core/     storage, router, theme, preferences, bridge, backup, install
 js/data/     the catalogue loaders, the shape guards, the link index
 js/study/    the review model, streak, decks, session
-js/ui/       shared widgets — content, quiz, nav, keyboard, doors
+js/ui/       shared widgets — content, quiz, nav, keyboard, doors, first run
 js/views/    the thirteen screens
 ```
 
@@ -234,6 +248,16 @@ Nothing below `views/` imports from `views/`. **[docs/ARCHITECTURE.md](docs/ARCH
 is the full account: the layers and why the arrow runs that way, how data
 flows from a JSON file to a graded card, what is permanent about the stored
 shapes, and what to do when adding a view, a content file or a store.
+
+One thing Bigu writes is not for Bigu. `js/core/bridge.js` publishes what
+the reader has been studying — what is due, when they last studied, the
+rounds they have finished — to a single `bigu:bridge` key, for the separate
+summer-project surface served from the same origin to read. It is one-way
+and it is a copy: nothing in Bigu reads it back, nothing here behaves
+differently because of it, and it invents no score, level or XP of its own.
+Its shape is a contract with something outside this repository, so it is
+versioned and never changed in place. **[docs/BRIDGE.md](docs/BRIDGE.md)**
+is that contract, written for the reader on the other side.
 
 ---
 

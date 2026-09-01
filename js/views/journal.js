@@ -224,7 +224,10 @@ function createComposer() {
   const textarea = document.createElement('textarea');
   textarea.className = 'journal__textarea';
   textarea.lang = 'ja';
-  textarea.rows = 12;
+  // A floor and a fallback, not the height: journal.css sets that, because
+  // twelve rows of this face is a writing surface taller than a laptop
+  // screen. This is what the element is if the stylesheet never arrives.
+  textarea.rows = 6;
   textarea.spellcheck = false;
   textarea.placeholder = '今日は…';
   textarea.setAttribute('aria-label', 'Journal entry, written in plain form');

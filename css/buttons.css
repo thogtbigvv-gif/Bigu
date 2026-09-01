@@ -35,6 +35,21 @@
   cursor: not-allowed;
 }
 
+/* A filled primary is the exception to the fade. Half-strength 朱色 is not a
+   quieter button, it is a pink one — and the accent is spent on exactly two
+   things in this app, where you are and a genuine error, neither of which is
+   "there is nothing to save yet". So a disabled primary stops being the
+   accent instead of becoming a wash of it: a flat neutral slab, no shadow,
+   at full opacity, which says "not yet" without saying it in the one colour
+   reserved for saying something else. */
+.button--primary:disabled {
+  opacity: 1;
+  background-color: var(--color-line);
+  border-color: var(--color-line);
+  color: var(--color-sumi-faint);
+  box-shadow: none;
+}
+
 /* --focus-ring and --focus-halo, in that pairing, wherever the app shows
    focus — see the note on the two tokens in variables.css for why the
    outline is load-bearing and the halo is not. Only the offset varies per

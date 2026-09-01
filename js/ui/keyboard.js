@@ -33,13 +33,14 @@
    ========================================================================== */
 
 /* Per view: the rows J and K walk, and the control Enter presses on the row it
-   is standing on. `open` is optional — a vocabulary entry and a grammar point
-   have nothing to open, and on those two Enter is deliberately inert rather
-   than being pointed at whichever button happens to come first in the card. */
+   is standing on. `open` is optional — a grammar point has nothing to open,
+   and there Enter is deliberately inert rather than being pointed at
+   whichever button happens to come first in the card. A vocabulary entry has
+   something to open now: it is a row that unfolds, and Enter unfolds it. */
 const LIST_VIEWS = {
-  vocabulary: { item: '.vocab-card' },
+  vocabulary: { item: '.vocab-row', open: '.vocab-row__face' },
   grammar: { item: '.grammar-card' },
-  kanji: { item: '.kanji-card', open: '.kanji-card__detail-button' },
+  kanji: { item: '.kanji-tile', open: '.kanji-tile__face' },
   reading: { item: '.reading-card', open: '.reading-card__open' },
   lessons: { item: '.lesson-group', open: '.lesson-group__header' },
   memory: { item: '.memory-slip', open: '.memory-slip__face' },
@@ -74,6 +75,9 @@ const SHORTCUTS = [
   { keys: ['Space'], text: 'Картыг эргүүлэх' },
   { keys: ['1', '2', '3', '4'], text: 'Хариултаа сонгох' },
   { keys: ['1', '2'], text: 'Эргүүлсэн картад: дахин үзье, мэдсэн' },
+  { keys: ['1', '…'], text: 'Эвлүүлэх горимд: хэсгийг байрлуулах' },
+  { keys: ['Backspace'], text: 'Эвлүүлэх горимд: сүүлийн хэсгийг буцаах' },
+  { keys: ['Enter'], text: 'Эвлүүлснээ шалгах' },
   { keys: ['Enter'], text: 'Хариултын дараа үргэлжлүүлэх' },
   { keys: ['Esc'], text: 'Нээлттэй байгааг хаах' },
   { keys: ['?'], text: 'Энэ жагсаалт' },

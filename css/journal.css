@@ -10,12 +10,26 @@
 /* -- Wrapper ------------------------------------------------------------------------
    Capped narrower than the app's main container — a full 72rem measure
    would make the writing line too long to be comfortable. 42rem keeps the
-   composer and the entry list at a calm, book-like width.
+   composer at a calm, book-like width, and that cap is the point: it is a
+   measure for writing into, not a column width.
+
+   Which is why the cap moved onto the composer rather than staying on the
+   wrapper. Stacked in one 42rem column, this screen put a writing card in
+   the left two thirds of a laptop and left the rest of the page blank — the
+   same "unfinished page" home.css describes, and the same answer: a desk
+   and the things beside it. The calendar and the list of past entries are
+   an aside; the composer keeps its measure whatever the window does.
    ------------------------------------------------------------------------------------ */
 .journal {
   display: flex;
   flex-direction: column;
   gap: var(--space-2xl);
+}
+
+.journal__composer,
+.journal__calendar,
+.journal__history {
+  width: 100%;
   max-width: 42rem;
 }
 
@@ -80,10 +94,21 @@
    sheet you write on is what this view is. It also has to be big enough to
    check your own kana against, which is most of the reason someone writes
    Japanese into a box at all. */
+/* The height is set here, not by the `rows` attribute journal.js gives the
+   element for the no-CSS case. rows="12" at this font size and this leading
+   is a 570px writing surface, which pushed the foot of the card — the
+   character count and the one button that saves the entry — off the bottom
+   of a laptop screen: the writer could not see whether their work was
+   saved without scrolling the page they were writing on. `height` rather
+   than `min-height` alone, because an intrinsic height from `rows` beats a
+   minimum every time. The reader can still drag it taller; `resize` is
+   deliberately left on. */
 .journal__textarea {
   display: block;
   width: 100%;
-  min-height: clamp(12rem, 40vh, 22rem);
+  min-height: 12rem;
+  height: clamp(12rem, 34vh, 20rem);
+  height: clamp(12rem, 34dvh, 20rem);
   font-size: var(--text-lg);
   background: transparent;
   border: none;
@@ -459,5 +484,37 @@ button.journal__calendar-day:active {
     min-height: 8rem;
     height: clamp(8rem, 30vh, 14rem);
     height: clamp(8rem, 30dvh, 14rem);
+  }
+}
+
+/* -- Wide screens ------------------------------------------------------------------------
+   1024px, the sidebar line from variables.css — the same number Home uses to
+   go from one column to a desk and an aside, because it is the same question.
+
+   The composer spans both rows so it keeps its full height beside a column
+   that is usually shorter than it: a month of dates and a handful of past
+   entries do not fill a page of writing, and stretching either of them to
+   match would be filling space rather than using it.
+   ------------------------------------------------------------------------------------------ */
+@media (min-width: 1024px) {
+  .journal {
+    display: grid;
+    grid-template-columns: minmax(0, 42rem) minmax(15rem, 1fr);
+    grid-auto-rows: min-content;
+    column-gap: var(--space-3xl);
+    row-gap: var(--space-2xl);
+    align-items: start;
+    max-width: 68rem;
+  }
+
+  .journal__composer {
+    grid-column: 1;
+    grid-row: 1 / -1;
+  }
+
+  .journal__calendar,
+  .journal__history {
+    grid-column: 2;
+    max-width: none;
   }
 }

@@ -30,12 +30,12 @@ import {
   loadIntoView,
   OFFLINE_HINT,
 } from '../ui/content.js';
-import { dailyGoal } from '../core/preferences.js';
+import { createFirstRun, isFirstVisit } from '../ui/firstRun.js';
 import { activeViewId } from '../core/router.js';
 import { bandFor, countDue, FAINT_STRENGTH, snapshotRecords, strengthOf } from '../study/review.js';
 import { loadVocabulary, loadGrammar, loadKanji, loadLessons } from '../data/catalogue.js';
 import { DECK_LABELS } from '../study/decks.js';
-import { collectStudyDays, computeStreak, toDateKey, todayKey } from '../study/streak.js';
+import { collectStudyDays, computeStreak, todayKey } from '../study/streak.js';
 
 const VIEW_ID = 'dashboard';
 
@@ -46,120 +46,6 @@ const dateLabelFormatter = new Intl.DateTimeFormat('en', {
 
 function formatSessionDate(timestamp) {
   return dateLabelFormatter.format(new Date(timestamp));
-}
-
-/* -- First visit ----------------------------------------------------------------------------
-   What a brand-new reader used to be shown, on the first screen of the app,
-   was four cards reading 0 items due, 0 days streak, 0 words in memory, and
-   "You haven't reviewed yet." Every one of those sentences is true and none
-   of them is any use: a status surface has nothing to report before there
-   is any status, and a grid of zeroes is the least inviting thing a study
-   app can open with. It also silently taught the wrong lesson — that the
-   numbers are the point — to the one reader who has no other impression yet.
-
-   So on the first visit the grid is replaced by one card that says what the
-   app does, in the app's own metaphor, and offers the one door that makes
-   sense from a standing start. It disappears for good the moment anything
-   is studied; there is no dismiss button, because a welcome you have to
-   dismiss is a welcome that outstayed its welcome.
-
-   "First visit" is defined as "nothing in any store" rather than by a flag,
-   so it is also correct after a reader clears their data or opens the app
-   in a second browser — both of which are, from the app's side, exactly a
-   first visit.
-   -------------------------------------------------------------------------------------------------- */
-
-function isFirstVisit({ records, entries, sessions }) {
-  return records.size === 0 && entries.length === 0 && sessions.length === 0;
-}
-
-const FIRST_VISIT_STEPS = [
-  {
-    jp: '出会う',
-    title: 'Meet a word',
-    body: 'Lessons бол эхлэх зам — арван таван хичээл, тус бүр хэдхэн үгтэй. Харин чөлөөтэй эргүүлж үзмээр бол Vocabulary, Grammar, Kanji гурав хүлээж байна.',
-  },
-  {
-    jp: '思い出す',
-    title: 'Try to recall it',
-    body: 'Review нь япон үгийг эхэлж үзүүлээд, утгыг нь харуулахаасаа өмнө тухайн үгийг асууна. Үнэнээр хариулаарай; давтах хуваарь тань оноогоор биш, таны хариултаар тогтоно.',
-  },
-  {
-    jp: '薄れる',
-    title: 'Watch the ink fade',
-    body: 'Таны танилцсан үг бүр тэр агшнаасаа бүдгэрч эхэлнэ. Memory аль нь бүдгэрч байгааг харуулдаг — тиймээс богинохон орж ирсэн ч хийх үнэ цэнэтэй зүйл үргэлж байна.',
-  },
-];
-
-function createWelcome() {
-  const card = document.createElement('section');
-  card.className = 'card dashboard-welcome';
-  card.setAttribute('aria-labelledby', 'dashboard-welcome-heading');
-
-  const kicker = document.createElement('p');
-  kicker.className = 'dashboard-welcome__kicker';
-  kicker.textContent = 'First time here';
-
-  const heading = document.createElement('h2');
-  heading.className = 'dashboard-welcome__heading';
-  heading.id = 'dashboard-welcome-heading';
-  heading.textContent = 'Ердөө гурван зүйл — аппын бүх учир нь тэр.';
-
-  const steps = document.createElement('ol');
-  steps.className = 'dashboard-welcome__steps';
-
-  for (const step of FIRST_VISIT_STEPS) {
-    const item = document.createElement('li');
-    item.className = 'dashboard-welcome__step';
-
-    const mark = document.createElement('p');
-    mark.className = 'dashboard-welcome__step-mark';
-    mark.lang = 'ja';
-    mark.textContent = step.jp;
-    mark.setAttribute('aria-hidden', 'true');
-
-    const title = document.createElement('p');
-    title.className = 'dashboard-welcome__step-title';
-    title.textContent = step.title;
-
-    const body = document.createElement('p');
-    body.className = 'dashboard-welcome__step-body';
-    body.textContent = step.body;
-
-    item.append(mark, title, body);
-    steps.append(item);
-  }
-
-  const actions = document.createElement('div');
-  actions.className = 'dashboard-welcome__actions';
-
-  const start = document.createElement('a');
-  start.href = '#lessons';
-  start.className = 'button button--primary';
-  start.textContent = 'Start with lesson one';
-
-  const browse = document.createElement('a');
-  browse.href = '#vocabulary';
-  browse.className = 'button button--secondary';
-  browse.textContent = 'Browse the vocabulary';
-
-  actions.append(start, browse);
-
-  /* The note is wrapped rather than carrying the divider itself: typography
-     gives every <p> a 68ch measure, so a rule drawn on the paragraph
-     stopped two thirds of the way across the card and read as an underline
-     on the text instead of as the foot of the section. */
-  const foot = document.createElement('div');
-  foot.className = 'dashboard-welcome__foot';
-
-  const note = document.createElement('p');
-  note.className = 'dashboard-welcome__note meta';
-  note.textContent =
-    'Таны хийсэн бүхэн энэ хөтөч дотор үлдэж, төхөөрөмжөөс хэзээ ч гардаггүй. Хуулбар авмаар бол Settings дотор нэг товшилтоор нөөцлөх боломжтой.';
-
-  foot.append(note);
-  card.append(kicker, heading, steps, actions, foot);
-  return card;
 }
 
 /* -- Card builders --------------------------------------------------------------------------
@@ -208,38 +94,13 @@ function describeToday({ due, new: fresh }) {
   return 'Бүгдийн давтах хугацаа хараахан болоогүй байна. Өнөөдөр таныг хүлээж буй юм алга.';
 }
 
-/* One line, only when the reader has asked for one. See the note on
-   DAILY_GOALS in preferences.js: no goal is the default, and a goal that
-   is set is reported plainly and never graded. "12 of 20 reviewed today"
-   with a hairline under it, no badge, no streak-at-risk warning, and the
-   same calm sentence whether the number is 2 or 40. */
-function createGoalLine(reviewedToday, goal) {
-  const wrap = document.createElement('div');
-  wrap.className = 'dashboard-goal';
+/* The daily-goal line used to be rendered here, inside this card. It moved
+   to the Review screen with the rest of what this view was still holding
+   for a reader who cannot reach it: a goal is set in Settings and reported
+   on the screen where rounds are actually run, not on one with no nav row.
+   See createGoalLine in js/views/practice.js. */
 
-  const reached = reviewedToday >= goal;
-
-  const label = document.createElement('p');
-  label.className = 'dashboard-goal__label meta';
-  label.textContent = reached
-    ? `Өнөөдрийн зорилго биеллээ — ${reviewedToday} зүйл давтлаа.`
-    : `Өнөөдөр ${reviewedToday} зүйл давтлаа — зорилт ${goal}.`;
-
-  const track = document.createElement('div');
-  track.className = 'dashboard-goal__track';
-  track.setAttribute('aria-hidden', 'true');
-
-  const fill = document.createElement('span');
-  fill.className = 'dashboard-goal__fill';
-  fill.style.setProperty('--progress', Math.min(reviewedToday / goal, 1).toFixed(3));
-  if (reached) fill.classList.add('is-met');
-  track.append(fill);
-
-  wrap.append(label, track);
-  return wrap;
-}
-
-function createTodayCard(counts, { reviewedToday, goal }) {
+function createTodayCard(counts) {
   const card = createCard('Today');
   // By class, not by grid position — see .dashboard-card--hero in dashboard.css.
   card.classList.add('dashboard-card--hero');
@@ -274,7 +135,6 @@ function createTodayCard(counts, { reviewedToday, goal }) {
   detail.textContent = describeToday(counts);
 
   lead.append(headline, label, detail);
-  if (goal > 0) lead.append(createGoalLine(reviewedToday, goal));
 
   const cta = document.createElement('a');
   cta.href = '#practice';
@@ -457,19 +317,6 @@ function createPracticeCard(sessions) {
 
 /* -- Rendering ------------------------------------------------------------------------- */
 
-/* How many items were actually reviewed today, for the daily goal. Read off
-   the progress records' own lastSeen rather than from a separate counter,
-   so it needs no new stored state and stays correct across a restored
-   backup — the same trick the streak already uses. */
-function countReviewedToday(records) {
-  const today = todayKey();
-  let reviewed = 0;
-  for (const record of records.values()) {
-    if (record.lastSeen && toDateKey(new Date(record.lastSeen)) === today) reviewed += 1;
-  }
-  return reviewed;
-}
-
 /* The line under the page heading. Says the same thing as the Today card in
    one sentence, so the answer to "what now?" is readable before a single
    card is scanned. */
@@ -538,7 +385,13 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
   const notices = isStorageAvailable() ? [] : [createStorageNotice()];
 
   if (firstVisit) {
-    container.replaceChildren(...notices, createWelcome());
+    /* Built by js/ui/firstRun.js, which Home draws too. The card surface is
+       added here rather than there: this screen is a grid of cards, Home is
+       a page with no boxes on it, and the explanation is the same either
+       way. */
+    const welcome = createFirstRun();
+    welcome.classList.add('card');
+    container.replaceChildren(...notices, welcome);
     return;
   }
 
@@ -556,10 +409,7 @@ function renderGrid(container, [vocabData, grammarData, kanjiData, lessonData]) 
   grid.className = 'dashboard-grid';
 
   grid.append(
-    createTodayCard(totals, {
-      reviewedToday: countReviewedToday(records),
-      goal: dailyGoal(),
-    }),
+    createTodayCard(totals),
     createStreakCard(days, entries),
     createMemoryCard(records.values()),
     createPracticeCard(sessions),

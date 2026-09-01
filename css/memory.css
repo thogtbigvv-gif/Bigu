@@ -413,7 +413,20 @@
   gap: var(--space-sm);
   margin: 0;
   padding: 0;
-  align-items: start;
+}
+
+/* And equal rows, which is the other half of the same argument. `align-items:
+   start` used to sit here, so a slip whose reading wrapped onto a second line
+   stood a few pixels taller than the ones beside it and every slip in the row
+   hung from a different edge — the ragged edge the columns above were chosen
+   to avoid, turned ninety degrees. The face fills whatever height its row
+   reaches, so the paper tones line up across the shelf. */
+.memory-slip {
+  align-self: stretch;
+}
+
+.memory-slip__face {
+  height: 100%;
 }
 
 /* -- Slips ------------------------------------------------------------------------------------
@@ -603,8 +616,15 @@
 /* Right-aligned and quiet: the state line is what you check, not what you
    read. It carries the band name in words as well as in ink, so the
    information is never colour-only. */
+/* On the headword's line, not in the middle of the slip. It used to be
+   centred, which was invisible while slips were only as tall as their own
+   content and became a floating fragment the moment they shared a row height
+   — the state of a word, hanging in space beside two lines of readings it had
+   nothing to do with. The nudge is optical: it sets this line's cap against
+   the headword's, which a top edge alone does not do across two type sizes. */
 .memory-slip__state {
-  align-self: center;
+  align-self: start;
+  margin-block-start: 0.25rem;
   flex-shrink: 0;
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-wide);

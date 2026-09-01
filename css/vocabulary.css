@@ -52,141 +52,250 @@
 }
 
 /* -- The list -----------------------------------------------------------------------
-   Two fixed columns, not `auto-fill`. Auto-fill with a 20rem minimum gave three
-   or four columns on a wide screen, which is a card wall — and the wider the
-   window, the more it looked like a dashboard of tiles rather than a
-   vocabulary. Two columns is the densest arrangement that still lets a headword
-   and its gloss sit on one readable line, and it holds the same shape at every
-   width above the breakpoint instead of reflowing under the reader.
+   Ten sections in kana-chart order, each a heading and a run of rows — see
+   the note at the top of js/views/vocabulary.js for why the file's own order
+   was not one.
 
-   `minmax(0, 1fr)` rather than `1fr`. A bare `1fr` is minmax(auto, 1fr), whose
-   floor is the widest min-content in the column — so one entry holding an
-   unbreakable string is enough to push the whole track past the page. The 0
-   floor makes the track its share of the container and lets the entry wrap
-   inside it.
-
-   No row gap. The hairline on each entry is the division, and rows are kept on
-   one baseline across both columns by the grid's default `align-items:
-   stretch` — so the rules line up straight across the page the way a table's
-   do, instead of stopping at whatever height each entry happened to reach.
+   Two columns of *rows* would put あ and か side by side and undo the
+   ordering, so this is one column at every width. Density comes from the row
+   being one line instead of a card.
    ------------------------------------------------------------------------------------ */
 .vocab-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: var(--space-2xl);
-  row-gap: 0;
-}
-
-/* -- Show more -----------------------------------------------------------------------
-   The foot of a paged list. Centred and full-width-ish so it reads as the
-   end of the run rather than as one more control belonging to the last
-   card; the summary line above the list carries the count, so this only has
-   to be pressable.
-   ------------------------------------------------------------------------------------ */
-.vocab-more {
-  display: flex;
-  width: fit-content;
-  margin: var(--space-lg) auto 0;
-  padding-inline: var(--space-xl);
-}
-
-/* An entry, not a card. The surface, border, radius and shadow are gone — this
-   no longer carries `.card` at all (see the note in vocabulary.js) — and what
-   marks one entry off from the next is a hairline and the air above it, the
-   same device the kanji list uses one view over.
-
-   Padding is vertical only. Inline padding on a borderless row just insets the
-   text from a boundary that isn't drawn, and costs the column width that the
-   two-up layout is here to spend. */
-.vocab-card {
   display: flex;
   flex-direction: column;
-  gap: 0;
-  padding-block: var(--space-md);
-  border-block-end: var(--border-width) solid var(--color-line);
-  /* See .card--deferred in cards.css. Re-measured for the entry: a headword, a
-     meaning, a three-line example and the control row, with the padding and
-     border it now has instead of a card's.
-
-     Two values, and the `none` is load-bearing. `contain-intrinsic-size` with
-     a single value applies it to *both* axes, so every skipped entry was also
-     claiming a fixed width — and since a skipped element's placeholder size is
-     what the grid measures, that resolved the track wider than the page and
-     cropped the right edge of every entry on a phone.
-
-     `none` means "no assumed width, size me normally"; the height is what the
-     property was wanted for and is the only part that should be guessed. */
-  contain-intrinsic-size: none auto 18rem;
 }
 
-.vocab-card__head {
+/* No content-visibility here, and it was tried: with eight hundred rows in
+   the document it is the obvious optimisation, and it makes the index rail
+   wrong. A section the browser has not rendered stands at its reserved
+   height rather than its real one, so the scroll position the rail computes
+   is against a document that then changes height underneath it — pressing ま
+   landed six thousand pixels short. Rows this small do not need it. The
+   whole list lays out in about a millisecond, because what was expensive
+   before was never the row count: it was eight hundred *cards*, each with an
+   example sentence, a door row and two controls in it. */
+.vocab-section {
+  /* Jumped to from the rail, so it lands where .view and every heading in
+     the app land: below the sticky header rather than under it. Same token
+     and the same reason — see the note beside scroll-margin-top in
+     css/layout.css. */
+  scroll-margin-top: var(--space-3xl);
+}
+
+.vocab-section[hidden] {
+  display: none;
+}
+
+/* The heading stays with the reader down the whole section, which is the
+   answer to "where am I" that a long list otherwise cannot give. It stops
+   under the app's own sticky header rather than at the top of the window.
+
+   Opaque, not the header's glass: this one scrolls *through* rows of type,
+   and a translucent bar over Japanese text at full sharpness is unreadable
+   in a way a translucent bar over a page's top margin is not. */
+.vocab-section__head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  scroll-margin-top: var(--space-3xl);
   display: flex;
   align-items: baseline;
-  flex-wrap: wrap;
-  gap: var(--space-xs);
-  margin-block-end: var(--space-3xs);
+  gap: var(--space-2xs);
+  margin: 0;
+  padding-block: var(--space-2xs);
+  background-color: var(--color-paper);
+  border-block-end: var(--border-width) solid var(--color-line);
 }
 
-/* The headword is the card. --font-jp first so it is set in the textbook hand
-   rather than the UI gothic, and --text-xl so it clears the Mongolian meaning
-   under it by two full steps of the scale. At --text-lg over a --text-base
-   meaning the two sat one step apart, which is close enough that the card read
-   as two lines of similar text and a reader scanning the grid had to actually
-   read to find the word. */
-.vocab-card__head ruby,
-.vocab-card__head span:first-child {
-  font-family: var(--font-jp), var(--font-jp-stack);
-  font-size: var(--text-xl);
+.vocab-section__mark {
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-lg);
   line-height: var(--leading-tight);
   color: var(--color-sumi);
 }
 
-.vocab-card__pos {
-  margin-inline-start: auto;
-  text-transform: capitalize;
+.vocab-section__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-sumi-faint);
 }
 
-.vocab-card__meaning {
-  margin: 0 0 var(--space-2xs) 0;
-  font-size: var(--text-sm);
-  font-weight: var(--weight-medium);
-  color: var(--color-sumi);
+.vocab-rows {
+  margin: 0 0 var(--space-xl);
+  padding: 0;
+  list-style: none;
 }
 
-/* An indent and a rule, not a recess. The filled panel this replaces was
-   --color-paper sunk into a raised white card; with no card the fill is the
-   page's own colour, so the recess became a rectangle painted the same value as
-   the paper with a stray highlight along its top edge.
-
-   The left rule is what Memory already uses to mark a quoted example, and it is
-   the right device here for the same reason it is right in the kanji list: it
-   subordinates a block without drawing a box. On a dense two-column list that
-   matters more than anywhere else in the app — twenty-four filled panels down a
-   page is the texture this view was being redesigned away from.
-
-   The hover and focus deepenings are gone with the fill. There is no surface
-   left to deepen, and no card lift for them to stay in step with.
+/* -- The index rail -------------------------------------------------------------------
+   Ten marks, and the only way across the list that is not scrolling. It
+   sticks to the top with the section headings so it is reachable from
+   anywhere in the eight hundred rather than only from the top of the page.
    ------------------------------------------------------------------------------------ */
-.vocab-card__example {
+.vocab-index {
+  /* Fixed to the edge of the window rather than sticky at the top of the
+     list, and vertical: at the top it would be scrolled past within one
+     screen of eight hundred, and sticky it would have to know the height of
+     the app's own sticky header to sit under it — a number that changes when
+     the header wraps. Pinned to the right edge it is reachable from anywhere
+     in the list, collides with nothing, and is where a phone's address book
+     has put the same control for fifteen years. */
+  position: fixed;
+  right: var(--space-3xs);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: var(--space-3xs) var(--space-3xs);
+  background-color: var(--glass-surface);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur));
+  border: var(--border-width) solid var(--color-line);
+  border-radius: var(--radius-lg);
+}
+
+.vocab-index__mark {
+  min-width: 1.75rem;
+  padding: var(--space-3xs);
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-sm);
+  line-height: 1;
+  color: var(--color-sumi-soft);
+  background: none;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .vocab-index__mark:hover:not(:disabled) {
+    color: var(--color-shu);
+    border-color: var(--color-line);
+  }
+}
+
+/* A row with nothing in it under the current filters keeps its place and
+   stops being pressable — the rail is the same ten marks in the same ten
+   places whatever is filtered, which is what makes it read as a chart. */
+.vocab-index__mark:disabled {
+  color: var(--color-sumi-faint);
+  opacity: 0.4;
+  cursor: default;
+}
+
+/* -- A row ----------------------------------------------------------------------------
+   One entry, one line: headword, reading, meaning, part of speech, level.
+   The hairline under each is the division; there is no gap, so the rules run
+   straight down the section the way a dictionary's do.
+   ------------------------------------------------------------------------------------ */
+.vocab-row {
+  border-block-end: var(--border-width) solid var(--color-line);
+}
+
+/* A grid, and every part placed by name rather than by the order it happens
+   to be appended in. Two thirds of the catalogue is written in kana alone
+   and so has no reading to print beside its headword; under a flex row those
+   entries' meanings slid left into the empty reading column and the list lost
+   the one thing that makes a column of eight hundred readable — the meanings
+   all starting at the same x. Named columns keep an absent part as an empty
+   cell instead of a gap that closes. */
+.vocab-row__face {
+  display: grid;
+  grid-template-columns: 7rem 7rem minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: var(--space-sm);
+  width: 100%;
+  padding-block: var(--space-2xs);
+  padding-inline: var(--space-3xs);
+  text-align: start;
+  background: none;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+@media (hover: hover) {
+  .vocab-row__face:hover {
+    background-color: color-mix(in srgb, var(--color-sumi) 4%, transparent);
+  }
+}
+
+.vocab-row__face[aria-expanded='true'] .vocab-row__word {
+  color: var(--color-shu);
+}
+
+/* The headword is the thing being scanned for, so it is the one part of the
+   line set at reading size and given a fixed column to start in — a run of
+   headwords all beginning at the same x is what makes the eye able to go
+   down the list instead of reading it. */
+.vocab-row__word {
+  grid-column: 1;
+  font-family: var(--font-display), var(--font-jp-stack);
+  font-size: var(--text-md);
+  line-height: var(--leading-tight);
+  color: var(--color-sumi);
+  transition: color var(--transition-fast);
+}
+
+.vocab-row__reading {
+  grid-column: 2;
+  font-size: var(--text-xs);
+  color: var(--color-sumi-faint);
+}
+
+.vocab-row__meaning {
+  grid-column: 3;
+  min-width: 0;
+  color: var(--color-sumi-soft);
+}
+
+.vocab-row__pos {
+  grid-column: 4;
+  justify-self: end;
+}
+
+.vocab-row .jlpt-tag {
+  grid-column: 5;
+  justify-self: end;
+}
+
+/* -- An opened row --------------------------------------------------------------------
+   The rest of the entry, built the first time it is asked for: the example
+   sentence, the two study controls, and the doors into the kanji the word is
+   spelled with. Indented to the headword column so it reads as belonging to
+   the line above it rather than as the next row.
+   ------------------------------------------------------------------------------------ */
+.vocab-row__detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  padding-block: var(--space-xs) var(--space-md);
+  padding-inline-start: var(--space-3xs);
+}
+
+.vocab-row__detail[hidden] {
+  display: none;
+}
+
+.vocab-row__example {
   display: flex;
   flex-direction: column;
   gap: var(--space-3xs);
   padding-inline-start: var(--space-sm);
-  margin-block-end: var(--space-2xs);
   border-inline-start: var(--border-width) solid var(--color-line);
 }
 
-.vocab-card__example p {
+.vocab-row__example p {
   margin: 0;
-  max-width: none;
 }
 
-/* Placement only. The row itself — the chip, the bookmark, and the flex that
-   pairs them — is .study-controls in buttons.css, built by js/ui/studyControls.js.
-   Pushed to the foot of the entry so the control line sits on one baseline
-   across a row of entries of different heights. */
-.vocab-card__controls {
-  margin-block-start: auto;
+.vocab-row__controls {
+  margin: 0;
 }
 
 /* -- Level tag --------------------------------------------------------------------
@@ -223,28 +332,60 @@
   line-height: 1;
 }
 
-/* -- Mobile spacing ----------------------------------------------------------------
-   768px is the breakpoint this view already used to drop to one column and it
-   still is; only the number of columns above it changed. The row gap stays at
-   zero in one column too — the hairlines are the division at every width, and a
-   single column of them is exactly the list the kanji view is.
+/* -- Small screens -----------------------------------------------------------------
+   The line has to give something up before it wraps, and the two things it
+   can lose are the two the reader is not scanning for: the part of speech
+   first, then the fixed headword column, which is worth more as alignment
+   than as a reserved width once the width is gone.
    ------------------------------------------------------------------------------------ */
 @media (max-width: 768px) {
+  /* Room at the end of every row for the rail, which is fixed to the window
+     rather than to the column and would otherwise sit on top of the last
+     thing on each line. */
   .vocab-list {
-    grid-template-columns: minmax(0, 1fr);
+    padding-inline-end: var(--space-lg);
+  }
+
+  .vocab-row__face {
+    grid-template-columns: 5.5rem 5.5rem minmax(0, 1fr) auto;
+  }
+
+  .vocab-row__pos {
+    display: none;
+  }
+
+  .vocab-row .jlpt-tag {
+    grid-column: 4;
   }
 }
 
 @media (max-width: 480px) {
-  .vocab-card {
-    padding-block: var(--space-sm);
+  /* At this width the line stops trying to hold four things and becomes two:
+     the headword with its reading, and the meaning under them. */
+  /* Two lines: the headword with its reading beside it, the meaning under
+     them. The reading stays next to the word it reads rather than being
+     pushed to the far side of the screen from it. */
+  .vocab-row__face {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-3xs) var(--space-2xs);
+    padding-block: var(--space-xs);
   }
 
-  /* The headword and its part-of-speech tag share a row, and `margin-inline-
-     start: auto` pins the tag to the far right of it — fine in a 20rem card, a
-     tag stranded across the page from a two-character word at 358px. Below the
-     phone line the row simply reads left to right in the order it is written. */
-  .vocab-card__pos {
-    margin-inline-start: 0;
+  .vocab-row__word {
+    grid-column: 1;
+  }
+
+  .vocab-row__reading {
+    grid-column: 2;
+    justify-self: start;
+    align-self: baseline;
+  }
+
+  .vocab-row__meaning {
+    grid-column: 1 / -1;
+  }
+
+  .vocab-row .jlpt-tag {
+    display: none;
   }
 }

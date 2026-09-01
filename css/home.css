@@ -309,6 +309,26 @@
    a fourth number: below it the nav is a drawer and the page is a phone or a
    tablet held in two hands, both of which want one column.
    ------------------------------------------------------------------------------------------ */
+/* -- What the room carries besides the desk ---------------------------------------------
+   The storage warning and the first-visit explanation, both full-width. On
+   a phone the room is one column and they simply take their place in it;
+   at 1024px and up it is a two-column grid, and both of these belong to the
+   room rather than to either column.
+
+   No card, no border, no background — see the note at the top of this file.
+   The explanation carries its own rules between its parts (css/first-run.css)
+   and this only says where in the room it sits.
+   ------------------------------------------------------------------------------------------ */
+.home > .first-run,
+.home > .storage-notice {
+  min-width: 0;
+}
+
+.home > .first-run {
+  padding-block-start: var(--space-lg);
+  border-block-start: var(--border-width) solid var(--color-line);
+}
+
 @media (min-width: 1024px) {
   /* Capped and centred rather than stretched to the container's full 72rem.
      The desk holds one sentence: given the whole width of a 1440px page the
@@ -323,14 +343,53 @@
     max-width: 60rem;
     margin-inline: auto;
     padding-block-start: var(--space-lg);
+    /* The room sits *in* the page rather than clinging to the top of it. A
+       returning reader's Home is one kanji, one button and a short shelf —
+       four hundred pixels of content at the top of a laptop screen with the
+       rest of the page empty beneath it, which is the vertical version of
+       the emptiness the two columns above were chosen to fix.
+
+       align-content, not align-items: it centres the grid's *rows* inside
+       the height below, and does nothing at all once the content is taller
+       than that — a first visit, with the explanation under the desk, simply
+       fills the space and grows past it. The subtraction is the header, the
+       footer and the main region's own padding; dvh so a phone browser's
+       collapsing toolbar cannot make it overflow (the rule is above the
+       phone breakpoint anyway, which leaves tablets in landscape). */
+    min-height: calc(100vh - 17rem);
+    min-height: calc(100dvh - 17rem);
+    align-content: center;
+    /* Optically centred, which is a little above the middle: a block of type
+       placed on the exact centre of a page reads as having sunk. The padding
+       is inside the min-height, so it lifts the rows by half of itself. */
+    padding-block-end: var(--space-3xl);
   }
 
   .home__desk {
     gap: var(--space-sm);
   }
 
+  /* Both columns. The desk and the shelf are a composition; these two are
+     addressed to the reader rather than part of it. */
+  .home > .first-run,
+  .home > .storage-notice {
+    grid-column: 1 / -1;
+  }
+
+  /* The notice comes before the desk in source order and stays there; the
+     explanation follows both columns, which is where the grid puts it. */
+  .home > .storage-notice {
+    grid-row: 1;
+  }
+
+  /* Specimen size, the same --text-3xl the quiz gives a word it is asking
+     about and the kanji list gives a character (see the note in quiz.css).
+     This is the one thing the screen is about and it was set two steps below
+     the size the app gives the same word twenty pixels into a round — the
+     wide scale exists so that the subject of a screen can be much larger
+     than everything around it, and Home was the screen not spending it. */
   .home__jp {
-    font-size: var(--text-2xl);
+    font-size: var(--text-3xl);
   }
 
   .home__aside {

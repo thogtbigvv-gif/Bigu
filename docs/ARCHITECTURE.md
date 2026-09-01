@@ -43,8 +43,8 @@ below `views/` may import from `views/`.
 |---|---|---|
 | `core/` | storage, router, theme, preferences, bridge, backup, the service worker, install | `core` |
 | `data/` | the catalogue loaders, the shape guards, the link index | `core`, `data`, `study` |
-| `study/` | the review model, streak, decks, favorites, session | `core`, `data`, `study` |
-| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors, the update banner | `core`, `data`, `study`, `ui` |
+| `study/` | the review model, streak, decks, favorites, session, the build puzzle | `core`, `data`, `study` |
+| `ui/` | shared widgets: content, quiz, nav, keyboard, favoriteButton, doors, the first-run card, the update banner | `core`, `data`, `study`, `ui` |
 | `views/` | the thirteen screens | anything |
 
 `data/` and `study/` may each import the other — the one bidirectional pair,
@@ -191,6 +191,38 @@ and each of them draws nothing.
 record, republishes it as a bridge event under the same id, and redraws the
 bridge status. Three surfaces run rounds — Review, a lesson quiz, and
 Home — and all three call it, so none of them can log a round differently.
+Grading a card in Memory is the one graded thing that is not a round: it
+redraws the bridge status and publishes no event, because there is no
+session there to report.
+
+---
+
+## What a screen may promise
+
+Home is the entry route and the Dashboard is off the map — it has no nav row
+and nothing links to it, though `#dashboard` still resolves and still
+renders. That decision holds, and it has one rule attached to it:
+
+**A screen nobody can reach may summarise, but it may not be the only place
+something is said.** A summary nobody sees is a summary nobody needed. A
+warning, an explanation, or the reported half of a setting is different: the
+reader is owed it, and owing it on an unreachable screen is the same as not
+saying it.
+
+Three things were on the wrong side of that line, all of them left there by
+the move to Home rather than written there:
+
+| What | Was | Is |
+|---|---|---|
+| The storage warning — this browser will not keep your work | Dashboard, Settings, 一文 | …and Home |
+| The first-run explanation — 出会う, 思い出す, 薄れる | Dashboard | `ui/firstRun.js`, drawn by Home and the Dashboard |
+| The daily-goal line, set in Settings | Dashboard | Review |
+
+`ui/firstRun.js` is the shared one rather than a copy on each screen, and it
+builds no surface of its own: the Dashboard adds `.card` because that screen
+is a grid of cards, Home appends it bare because that screen has no boxes on
+it. `isFirstVisit` lives beside it for the same reason — Home and the
+Dashboard each had their own copy, agreeing by coincidence.
 
 ---
 
@@ -278,6 +310,33 @@ server copy.
   theme script in `index.html` reads `bigu:settings` directly, because it
   must run synchronously before any module loads. If you change how the
   theme is persisted, change it in both places.
+
+### The bridge is not a store
+
+`bigu:bridge` sits beside the `bigu:<store>` keys and is not one of them.
+Nothing in `storage.js` knows about it, it is not in `STORES`, it is not in
+a backup file, and nothing in Bigu ever reads it back. It is a one-way
+publish of what the reader has been studying, for the separate
+summer-project surface served from the same origin — and its shape is a
+*contract with something outside this repository*, versioned by `v` and not
+changed in place. **[docs/BRIDGE.md](BRIDGE.md)** is that contract, written
+for the reader on the other side.
+
+Three consequences worth knowing before touching it:
+
+- **No screen in this app would ever look wrong if the shape broke.** The
+  only symptom is on a surface this repository cannot see, which is why
+  `test/bridge.test.mjs` tests the envelope harder than its size suggests.
+- **`clearAll()` cannot reach it**, because it walks `STORES`. The two
+  moments this browser's history stops being the history the key describes
+  — Start over, and a restore from a backup file — call `clearBridge()`
+  themselves, in `views/settings.js`.
+- **The log is a copy and the practice store is the original.** They drift
+  whenever the store gains rounds the bridge did not watch arrive, so
+  `publishHistory()` offers the whole store at every boot and every id
+  already published is skipped. A republish that adds nothing writes
+  nothing, which is what keeps `updatedAt` meaning "when something last
+  changed".
 
 ### Persisted shapes are permanent
 

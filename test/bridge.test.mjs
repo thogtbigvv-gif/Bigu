@@ -16,7 +16,7 @@ import assert from 'node:assert/strict';
 import { installMemoryStorage, installFailingStorage } from './helpers/localStorage.mjs';
 
 installMemoryStorage();
-const { publishEvent, publishStatus } = await import('../js/core/bridge.js');
+const { publishEvent, publishEvents, publishStatus, clearBridge } = await import('../js/core/bridge.js');
 
 const KEY = 'bigu:bridge';
 const read = () => JSON.parse(localStorage.getItem(KEY));
@@ -36,6 +36,22 @@ describe('the envelope', () => {
   /* `bigu:bridge` sits beside the app's own `bigu:<store>` keys but is not
      one of them: nothing in storage.js knows about it, and nothing in Bigu
      reads it back. Its shape is a contract with an outside surface. */
+  /* An envelope from a different version of the contract is dropped whole
+     rather than merged into: relabelling one version's entries with
+     another's `v` is the one lie the field exists to prevent. The rounds
+     themselves are not lost — study/session.js republishes them from the
+     practice store at the next boot. */
+  test('an envelope from another version is dropped, not relabelled', () => {
+    localStorage.setItem(KEY, JSON.stringify({
+      v: 1, app: 'Bigu', status: { xp: 4000 }, events: [{ id: 'old', type: 'v1.thing' }],
+    }));
+    publishEvent({ id: 'a', type: 'review.session', value: 1 });
+    const state = read();
+    assert.equal(state.v, 2);
+    assert.deepEqual(state.events.map((event) => event.id), ['a'], 'the v1 events did not come across');
+    assert.equal(state.status, null, 'nor did the v1 status');
+  });
+
   test('is not one of the app\'s stores', async () => {
     const { STORES } = await import('../js/core/storage.js');
     publishStatus({ dueCount: 1 });
@@ -142,6 +158,91 @@ describe('a damaged key', () => {
   });
 });
 
+describe('a batch of events', () => {
+  /* One read and one write for the whole batch. This is the republish at
+     boot, which offers the entire practice history every time. */
+  test('appends in the order given and dedupes against what is already there', () => {
+    publishEvent({ id: 'a', type: 'review.session', value: 1 });
+    publishEvents([
+      { id: 'a', type: 'review.session', value: 99 },
+      { id: 'b', type: 'lesson.quiz', value: 2 },
+      { id: 'c', type: 'review.session', value: 3 },
+    ]);
+    const { events } = read();
+    assert.deepEqual(events.map((event) => event.id), ['a', 'b', 'c']);
+    assert.equal(events[0].value, 1, 'the first write of an id stands');
+  });
+
+  test('a repeat within the batch itself is added once', () => {
+    publishEvents([
+      { id: 'a', type: 'review.session', value: 1 },
+      { id: 'a', type: 'review.session', value: 2 },
+    ]);
+    assert.equal(read().events.length, 1);
+  });
+
+  /* A round republished out of the practice store carries the moment it
+     happened, not the moment it was republished — otherwise a reader is
+     handed a timeline that says every round in the log happened today, and
+     has no way to correct it. */
+  test('an event carries the time it is given, dated in local terms', () => {
+    const at = new Date(2025, 0, 31, 23, 30).getTime();
+    publishEvents([{ id: 'a', type: 'review.session', value: 1, at }]);
+    const [event] = read().events;
+    assert.equal(event.at, at);
+    assert.equal(event.date, '2025-01-31');
+  });
+
+  /* `updatedAt` has to keep meaning "when something last changed" rather
+     than "when Bigu was last opened", or a reader cannot tell a stale key
+     from a quiet one. Boot offers the whole history on every visit and adds
+     nothing on all but the first. */
+  test('a batch that adds nothing writes nothing', () => {
+    publishEvent({ id: 'a', type: 'review.session', value: 1 });
+    const before = read().updatedAt;
+    assert.equal(publishEvents([{ id: 'a', type: 'review.session', value: 1 }]), true);
+    assert.equal(read().updatedAt, before, 'the envelope was left alone');
+    assert.equal(publishEvents([]), true);
+    assert.equal(read().updatedAt, before);
+  });
+
+  test('entries with no id or no type are skipped, the rest go in', () => {
+    publishEvents([{ type: 'review.session' }, null, { id: 'b', type: 'review.session' }]);
+    assert.deepEqual(read().events.map((event) => event.id), ['b']);
+  });
+
+  test('the cap applies to the batch too', () => {
+    publishEvents(Array.from({ length: 60 }, (_, i) => ({ id: `e${i}`, type: 'review.session', value: i })));
+    const { events } = read();
+    assert.equal(events.length, 50);
+    assert.equal(events[0].id, 'e10');
+  });
+});
+
+describe('clearing', () => {
+  /* `bigu:bridge` is not one of storage.js's stores, so clearAll() cannot
+     reach it. Start over emptied every store and left a streak, a due count
+     and fifty finished rounds standing on the other surface — this
+     browser's study history, still on display, after the reader asked for
+     it to be gone. */
+  test('takes the key away rather than writing an empty envelope', () => {
+    publishStatus({ dueCount: 9, streak: 12 });
+    publishEvent({ id: 'a', type: 'review.session', value: 1 });
+    assert.equal(clearBridge(), true);
+    assert.equal(localStorage.getItem(KEY), null, 'no key at all, as before the first visit');
+  });
+
+  test('publishing after a clear starts from an empty envelope', () => {
+    publishStatus({ dueCount: 9, streak: 12 });
+    publishEvent({ id: 'a', type: 'review.session', value: 1 });
+    clearBridge();
+    publishStatus({ dueCount: 0 });
+    const state = read();
+    assert.deepEqual(state.status, { dueCount: 0 });
+    assert.deepEqual(state.events, [], 'the old history did not come back');
+  });
+});
+
 describe('a browser that refuses to store', () => {
   beforeEach(() => installFailingStorage());
 
@@ -150,7 +251,9 @@ describe('a browser that refuses to store', () => {
   test('both publishers report false and neither throws', () => {
     assert.doesNotThrow(() => {
       assert.equal(publishEvent({ id: 'a', type: 'review.session', value: 1 }), false);
+      assert.equal(publishEvents([{ id: 'b', type: 'review.session', value: 1 }]), false);
       assert.equal(publishStatus({ dueCount: 1 }), false);
+      assert.equal(clearBridge(), false);
     });
   });
 });

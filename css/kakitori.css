@@ -46,16 +46,23 @@
 }
 
 /* Carries .reading too, which is where the mono face comes from — a reading is
-   data here exactly as it is on a kanji row or a quiz card. */
+   data here exactly as it is on a kanji row or a quiz card.
+
+   The prompt is the whole question on this screen: the character is hidden,
+   and these two lines are all the reader has to write from. They were set at
+   body and small — the quietest type on a page whose other element is a
+   512px sheet of paper, so the eye landed on the empty square and then went
+   looking for what to put in it. One step up each, still well under the
+   sheet, and the question now reads before the paper does. */
 .kakitori__readings {
   margin: 0;
+  font-size: var(--text-lg);
   color: var(--color-sumi-soft);
 }
 
 .kakitori__meaning {
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-sumi-faint);
+  color: var(--color-sumi-soft);
 }
 
 /* -- The sheet ----------------------------------------------------------------

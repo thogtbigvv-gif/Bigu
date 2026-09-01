@@ -17,7 +17,7 @@ import { installMemoryStorage } from './helpers/localStorage.mjs';
 
 installMemoryStorage();
 const { journal, practice } = await import('../js/core/storage.js');
-const { toDateKey, todayKey, collectStudyDays, computeStreak, currentStreak } =
+const { toDateKey, todayKey, countReviewedToday, collectStudyDays, computeStreak, currentStreak } =
   await import('../js/study/streak.js');
 
 beforeEach(() => installMemoryStorage());
@@ -148,5 +148,53 @@ describe('currentStreak', () => {
 
   test('is zero on an empty install rather than undefined', () => {
     assert.equal(currentStreak(), 0);
+  });
+});
+
+/* -- Today's count ------------------------------------------------------------------------
+   What the daily-goal line on Review reports. It is read off the progress
+   records' own lastSeen rather than from a counter, which is what keeps it
+   correct across a restored backup — and what makes the local-midnight
+   boundary its own thing to get wrong.
+   ------------------------------------------------------------------------------------------ */
+
+describe("today's count", () => {
+  function records(entries) {
+    return new Map(entries.map(([id, lastSeen]) => [id, { lastSeen }]));
+  }
+
+  test('counts the records touched today and no others', () => {
+    assert.equal(
+      countReviewedToday(records([
+        ['a', daysAgo(0)],
+        ['b', daysAgo(0, 9)],
+        ['c', daysAgo(1)],
+        ['d', daysAgo(30)],
+      ])),
+      2,
+    );
+  });
+
+  test('a record never seen is not a record reviewed today', () => {
+    assert.equal(countReviewedToday(records([['a', 0], ['b', undefined]])), 0);
+  });
+
+  test('the boundary is local midnight, not UTC', () => {
+    const lateLastNight = new Date();
+    lateLastNight.setDate(lateLastNight.getDate() - 1);
+    lateLastNight.setHours(23, 30, 0, 0);
+
+    const earlyToday = new Date();
+    earlyToday.setHours(0, 30, 0, 0);
+
+    assert.equal(
+      countReviewedToday(records([['a', lateLastNight.getTime()], ['b', earlyToday.getTime()]])),
+      1,
+      'the round finished at 23:30 belongs to the day the reader spent',
+    );
+  });
+
+  test('no records at all is zero, not a throw', () => {
+    assert.equal(countReviewedToday(new Map()), 0);
   });
 });

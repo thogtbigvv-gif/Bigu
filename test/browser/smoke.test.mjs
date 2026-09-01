@@ -172,6 +172,157 @@ describe('the app in a browser', { skip: found.reason }, () => {
     assert.deepEqual(problems.slice(before), []);
   });
 
+  /* Home is where people land, so it is where the app has to explain itself.
+     This is a whole-app assertion rather than a DOM mirror: the card is built
+     in js/ui/firstRun.js, drawn by two views, and shown on the condition that
+     every store is empty — which is exactly what a fresh browser profile is,
+     and what no unit test can stand in for. Before it was drawn here it was
+     drawn only on #dashboard, a route with no nav row and nothing linking to
+     it, so a first-time reader was never once shown it. */
+  test('a first-time reader is told what the app is, on the screen they land on', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#home'; });
+    await page.waitForFunction(() => !document.getElementById('home')?.hidden);
+    const card = await page.waitForSelector('#home .first-run', { timeout: 5000 });
+
+    const text = (await card.textContent()).replace(/\s+/g, ' ');
+    for (const verb of ['出会う', '思い出す', '薄れる']) {
+      assert.ok(text.includes(verb), `the explanation should carry ${verb}`);
+    }
+
+    /* Bare on this screen. home.css says in as many words that nothing here
+       gets a box drawn round it; the Dashboard adds the card surface itself. */
+    assert.equal(
+      await page.evaluate(() => document.querySelector('#home .first-run').classList.contains('card')),
+      false,
+      'Home draws the explanation without card chrome',
+    );
+
+    /* Two real doors, and the only ones on the card: they are why the
+       first-visit "Lessons" button under the practice action came out. */
+    assert.deepEqual(
+      await page.evaluate(() => [...document.querySelectorAll('#home .first-run__actions a')].map((a) => a.getAttribute('href'))),
+      ['#lessons', '#vocabulary'],
+    );
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  /* The two reference screens, and the one assertion that is about being able
+     to *find* something rather than about rendering. Both were flat runs in
+     the order their files were written — eight hundred words twenty-four at a
+     time, and a hundred and thirty-two kanji as full-height rows — and both
+     are now a structure a reader can cross in one press. That structure is
+     derived at render time from the data (js/data/kana.js), so it is exactly
+     the kind of thing that can quietly stop happening. */
+  test('the vocabulary list is filed in kana rows, all of it in the document', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#vocabulary'; });
+    await page.waitForFunction(() => !document.getElementById('vocabulary')?.hidden);
+    await page.waitForSelector('#vocabulary .vocab-section:not([hidden])', { timeout: 5000 });
+
+    const state = await page.evaluate(() => ({
+      sections: [...document.querySelectorAll('#vocabulary .vocab-section:not([hidden])')].map((s) => s.id),
+      rows: document.querySelectorAll('#vocabulary .vocab-row').length,
+      marks: document.querySelectorAll('#vocabulary .vocab-index__mark').length,
+      firstThree: [...document.querySelectorAll('#vocabulary .vocab-row__word')]
+        .slice(0, 3).map((el) => el.textContent),
+    }));
+
+    assert.equal(state.sections[0], 'vocab-row-a', 'the list opens at あ');
+    assert.deepEqual(state.sections.at(-1), 'vocab-row-wa', 'and ends at わ');
+    assert.equal(state.marks, 10, 'ten marks on the index rail, one per row');
+    // Every word, not a page of them: the "Show more" boundary is what made
+    // the end of the list unreachable.
+    assert.ok(state.rows > 800, `expected the whole catalogue in the document, saw ${state.rows}`);
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  test('a vocabulary row opens in place rather than being a card', async () => {
+    const before = problems.length;
+
+    const face = await page.waitForSelector('#vocabulary .vocab-row__face', { timeout: 5000 });
+    assert.equal(await face.getAttribute('aria-expanded'), 'false');
+
+    await face.click();
+    await page.waitForFunction(
+      () => document.querySelector('#vocabulary .vocab-row__face')?.getAttribute('aria-expanded') === 'true',
+      null,
+      { timeout: 5000 },
+    );
+    // The detail is built on the press, not with the row.
+    assert.ok(
+      await page.evaluate(() => Boolean(document.querySelector('#vocabulary .vocab-row__detail'))),
+      'the example and controls arrive when the row is opened',
+    );
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  test('the kanji browse is a chart of characters, banded by level', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => { window.location.hash = '#kanji'; });
+    await page.waitForFunction(() => !document.getElementById('kanji')?.hidden);
+    await page.waitForSelector('#kanji .kanji-tile', { timeout: 5000 });
+
+    const state = await page.evaluate(() => ({
+      tiles: document.querySelectorAll('#kanji .kanji-tile').length,
+      bands: [...document.querySelectorAll('#kanji .kanji-band__label')].map((el) => el.textContent),
+    }));
+
+    assert.ok(state.tiles > 100, `expected the whole chart, saw ${state.tiles} tiles`);
+    assert.ok(state.bands.length > 0, 'the chart is banded by level');
+
+    // A tile is the route into the entry, the same as every other way in.
+    await page.click('#kanji .kanji-tile__face');
+    await page.waitForFunction(() => /^#kanji\/.+/.test(window.location.hash), null, { timeout: 5000 });
+    await page.waitForSelector('#kanji .kanji-detail:not([hidden])', { timeout: 5000 });
+
+    // …and backing out of it leaves the chart, not a panel with no way home.
+    await page.evaluate(() => { window.location.hash = '#kanji'; });
+    await page.waitForFunction(() => document.querySelector('.kanji-detail')?.hidden === true, null, { timeout: 5000 });
+    await page.waitForSelector('#kanji .kanji-tile', { timeout: 5000 });
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  /* The bridge is the other thing whose failure is invisible from inside
+     this app: nothing in Bigu reads `bigu:bridge` back, so a boot that
+     stopped publishing it, or published a shape the contract does not
+     describe, would look exactly like a working app from every screen. The
+     unit suite tests the envelope; only a real boot tests that the envelope
+     is written at all — it waits on four fetches and a router that has to
+     have handed off first. See docs/BRIDGE.md. */
+  test('boot publishes the bridge, in the shape the contract describes', async () => {
+    const payload = await page.waitForFunction(() => {
+      const raw = localStorage.getItem('bigu:bridge');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed.status ? parsed : null;
+    }, null, { timeout: 5000 }).then((handle) => handle.jsonValue());
+
+    assert.equal(payload.v, 2, 'a reader checks the version before anything else');
+    assert.equal(payload.app, 'Bigu');
+    assert.ok(payload.updatedAt > 0);
+    assert.ok(Array.isArray(payload.events), 'an empty log is still a log');
+
+    assert.equal(typeof payload.status.dueCount, 'number');
+    assert.equal(typeof payload.status.learnedCount, 'number');
+    /* A reader prints what is there and nothing for what is not; a null
+       would be printed as a value. A fresh browser has no streak and no last
+       studied date, and says so by carrying neither key. */
+    assert.equal(
+      Object.values(payload.status).some((value) => value === null),
+      false,
+      'an absent figure is an absent key, never null',
+    );
+    assert.equal('streak' in payload.status, false, 'no rounds studied here yet');
+  });
+
   test('a deep link to an entry that is not in the catalogue lands on the list, not an error', async () => {
     const before = problems.length;
 
@@ -184,6 +335,270 @@ describe('the app in a browser', { skip: found.reason }, () => {
       'a retired id or an old bookmark is a normal arrival at the grid',
     );
     assert.equal(await page.evaluate(() => Boolean(document.querySelector('.error-state'))), false);
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  /* The two round-walking tests last, deliberately. Both finish or abandon a
+     round, which writes to the schedule and the practice store — run earlier
+     they leave the bridge's status carrying a streak the test above asserts
+     is quiet, and the deck they emptied has no start button for the next one.
+     ------------------------------------------------------------------------ */
+
+  /* Mix is not a fourth way of asking — it is the other three, one per card.
+     What can go wrong is invisible from any single card: a round that only
+     ever produced one form, or a form the item is not ready for. So this
+     walks a round and checks that the panel really does change shape, and
+     that nothing on the way through logs an error — every form has its own
+     branch in renderCard, and Mix is the only mode that takes all of them
+     inside one round. */
+  test('a mix round asks in more than one form', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => {
+      /* Some items held well enough to be asked in every form. Written
+         straight to the store because that is where getRecord reads them
+         from, per card, at the moment the question is built. */
+      const now = Date.now();
+      const progress = {};
+      for (let i = 1; i <= 24; i += 1) {
+        progress[`n5-${String(i).padStart(3, '0')}`] = {
+          level: 4, dueAt: now - 1000, lastSeen: now - 86400000, firstSeen: now - 6e8, reviews: 6, lapses: 0,
+        };
+      }
+      localStorage.setItem('bigu:progress', JSON.stringify(progress));
+      window.location.hash = '#practice';
+    });
+    await page.waitForFunction(() => !document.getElementById('practice')?.hidden);
+
+    /* The Vocabulary deck rather than Due today: these two tests finish
+       rounds, which moves everything they touch out of "due", and a round
+       that grades ten items leaves the next test with an empty deck and no
+       start button. */
+    await page.evaluate(() => {
+      const deck = [...document.querySelectorAll('#practice .practice__deck-button')]
+        .find((el) => el.textContent.trim() === 'Vocabulary');
+      if (deck) deck.click();
+    });
+
+    const picked = await page.evaluate(() => {
+      const button = [...document.querySelectorAll('#practice .quiz-modes button')]
+        .find((el) => el.textContent.trim() === 'Mix');
+      if (button) button.click();
+      return Boolean(button);
+    });
+    assert.equal(picked, true, 'Mix is offered as a study mode');
+
+    await page.waitForSelector('#practice .practice__start:not([hidden])', { timeout: 5000 });
+    await page.click('#practice .practice__start');
+    await page.waitForSelector('.quiz:not([hidden])', { timeout: 5000 });
+
+    /* What is on screen, per card. Answering is deliberately crude — the
+       point is to walk the round, not to be right — so each card is answered
+       whichever way it can be: a piece row is filled and checked, options are
+       picked, a flip card is turned and graded. */
+    const forms = new Set();
+    for (let card = 0; card < 10; card += 1) {
+      await page.waitForTimeout(250);
+      const shape = await page.evaluate(() => {
+        if (document.querySelector('.quiz__summary:not([hidden])')) return 'done';
+        const build = document.querySelector('.quiz__build');
+        if (build && !build.hidden) return 'build';
+        const options = document.querySelector('.quiz__options');
+        if (options && !options.hidden) return 'choose';
+        return 'flip';
+      });
+      if (shape === 'done') break;
+      forms.add(shape);
+
+      if (shape === 'build') {
+        const pieces = await page.evaluate(() => document.querySelectorAll('.quiz__piece--tray').length);
+        for (let i = 0; i < pieces; i += 1) await page.keyboard.press(String(i + 1));
+        await page.keyboard.press('Enter');
+      } else if (shape === 'choose') {
+        await page.keyboard.press('1');
+      } else {
+        await page.keyboard.press('Enter');
+        await page.waitForTimeout(200);
+        await page.keyboard.press('1');
+      }
+
+      await page.waitForTimeout(400);
+      const waiting = await page.evaluate(() => {
+        const c = document.querySelector('.quiz__continue');
+        return Boolean(c) && !c.hidden;
+      });
+      if (waiting) await page.keyboard.press('Enter');
+    }
+
+    assert.ok(forms.size >= 2, `a mix round should not be one form all the way through, saw ${[...forms]}`);
+
+    /* All the way out, not just out of the round: "End" leaves the summary on
+       screen, and the intro — with the button the next test presses — stays
+       hidden behind it until the summary is dismissed. */
+    await page.evaluate(() => {
+      const exit = document.querySelector('.quiz__exit');
+      if (exit && !exit.hidden) exit.click();
+    });
+    await page.waitForTimeout(300);
+    await page.evaluate(() => {
+      const done = [...document.querySelectorAll('.quiz__summary-actions button')]
+        .find((el) => !el.hidden && el.textContent.includes('Сургалт'));
+      if (done) done.click();
+    });
+    await page.waitForSelector('#practice .practice__start:not([hidden])', { timeout: 5000 });
+
+    assert.deepEqual(problems.slice(before), []);
+  });
+
+  /* After the bridge test, deliberately: this one finishes a round, and a
+     round is exactly what the bridge's status snapshot reports. Run before
+     it, it left a streak on a key the test above asserts is quiet. */
+  /* Build mode, end to end. The pieces come from study/puzzle.js, which its
+     own suite covers; what only a browser can answer is whether the tray,
+     the line and the check add up to a question that can be asked and got
+     right — and whether the round then moves on the way the other two modes
+     do. Driven from the keyboard rather than by clicking, because the
+     bindings are the half most likely to rot: a build round that fell back
+     to a Choose question used to leave the number keys pointing at nothing,
+     which is also why the loop below walks past those cards rather than
+     assuming the first one has a puzzle in it. */
+  test('a build round assembles an answer and grades it', async () => {
+    const before = problems.length;
+
+    await page.evaluate(() => {
+      /* Some items held well enough to be asked in every form. Written
+         straight to the store because that is where getRecord reads them
+         from, per card, at the moment the question is built. */
+      const now = Date.now();
+      const progress = {};
+      for (let i = 1; i <= 24; i += 1) {
+        progress[`n5-${String(i).padStart(3, '0')}`] = {
+          level: 4, dueAt: now - 1000, lastSeen: now - 86400000, firstSeen: now - 6e8, reviews: 6, lapses: 0,
+        };
+      }
+      localStorage.setItem('bigu:progress', JSON.stringify(progress));
+      window.location.hash = '#practice';
+    });
+    await page.waitForFunction(() => !document.getElementById('practice')?.hidden);
+
+    /* The Vocabulary deck rather than Due today: these two tests finish
+       rounds, which moves everything they touch out of "due", and a round
+       that grades ten items leaves the next test with an empty deck and no
+       start button. */
+    await page.evaluate(() => {
+      const deck = [...document.querySelectorAll('#practice .practice__deck-button')]
+        .find((el) => el.textContent.trim() === 'Vocabulary');
+      if (deck) deck.click();
+    });
+
+    // Through the mode picker, the way a reader picks it: the view read the
+    // stored mode once, when it was built.
+    const picked = await page.evaluate(() => {
+      const button = [...document.querySelectorAll('#practice .quiz-modes button')]
+        .find((el) => el.textContent.trim() === 'Build');
+      if (button) button.click();
+      return Boolean(button);
+    });
+    assert.equal(picked, true, 'Build is offered as a study mode');
+
+    await page.waitForSelector('#practice .practice__start:not([hidden])', { timeout: 5000 });
+    await page.click('#practice .practice__start');
+    await page.waitForSelector('.quiz:not([hidden])', { timeout: 5000 });
+
+    /* Walk to the first card that actually has a puzzle. An item with a
+       one-character headword and no spaced example has none, and the mode
+       asks it a Choose question instead of skipping it. */
+    let onBuildCard = false;
+    for (let card = 0; card < 8 && !onBuildCard; card += 1) {
+      await page.waitForTimeout(250);
+      onBuildCard = await page.evaluate(() => {
+        const build = document.querySelector('.quiz__build');
+        return Boolean(build) && !build.hidden;
+      });
+      if (onBuildCard) break;
+
+      // A fallback card: answer it and move on.
+      await page.keyboard.press('1');
+      await page.waitForSelector('.quiz__feedback:not([hidden])', { timeout: 5000 });
+      await page.keyboard.press('Enter');
+    }
+
+    assert.equal(onBuildCard, true, 'a round in Build mode reaches a card with a puzzle in it');
+
+    const shape = await page.evaluate(() => document.querySelector('.quiz__build').dataset.shape);
+    assert.ok(['word', 'sentence'].includes(shape), `unexpected puzzle shape ${shape}`);
+
+    // The check is offered only once every piece is placed: a partial answer
+    // is unfinished, not wrong.
+    assert.equal(await page.evaluate(() => document.querySelector('.quiz__build-check').disabled), true);
+
+    /* The nth digit places the nth piece in the tray, and it means the same
+       nth piece all the way through: the tray does not renumber itself as it
+       is used. Pressing them in order assembles the answer in the order it
+       was shuffled into, which is almost never the right one and does not
+       need to be — what is being tested is that it can be completed, undone
+       and checked. */
+    const pieces = await page.evaluate(() => document.querySelectorAll('.quiz__piece--tray').length);
+    assert.ok(pieces >= 2, 'a puzzle is at least two pieces');
+
+    /* The row the pieces sit in must not move as they are used — the Check
+       button is directly under it, and it used to climb up the screen as the
+       tray emptied, arriving under the finger reaching for it. */
+    const trayBefore = await page.evaluate(() => Math.round(document.querySelector('.quiz__build-tray').getBoundingClientRect().top));
+
+    for (let i = 0; i < pieces; i += 1) await page.keyboard.press(String(i + 1));
+
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.quiz__piece--placed').length), pieces);
+    assert.equal(
+      await page.evaluate(() => document.querySelectorAll('.quiz__piece--tray').length),
+      pieces,
+      'a placed piece keeps its place in the tray',
+    );
+    assert.equal(
+      await page.evaluate(() => document.querySelectorAll('.quiz__piece--tray.is-used').length),
+      pieces,
+      'and is marked used',
+    );
+    assert.equal(
+      await page.evaluate(() => Math.round(document.querySelector('.quiz__build-tray').getBoundingClientRect().top)),
+      trayBefore,
+      'the tray has not moved',
+    );
+    assert.equal(await page.evaluate(() => document.querySelector('.quiz__build-check').disabled), false);
+
+    // Backspace takes the last one back, and the check goes away with it.
+    await page.keyboard.press('Backspace');
+    assert.equal(await page.evaluate(() => document.querySelectorAll('.quiz__piece--placed').length), pieces - 1);
+    assert.equal(await page.evaluate(() => document.querySelector('.quiz__build-check').disabled), true);
+
+    await page.keyboard.press(String(pieces));
+    await page.keyboard.press('Enter');
+
+    await page.waitForSelector('.quiz__feedback:not([hidden])', { timeout: 5000 });
+
+    /* Every piece carries its own verdict, so a sentence with two chunks
+       swapped says where it went wrong rather than only that it did. */
+    const marks = await page.evaluate(() => [...document.querySelectorAll('.quiz__piece--placed')]
+      .map((el) => el.classList.contains('is-right') || el.classList.contains('is-wrong')));
+    assert.equal(marks.length, pieces);
+    assert.deepEqual(marks, marks.map(() => true), 'each placed piece is marked');
+
+    // Out of the round, so the views that follow start where they expect to.
+    /* All the way out, not just out of the round: "End" leaves the summary on
+       screen, and the intro — with the button the next test presses — stays
+       hidden behind it until the summary is dismissed. */
+    await page.evaluate(() => {
+      const exit = document.querySelector('.quiz__exit');
+      if (exit && !exit.hidden) exit.click();
+    });
+    await page.waitForTimeout(300);
+    await page.evaluate(() => {
+      const done = [...document.querySelectorAll('.quiz__summary-actions button')]
+        .find((el) => !el.hidden && el.textContent.includes('Сургалт'));
+      if (done) done.click();
+    });
+    await page.waitForSelector('#practice .practice__start:not([hidden])', { timeout: 5000 });
+
     assert.deepEqual(problems.slice(before), []);
   });
 });

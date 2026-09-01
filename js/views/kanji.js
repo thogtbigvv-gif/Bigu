@@ -46,6 +46,7 @@
    this screen lands on the grid rather than on whatever was last open.
    ========================================================================== */
 
+import { isRemembered } from '../study/review.js';
 import { createStudyControls } from '../ui/studyControls.js';
 import {
   collectFacets,
@@ -93,22 +94,9 @@ function getEntryLevel(entry) {
   return entry.level ?? null;
 }
 
-function createReadings(entry) {
-  const wrap = document.createElement('p');
-  wrap.className = 'kanji-card__readings reading';
-  wrap.lang = 'ja';
-
-  const parts = [];
-  if (entry.onyomi) parts.push(entry.onyomi);
-  if (entry.kunyomi) parts.push(entry.kunyomi);
-  wrap.textContent = parts.join(' ・ ');
-
-  return wrap;
-}
-
 function createExample(example) {
   const wrap = document.createElement('div');
-  wrap.className = 'kanji-card__example';
+  wrap.className = 'kanji-detail__example';
 
   const wordEl = document.createElement('ruby');
   wordEl.lang = 'ja';
@@ -131,55 +119,45 @@ function createExample(example) {
    detail content only exists once the button is pressed.
    ------------------------------------------------------------------------------------------ */
 
-function createCard(entry, level, onOpenDetail) {
+function createTile(entry, onOpenDetail) {
   const item = document.createElement('li');
-  /* No `card` — see the same note in vocabulary.js. A kanji entry is one row of
-     a sparse list separated by hairlines, and carrying the card primitive only
-     to cancel every one of its properties would misdescribe the view. */
-  item.className = 'kanji-card card--deferred';
+  item.className = 'kanji-tile';
   item.dataset.kanjiId = entry.id;
 
-  const head = document.createElement('div');
-  head.className = 'kanji-card__head';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'kanji-tile__face';
+  button.addEventListener('click', () => onOpenDetail(entry));
 
-  const character = document.createElement('p');
-  character.className = 'kanji-card__character';
+  const character = document.createElement('span');
+  character.className = 'kanji-tile__character';
   character.lang = 'ja';
   character.textContent = entry.character;
 
-  head.append(character);
+  /* One gloss, and the first one only. A tile is a cell in a chart, and the
+     chart's job is to let the eye find a character; the full list of meanings
+     is one press away in the panel. */
+  const meaning = document.createElement('span');
+  meaning.className = 'kanji-tile__meaning';
+  meaning.textContent = firstGloss(entry.meaning);
 
-  /* No level, no badge — the chip row files the entry under the unleveled
-     bucket rather than the card inventing a level for it. */
-  if (level) {
-    const tag = document.createElement('span');
-    tag.className = 'jlpt-tag';
-    tag.textContent = level;
-    head.append(tag);
-  }
+  button.append(character, meaning);
+  item.append(button);
 
-  const meaning = document.createElement('p');
-  meaning.className = 'kanji-card__meaning';
-  meaning.textContent = entry.meaning;
+  /* A mark, not a badge: the characters already held show a short rule under
+     them, so the chart answers "how far into this am I" at a glance without
+     counting anything or printing a number. Read once, when the chart is
+     built — pressing a character opens the panel, and coming back rebuilds. */
+  if (isRemembered(entry.id)) item.dataset.remembered = 'true';
 
-  const detailButton = document.createElement('button');
-  detailButton.type = 'button';
-  detailButton.className = 'button button--secondary kanji-card__detail-button';
-  detailButton.textContent = 'View details';
-  detailButton.addEventListener('click', () => onOpenDetail(entry));
-
-  /* One vocabulary across the app: a kanji is held in memory or it isn't,
-     said the same way a word or a grammar pattern is — see
-     js/ui/studyControls.js. The bookmark beside it is the same control too. */
-  item.append(
-    head,
-    meaning,
-    createReadings(entry),
-    createExample(entry.example),
-    createStudyControls(entry.id, { className: 'kanji-card__controls' }).row,
-    detailButton,
-  );
   return item;
+}
+
+const GLOSS_SEPARATOR = /[,、;·]/;
+
+function firstGloss(meaning = '') {
+  const [first] = String(meaning).split(GLOSS_SEPARATOR);
+  return (first ?? '').trim();
 }
 
 /* -- Detail panel ------------------------------------------------------------------------
@@ -309,20 +287,32 @@ function buildDetailPanel() {
   const tag = document.createElement('span');
   tag.className = 'jlpt-tag';
 
-  head.append(character, tag);
+  /* The two study controls, which used to sit on every card in the grid.
+     The grid is a chart of characters now — a cell there holds a character
+     and one gloss — so they live here, on the entry itself, which is also
+     where a reader who has just read the meaning is when they decide they
+     hold it. Rebuilt per entry rather than reused: studyControls binds to
+     one id. */
+  const controls = document.createElement('div');
+  controls.className = 'kanji-detail__controls';
+
+  head.append(character, tag, controls);
 
   const sections = document.createElement('div');
   sections.className = 'kanji-detail__sections';
 
   wrap.append(exit, head, sections);
 
-  return { wrap, exit, character, tag, sections };
+  return { wrap, exit, character, tag, controls, sections };
 }
 
 function renderDetail(elements, entry, level, allEntries, links) {
   elements.character.textContent = entry.character;
   elements.tag.textContent = level ?? '';
   elements.tag.hidden = !level;
+  elements.controls.replaceChildren(
+    createStudyControls(entry.id, { className: 'kanji-detail__control-row' }).row,
+  );
 
   /* Three of the seven sections can be absent, and each is built
      conditionally for the same reason: 14 of the 132 entries have no related
@@ -382,8 +372,8 @@ function renderGrid(container, data) {
   summary.className = 'kanji-meta meta';
   summary.setAttribute('aria-live', 'polite');
 
-  const grid = document.createElement('ul');
-  grid.className = 'kanji-grid';
+  const grid = document.createElement('div');
+  grid.className = 'kanji-chart';
 
   const detailElements = buildDetailPanel();
   let lastOpener = null;
@@ -479,11 +469,41 @@ function renderGrid(container, data) {
     closeDetail({ restoreFocus: false });
   });
 
-  function cardFor(row) {
+  function tileFor(row) {
     if (!row.item) {
-      row.item = createCard(row.entry, row.level, (entry) => routeTo(VIEW_ID, entry.id));
+      row.item = createTile(row.entry, (entry) => routeTo(VIEW_ID, entry.id));
     }
     return row.item;
+  }
+
+  /* One band per level, in ladder order, each a heading and a chart of the
+     characters in it. The bands are what makes 132 characters a set a reader
+     can hold in their head rather than a run: N5 is a hundred and eighteen
+     characters and N2 is fourteen, and a chart that says so is answering the
+     question the level chips above it can only filter by. */
+  function createBand(bucket, entries) {
+    const band = document.createElement('section');
+    band.className = 'kanji-band';
+
+    const head = document.createElement('h2');
+    head.className = 'kanji-band__head';
+
+    const label = document.createElement('span');
+    label.className = 'kanji-band__label';
+    label.textContent = bucket;
+
+    const count = document.createElement('span');
+    count.className = 'kanji-band__count';
+    count.textContent = formatCount(entries.length);
+
+    head.append(label, count);
+
+    const chart = document.createElement('ul');
+    chart.className = 'kanji-chart__grid';
+    chart.append(...entries.map(tileFor));
+
+    band.append(head, chart);
+    return band;
   }
 
   function applyFilter() {
@@ -495,7 +515,12 @@ function renderGrid(container, data) {
     const matched = rows.filter((row) =>
       (selected.size === 0 || selected.has(row.bucket)) && matchesQuery(row.entry, query));
 
-    grid.replaceChildren(...matched.map(cardFor));
+    const bands = [];
+    for (const bucket of LEVEL_ORDER) {
+      const inBand = matched.filter((row) => row.bucket === bucket);
+      if (inBand.length > 0) bands.push(createBand(bucket, inBand));
+    }
+    grid.replaceChildren(...bands);
 
     const total = formatCount(data.kanji.length);
     const count = query || selected.size > 0
@@ -536,7 +561,7 @@ function renderGrid(container, data) {
   onRouteTarget(VIEW_ID, (id) => {
     const row = rows.find((candidate) => candidate.entry.id === id);
     if (!row) return;
-    openDetail(row.entry, cardFor(row).querySelector('.kanji-card__detail-button'));
+    openDetail(row.entry, tileFor(row).querySelector('.kanji-tile__face'));
   });
 }
 

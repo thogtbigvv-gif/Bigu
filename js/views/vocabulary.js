@@ -5,27 +5,35 @@
    reuse the type treatment already defined in typography.css — no new
    text styling is invented here, only structure.
 
-   Rendering is paged. It did not used to be, and the difference is the
-   difference between a page and a wall: the view was built for a few dozen
-   cards, the word list grew into the hundreds, and 816 cards came out as
-   ~13,000 DOM nodes and a document 150,000 pixels tall. Every keystroke in
-   the search field then walked all 816 rows and toggled `hidden` on each,
-   forcing a full layout of that document per character typed. Nothing about
-   that was visible as a bug — it was just an app that felt slow and a list
-   nobody could reach the bottom of.
+   The list is kept in 五十音順 and broken into the ten rows of a kana chart,
+   because eight hundred entries in the order somebody happened to write them
+   down is not a list a reader can find their way around. That was the state
+   of this screen: an arbitrary sequence, twenty-four at a time behind a "Show
+   more" button, each entry a card deep enough that reaching the end of the
+   file meant thirty presses and a document a hundred and fifty thousand
+   pixels tall. Looking one word up meant searching for it, and there was no
+   way to answer "what is in here" at all.
 
-   Now a page of cards is built at a time and the rest arrive on request,
-   which is also the honest reading of what a reader wants here: a
-   vocabulary list is somewhere you look a word up or browse a little, not
-   something you scroll to the end of.
+   So: sorted (js/data/kana.js), sectioned by kana row with the section's
+   heading sticking to the top of the window while you are inside it, and an
+   index rail across the top that jumps to any row in one press. What is on
+   screen always says where in the list it is.
 
-   Each card carries a row of doors into the kanji it is spelled with, and
+   And an entry is a row, not a card. It carries the headword, its reading
+   and its meaning on one line — which is what browsing and looking up both
+   need — and opens in place for the rest: the example sentence, the kanji it
+   is spelled with, and the two study controls. That is what makes showing
+   all eight hundred at once affordable, and paging unnecessary: a row is a
+   handful of nodes rather than a dozen, and the detail behind a row — the
+   example, the doors, the controls — is not built until the row is opened.
+   The whole list then lays out in about a millisecond and stands thirty-eight
+   thousand pixels tall instead of a hundred and fifty.
+
+   Each open row carries a row of doors into the kanji it is spelled with, and
    the view answers to `#vocabulary/n5-001` by finding that word and putting
    it on screen. The two go together: a kanji screen sends the reader to a
-   word that uses it, and paging is exactly what stands in the way of that
-   arriving anywhere — the linked word is the 380th match and the document
-   holds 24 of them. So the reveal below pages forward to it, and drops any
-   filter that would have excluded it, rather than landing the reader on a
+   word that uses it, so the reveal below drops any filter that would have
+   excluded that word and opens the row, rather than landing the reader on a
    list that does not contain what they followed a link to read.
    ========================================================================== */
 
@@ -48,40 +56,47 @@ import {
 } from '../ui/content.js';
 import { createDoorRow, revealEntry } from '../ui/doors.js';
 import { loadVocabulary, loadLinkIndex } from '../data/catalogue.js';
+import { KANA_ROWS, compareKana, rowOf } from '../data/kana.js';
 import { onRouteTarget } from '../core/router.js';
 
 const VIEW_ID = 'vocabulary';
 
-/* How many cards exist in the document at once, and how many more each
-   "Show more" adds. 24 fills roughly two screens of the widest grid, so the
-   first page always overflows the fold — a list that ends exactly at the
-   bottom edge reads as the whole list. */
-const PAGE_SIZE = 24;
-
 /* -- Data ------------------------------------------------------------------------- */
 
 
-/* -- Card building -------------------------------------------------------------------- */
+/* -- Rows -------------------------------------------------------------------------
+   One entry, one line: the headword, its reading, its meaning. Everything
+   else — the example sentence, the doors into its kanji, the two study
+   controls — is behind the row and built the first time it is opened.
+
+   A button rather than a details/summary pair or a click handler on the li:
+   the row is one control that opens one thing, which is what a button is,
+   and aria-expanded/aria-controls then say so without any of it being
+   described in a label.
+   -------------------------------------------------------------------------------------- */
 
 function createHeadword(word) {
-  if (!word.kanji) {
-    const span = document.createElement('span');
-    span.lang = 'ja';
-    span.textContent = word.kana;
-    return span;
-  }
+  const span = document.createElement('span');
+  span.className = 'vocab-row__word';
+  span.lang = 'ja';
+  span.textContent = word.kanji || word.kana;
+  return span;
+}
 
-  const ruby = document.createElement('ruby');
-  ruby.lang = 'ja';
-  const rt = document.createElement('rt');
-  rt.textContent = word.kana;
-  ruby.append(word.kanji, rt);
-  return ruby;
+/* The reading, and only where it says something the headword does not. A
+   word written in kana alone would otherwise print itself twice. */
+function createReading(word) {
+  if (!word.kanji) return null;
+  const span = document.createElement('span');
+  span.className = 'vocab-row__reading reading';
+  span.lang = 'ja';
+  span.textContent = word.kana;
+  return span;
 }
 
 function createExample(example) {
   const wrap = document.createElement('div');
-  wrap.className = 'vocab-card__example';
+  wrap.className = 'vocab-row__example';
 
   const jp = document.createElement('p');
   jp.lang = 'ja';
@@ -122,56 +137,92 @@ function createKanjiDoors(word, links) {
 
 /* Two controls, two different questions: the chip answers "do I hold this?"
    (schedule state), the bookmark answers "do I want this?" (a choice). Both
-   come from studyControls.js so this card, a grammar point, a kanji, and a
+   come from studyControls.js so this entry, a grammar point, a kanji, and a
    lesson word all say it the same way. */
-function createCard(word, level, links, onProgressChange) {
+function createDetail(word, links, onProgressChange) {
+  const detail = document.createElement('div');
+  detail.className = 'vocab-row__detail';
+
+  const { row } = createStudyControls(word.id, {
+    onChange: onProgressChange,
+    className: 'vocab-row__controls',
+  });
+
+  detail.append(createExample(word.example), row);
+
+  const doors = createKanjiDoors(word, links);
+  if (doors) detail.append(doors);
+
+  return detail;
+}
+
+let rowCount = 0;
+
+function createRow(word, level, links, onProgressChange) {
   const item = document.createElement('li');
-  /* No `card`. A vocabulary entry is a row in a dense two-column list now, not
-     a surface — see vocabulary.css. Dropping the class is the honest way to say
-     that: the alternative was keeping it and then cancelling its background,
-     border, radius, shadow and lift one property at a time, which leaves the
-     app's card primitive looking like it applies here when it does not.
-     `card--deferred` stays; it is content-visibility and independent of .card. */
-  item.className = 'vocab-card card--deferred';
+  item.className = 'vocab-row';
   item.dataset.wordId = word.id;
 
-  const head = document.createElement('div');
-  head.className = 'vocab-card__head';
+  const detailId = `vocab-detail-${(rowCount += 1)}`;
+
+  const face = document.createElement('button');
+  face.type = 'button';
+  face.className = 'vocab-row__face';
+  face.setAttribute('aria-expanded', 'false');
+  face.setAttribute('aria-controls', detailId);
+
+  face.append(createHeadword(word));
+
+  const reading = createReading(word);
+  if (reading) face.append(reading);
+
+  const meaning = document.createElement('span');
+  meaning.className = 'vocab-row__meaning';
+  meaning.textContent = word.meaning;
+  face.append(meaning);
 
   const pos = document.createElement('span');
-  pos.className = 'vocab-card__pos meta';
+  pos.className = 'vocab-row__pos meta';
   pos.textContent = word.partOfSpeech;
-
-  head.append(createHeadword(word));
+  face.append(pos);
 
   /* A word with no JLPT level gets no level badge — not a guessed one and
-     not an "Outside JLPT" pill crowding a two-character headword. It is
-     still reachable: the chip row above the list files it under that
-     bucket, which is where a reader goes looking for it. */
+     not an "Outside JLPT" pill crowding the line. It is still reachable: the
+     chip row above the list files it under that bucket, which is where a
+     reader goes looking for it. */
   if (level) {
     const tag = document.createElement('span');
     tag.className = 'jlpt-tag';
     tag.textContent = level;
-    head.append(tag);
+    face.append(tag);
   }
 
-  head.append(pos);
+  item.append(face);
 
-  const meaning = document.createElement('p');
-  meaning.className = 'vocab-card__meaning';
-  meaning.textContent = word.meaning;
+  /* Built on the first press. Eight hundred example sentences and door rows
+     that nobody has asked to see is the wall this screen was replacing. */
+  let detail = null;
+  function open() {
+    if (!detail) {
+      detail = createDetail(word, links, onProgressChange);
+      detail.id = detailId;
+      item.append(detail);
+    }
+    detail.hidden = false;
+    face.setAttribute('aria-expanded', 'true');
+  }
 
-  const { row } = createStudyControls(word.id, {
-    onChange: onProgressChange,
-    className: 'vocab-card__controls',
+  function close() {
+    if (detail) detail.hidden = true;
+    face.setAttribute('aria-expanded', 'false');
+  }
+
+  face.addEventListener('click', () => {
+    if (face.getAttribute('aria-expanded') === 'true') close();
+    else open();
   });
 
-  item.append(head, meaning, createExample(word.example), row);
-
-  const doors = createKanjiDoors(word, links);
-  if (doors) item.append(doors);
-
-  return item;
+  return { item, open };
 }
 
 /* -- Facets -------------------------------------------------------------------------
@@ -234,6 +285,62 @@ function createRememberedToggle() {
 
 /* -- Rendering ------------------------------------------------------------------------- */
 
+/* The index rail: one press per kana row, and the only way to cross eight
+   hundred entries without scrolling through them. A row with nothing in it
+   under the current filters is disabled rather than removed, so the rail is
+   the same ten marks in the same ten places whatever is being filtered —
+   which is what makes it readable as a chart rather than as a changing menu.
+   ------------------------------------------------------------------------------------ */
+function createIndexRail(onJump) {
+  const nav = document.createElement('nav');
+  nav.className = 'vocab-index';
+  nav.setAttribute('aria-label', '五十音順');
+
+  const buttons = new Map();
+  for (const row of KANA_ROWS) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'vocab-index__mark';
+    button.lang = 'ja';
+    button.textContent = row.label;
+    button.dataset.row = row.key;
+    button.addEventListener('click', () => onJump(row.key));
+    buttons.set(row.key, button);
+    nav.append(button);
+  }
+
+  return { nav, buttons };
+}
+
+/* A section per kana row, in chart order, each holding its own list. The
+   heading sticks while the reader is inside the section, so the answer to
+   "where am I" is on screen the whole way down rather than only at the
+   moment they crossed the boundary. */
+function createSection(rowDefinition) {
+  const section = document.createElement('section');
+  section.className = 'vocab-section';
+  section.id = `vocab-row-${rowDefinition.key}`;
+
+  const head = document.createElement('h2');
+  head.className = 'vocab-section__head';
+
+  const mark = document.createElement('span');
+  mark.className = 'vocab-section__mark';
+  mark.lang = 'ja';
+  mark.textContent = rowDefinition.label;
+
+  const count = document.createElement('span');
+  count.className = 'vocab-section__count';
+
+  head.append(mark, count);
+
+  const list = document.createElement('ul');
+  list.className = 'vocab-rows';
+
+  section.append(head, list);
+  return { section, list, count };
+}
+
 function renderList(container, data) {
   const { wrap: searchWrap, input: searchInput } = createSearchField({
     id: 'vocabulary-search',
@@ -250,18 +357,27 @@ function renderList(container, data) {
   summary.className = 'vocab-meta meta';
   summary.setAttribute('aria-live', 'polite');
 
-  const list = document.createElement('ul');
+  const list = document.createElement('div');
   list.className = 'vocab-list';
 
-  /* Rows are the model; cards are built lazily and cached on the row the
-     first time that row is actually shown. Filtering therefore costs a pass
-     over 816 small objects — not over 816 live DOM subtrees. */
-  const rows = data.words.map((word) => ({
-    word,
-    tags: getWordTags(word),
-    level: getWordLevel(word),
-    item: null,
-  }));
+  /* Rows are the model; the elements are built lazily and cached the first
+     time a row is actually shown. Filtering therefore costs a pass over 816
+     small objects — not over 816 live DOM subtrees. */
+  const rows = data.words
+    .map((word) => ({
+      word,
+      tags: getWordTags(word),
+      level: getWordLevel(word),
+      kanaRow: rowOf(word.kana),
+      item: null,
+      open: null,
+    }))
+    /* Sorted here rather than in the file. data/vocabulary.json is written by
+       hand in the order the learner met each word, which is the right order
+       for the lesson it came from and no order at all for a list of eight
+       hundred; the reading is already on every entry, so the order the
+       language files itself in is derivable rather than authored. */
+    .sort((a, b) => compareKana(a.word.kana, b.word.kana));
 
   /* The span the file actually covers, read off the words themselves. */
   const levelLabel = describeLevelSpan(rows.map((row) => levelBucketOf(row.level)));
@@ -271,49 +387,42 @@ function renderList(container, data) {
     { className: 'vocab-filters__categories', ariaLabel: 'Filter by level or topic' },
   );
 
+  const sections = new Map();
+  for (const definition of KANA_ROWS) {
+    const built = createSection(definition);
+    sections.set(definition.key, built);
+    list.append(built.section);
+  }
+
+  const { nav: indexRail, buttons: indexButtons } = createIndexRail((key) => {
+    const target = sections.get(key);
+    if (!target || target.section.hidden) return;
+    target.section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
   const empty = document.createElement('p');
   empty.className = 'empty-state';
   empty.hidden = true;
 
-  const more = document.createElement('button');
-  more.type = 'button';
-  more.className = 'button button--secondary vocab-more';
-  more.hidden = true;
-
   const selectedTags = new Set();
   let matched = [];
-  let shown = 0;
 
   /* Marking a word only re-filters when the filter is actually watching for
-     it. Handing applyFilter() straight to every card meant pressing
-     "Remember this" on the 200th word emptied the list and rebuilt it from
-     page one — the reader was thrown back to the top for doing the one thing
-     the card asks of them. With the toggle off, the word's own state is the
-     only thing that changed, and the card has already redrawn itself. */
-  function onCardProgressChange() {
+     it. Handing applyFilter() straight to every row meant pressing "Remember
+     this" on the 200th word rebuilt the list under the reader's finger. With
+     the toggle off, the word's own state is the only thing that changed, and
+     the control has already redrawn itself. */
+  function onRowProgressChange() {
     if (rememberedToggle.getAttribute('aria-pressed') === 'true') applyFilter();
   }
 
-  function cardFor(row) {
-    if (!row.item) row.item = createCard(row.word, row.level, data.links, onCardProgressChange);
+  function elementFor(row) {
+    if (!row.item) {
+      const built = createRow(row.word, row.level, data.links, onRowProgressChange);
+      row.item = built.item;
+      row.open = built.open;
+    }
     return row.item;
-  }
-
-  /* Appends the next page into the list. The cards already on screen are
-     left alone — re-rendering them would drop the reader's scroll position
-     and rebuild every control they can see. */
-  function showMore() {
-    const next = matched.slice(shown, shown + PAGE_SIZE);
-    list.append(...next.map(cardFor));
-    shown += next.length;
-    syncMore();
-  }
-
-  function syncMore() {
-    const remaining = matched.length - shown;
-    more.hidden = remaining <= 0;
-    more.textContent = `Show ${formatCount(Math.min(remaining, PAGE_SIZE))} more`;
-    summary.textContent = describeSummary();
   }
 
   /* The span is a prefix, not a heading — and it is dropped rather than
@@ -326,21 +435,14 @@ function renderList(container, data) {
     const filtering = searchInput.value.trim() !== '' || selectedTags.size > 0
       || rememberedToggle.getAttribute('aria-pressed') === 'true';
     const total = formatCount(data.words.length);
-
-    if (!filtering) {
-      return withSpan(matched.length > shown
-        ? `${total} үгээс ${formatCount(shown)} нь харагдаж байна`
-        : `${total} үг`);
-    }
-
-    const found = `${total} үгээс ${formatCount(matched.length)} нь тохирлоо`;
-    return withSpan(matched.length > shown ? `${found}, ${formatCount(shown)} нь харагдаж байна` : found);
+    if (!filtering) return withSpan(`${total} үг · あ–わ`);
+    return withSpan(`${total} үгээс ${formatCount(matched.length)} нь тохирлоо`);
   }
 
-  /* Recomputes the match set and starts the list again from the first page.
-     replaceChildren rather than toggling `hidden` on every card: the point
-     of paging is that the document only ever holds a screenful or two, and
-     hiding cards would keep all 816 of them in it. */
+  /* Recomputes the match set and refills each section from it. Every matching
+     row goes into the document — there is no page boundary any more — and the
+     sections carry content-visibility, so the browser lays out the ones near
+     the viewport and skips the rest. */
   function applyFilter() {
     const query = searchInput.value.trim().toLowerCase();
     const hideRemembered = rememberedToggle.getAttribute('aria-pressed') === 'true';
@@ -352,10 +454,23 @@ function renderList(container, data) {
       return true;
     });
 
-    list.replaceChildren();
-    shown = 0;
-    showMore();
+    const byRow = new Map(KANA_ROWS.map((definition) => [definition.key, []]));
+    for (const row of matched) {
+      const bucket = byRow.get(row.kanaRow);
+      if (bucket) bucket.push(row);
+    }
 
+    for (const [key, built] of sections) {
+      const inRow = byRow.get(key) ?? [];
+      built.list.replaceChildren(...inRow.map(elementFor));
+      built.count.textContent = inRow.length > 0 ? formatCount(inRow.length) : '';
+      built.section.hidden = inRow.length === 0;
+
+      const mark = indexButtons.get(key);
+      if (mark) mark.disabled = inRow.length === 0;
+    }
+
+    summary.textContent = describeSummary();
     empty.hidden = matched.length > 0;
     /* One line, and no instruction after it. Every empty state in the app used
        to end by telling the reader what to type or which control to clear —
@@ -381,7 +496,6 @@ function renderList(container, data) {
       applyFilter();
     });
   });
-  more.addEventListener('click', showMore);
 
   /* Every filter back to nothing, in one place. Pressed chips are cleared as
      well as the field, because a reveal that only cleared the search would
@@ -395,15 +509,15 @@ function renderList(container, data) {
     applyFilter();
   }
 
-  /* Arriving from a door. Three things stand between a word's id and the
-     reader seeing it, and each of them is a state this view is normally right
-     to be in: a filter that excludes it, a search that excludes it, and the
-     page boundary that excludes almost everything.
+  /* Arriving from a door. Two things stand between a word's id and the reader
+     seeing it, and both are states this view is normally right to be in: a
+     filter that excludes it and a search that excludes it. The page boundary
+     used to be a third and is gone — every matching row is in the document.
 
      The filters are dropped only when they are actually hiding the word — a
      reader who followed a link to a word already in front of them keeps the
-     list they had. Paging forward always happens, because a card that is not
-     in the document cannot be scrolled to.
+     list they had. The row is opened as well as scrolled to: they followed a
+     link to read the entry, not to see its headword.
 
      An id nothing matches leaves the list exactly as it was. That is a
      retired entry or an old bookmark, and the right answer to it is the word
@@ -413,19 +527,18 @@ function renderList(container, data) {
     if (!row) return;
 
     if (!matched.includes(row)) clearFilters();
+    if (!matched.includes(row)) return;
 
-    const at = matched.indexOf(row);
-    if (at === -1) return;
-    while (shown <= at) showMore();
-
-    revealEntry(cardFor(row));
+    const element = elementFor(row);
+    row.open();
+    revealEntry(element);
   }
 
   applyFilter();
 
-  container.replaceChildren(filters, facetWrap, summary, list, empty, more);
+  container.replaceChildren(filters, facetWrap, indexRail, summary, list, empty);
 
-  // After the list is in the document: revealEntry scrolls to the card and
+  // After the list is in the document: revealEntry scrolls to the row and
   // moves focus onto it, and neither works on an element that has not been
   // laid out. Same reason kanji.js subscribes at the end of its own render.
   onRouteTarget(VIEW_ID, revealWord);

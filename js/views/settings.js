@@ -18,6 +18,7 @@
    ========================================================================== */
 
 import { clearAll, isAvailable as isStorageAvailable } from '../core/storage.js';
+import { clearBridge } from '../core/bridge.js';
 import {
   backupFilename,
   buildBackupPayload,
@@ -154,7 +155,7 @@ function createStudyCard() {
   const goalNote = document.createElement('p');
   goalNote.className = 'meta';
   goalNote.textContent =
-    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Dashboard дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu үүнийг өөрөө тогтоохгүй.';
+    'Өнөөдөр хэдэн зүйл давтсаныг хөтлөх нэг мөрийг Review дээр харуулна. Анхдагчаар унтраалттай — зорилт зарим хүнд тусалж, заримыг нь чимээгүйхэн шийтгэдэг тул Bigu үүнийг өөрөө тогтоохгүй.';
 
   const { group: goalGroup } = createChoiceRow({
     options: DAILY_GOALS.map((value) => ({ value, label: value === 0 ? 'No goal' : String(value) })),
@@ -349,6 +350,13 @@ function handleRestoreFile(file, statusEl, fileInput) {
     }
 
     restoreBackup(payload);
+    /* `bigu:bridge` is not one of the stores restoreBackup() overwrites, and
+       it is not in the file either — it is Bigu talking about itself, not
+       data Bigu holds. So it is taken away rather than restored: what it
+       said a moment ago was about whoever this browser belonged to before
+       the file landed, and the boot after the reload republishes the status
+       and the restored file's own rounds from the stores. */
+    clearBridge();
     setRestoreStatus(statusEl, 'Нөөцөөс сэргээлээ. Дахин ачаалж байна…', false);
     fileInput.value = '';
     window.setTimeout(() => location.reload(), 700);
@@ -476,6 +484,12 @@ function createResetCard() {
     }
 
     clearAll();
+    /* And the bridge, which clearAll() cannot reach: it walks STORES, and
+       the bridge key deliberately is not one. Erasing everything used to
+       leave the streak, the due count and the last fifty rounds standing on
+       the surface that reads the key — this browser's study history, still
+       being displayed, after the reader had asked for it to be gone. */
+    clearBridge();
     status.textContent = 'Бүгдийг устгалаа. Шинээр эхэлж байна…';
     status.hidden = false;
     button.disabled = true;

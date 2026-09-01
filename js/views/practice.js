@@ -32,9 +32,10 @@ import { getViewContainer } from '../ui/content.js';
 import { loadReviewPool } from '../data/catalogue.js';
 import { buildSession, countDue, snapshotRecords } from '../study/review.js';
 import { DECK_KEYS, DECK_LABELS, DECK_NEXT } from '../study/decks.js';
+import { countReviewedToday } from '../study/streak.js';
 import { recordSession } from '../study/session.js';
 import { createQuiz, createModePicker } from '../ui/quiz.js';
-import { sessionSize } from '../core/preferences.js';
+import { dailyGoal, sessionSize } from '../core/preferences.js';
 import { activeViewId } from '../core/router.js';
 
 const VIEW_ID = 'practice';
@@ -61,6 +62,47 @@ function describeRound(count) {
    note at the top of quiz.css about why a round is the only thing on
    screen — and the intro comes back when it ends.
    ---------------------------------------------------------------------------------------------- */
+
+/* -- The daily goal ---------------------------------------------------------------------
+   One line, only when the reader has asked for one. See the note on
+   DAILY_GOALS in preferences.js: no goal is the default, and a goal that is
+   set is reported plainly and never graded — a line of text over a hairline
+   that fills, deliberately not a ring, a badge or a percentage. The point
+   is to notice, not to be congratulated.
+
+   It used to be drawn on the Dashboard, which is the screen this app took
+   off its own map: a reader could set a goal in Settings and then have
+   nowhere to see it, because the only surface that reported it had no nav
+   row and nothing linking to it. Review is where rounds are actually run,
+   so it is where the day's count belongs — and here it is redrawn as each
+   round ends rather than only on the next visit.
+   ------------------------------------------------------------------------------------------ */
+
+function createGoalLine(reviewedToday, goal) {
+  const wrap = document.createElement('div');
+  wrap.className = 'practice__goal';
+
+  const reached = reviewedToday >= goal;
+
+  const label = document.createElement('p');
+  label.className = 'practice__goal-label meta';
+  label.textContent = reached
+    ? `Өнөөдрийн зорилго биеллээ — ${reviewedToday} зүйл давтлаа.`
+    : `Өнөөдөр ${reviewedToday} зүйл давтлаа — зорилт ${goal}.`;
+
+  const track = document.createElement('div');
+  track.className = 'practice__goal-track';
+  track.setAttribute('aria-hidden', 'true');
+
+  const fill = document.createElement('span');
+  fill.className = 'practice__goal-fill';
+  fill.style.setProperty('--progress', Math.min(reviewedToday / goal, 1).toFixed(3));
+  if (reached) fill.classList.add('is-met');
+  track.append(fill);
+
+  wrap.append(label, track);
+  return wrap;
+}
 
 function buildView(container) {
   const wrapper = document.createElement('div');
@@ -95,6 +137,11 @@ function buildView(container) {
   status.className = 'practice__status';
   status.setAttribute('aria-live', 'polite');
 
+  // Filled by the controller when a goal is set and left empty otherwise —
+  // no goal is the default, and an empty slot draws nothing.
+  const goalSlot = document.createElement('div');
+  goalSlot.className = 'practice__goal-slot';
+
   const startButton = document.createElement('button');
   startButton.type = 'button';
   startButton.className = 'button button--primary practice__start';
@@ -125,7 +172,7 @@ function buildView(container) {
   container.replaceChildren(wrapper);
 
   return {
-    wrapper, intro, deckGroup, deckButtons, status, startButton,
+    wrapper, intro, deckGroup, deckButtons, status, goalSlot, startButton,
     history, historyList, historyEmpty,
   };
 }
@@ -164,7 +211,7 @@ function initController(elements, decks) {
     onExit: showIntro,
   });
 
-  elements.intro.append(modePicker.wrap, elements.status, elements.startButton);
+  elements.intro.append(modePicker.wrap, elements.status, elements.goalSlot, elements.startButton);
   elements.wrapper.insertBefore(quiz.element, elements.history);
 
   /* -- Intro ---------------------------------------------------------------------------- */
@@ -179,6 +226,10 @@ function initController(elements, decks) {
      than "N items in the deck" — the point of the ladder is that the
      number that matters is what's ready, not how much content exists. */
   function updateStatus() {
+    // First, and outside every branch below: the day's count is true whether
+    // or not the chosen deck has anything in it.
+    updateGoal();
+
     const deck = decks[state.deck];
     const items = deck.items;
 
@@ -218,13 +269,32 @@ function initController(elements, decks) {
        the reader chose, in settings, and can change.
 
        The order still holds: what is ready leads, what is untouched follows
-       as a supply rather than a backlog. */
+       as a supply rather than a backlog.
+
+       Two half-sentences, and either of them can be the one that leads. The
+       second was written to follow the first and so began lowercase — which
+       is what a deck with nothing due but plenty unmet said to open with, a
+       reader's whole first week and every deck on their first day. It has a
+       leading form now, and the joined form is unchanged. */
     const parts = [];
     if (due > 0) parts.push('Эргэж ирэхэд бэлэн зүйл байна');
-    if (fresh > 0) parts.push('хараахан үзээгүй зүйл ч бий');
+    if (fresh > 0) parts.push(due > 0 ? 'хараахан үзээгүй зүйл ч бий' : 'Хараахан үзээгүй зүйл хүлээж байна');
     elements.status.textContent =
       `${parts.join(' · ')}. Энэ давталтад ${describeRound(Math.min(size, due + fresh))}, `
       + 'бэлэн болсныг эхэлж үзнэ.';
+  }
+
+  /* Read from the stores on every status update — arrival, deck change, and
+     the end of a round — rather than once when the screen was built, so what
+     it reports is the day's count at the moment the reader is looking at it.
+     A goal of zero is no goal, which is the default, and draws nothing. */
+  function updateGoal() {
+    const goal = dailyGoal();
+    if (goal === 0) {
+      elements.goalSlot.replaceChildren();
+      return;
+    }
+    elements.goalSlot.replaceChildren(createGoalLine(countReviewedToday(), goal));
   }
 
   function selectDeck(key) {
