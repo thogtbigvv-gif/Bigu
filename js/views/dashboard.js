@@ -54,21 +54,64 @@ function formatSessionDate(timestamp) {
    there's no reason to define its own card chrome from scratch.
    -------------------------------------------------------------------------------------------------- */
 
+/* The one card left on this screen. It names itself in the same tracked label
+   voice the three panels below use — one voice for "what this block is",
+   across a view that otherwise now has two kinds of block in it. A bold 20px
+   heading here and small caps three inches below it were two answers to the
+   same question. */
 function createCard(titleText) {
   const card = document.createElement('div');
   card.className = 'card';
 
-  const header = document.createElement('div');
-  header.className = 'card__header';
-
   const title = document.createElement('p');
-  title.className = 'card__title';
+  title.className = 'dashboard-panel__label';
   title.textContent = titleText;
 
-  header.append(title);
-  card.append(header);
-
+  card.append(title);
   return card;
+}
+
+/* The other three, and they are not cards.
+
+   This screen used to be four of the same object: same surface, same border,
+   same padding, same recipe inside — a bold title, a figure, a line under it
+   and an outlined button at the foot. Four boxes in a row is the shape of a
+   settings page, and it flattened a view that has one thing to say and three
+   footnotes to it into four things of equal weight.
+
+   So only the one card that carries today's action is still a card. These sit
+   directly on the page, separated by a hairline and by space, in the same
+   rule-not-box language Home uses between its desk and its shelf and Memory
+   uses between its sentence and its week. Nothing about what they report has
+   changed: same three figures, same three sentences, same three doors.
+
+   The title comes down to a tracked label as it comes out of its box, because
+   an open block does not need a bold heading to be found — the figure under it
+   is already the loudest thing in the column, and a 20px bold title above a
+   39px figure was two headings arguing. */
+function createPanel(titleText) {
+  const panel = document.createElement('div');
+  panel.className = 'dashboard-panel';
+
+  const title = document.createElement('p');
+  title.className = 'dashboard-panel__label';
+  title.textContent = titleText;
+
+  panel.append(title);
+  return panel;
+}
+
+/* The door out of a panel. A way link (buttons.css) rather than the outlined
+   button this used to be: three bordered rectangles stacked down a phone
+   screen were the most form-like thing in the app, and the app already has a
+   settled treatment for "this leads on to something" — the short rule that
+   grows toward the label, which Home wears on exactly the same kind of link. */
+function createPanelWay(href, label) {
+  const way = document.createElement('a');
+  way.className = 'way-link dashboard-panel__way';
+  way.href = href;
+  way.textContent = label;
+  return way;
 }
 
 /* -- Today ------------------------------------------------------------------------------------
@@ -152,7 +195,7 @@ function createTodayCard(counts) {
 }
 
 function createStreakCard(days, entries) {
-  const card = createCard('Streak');
+  const card = createPanel('Streak');
   const streak = computeStreak(days);
   const today = todayKey();
   const wroteToday = entries.some((entry) => entry.date === today);
@@ -184,18 +227,17 @@ function createStreakCard(days, entries) {
      that something was missing. */
   card.append(count, label, kinds);
 
-  const cta = document.createElement('a');
-  cta.href = '#journal';
-  cta.className = 'button button--secondary dashboard-card__cta';
-  cta.textContent = 'Journal';
-  card.append(cta);
-
+  /* Before the door, not after it. The remark is part of what this panel
+     reports; the way out is the last thing in every panel on the screen, and
+     the three of them line up along one baseline only if nothing follows. */
   if (wroteToday) {
     const done = document.createElement('p');
     done.className = 'dashboard-card__status';
     done.textContent = 'Өнөөдрийн тэмдэглэл бичигдлээ ✓';
     card.append(done);
   }
+
+  card.append(createPanelWay('#journal', 'Journal'));
 
   return card;
 }
@@ -216,7 +258,7 @@ function createStreakCard(days, entries) {
    -------------------------------------------------------------------------------------------- */
 
 function createMemoryCard(entries) {
-  const card = createCard('Memory');
+  const card = createPanel('Memory');
   const now = Date.now();
 
   let held = 0;
@@ -255,12 +297,7 @@ function createMemoryCard(entries) {
       : `Бүгдийнх нь бэх ${band.label} байна. Бүдгэрсэн юм алга.`;
   }
 
-  const cta = document.createElement('a');
-  cta.href = '#memory';
-  cta.className = 'button button--secondary dashboard-card__cta';
-  cta.textContent = held === 0 ? 'See how it works' : 'Open memory';
-
-  card.append(count, label, detail, cta);
+  card.append(count, label, detail, createPanelWay('#memory', held === 0 ? 'See how it works' : 'Open memory'));
   return card;
 }
 
@@ -276,7 +313,7 @@ function createMemoryCard(entries) {
    -------------------------------------------------------------------------------------- */
 
 function createPracticeCard(sessions) {
-  const card = createCard('Last review');
+  const card = createPanel('Last review');
   const latest = sessions.slice().sort((a, b) => b.createdAt - a.createdAt)[0] ?? null;
 
   if (!latest) {
@@ -306,11 +343,7 @@ function createPracticeCard(sessions) {
     card.append(score, label);
   }
 
-  const cta = document.createElement('a');
-  cta.href = '#practice';
-  cta.className = 'button button--secondary dashboard-card__cta';
-  cta.textContent = latest ? 'Review again' : 'Start review';
-  card.append(cta);
+  card.append(createPanelWay('#practice', latest ? 'Review again' : 'Start review'));
 
   return card;
 }

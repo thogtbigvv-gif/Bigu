@@ -47,6 +47,26 @@
    baseline` is wrong here and `center` is right — the two lines are one
    block, and a door holding only a character has to sit level with one
    holding a word and a meaning.
+
+   At rest it is now what the note at the top of this file always said it was:
+   a line of links. The outlined, raised, rounded box it used to wear said
+   "control" in a place where the app renders as many as thirty-six of them on
+   one lesson — under a word, under a passage, under a kanji — and thirty-six
+   little rectangles under a column of Japanese is the wall the reference
+   screens were made of.
+
+   What is left is a patch of tinted paper: a body, so the door is still
+   plainly a thing you can press and a row of single characters still reads as
+   a row of separate ones, with nothing drawn around it. The same move the
+   level tag makes in vocabulary.css, and the same reasoning — a small object
+   can be a surface or an outline, and at this size and this repeat count the
+   outline is what turns a page into a grid.
+
+   Nothing about the target changed. The padding and the 44px floor are the
+   same, so the thing a thumb aims at is exactly where it was; what went is
+   the border and the raised white. And the door is *more* tactile for it, not
+   less: the accent surface now arrives under the pointer where it used to be
+   a border changing colour, so approaching one is the door coming forward.
    ---------------------------------------------------------------------------- */
 .door {
   display: inline-flex;
@@ -57,8 +77,8 @@
   justify-content: center;
   text-decoration: none;
   color: var(--color-sumi);
-  background-color: var(--color-paper-raised);
-  border: var(--border-width) solid var(--color-line);
+  background-color: color-mix(in srgb, var(--color-sumi-faint) 8%, transparent);
+  border: var(--border-width) solid transparent;
   border-radius: var(--radius-md);
   transition:
     background-color var(--transition-fast),
@@ -79,11 +99,14 @@
   line-height: var(--leading-tight);
 }
 
+/* The surface arrives with the pointer, and again for a keyboard: focus is the
+   same fact as hover, so it gets the same answer under the ring rather than
+   only the ring. */
 @media (hover: hover) {
   .door:hover {
-    border-color: var(--color-shu);
+    border-color: color-mix(in srgb, var(--color-shu) 40%, transparent);
     color: var(--color-shu);
-    background-color: color-mix(in srgb, var(--color-shu) 6%, var(--color-paper-raised));
+    background-color: color-mix(in srgb, var(--color-shu) 7%, var(--color-paper-raised));
   }
 
   /* The gloss follows the face into the accent rather than staying grey.
@@ -102,6 +125,8 @@
   outline: var(--focus-ring);
   outline-offset: 2px;
   box-shadow: var(--focus-halo);
+  color: var(--color-shu);
+  background-color: color-mix(in srgb, var(--color-shu) 7%, var(--color-paper-raised));
 }
 
 /* The rest of a capped row. Sized down to the doors it opens onto, since it

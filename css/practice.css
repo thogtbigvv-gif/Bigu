@@ -35,6 +35,9 @@
    The screen before a round: which deck, how you want to study, and what
    the schedule says is waiting.
    ------------------------------------------------------------------------------------------ */
+/* Drawn as a surface rather than as an outline — same edge and same resting
+   elevation .card wears, because this is the same kind of object and was the
+   one panel in the app still describing itself with a full-strength rule. */
 .practice__intro {
   display: flex;
   flex-direction: column;
@@ -42,8 +45,20 @@
   gap: var(--space-md);
   padding: var(--space-lg);
   background-color: var(--color-paper-raised);
-  border: var(--border-width) solid var(--color-line);
+  border: var(--border-width) solid var(--color-edge);
   border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* A label and the chips it names, grouped — the same shape and the same
+   internal gap .quiz-modes uses for its own pair, so the two pickers on this
+   screen are spaced identically instead of the deck's label sitting a full
+   section-gap away from its own controls. */
+.practice__deck {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2xs);
+  align-self: stretch;
 }
 
 .practice__deck-label {
@@ -106,22 +121,32 @@
 .practice__history-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2xs);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-/* Carries .card, so cards.css already gives it the surface, the hover lift and
-   the focus-within lift. What is set here is only the row's own shape — and
-   the radius steps down to --radius-md, because at list density the card
-   radius reads as a stack of pills rather than as a log. */
+/* Rows, not cards. This used to carry .card and take the app's whole surface
+   treatment — fill, edge, resting shadow, hover lift — and the note that stood
+   here spent its words stepping the radius down "because at list density the
+   card radius reads as a stack of pills rather than as a log". That was the
+   right observation and the wrong lever: five identical surfaces in a column
+   read as a stack whatever their corners do, and this is five lines of the
+   same three fields, which is a list.
+
+   So it is drawn the way every other list in Bigu is drawn — a hairline
+   between rows, nothing around them — and the eye can run down the score
+   column, which is the only reason the log is on the screen. The rule is on
+   the row rather than between rows via a sibling selector so the first row
+   gets one too: it sits directly under the section heading and needs the
+   same separation from it that the rows have from each other.
+   ------------------------------------------------------------------------------------------- */
 .practice__history-item {
   display: flex;
   align-items: baseline;
   gap: var(--space-sm);
-  padding: var(--space-xs) var(--space-sm);
-  border-radius: var(--radius-md);
+  padding-block: var(--space-xs);
+  border-block-start: var(--border-width) solid var(--color-line);
 }
 
 

@@ -151,9 +151,19 @@ function buildView(container) {
   startButton.className = 'button button--primary practice__start';
   startButton.textContent = 'Start review';
 
+  /* The label and its chips are one group and are wrapped as one, the way
+     .quiz-modes already wraps its own label and buttons. Loose in the intro
+     they were two of its children, so the distance from a label to the chips
+     it names was the same as the distance from one picker to the next — and
+     the two pickers on this screen, which do the same job, were spaced two
+     different ways. */
+  const deck = document.createElement('div');
+  deck.className = 'practice__deck';
+  deck.append(deckLabel, deckGroup);
+
   // status and the start button are appended by the controller, after the
   // mode picker, so the intro reads deck -> mode -> what you'll get -> go.
-  intro.append(deckLabel, deckGroup);
+  intro.append(deck);
 
   /* History */
   const history = document.createElement('div');
@@ -358,7 +368,10 @@ function initController(elements, decks) {
 
     for (const entry of recent) {
       const item = document.createElement('li');
-      item.className = 'card practice__history-item';
+      /* Not a .card. A log is a list — see the note on .practice__history-item
+         in practice.css for why five surfaces stacked in a column was the
+         wrong shape for five lines of the same three fields. */
+      item.className = 'practice__history-item';
 
       const mode = document.createElement('span');
       mode.className = 'practice__history-mode';

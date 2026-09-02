@@ -6,10 +6,16 @@
    gets its rhythm from typography.css.
    ========================================================================== */
 
+/* --color-edge, not --color-line: the shadow describes this object's edge
+   already, and an outline at full rule strength on top of it is what turned
+   every surface in the app into a box. See the elevation note in
+   variables.css. The line is still there — a card with no edge at all loses
+   its corners against a white page — it has simply stopped being the loudest
+   thing about a card. */
 .card {
   padding: var(--space-lg);
   background-color: var(--color-paper-raised);
-  border: var(--border-width) solid var(--color-line);
+  border: var(--border-width) solid var(--color-edge);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   /* Declared on the resting card, not only on the hover states below, so the
@@ -145,23 +151,14 @@
   transition-duration: var(--duration-fast);
 }
 
-.card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  margin-block-end: var(--space-sm);
-}
-
-/* Body face, not the display face. A card title sits a few pixels from a
-   page heading and a vocabulary headword; when all three are Shippori
-   Mincho the eye gets no entry point into the card. Weight carries the
-   emphasis here instead. */
-.card__title {
-  font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  color: var(--color-sumi);
-}
+/* .card__header and .card__title stood here as optional hooks and ended up
+   with exactly one caller between them — the Dashboard's four cards. Three of
+   those are no longer cards, and the fourth names itself in that view's own
+   label voice now (see createCard in js/views/dashboard.js), so both rules
+   went with their caller rather than staying as a header treatment nothing in
+   the app wears. What is left is what the note at the top of this file always
+   said: a card's content takes its rhythm from typography.css.
+   ------------------------------------------------------------------------------- */
 
 /* -- Empty state -------------------------------------------------------------------
    Shared "nothing to show" treatment — an empty search result, an empty

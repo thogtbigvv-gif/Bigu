@@ -457,6 +457,67 @@
   transition-timing-function: var(--ease-spring);
 }
 
+/* -- The way link ------------------------------------------------------------------------
+   The third control treatment, after the filled primary and the outlined
+   secondary, and the quietest: a line of text with the app's own way mark
+   (see --way-mark in variables.css) leading into it, where the mark doubles
+   in length as the pointer or the focus ring arrives.
+
+   It is for one thing only — a door onward from a block that has just told
+   you something. Home wore it first on 続きから and 復習; the Dashboard's three
+   report panels wear it now in place of the outlined buttons they used to
+   end with. That is the whole reason it lives here rather than in home.css:
+   two callers, one component, and the alternative was a second treatment for
+   the same job that would have drifted from the first within a commit.
+
+   Not a .button, and the distinction is worth keeping sharp. A button is an
+   object you press; this is a sentence that leads somewhere. It has no box,
+   no fill and no padding to speak of, and everything it does on approach it
+   does with a rule twelve pixels long.
+
+   scaleX rather than a width, so nothing in the row moves when the mark grows
+   and the whole thing stays on the compositor. currentColor, so the mark turns
+   shu with the link it belongs to and never needs a hover colour of its own.
+   reset.css collapses the transition under prefers-reduced-motion.
+   ---------------------------------------------------------------------------------------- */
+.way-link {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-3xs);
+  padding-block: var(--space-3xs);
+  font-size: var(--text-sm);
+  color: var(--color-sumi-soft);
+}
+
+/* It sits on the text's own baseline because a flex item with no content takes
+   its bottom margin edge as its baseline, which is exactly where a line
+   leading into a word belongs — and where the link's underline picks it up on
+   hover, so the mark reads as that underline running on ahead of the word. */
+.way-link::before {
+  content: '';
+  flex: none;
+  width: 1.5rem;
+  height: var(--border-width);
+  margin-inline-end: var(--space-3xs);
+  background-color: currentColor;
+  opacity: 0.3;
+  transform: scaleX(0.5);
+  transform-origin: left center;
+  transition:
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
+}
+
+.way-link:hover {
+  color: var(--color-shu);
+}
+
+.way-link:hover::before,
+.way-link:focus-visible::before {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
 /* -- Touch targets --------------------------------------------------------------------
    At and below 768px every button in the study loop gets a 44px minimum
    box. See the matching block in navigation.css for the reasoning; the

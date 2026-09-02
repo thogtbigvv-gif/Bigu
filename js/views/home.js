@@ -348,7 +348,9 @@ function createToday(line, lessons) {
    A link, not a card and not a button block: this is a door left ajar. */
 function createWay(href, jp, note) {
   const way = document.createElement('a');
-  way.className = 'home__way';
+  /* .way-link is the shared onward-link treatment in buttons.css — the mark,
+     the hover, the focus. .home__way is only what this screen adds on top. */
+  way.className = 'way-link home__way';
   way.href = href;
 
   const lead = element('span', 'home__way-jp', jp);

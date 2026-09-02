@@ -236,60 +236,15 @@
 
 /* Rows of text, not buttons and not cards. At most two of them ever exist,
    both are links, and each is a single line: a filled hero block here would
-   make the app's front door an instruction. The underline behaves exactly as
-   every other link in the app — transparent at rest, coloured on hover. */
-.home__way {
-  display: inline-flex;
-  align-items: baseline;
-  gap: var(--space-3xs);
-  padding-block: var(--space-3xs);
-  font-size: var(--text-sm);
-  color: var(--color-sumi-soft);
-}
+   make the app's front door an instruction.
 
-/* The way, on the two rows that are literally named for it — see --way-mark
-   in variables.css. These are the only links in the app that lead back into
-   something already begun: 続きから is the lesson the reader last touched,
-   復習 is what the schedule has waiting. Everything else on this screen opens
-   a shelf, and a shelf is not a continuation.
-
-   So the rule is a short one, ending at the word rather than passing under
-   it, and it doubles in length under a pointer or a focus ring — the one
-   piece of directional motion in the app, and it is twelve pixels of it. It
-   sits on the text's own baseline because a flex item with no content takes
-   its bottom edge as its baseline, which is exactly where a line leading into
-   a word belongs — and on a phone, where the row grows to the 44px touch
-   floor and centres its contents, it comes with them.
-
-   scaleX rather than a width, so nothing in the row moves when it grows and
-   the whole thing stays on the compositor. currentColor, so it turns shu with
-   the link it belongs to and never needs a hover colour of its own.
-   reset.css collapses the transition under prefers-reduced-motion. */
-.home__way::before {
-  content: '';
-  flex: none;
-  width: 1.5rem;
-  height: var(--border-width);
-  margin-inline-end: var(--space-3xs);
-  background-color: currentColor;
-  opacity: 0.3;
-  transform: scaleX(0.5);
-  transform-origin: left center;
-  transition:
-    transform var(--transition-fast),
-    opacity var(--transition-fast);
-}
-
-.home__way:hover {
-  color: var(--color-shu);
-}
-
-.home__way:hover::before,
-.home__way:focus-visible::before {
-  opacity: 1;
-  transform: scaleX(1);
-}
-
+   These are the only links on this screen that lead back into something
+   already begun — 続きから is the lesson the reader last touched, 復習 is what
+   the schedule has waiting — so they carry .way-link, the app's shared
+   treatment for exactly that (buttons.css), and everything about how they
+   look lives there. Nothing is left here but the two glosses they hang on the
+   end. Everything else on this screen opens a shelf, and a shelf is not a
+   continuation. */
 .home__way-separator,
 .home__way-note {
   color: var(--color-sumi-faint);

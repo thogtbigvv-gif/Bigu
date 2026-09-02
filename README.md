@@ -205,6 +205,12 @@ are the graphic material, set large enough to be looked at rather than
 scanned.
 
 - **Ground** — near-white paper, true sumi ink, hairline rules
+- **Surface** — a raised thing is raised by its own shadow, not by a box drawn
+  around it. Cards, panels and slips carry a two-layer contact shadow and an
+  edge stepped back from the rule weight, so a page reads as objects on paper
+  rather than as a grid of outlined rectangles — and small repeated objects
+  (a level tag, a door into another entry) get a body instead of an outline,
+  because at thirty to a page an outline is what a wall is made of
 - **Accent** — 朱色, one signature red, reserved for where you are and for
   genuine errors. Absence and incompleteness are neutral, never warned about
 - **Type** — Klee One, a Japanese textbook hand, for Japanese content; Zen

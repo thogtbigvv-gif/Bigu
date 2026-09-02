@@ -489,8 +489,17 @@
   min-width: 0;
   border-radius: var(--radius-md);
   background-color: var(--color-paper-raised);
+  /* Still no border — that part of the note above stands. What it could not
+     anticipate is that "separation comes from the paper tone" needs the paper
+     tone to be separable, and in the light theme the step between the page and
+     a raised surface is under four percent: the slips were laid out on a desk
+     the same colour as they were. The resting shadow is the tone made
+     legible, and it is the one variables.css rebuilt for exactly this — a
+     contact layer and a short spread, no outline anywhere in it. */
+  box-shadow: var(--shadow-sm);
   transition:
     background-color var(--transition-fast),
+    box-shadow var(--transition-fast),
     transform var(--transition-fast),
     opacity var(--transition-base);
   --rise: 6px;
@@ -498,12 +507,30 @@
   animation-delay: calc(var(--index, 0) * 40ms);
 }
 
+/* Now that a slip rests on a shadow rather than on a tone alone, it has a
+   second thing it can do on approach: come up. One step, --shadow-sm to
+   --shadow-md, and no travel — a shelf of these reflows as items are graded
+   away, and a slip that moved as well as brightened would read as the shelf
+   shifting rather than as the slip answering.
+
+   The wash on the face below is kept and does the near work; this does the
+   depth. Both are gated behind (hover: hover) for the same reason: on a touch
+   screen the state would be left on whichever slip inherited the position of
+   the one just graded. */
+@media (hover: hover) {
+  .memory-slip:hover {
+    box-shadow: var(--shadow-md);
+  }
+}
+
 /* Open, a slip takes the whole row. The detail needs the width, and a slip
    that displaces its own row is an unmistakable answer to "which one am I
-   inside of?" — no highlight or overlay required. */
+   inside of?" — no highlight or overlay required. It holds the raised shadow
+   while it is open, so the one the reader is inside of is also the one off the
+   shelf. */
 .memory-slip.is-open {
   grid-column: 1 / -1;
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow-md);
 }
 
 /* …and its state line comes back to sit beside the word. Left where it is,

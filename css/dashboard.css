@@ -31,9 +31,14 @@
 }
 
 /* The rule sits under the heading *and* its status line, so it reads as the
-   base of one hero block rather than a divider between the two. */
+   base of one hero block rather than a divider between the two.
+
+   More air under the rule than over it. The heading block and its rule are one
+   object; what follows is a different one, and spacing them identically is
+   what makes a page read as evenly stacked bands rather than as a composition.
+   The grid below takes the wider half. */
 .dashboard-hero {
-  padding-block-end: var(--space-sm);
+  padding-block-end: var(--space-md);
   border-bottom: var(--border-width) solid var(--color-line);
 }
 
@@ -62,16 +67,70 @@
   gap: var(--space-lg);
 }
 
+/* Row one is the hero, spanning; row two is three open panels. The column gap
+   is wider than the row gap on purpose — the panels are divided from each
+   other by a hairline and need room around it, while the hero and the row
+   below it are already divided by the change of surface. */
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-lg);
+  column-gap: var(--space-2xl);
+  row-gap: var(--space-xl);
   align-items: stretch;
 }
 
 .dashboard-grid .card {
   display: flex;
   flex-direction: column;
+}
+
+/* -- The three reports ---------------------------------------------------------------
+   Open blocks on the page, not cards. See createPanel() in dashboard.js for
+   why; what is here is only how they are divided and how they stack.
+
+   The division is a hairline *between* panels — the same divider Home puts
+   between its desk and its shelf and Memory puts between its sentence and its
+   week, turned to serve three columns instead of two. Which panels carry one
+   depends on how many tracks the grid has, and the two narrow steps restate it
+   rather than inheriting it: a leading rule is only ever right on a panel that
+   has another panel to its left in the same row, and at two tracks the third
+   panel wraps to a row of its own. The hero spans every track, so it is never
+   the thing on the other side of one of these rules.
+
+   Each panel is a column that ends with its door, and the door is pushed to
+   the bottom by an auto margin so the three line up along one baseline no
+   matter how many lines of text sit above them. That alignment is most of
+   what makes three unequal blocks read as a row.
+   ---------------------------------------------------------------------------------- */
+.dashboard-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3xs);
+  min-width: 0;
+}
+
+.dashboard-panel + .dashboard-panel {
+  padding-inline-start: var(--space-2xl);
+  border-inline-start: var(--border-width) solid var(--color-line);
+}
+
+/* A tracked label rather than a heading, in the app's own small-caps voice —
+   the same one Memory's kicker and the Review history heading already speak.
+   Out of its box, the panel does not need a bold title to be found: the figure
+   below is the loudest thing in the column, and this only has to name it. */
+.dashboard-panel__label {
+  margin: 0 0 var(--space-2xs) 0;
+  font-family: var(--font-mono-stack);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-sumi-faint);
+}
+
+.dashboard-panel__way {
+  margin-block-start: auto;
+  padding-block-start: var(--space-md);
 }
 
 /* The emphasised card among the four — the signature hanko accent plus a
@@ -242,7 +301,14 @@
    ------------------------------------------------------------------------------------------- */
 .dashboard-streak__count {
   font-family: var(--font-mono-stack);
-  font-size: var(--text-2xl);
+  /* One step down, and the Today headline one step up (below). These three
+     figures used to be set at --text-2xl while the hero's headline sat at
+     --text-lg, so the loudest things on a screen whose whole job is "here is
+     what to do next" were three reports about what has already happened. The
+     ladder now runs the way the page reads: the action, then the reports on
+     it. Nothing else about them changes — same face, same tabular figures,
+     still comfortably the largest thing in their own column. */
+  font-size: var(--text-xl);
   font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
   letter-spacing: var(--tracking-normal);
@@ -263,14 +329,19 @@
    one — same size and weight in the composition, none of the ledger. */
 .dashboard-today__headline {
   margin: 0 0 var(--space-3xs) 0;
-  font-size: var(--text-lg);
+  font-size: var(--text-2xl);
   font-weight: var(--weight-medium);
   line-height: var(--leading-tight);
+  letter-spacing: -0.01em;
   color: var(--color-sumi);
+  /* Its own measure. The phrase is two or three words and the card is the full
+     width of the page; without a cap the line sits alone in a great deal of
+     white with the sentence under it starting somewhere else entirely. */
+  max-width: 14ch;
 }
 
 .dashboard-streak__count--score {
-  font-size: var(--text-xl);
+  font-size: var(--text-lg);
   letter-spacing: -0.01em;
 }
 
@@ -284,11 +355,11 @@
    css/practice.css: a goal is reported on the screen where rounds are run,
    not on one with no nav row. See createGoalLine in js/views/practice.js. */
 
+/* No divider and no auto margin any more: this line follows the Journal way
+   inside an open panel, where a rule across the column would be drawing a card
+   back around content that has just left one. */
 .dashboard-card__status {
-  margin-block-start: auto;
-  margin-block-end: 0;
-  padding-block-start: var(--space-md);
-  border-top: var(--border-width) solid var(--color-line);
+  margin-block: var(--space-2xs) 0;
   font-size: var(--text-sm);
   color: var(--color-moss);
   font-weight: var(--weight-medium);
@@ -322,6 +393,20 @@
 @media (max-width: 1024px) {
   .dashboard-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-xl);
+  }
+
+  /* Two tracks. The hero is grid child 1 and spans both, so the panels are
+     children 2, 3 and 4 — which lands 2 and 4 in the first column and 3 in the
+     second. Only child 3 has a panel beside it. */
+  .dashboard-panel + .dashboard-panel {
+    padding-inline-start: 0;
+    border-inline-start: none;
+  }
+
+  .dashboard-panel:nth-child(3) {
+    padding-inline-start: var(--space-xl);
+    border-inline-start: var(--border-width) solid var(--color-line);
   }
 }
 
@@ -340,10 +425,23 @@
   }
 }
 
-@media (max-width: 480px) {
+/* Stacked, the divider lies down. A vertical rule beside a full-width block
+   is a rule to nowhere; between two stacked blocks it is the same separation
+   doing the same job, and the panels keep the generous space around it that
+   stops a phone screen reading as a stack of slabs. */
+@media (max-width: 768px) {
   .dashboard-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-md);
+    row-gap: var(--space-lg);
+  }
+
+  /* Every panel, including the first: stacked, the rule above the first one is
+     what separates the open blocks from the card they follow. */
+  .dashboard-panel {
+    padding-inline-start: 0;
+    padding-block-start: var(--space-lg);
+    border-inline-start: none;
+    border-block-start: var(--border-width) solid var(--color-line);
   }
 }
 

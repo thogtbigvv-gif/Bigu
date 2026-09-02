@@ -302,28 +302,27 @@
    Shared look for the small badge that marks a word/point's JLPT level;
    grammar.css and kanji.css reuse this same class rather than redefining it.
 
-   Outlined, not filled. As a filled badge this was pale text on a dark
-   yellow-brown — 2.85:1 at 12px, the worst contrast in the app and repeated on
-   every vocabulary, grammar, and kanji card. It now takes --color-sumi-faint,
-   which clears 4.5:1 on both grounds, and a hairline box matches the "a line,
-   not a spotlight" language the rest of the app already uses.
-
    The colour is meta ink rather than an accent of its own, which is the whole
    point of a level tag: N5 is bookkeeping attached to a word, and a badge that
    competes with the word it labels is a badge in the wrong place.
+
+   Which is what the outline was doing. The tag used to carry a solid
+   --color-sumi-faint border — a line at better than 4.5:1, the same weight as
+   the tag's own text — around a two-character label, on every row of a list
+   eight hundred rows long. One of them reads as a badge; a column of them
+   reads as a wall of small rectangles, and it was the single biggest reason
+   the reference screens felt like a page made of boxes.
+
+   So the wash carries it alone now, at 12% rather than 7% to make up the body
+   the outline was giving it. Contrast is untouched — the text colour has not
+   moved, and the tint is mixed into the surface underneath rather than laid
+   over the text. It is still plainly an object attached to the headword; it
+   has simply stopped being drawn around.
    ------------------------------------------------------------------------------------ */
 .jlpt-tag {
   display: inline-block;
   padding: var(--space-3xs) var(--space-2xs);
-  /* A wash of the tag's own colour rather than nothing at all. At 7% it is
-     barely a tint — well under the point where the outlined-not-filled
-     decision above would be undone — but it gives the badge a body, so it
-     reads as a small object attached to the headword instead of as an empty
-     rectangle drawn around two characters. Contrast is unaffected: the text
-     colour and the border are exactly as they were, and the tint is mixed
-     into the card surface rather than laid over it. */
-  background-color: color-mix(in srgb, var(--color-sumi-faint) 7%, transparent);
-  border: var(--border-width) solid var(--color-sumi-faint);
+  background-color: color-mix(in srgb, var(--color-sumi-faint) 12%, transparent);
   color: var(--color-sumi-faint);
   border-radius: var(--radius-sm);
   font-size: var(--text-xs);
