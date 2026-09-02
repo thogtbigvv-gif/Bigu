@@ -178,11 +178,17 @@
   margin: 0;
 }
 
+/* The same way the round rule above the quiz card draws — see the note on
+   .quiz__progress, and --way-mark in variables.css. A day worked through is
+   the other ordered thing this screen knows about, so it is said in the same
+   words: ink behind, hairline ahead, one mark where the reader has got to.
+   --progress rides the track rather than the fill for the same reason it does
+   there — the fill is scaled, and a mark inside a scaled box is an ellipse. */
 .practice__goal-track {
+  position: relative;
   height: 2px;
   border-radius: 999px;
   background-color: var(--color-line);
-  overflow: hidden;
 }
 
 /* Draws itself on arrival instead of appearing already filled. The rule is the
@@ -216,6 +222,32 @@
 }
 
 .practice__goal-fill.is-met {
+  background-color: var(--color-moss);
+}
+
+/* Centre travelling half a mark in from each end, so it stays on the rule at
+   both ends of the day rather than hanging off the paper before the first
+   round and off the end of the track after the last. */
+.practice__goal-track::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: calc(
+    var(--way-mark) / 2 + var(--progress, 0) * (100% - var(--way-mark))
+  );
+  width: var(--way-mark);
+  height: var(--way-mark);
+  border-radius: 50%;
+  background-color: var(--color-shu);
+  transform: translate(-50%, -50%);
+  transition: inset-inline-start var(--transition-base);
+}
+
+/* And it goes moss with the ink it sits at the head of. The goal being met is
+   the one state in this app that changes what the way is drawn in, and a shu
+   mark left at the end of a moss rule would be the one part of the line still
+   asking for something. */
+.practice__goal-track:has(.is-met)::after {
   background-color: var(--color-moss);
 }
 

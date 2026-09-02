@@ -155,12 +155,30 @@
 }
 
 /* -- The week ------------------------------------------------------------------------------
-   Seven marks, no axis, no numbers. It answers "have I been coming back?"
-   with a shape, which is the only form of that answer a reader takes in
-   without stopping to read.
+   Seven marks on one line, no axis and no numbers. It answers "have I been
+   coming back?" with a shape, which is the only form of that answer a reader
+   takes in without stopping to read.
+
+   The line under the marks is the app's way (see --way-mark in
+   variables.css) in its third and quietest form: not a track filling, just
+   the continuity. This strip already argued in code that a day with nothing
+   on it is a pause and not a gap — that is why an empty day is drawn as a
+   ring rather than left blank — and the rule is that argument made visible.
+   Seven separate dots are seven tallies; seven dots on a line are a week
+   somebody has been walking, and the empty ones are places on it rather than
+   misses.
+
+   It runs the full width of the strip rather than stopping at the outer two
+   marks, so the week reads as a length of something longer — which it is.
+   Monday is not where the reader started.
    -------------------------------------------------------------------------------------------- */
 
 .memory-week {
+  /* The size of one day's mark, named because three rules need to agree on
+     it: the mark itself, the ring an empty day is drawn as, and the vertical
+     position of the line all seven of them sit on. */
+  --memory-dot: 0.75rem;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -221,10 +239,24 @@
 }
 
 .memory-week__days {
+  position: relative;
   display: flex;
   gap: var(--space-md);
   margin: 0;
   padding: 0;
+}
+
+/* Behind the marks, at their centre. A hairline in the app's own divider
+   colour — the way, undrawn on: the marks are the content and this is only
+   what carries them. */
+.memory-week__days::before {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  inset-block-start: calc(var(--memory-dot) / 2);
+  height: var(--border-width);
+  background-color: var(--color-line);
+  transform: translateY(-50%);
 }
 
 .memory-week__day {
@@ -239,8 +271,9 @@
    is legible at a glance and still legible to someone who can't separate the
    two greys. */
 .memory-week__dot {
-  width: 0.75rem;
-  height: 0.75rem;
+  position: relative;
+  width: var(--memory-dot);
+  height: var(--memory-dot);
   border-radius: 50%;
   background-color: var(--color-sumi);
   opacity: calc(0.12 + var(--weight) * 0.78);
@@ -250,9 +283,11 @@
 
 /* A day with nothing on it is still a day — an empty ring, not a gap, so the
    week keeps its shape and a missed day reads as a pause rather than an
-   absence. */
+   absence. The ring is filled with the page rather than left transparent so
+   the line behind it passes *under* the mark instead of through it: an open
+   circle with a rule across its middle reads as a symbol, not as a day. */
 .memory-week__dot--empty {
-  background-color: transparent;
+  background-color: var(--color-paper);
   border: var(--border-width) solid var(--color-line);
   opacity: 1;
 }

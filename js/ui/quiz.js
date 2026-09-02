@@ -1059,7 +1059,7 @@ function buildPanel() {
   panel.append(round, summary);
 
   return {
-    panel, round, bar, barFill, title, count, countIndex, countTotal, countSpoken, exitButton,
+    panel, round, bar, title, count, countIndex, countTotal, countSpoken, exitButton,
     scene, cardInner, card, prompt, front, hint, flipHint,
     cardBack, answerJp, answer, answerDetail,
     options, build, buildLine, buildLineEmpty, buildTray, buildCheck,
@@ -1159,7 +1159,11 @@ function createQuiz({
     const done = Math.min(state.index + (state.answered ? 1 : 0), total);
     const position = Math.min(state.index + 1, total);
 
-    el.barFill.style.setProperty('--progress', total === 0 ? '0' : (done / total).toFixed(3));
+    /* On the track, not the fill. Both read it — the fill scales by it and the
+       way's mark is positioned by it (see .quiz__progress::after in quiz.css) —
+       and a custom property set on the track reaches the fill by inheritance,
+       where one set on the fill is out of the mark's reach entirely. */
+    el.bar.style.setProperty('--progress', total === 0 ? '0' : (done / total).toFixed(3));
     el.countIndex.textContent = String(position).padStart(2, '0');
     el.countTotal.textContent = String(total).padStart(2, '0');
     el.countSpoken.textContent = `${position} / ${total} асуулт · ${state.correct} зөв`;
@@ -1850,7 +1854,7 @@ function createQuiz({
     const total = state.queue.length;
     onFinish({ total, correct: state.correct, missed: state.missed.slice(), mode: state.mode });
 
-    el.barFill.style.setProperty('--progress', '1');
+    el.bar.style.setProperty('--progress', '1');
     el.summaryScore.textContent = `${state.correct} / ${total}`;
     el.summaryScore.classList.toggle('is-perfect', total > 0 && state.missed.length === 0);
 

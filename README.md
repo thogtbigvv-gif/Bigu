@@ -212,6 +212,14 @@ scanned.
 - **Scale** — a wide range, so that the one thing a screen is about can be
   much larger than everything around it
 - **Motion** — short, and honouring `prefers-reduced-motion`
+- **The way** — 道, and the one motif the app repeats. Wherever Bigu already
+  knows where you are in something ordered, it draws that thing as a line and
+  puts a single mark on it at the point you have reached: ink behind, hairline
+  ahead. It is the round rule above a quiz card, the day's goal on Review, the
+  week on Memory, and the two links on Home that lead back into something
+  already begun. It is deliberately absent everywhere else — a catalogue is a
+  shelf, not a journey, and a path drawn through one would be decoration
+  pretending to be information
 
 Accessibility is part of the design rather than a pass over it: skip link,
 semantic landmarks, real buttons, `aria-expanded` / `aria-controls` /

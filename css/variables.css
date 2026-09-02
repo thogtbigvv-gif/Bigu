@@ -286,6 +286,34 @@
      rows nine onward arrive with row eight rather than queueing behind it. */
   --stagger-step: 40ms;
 
+  /* -- The way ------------------------------------------------------------------
+     道. The one motif the app repeats, and it is a *position* rather than an
+     ornament: wherever Bigu already knows where a reader is in something
+     ordered, it draws the thing as a line and puts a single mark on it at the
+     point they have reached. The ink behind the mark is what has been done,
+     the hairline ahead of it is what is left, and the mark itself is the only
+     part that is loud.
+
+     Four surfaces speak it, and no others: the round rule above a quiz card
+     (quiz.css), the day's goal on Review (practice.css), the week strip on
+     Memory (memory.css), and the continuation links on Home (home.css). It is
+     deliberately absent from the reference screens — Vocabulary, Kanji,
+     Grammar, Reading — because a catalogue is a shelf and not a journey, and a
+     path drawn through one would be decoration pretending to be information.
+
+     This is the only new value the motif needed. The tracks it rides were
+     already 2px rules, the ink is already --color-shu, the untravelled
+     hairline is already --color-line, and the connector on Memory is already
+     --border-width: everything else about the way was in the app before it
+     had a name. What was missing was the mark, and the mark has to be exactly
+     one size everywhere or the four surfaces stop reading as one idea.
+
+     6px: three times the rule it sits on, which is enough to be a mark rather
+     than a bulge, and small enough that a round with ten questions in it never
+     looks like a gauge.
+     ------------------------------------------------------------------------------ */
+  --way-mark: 0.375rem;   /* 6px */
+
   /* -- Layout ------------------------------------------------------------------ */
   --container-max: 72rem;  /* 1152px */
   --border-width: 1px;

@@ -93,10 +93,14 @@ function createGoalLine(reviewedToday, goal) {
   const track = document.createElement('div');
   track.className = 'practice__goal-track';
   track.setAttribute('aria-hidden', 'true');
+  /* On the track, so both halves of the way can read it: the fill scales by
+     it and the mark at the head of the fill is positioned by it. A property
+     set on the fill would be inside the box the mark needs to sit at the edge
+     of. See .practice__goal-track in practice.css. */
+  track.style.setProperty('--progress', Math.min(reviewedToday / goal, 1).toFixed(3));
 
   const fill = document.createElement('span');
   fill.className = 'practice__goal-fill';
-  fill.style.setProperty('--progress', Math.min(reviewedToday / goal, 1).toFixed(3));
   if (reached) fill.classList.add('is-met');
   track.append(fill);
 

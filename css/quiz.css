@@ -47,12 +47,25 @@
    Deliberately not a <progress>: the native element carries a UA appearance
    that has to be undone in three engines to look like a hairline, and the
    number is already announced in words by the counter beside it.
+
+   This is the app's way (see --way-mark in variables.css) in its fullest
+   form, and the round is where it earns the name: ink behind, hairline
+   ahead, one mark at the question the reader has reached. What the rule used
+   to say was "the round is 40% done", which is a quantity; what it says now
+   is "you are here, and that is what is left", which is a position. Same
+   number, and the number was never the part a reader was reading.
+
+   --progress moved from the fill to the track for it. The fill is scaled
+   along its own X axis, so a mark parented to it would be squashed to an
+   ellipse that got flatter the further the round went — the track is the one
+   box on this component that keeps its geometry, and a custom property set
+   there is inherited by the fill unchanged. js/ui/quiz.js sets it on el.bar.
    ------------------------------------------------------------------------------------ */
 .quiz__progress {
+  position: relative;
   height: 2px;
   border-radius: 999px;
   background-color: var(--color-line);
-  overflow: hidden;
 }
 
 .quiz__progress-bar {
@@ -63,6 +76,33 @@
   transform-origin: left center;
   transform: scaleX(var(--progress, 0));
   transition: transform var(--transition-base);
+}
+
+/* The mark. Its *centre* travels between half a mark in from each end rather
+   than from 0% to 100%, so it is fully on the rule at both ends of the round
+   instead of hanging half off the paper on the first question and half off
+   the card on the last.
+
+   `left` rather than a transform, and the exception is worth stating because
+   the rest of this file is strict about it: the mark is one 6px absolutely
+   positioned element with nothing beside it in flow, so moving it lays out
+   nothing but itself, and it moves once per question rather than once per
+   frame. The alternative needs the track's resolved width in JS, which is a
+   measurement this component has never had to take.
+   ------------------------------------------------------------------------------------ */
+.quiz__progress::after {
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: calc(
+    var(--way-mark) / 2 + var(--progress, 0) * (100% - var(--way-mark))
+  );
+  width: var(--way-mark);
+  height: var(--way-mark);
+  border-radius: 50%;
+  background-color: var(--color-shu);
+  transform: translate(-50%, -50%);
+  transition: inset-inline-start var(--transition-base);
 }
 
 .quiz__head {
