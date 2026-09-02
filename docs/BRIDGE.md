@@ -181,6 +181,20 @@ page opened after it, both just read the key.
 - **Renaming, removing or changing the meaning of a field bumps `v`.** The
   shape is not changed in place.
 
+A bump is a thing that happens to the reader, not only to Bigu, and the `v`
+here is Bigu's alone — a reader that also reads other apps is holding several
+contracts at once, each on its own number. So the check above is a check
+against a *set* of versions the reader knows how to read, not against one
+number: `1` and `2` are read the same way for every field this document
+describes, and pinning to a single number turns Bigu's next bump into a
+reader that goes quiet. Widening that set is a deliberate act — read the
+differences first, and write the conversion before the number goes in.
+
+The bump from `1` to `2` renamed `due` to `status` and `sessions` to
+`events`, and replaced each entry's `mode`/`total`/`correct` with
+`type`/`value`/`detail`. `id`, `at` and `date` mean in `2` exactly what they
+meant in `1`.
+
 ---
 
 ## Keeping it honest
