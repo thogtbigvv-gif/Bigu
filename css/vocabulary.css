@@ -51,6 +51,31 @@
   margin: 0 0 var(--space-md) 0;
 }
 
+/* -- The filter block, on a phone ---------------------------------------------------
+   Same three rows, closer together. Each of these gaps was set for a page
+   where the block sits in the top eighth of the screen; stacked on a phone
+   they were the difference between four words visible on arrival and seven.
+   Nothing is removed and nothing moves — this is the vertical rhythm of one
+   block being read at the size it is actually being read at.
+
+   Shared with #kanji and #grammar, which build the same filter row from the
+   same classes.
+   ---------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .vocab-filters {
+    gap: var(--space-2xs);
+    margin-block-end: var(--space-2xs);
+  }
+
+  .vocab-filters__categories {
+    margin-block-end: var(--space-md);
+  }
+
+  .vocab-meta {
+    margin-block-end: var(--space-2xs);
+  }
+}
+
 /* -- The list -----------------------------------------------------------------------
    Ten sections in kana-chart order, each a heading and a run of rows — see
    the note at the top of js/views/vocabulary.js for why the file's own order

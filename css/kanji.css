@@ -228,6 +228,28 @@
   text-align: center;
 }
 
+/* The 空白 is a ratio, not a number, and 96px above and below is the ratio for
+   a 1152px page. On a 390px phone the same padding plus the glyph's own box
+   is 360px of a 844px screen — and above it sit the header, the view title
+   and the back link, so tapping a kanji from a door gave the reader the
+   character and nothing else at all. The panel below it, which is the reason
+   they tapped, began off the bottom of the screen.
+
+   Two steps down the same scale, at the two breakpoints layout.css already
+   steps its own rhythm at. The character keeps its air and stops being the
+   whole page. */
+@media (max-width: 768px) {
+  .kanji-detail__head {
+    padding-block: var(--space-2xl);
+  }
+}
+
+@media (max-width: 480px) {
+  .kanji-detail__head {
+    padding-block: var(--space-xl);
+  }
+}
+
 /* --font-jp first — the textbook hand, at the size a specimen wants. line-height
    1 because a CJK glyph fills its em square: --leading-tight at 136px would add
    34px of空 above and below the character *inside* its own line box, on top of

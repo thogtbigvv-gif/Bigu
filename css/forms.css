@@ -187,6 +187,36 @@ select.field {
   }
 }
 
+/* -- The label, on a phone --------------------------------------------------------
+   Taken out of the picture and left in the accessibility tree, which is the
+   one place it is still doing work. On a 390px screen this list's furniture —
+   the view's own title, this label, the field, the memory toggle, the level
+   chips and the count under them — filled nearly half the height before a
+   single word of Japanese, and "Search vocabulary" was the line of it saying
+   the least: the field below carries a magnifier and a placeholder naming
+   exactly what to type, and the <h1> two lines above already says which list
+   this is.
+
+   The same declarations as .sr-only in reset.css rather than a class swap,
+   because the element is built by content.js for every width and only its
+   presentation changes here. Scoped to .search-field so the labelled controls
+   on Settings and the Journal keep their visible labels, where there is room
+   for them and where the field alone would not say what it is.
+   ---------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .search-field .field-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}
+
 /* -- Labels ------------------------------------------------------------------------- */
 
 /* The label follows its own field into focus, for the same reason the search

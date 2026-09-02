@@ -409,13 +409,33 @@
   scroll-margin-top: var(--space-3xl);
 }
 
-/* router.js gives the active view's heading tabindex="-1" and focuses it on
+/* Everything the app sends focus to, wearing the app's own indicator.
+
+   router.js gives the active view's heading tabindex="-1" and focuses it on
    every navigation, so a keyboard reader lands at the top of the new view
-   rather than back at the document root. That programmatic focus draws the
-   browser's default ring — a heavy black box around a 31px heading — so it
-   gets the app's own indicator instead: same colour and width as every
-   other focusable thing, offset enough to read as "you are here" rather
-   than as a control. */
+   rather than back at the document root — and it is not the only place that
+   does this. kanji.js focuses the character on a detail panel, quiz.js the
+   turned card and the summary, reading.js the passage title, keyboard.js the
+   row it moved to, doors.js the entry a door led to. Every one of those is a
+   destination given tabindex="-1" so it can receive focus without becoming a
+   tab stop.
+
+   Left alone they draw the *browser's* default ring, which is a different
+   colour in every engine and in none of them one of Bigu's: measured in
+   Chromium, landing on a kanji from a door drew rgb(229, 151, 0) — an amber
+   box around the app's largest glyph, on the screen a reader arrives at most
+   often. The rule that used to sit here covered the view's own <h1> and
+   nothing else, which is why that was never caught.
+
+   So the selector is the attribute rather than a list of elements: anything
+   focusable only because the app focused it gets the same shu ring at the
+   same offset, and a destination cannot be added later without one. Real
+   controls are unaffected — a button or a link is a tab stop and never
+   carries tabindex="-1" — and the two places that already draw their own
+   (.is-arrival in doors.css, and the heading rule below) still win on
+   specificity or on source order.
+   ------------------------------------------------------------------------------- */
+[tabindex="-1"]:focus-visible,
 .view > h1:focus-visible,
 .view .dashboard-hero h1:focus-visible {
   outline: var(--focus-ring);

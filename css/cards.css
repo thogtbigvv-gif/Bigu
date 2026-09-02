@@ -78,6 +78,34 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* -- On a small screen ------------------------------------------------------------------
+   32px on every side is right for a 1152px page and wrong for a 390px one.
+   Measured on a phone: the gutter takes 16px each side and this took another
+   32, so a card's content column was 294px — the card's own padding was
+   spending a fifth of the screen. Two steps down the same scale, at the same
+   two breakpoints layout.css already steps its gutters at, so the page and
+   the cards on it narrow together rather than one at a time.
+
+   The empty and error states come with it. They are the same surface at the
+   same size and were the two places a phone showed a short sentence inside a
+   great deal of nothing.
+   ------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .card,
+  .empty-state,
+  .error-state {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .card,
+  .empty-state,
+  .error-state {
+    padding: var(--space-sm);
+  }
+}
+
 /* -- Off-screen cards -------------------------------------------------------------------
    Opt-in, for the two views that render a grid of dozens of near-identical
    cards: the browser skips layout, style and paint for any of them outside

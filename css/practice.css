@@ -90,6 +90,28 @@
   color: var(--color-sumi-soft);
 }
 
+/* -- On a phone -----------------------------------------------------------------------
+   The picker is the screen, so its density is the screen's. A deck chip
+   carries --space-md of inline padding on top of .toggle-chip's own, which
+   put it at 114px on a 390px phone — two per row, six decks over three rows,
+   and four modes over two more. Five rows of chips is what the Review screen
+   was, above the fold, before anything about a round.
+
+   The touch floor is untouched: .toggle-chip keeps its 44px min-height from
+   buttons.css, and this only takes back horizontal padding the chips did not
+   need. Three per row instead of two, and the whole picker halves.
+   ------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .practice__deck-button {
+    padding-inline: var(--space-2xs);
+    flex: 1 1 auto;
+  }
+
+  .practice__deck-group {
+    gap: var(--space-3xs);
+  }
+}
+
 /* Full width on a phone, where a button the width of its label reads as an
    afterthought rather than as the thing to press. */
 @media (max-width: 480px) {

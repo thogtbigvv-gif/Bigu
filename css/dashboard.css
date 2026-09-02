@@ -411,15 +411,22 @@
 }
 
 @media (max-width: 768px) {
+  /* The column gap does the separating here, so it steps down with the card's
+     own padding: at --space-lg it and the divider below were together putting
+     80px between a two-line sentence and the button under it, inside a card
+     that had just given up half its padding to fit the screen. */
   .dashboard-today__body {
     flex-direction: column;
     align-items: stretch;
+    gap: var(--space-md);
   }
 
   /* Back to the divider the stacked cards use, now that the action is once
-     again below the figure rather than beside it. */
+     again below the figure rather than beside it. No margin above it: the
+     gap already spaced the two, and the padding is what holds the rule off
+     the button. */
   .dashboard-card--hero .dashboard-card__cta {
-    margin-block-start: var(--space-md);
+    margin-block-start: 0;
     padding-block-start: var(--space-md);
     border-top: var(--border-width) solid var(--color-line);
   }

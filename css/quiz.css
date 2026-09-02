@@ -640,6 +640,22 @@
   transition: border-color var(--transition-fast), color var(--transition-fast);
 }
 
+/* Hidden where there is no key to press. The test is (hover: none), the same
+   question the rest of this app asks before committing to a pointer-only
+   state — on a touch screen the box is a hint for an input the reader does
+   not have, and it costs a 24px box plus a gap out of an option row that is
+   294px wide on a phone. The shortcut itself is untouched: a phone with a
+   keyboard attached still answers to 1-4, and the option's spoken label was
+   never this element.
+
+   After the rule it overrides, not before it: same specificity, so source
+   order is the whole of the cascade here. */
+@media (hover: none) {
+  .quiz__option-key {
+    display: none;
+  }
+}
+
 .quiz__option-text {
   min-width: 0;
 }
@@ -1133,6 +1149,20 @@
 
 .quiz-modes__button {
   min-width: 6rem;
+}
+
+/* The floor comes off on a phone. 6rem plus .toggle-chip's own padding put
+   two of the four modes on a row and the other two on a second, which on the
+   Review screen sat under three rows of deck chips. Without it the four
+   labels — Choose, Flip, Build, Mix — size to themselves and fit on one line,
+   which is also how they read as one choice rather than as a list.
+
+   The 44px touch floor is buttons.css's and is untouched; this is width. */
+@media (max-width: 768px) {
+  .quiz-modes__button {
+    min-width: 0;
+    flex: 1 1 auto;
+  }
 }
 
 .quiz-modes__hint {

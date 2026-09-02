@@ -21,7 +21,19 @@
   padding: 0;
 }
 
+/* No padding of its own, and this is a correction rather than a preference.
+   .lesson-group carries .card, so it took the card's 32px on every side — and
+   then every child inside it draws its own: the header pads 16/24, the word
+   list pads 24/32/32. The two were compounding, which on a phone left the
+   lesson title 127px of a 390px screen and wrapped "1. はじめまして (Nice to
+   meet you)" onto three lines inside a card that looked half empty.
+
+   A collapsible group is a container for rows that pad themselves, not a
+   padded surface with rows inside it. The header row and the word list are
+   also what has to reach the card's edges for a full-width press target and
+   for the divider between them to be a real divider. */
 .lesson-group {
+  padding: 0;
   overflow: hidden;
 }
 
@@ -175,6 +187,25 @@
   padding: var(--space-md) var(--space-lg) var(--space-lg);
   margin: 0;
   list-style: none;
+}
+
+/* On a phone the list keeps its vertical rhythm and gives back its inline
+   padding: the group no longer pads itself (see .lesson-group above), so this
+   is the only inset between a word and the card edge, and 32px of it on a
+   358px card was a third of the room the Japanese had to be set in. */
+@media (max-width: 480px) {
+  .lesson-word-list {
+    padding-inline: var(--space-sm);
+    gap: var(--space-sm) var(--space-md);
+  }
+
+  .lesson-group__header {
+    padding-inline: var(--space-sm);
+  }
+
+  .lesson-group__heading {
+    padding-inline-end: var(--space-sm);
+  }
 }
 
 /* The mark leads the row and the word follows it, so a column of words
