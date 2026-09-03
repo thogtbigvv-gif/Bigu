@@ -21,6 +21,7 @@ import {
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,
+  readingAdds,
 } from '../ui/content.js';
 import { createDoorRow, revealEntry } from '../ui/doors.js';
 import { loadGrammar, loadLinkIndex } from '../data/catalogue.js';
@@ -60,16 +61,23 @@ function createExample(example) {
   jp.lang = 'ja';
   jp.textContent = example.jp;
 
-  const reading = document.createElement('p');
-  reading.className = 'reading';
-  reading.lang = 'ja';
-  reading.textContent = example.reading;
-
   const translation = document.createElement('p');
   translation.className = 'meta';
   translation.textContent = example.mn;
 
-  wrap.append(jp, reading, translation);
+  wrap.append(jp);
+
+  /* Only when it says something the line above does not — see readingAdds in
+     js/ui/content.js. */
+  if (readingAdds(example.jp, example.reading)) {
+    const reading = document.createElement('p');
+    reading.className = 'reading';
+    reading.lang = 'ja';
+    reading.textContent = example.reading;
+    wrap.append(reading);
+  }
+
+  wrap.append(translation);
   return wrap;
 }
 

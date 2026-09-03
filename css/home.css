@@ -405,8 +405,10 @@
    screen: the hour, the label, the Japanese, the action, and the first row
    of what comes next — which is the whole point of the layout order.
 
-   The three link families take the app's 44px touch floor at this width, the
-   same figure navigation.css applies to every control in the study loop.
+   The shelf links take the app's 44px touch floor at this width, the same
+   figure navigation.css applies to every control in the study loop. The two
+   ways above them take it from .way-link itself (buttons.css), which is where
+   it belongs now that the Dashboard's doors are the same component.
    ---------------------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .home {
@@ -419,7 +421,6 @@
     padding-block-start: var(--space-md);
   }
 
-  .home__way,
   .home__shelf-link {
     min-height: 2.75rem;
     display: flex;

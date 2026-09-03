@@ -207,16 +207,33 @@
   --color-edge: color-mix(in srgb, var(--color-line) 62%, var(--color-paper));
 
   /* -- Glass ------------------------------------------------------------------
-     Used in exactly one place: the sticky header, which is the only surface in
-     the app that content passes *underneath*. A translucent ground plus a
-     small blur tells the reader the page is still moving behind it, where an
-     opaque bar just clips the content off. Kept at 82% so type on the header
-     never loses contrast against whatever scrolls beneath it, and the blur is
-     small enough to stay cheap on a phone.
+     For the three surfaces content passes *underneath*: the sticky header, the
+     thumb bar at the foot of a phone, and the kana index rail pinned to the
+     edge of the vocabulary list. A translucent ground plus a small blur tells
+     the reader the page is still moving behind it, where an opaque bar just
+     clips the content off, and the blur is small enough to stay cheap on a
+     phone.
 
      Glassmorphism anywhere else in this app would be decoration — cards sit
-     on the page, not over it, and there is nothing behind them to reveal. */
-  --glass-surface: color-mix(in srgb, var(--color-paper) 82%, transparent);
+     on the page, not over it, and there is nothing behind them to reveal.
+
+     92%, up from 82%. The old figure was set so that the header's *own* type
+     kept its contrast, which is the wrong half of the question: at 18%
+     transparent, sumi at full strength behind the bar composites to about
+     rgb(206,206,204), which is not a hint of movement — it is legible text.
+     On a desktop page the header only ever has a top margin behind it and it
+     never showed; on a phone every one of these three surfaces has dense
+     content running under it all the time, and it showed constantly. Measured
+     on a 390px screen: the footer's copyright line read straight through the
+     thumb bar under the word "Home", and a slip's furigana ghosted above the
+     logo.
+
+     At 92% the same ink composites to about rgb(236,236,234) — a shadow of
+     something moving, which is what the effect is for. The header's own type
+     only gains from it, so nothing had to be re-measured in the other
+     direction. Dark takes 94% for the same reason it took 88%: a dark ground
+     lets more through at the same figure. */
+  --glass-surface: color-mix(in srgb, var(--color-paper) 92%, transparent);
   --glass-blur: 10px;
 
   /* -- Focus indicator ---------------------------------------------------------
@@ -470,9 +487,10 @@
 
   /* The glass ground is re-mixed rather than inherited: --color-paper has
      already flipped to the night value above, but a dark surface needs to sit
-     *more* opaque than a light one to hold its type — an 82% dark bar over
-     bright content still lets enough through to grey the header's own text. */
-  --glass-surface: color-mix(in srgb, var(--color-paper) 88%, transparent);
+     *more* opaque than a light one to hold its type — a dark bar over bright
+     content lets enough through at the light theme's figure to grey the
+     header's own text. */
+  --glass-surface: color-mix(in srgb, var(--color-paper) 94%, transparent);
 
   color-scheme: dark;
 }

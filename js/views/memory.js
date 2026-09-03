@@ -51,7 +51,7 @@ import {
 } from '../study/review.js';
 import { favoriteIds } from '../study/favorites.js';
 import { createFavoriteButton } from '../ui/favoriteButton.js';
-import { createIcon, getViewContainer, loadIntoView, OFFLINE_HINT } from '../ui/content.js';
+import { createIcon, getViewContainer, loadIntoView, readingAdds, OFFLINE_HINT } from '../ui/content.js';
 import { practice } from '../core/storage.js';
 import { publishStatusSnapshot } from '../study/session.js';
 import { activeViewId } from '../core/router.js';
@@ -430,7 +430,11 @@ function createSlip(entry, onGraded, onKeptChange) {
   if (shape.example) {
     const example = element('div', 'memory-slip__example');
     example.append(japanese('p', null, shape.example.jp));
-    if (shape.example.reading) example.append(japanese('p', 'reading', shape.example.reading));
+    // Only when it says something the line above does not — see readingAdds
+    // in js/ui/content.js.
+    if (readingAdds(shape.example.jp, shape.example.reading)) {
+      example.append(japanese('p', 'reading', shape.example.reading));
+    }
     if (shape.example.mn) example.append(element('p', 'meta', shape.example.mn));
     answer.append(example);
   }

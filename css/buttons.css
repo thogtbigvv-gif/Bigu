@@ -518,6 +518,22 @@
   transform: scaleX(1);
 }
 
+/* The app's 44px touch floor, on the component rather than on one caller.
+   home.css had this on .home__way from before there was a shared way link,
+   which meant Home's two ways cleared the floor on a phone and the
+   Dashboard's three — added later, out of the same component — did not: a
+   22px target, on a screen where it is the only way out of a panel. The floor
+   is the same figure navigation.css and buttons.css apply to every other
+   control in the study loop, and the centring is what stops the row growing
+   its mark away from the text it leads into.
+   ---------------------------------------------------------------------------------------- */
+@media (max-width: 768px) {
+  .way-link {
+    min-height: 2.75rem;
+    align-items: center;
+  }
+}
+
 /* -- Touch targets --------------------------------------------------------------------
    At and below 768px every button in the study loop gets a 44px minimum
    box. See the matching block in navigation.css for the reasoning; the

@@ -398,6 +398,29 @@ function createStorageNotice() {
 const OFFLINE_HINT =
   'Үүнийг татаж чадсангүй. Хэрэв та энэ хуудсыг файлаар нээсэн бол локал сервер дээр ажиллуулах хэрэгтэй — шаардлагатай нэг мөр тушаалыг README дотор бичсэн байгаа.';
 
+/* -- A reading that reads back the sentence ---------------------------------------
+   Vocabulary, Grammar and Memory each print an example as three lines: the
+   Japanese, its kana reading, and the translation. For a sentence written
+   entirely in kana the middle line is the top line again — measured on
+   あ、ここに ありました。, which the catalogue writes with the spaces its Build
+   round is cut at and reads back without them, so the two lines differ by
+   whitespace and by nothing else.
+
+   The app already knows this rule in its other half: quiz.js's furigana()
+   sets no ruby over a word whose reading is the word. This is that rule for a
+   whole sentence, said once and shared, rather than three views each deciding
+   for themselves whether to print a line twice.
+
+   Whitespace is stripped on both sides because that is exactly the difference
+   the two strings have when there is no difference — a reading that genuinely
+   adds something adds kana, not spacing.
+   ------------------------------------------------------------------------------------ */
+function readingAdds(jp, reading) {
+  if (!reading) return false;
+  const bare = (text) => String(text).replace(/\s+/gu, '');
+  return bare(reading) !== bare(jp);
+}
+
 /* Only what another module actually imports. renderError and
    renderSkeleton are the two halves of loadIntoView and are called from
    nowhere else; exporting them advertised an API with no callers, which is
@@ -416,6 +439,7 @@ export {
   jlptLevelOf,
   levelBucketOf,
   loadIntoView,
+  readingAdds,
   JLPT_LEVELS,
   NO_LEVEL,
   OFFLINE_HINT,

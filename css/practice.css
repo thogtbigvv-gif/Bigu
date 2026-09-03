@@ -100,11 +100,18 @@
    The touch floor is untouched: .toggle-chip keeps its 44px min-height from
    buttons.css, and this only takes back horizontal padding the chips did not
    need. Three per row instead of two, and the whole picker halves.
+
+   Padding only — the chips size to their own labels and pack. An earlier
+   version of this rule also gave them `flex: 1 1 auto` to encourage three to
+   a row, which is not what that does: flex-grow shares each row's leftover
+   space among whatever landed on it, so a row holding one chip got a chip the
+   width of the card. Measured, it produced a 222px "Tricky ones" alone on a
+   320px screen and a row of 144px and 184px chips on a 430px one. Natural
+   widths wrap into 3 + 3 at 390px on their own.
    ------------------------------------------------------------------------------------- */
 @media (max-width: 768px) {
   .practice__deck-button {
     padding-inline: var(--space-2xs);
-    flex: 1 1 auto;
   }
 
   .practice__deck-group {

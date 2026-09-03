@@ -464,6 +464,22 @@
   height: 100%;
 }
 
+/* …and only while it is closed.
+
+   height: 100% resolves against the slip, and an open slip is as tall as its
+   face *plus* its detail — so the face took the whole of that and pushed the
+   detail out of the bottom of its own slip. Measured at both widths: a 251px
+   slip with a 251px face and a 170px detail starting at the slip's own bottom
+   edge, painting "Turn it over / Not yet / I remember" over the slips below
+   it, while the slip the reader had just opened showed as a tall empty card.
+
+   Nothing about the row alignment above changes: a closed slip still stretches
+   to its row, which is the whole reason that rule exists. An open slip has no
+   row to line up with — it takes the full width and is the only thing in it. */
+.memory-slip.is-open .memory-slip__face {
+  height: auto;
+}
+
 /* -- Slips ------------------------------------------------------------------------------------
    短冊: a strip of paper with one thing on it. No border and no shadow —
    a hairline box around every word is what made the old list read as a

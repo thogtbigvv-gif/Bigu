@@ -1157,11 +1157,12 @@
    labels — Choose, Flip, Build, Mix — size to themselves and fit on one line,
    which is also how they read as one choice rather than as a list.
 
-   The 44px touch floor is buttons.css's and is untouched; this is width. */
+   The 44px touch floor is buttons.css's and is untouched; this is width. No
+   flex-grow with it — see the note on .practice__deck-button for why growing
+   a wrapped row's chips is how you get one chip the width of the card. */
 @media (max-width: 768px) {
   .quiz-modes__button {
     min-width: 0;
-    flex: 1 1 auto;
   }
 }
 
