@@ -41,6 +41,7 @@ import {
   OFFLINE_HINT,
 } from '../ui/content.js';
 import { loadKanji } from '../data/catalogue.js';
+import { snapshotRecords } from '../study/review.js';
 
 const VIEW_ID = 'kakitori';
 
@@ -48,6 +49,33 @@ const VIEW_ID = 'kakitori';
    to read as ink rather than as a diagram, thin enough that two strokes
    crossing in a dense character stay two strokes. */
 const STROKE_WIDTH = 7;
+
+/* What a pen's pressure is allowed to do to that width, as a multiplier. A
+   real brush is not a slider from nothing to everything: a light touch still
+   leaves a line and a hard one does not blot, so the range is narrow and
+   centred on the width above — at half pressure the stroke is exactly
+   STROKE_WIDTH and the two ends of the range are a little either side of it.
+   Wide enough that a 払い tapers and a 止め does not; narrow enough that the
+   crossing-strokes argument above still holds at the thick end. */
+const PRESSURE_MIN = 0.55;
+const PRESSURE_MAX = 1.5;
+
+/* Only a pen reports force. A mouse says 0.5 whenever a button is down and a
+   finger without force sensing says 0 or 0.5 — neither is a measurement, and
+   deriving a width from velocity instead would be the app inventing a
+   pressure the device never gave it. So this returns null for everything but
+   a stylus, and the sheet draws its one honest width for the rest, which is
+   what it has always drawn.
+
+   `pressure === 0` from a pen is a pen that is down but reporting nothing
+   yet, not a pen pressed with no force; treating it as zero width would open
+   every stylus stroke with an invisible segment. */
+function pressureOf(event) {
+  if (event.pointerType !== 'pen') return null;
+  const force = event.pressure;
+  if (typeof force !== 'number' || force <= 0) return null;
+  return PRESSURE_MIN + (PRESSURE_MAX - PRESSURE_MIN) * Math.min(force, 1);
+}
 
 /* Characters drawn this sitting. Module scope, deliberately: it is a fact
    about the last twenty minutes, not about the reader, and a number this view
@@ -118,21 +146,56 @@ function createSheet() {
     ctx.restore();
   }
 
+  /* A point carries its own width where the device gave one. `p` is the
+     pressure multiplier from pressureOf() and is null for a finger, a mouse
+     and any pen that reports nothing — the overwhelming majority of strokes,
+     which take the single width and the single path they always took. */
+  function widthAt(point) {
+    return point.p == null ? STROKE_WIDTH : STROKE_WIDTH * point.p;
+  }
+
   function drawStroke(points, w, h) {
     if (!points.length) return;
-    ctx.beginPath();
+
     if (points.length === 1) {
       /* A tap with no travel is still a mark — the dot a short stroke leaves.
          Without this the reader presses, lifts, and nothing appears. */
-      ctx.arc(points[0].x * w, points[0].y * h, STROKE_WIDTH / 2, 0, Math.PI * 2);
+      ctx.beginPath();
+      ctx.arc(points[0].x * w, points[0].y * h, widthAt(points[0]) / 2, 0, Math.PI * 2);
       ctx.fill();
       return;
     }
-    ctx.moveTo(points[0].x * w, points[0].y * h);
-    for (let i = 1; i < points.length; i += 1) {
-      ctx.lineTo(points[i].x * w, points[i].y * h);
+
+    /* One path for a stroke of one width, which is every stroke a finger or a
+       mouse makes: the whole polyline in a single stroke() call, exactly as
+       before. A pen's stroke changes width along its length and cannot be one
+       path, so it is drawn segment by segment — each with its own lineWidth
+       and its own round caps, which is what makes the joins between them read
+       as one tapering line rather than as a row of dashes. The cost is one
+       path per sample instead of one per stroke, and it is only ever paid by
+       the input that asked for it. */
+    if (points.every((point) => point.p == null)) {
+      ctx.beginPath();
+      ctx.moveTo(points[0].x * w, points[0].y * h);
+      for (let i = 1; i < points.length; i += 1) {
+        ctx.lineTo(points[i].x * w, points[i].y * h);
+      }
+      ctx.stroke();
+      return;
     }
-    ctx.stroke();
+
+    for (let i = 1; i < points.length; i += 1) {
+      const from = points[i - 1];
+      const to = points[i];
+      ctx.beginPath();
+      /* The mean of the two ends, so a segment is the width the pen was at
+         while it was drawn rather than the width it arrived at. */
+      ctx.lineWidth = (widthAt(from) + widthAt(to)) / 2;
+      ctx.moveTo(from.x * w, from.y * h);
+      ctx.lineTo(to.x * w, to.y * h);
+      ctx.stroke();
+    }
+    ctx.lineWidth = STROKE_WIDTH;
   }
 
   function redraw() {
@@ -172,6 +235,10 @@ function createSheet() {
     return {
       x: (event.clientX - rect.left) / rect.width,
       y: (event.clientY - rect.top) / rect.height,
+      /* Kept with the coordinates for the same reason they are normalised: a
+         stroke is redrawn from this list every frame and on every resize, so
+         anything the sheet needs to draw it has to survive in the list. */
+      p: pressureOf(event),
     };
   }
 
@@ -253,6 +320,38 @@ function renderKakitori(container, data) {
     ariaLabel: 'Filter by level',
   });
 
+  /* -- The characters you have met -------------------------------------------
+     A hundred and thirty-two characters offered at random is a chart, not a
+     practice sheet: a reader four lessons in gets 電 and 館 as often as 日, and
+     the shape they cannot write is the one they have never seen. Which of them
+     the reader has met is a fact the app already holds — a character with a
+     progress record is one that has been through a round or been marked — so
+     this narrows the pool to those, and nothing about the pool is invented.
+
+     A filter and not a mode: it sits with the level chips, it is off by
+     default, and it says how many it would leave. The app does not decide what
+     to practise; this only lets the reader say "the ones I am working on",
+     which is the sentence the level chips could not express.
+
+     Read once, on render, rather than per character. A sitting is a few
+     minutes and the store does not change underneath it — nothing on this
+     screen writes one, which is the whole point of the view. */
+  const records = snapshotRecords();
+  const metRows = rows.filter((row) => records.has(row.entry.id));
+
+  const metToggle = document.createElement('button');
+  metToggle.type = 'button';
+  metToggle.className = 'toggle-chip kakitori__met';
+  metToggle.setAttribute('aria-pressed', 'false');
+  metToggle.textContent = `Танилцсан нь ${metRows.length}`;
+  /* Nothing met yet is a normal first-week state, and a chip that would empty
+     the sheet is not a choice worth offering. */
+  metToggle.hidden = metRows.length === 0;
+
+  const filters = document.createElement('div');
+  filters.className = 'kakitori__filters';
+  filters.append(levelWrap, metToggle);
+
   const meta = document.createElement('p');
   meta.className = 'kakitori__meta meta';
 
@@ -293,12 +392,26 @@ function renderKakitori(container, data) {
   pad.append(ghost, sheet.element);
 
   /* -- Controls --------------------------------------------------------------
-     Four, quiet, and none of them says anything about how it went. Undo and
-     clear are the sheet's own; reveal ends the attempt; next draws another
-     character. After a reveal the first three go away, because there is
-     nothing left to do to a sheet you have already checked — and leaving
-     "clear" there would be inviting the reader to have another go at a
-     character the app has just printed the answer to. */
+     Quiet, and none of them says anything about how it went. Undo and clear
+     are the sheet's own; reveal puts the character up against what the reader
+     drew; next draws another character.
+
+     After a reveal, undo and clear go away — leaving them would be inviting
+     the reader to have another go at a character the app has just printed the
+     answer to, which is tracing rather than recall.
+
+     Which left the sheet with one way out of a reveal, and it was the wrong
+     one. Having looked, the thing a person with a 漢字ドリル does next is write
+     it again — and this view could only offer them a *different* character.
+     The answer is not to allow the redraw with the answer on the page, it is
+     to put the answer away first: 「もう一度」 hides the character and clears
+     the sheet in one press, so the second attempt starts from the same blank
+     square the first one did. The anti-tracing argument above is why it does
+     both at once rather than handing back "clear".
+
+     Reveal is a toggle for the same reason. A reader who glanced at the shape
+     and wants it gone again should not have to give up the strokes they have
+     already made to get back to a blank prompt. */
 
   const controls = document.createElement('div');
   controls.className = 'kakitori__controls';
@@ -313,30 +426,38 @@ function renderKakitori(container, data) {
   clear.className = 'kakitori__control';
   clear.textContent = 'Хуудсыг цэвэрлэх';
 
+  const again = document.createElement('button');
+  again.type = 'button';
+  again.className = 'kakitori__control kakitori__control--again';
+  again.textContent = 'Дахин бичих';
+  again.hidden = true;
+
   const reveal = document.createElement('button');
   reveal.type = 'button';
   reveal.className = 'kakitori__control kakitori__control--reveal';
-  reveal.textContent = 'Ханзыг харах';
+  reveal.setAttribute('aria-pressed', 'false');
 
   const next = document.createElement('button');
   next.type = 'button';
   next.className = 'kakitori__control kakitori__control--next';
   next.textContent = 'Дараагийнх →';
 
-  controls.append(undo, clear, reveal, next);
+  controls.append(undo, clear, again, reveal, next);
 
   const empty = document.createElement('p');
   empty.className = 'empty-state';
   empty.hidden = true;
   empty.textContent = 'Энэ түвшинд тохирох ханз алга.';
 
-  wrap.append(levelWrap, meta, prompt, pad, controls, empty);
+  wrap.append(filters, meta, prompt, pad, controls, empty);
 
   /* -- State ---------------------------------------------------------------- */
 
   let pool = rows;
   let current = null;
   let revealed = false;
+  /* Whether this character has already been added to the sitting's count. */
+  let counted = false;
 
   function pickNext() {
     if (!pool.length) return null;
@@ -367,16 +488,32 @@ function renderKakitori(container, data) {
 
   function syncControls() {
     const hasStrokes = sheet.strokeCount > 0;
+    /* The two that edit a sheet are gone while the answer is on it; the one
+       that starts the attempt over takes their place. Reveal stays either way
+       — it is the toggle now, and the reader has to be able to press it back. */
     undo.hidden = revealed;
     clear.hidden = revealed;
-    reveal.hidden = revealed;
+    again.hidden = !revealed;
     undo.disabled = !hasStrokes;
     clear.disabled = !hasStrokes;
+    reveal.textContent = revealed ? 'Ханзыг нуух' : 'Ханзыг харах';
+    reveal.setAttribute('aria-pressed', String(revealed));
+  }
+
+  /* Puts the answer away and gives the sheet back. Shared by 「もう一度」 and by
+     the reveal toggle's off state, so hiding the character is one thing that
+     happens one way — the difference between them is only whether the strokes
+     go with it. */
+  function conceal() {
+    revealed = false;
+    ghost.hidden = true;
+    syncControls();
   }
 
   function show(row) {
     current = row;
     revealed = false;
+    counted = false;
     ghost.hidden = true;
     sheet.clear();
 
@@ -409,15 +546,30 @@ function renderKakitori(container, data) {
   clear.addEventListener('click', () => sheet.clear());
 
   reveal.addEventListener('click', () => {
+    if (revealed) {
+      conceal();
+      return;
+    }
+
     revealed = true;
     ghost.hidden = false;
-    /* Counted on reveal rather than on the first stroke: a character the
-       reader looked at is one they went through, and one they started and
-       cleared is not. */
-    drawnCount += 1;
-    syncMeta();
+    /* Counted on the *first* reveal of this character rather than on the first
+       stroke: a character the reader looked at is one they went through, and
+       one they started and cleared is not. Toggling the answer back and forth,
+       or writing it a second time, is still one character — hence the flag,
+       which show() resets and conceal() deliberately does not. */
+    if (!counted) {
+      counted = true;
+      drawnCount += 1;
+      syncMeta();
+    }
     syncControls();
     next.focus();
+  });
+
+  again.addEventListener('click', () => {
+    conceal();
+    sheet.clear();
   });
 
   next.addEventListener('click', () => show(pickNext()));
@@ -426,7 +578,9 @@ function renderKakitori(container, data) {
     const selected = new Set(
       levelButtons.filter((b) => b.getAttribute('aria-pressed') === 'true').map((b) => b.dataset.tag),
     );
-    pool = selected.size === 0 ? rows : rows.filter((row) => selected.has(row.bucket));
+    const onlyMet = metToggle.getAttribute('aria-pressed') === 'true';
+    const base = onlyMet ? metRows : rows;
+    pool = selected.size === 0 ? base : base.filter((row) => selected.has(row.bucket));
     show(pickNext());
   }
 
@@ -435,6 +589,11 @@ function renderKakitori(container, data) {
       button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
       applyFilter();
     });
+  });
+
+  metToggle.addEventListener('click', () => {
+    metToggle.setAttribute('aria-pressed', String(metToggle.getAttribute('aria-pressed') !== 'true'));
+    applyFilter();
   });
 
   /* The sheet's ink is read from the stylesheet at redraw time, so a theme

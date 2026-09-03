@@ -88,9 +88,10 @@ because that is the order the learner actually meets the language in. Lessons
 This is the honest measure of "where I am".
 
 **JLPT level is a tag.** Useful for filtering when you want to drill a band,
-invisible when you don't. Present throughout the kanji catalogue; being filled
-in for vocabulary and grammar over time. An entry with no level assigned is
-shown as unlabelled rather than guessed at.
+invisible when you don't. Present throughout — every kanji, every word and
+every grammar point carries one. An entry with no level assigned is shown as
+unlabelled rather than guessed at, which is still the rule and no longer a
+state anything in `data/` is in.
 
 Neither axis produces a percentage, a completion state, or a target.
 
@@ -143,10 +144,19 @@ door that lets the wild language in.
 ### Produce
 
 **🖌 書き取り Writing** — A canvas for writing kanji by hand, prompted by
-reading and meaning with the character hidden. Undo, clear, reveal, next. It
-does not grade you, because there is no stroke data to grade against and
-because being graded on handwriting is not the point. You compare, and you
-decide.
+reading and meaning with the character hidden. Undo, clear, reveal, write it
+again, next. It does not grade you, because there is no stroke data to grade
+against and because being graded on handwriting is not the point. You compare,
+and you decide — and then you put the character away and write it again, which
+is the half of that sentence the screen used to be missing.
+
+Reveal is a toggle and 「もう一度」 hides the character *and* clears the sheet in
+one press, so a second attempt starts from the same blank square the first one
+did; the app will not let you redraw a character while its answer is on the
+page. Filter by level, or by the characters you have already met — which is
+read off the progress records rather than being a list this screen keeps. On a
+stylus the stroke takes the pen's own pressure, so a 払い tapers; a finger and
+a mouse report no force and get the one honest width they always did.
 
 **📓 Journal** — Somewhere to use what you have, in your own sentences.
 
@@ -379,16 +389,21 @@ pip install cairosvg && python3 tools/build-icons.py
 **In progress**
 - **Lessons 16–50** — the spine exists; the content is being written by hand.
   Each lesson written is also, now, a lesson linked.
-- **Level tags for vocabulary and grammar** — present for kanji, absent
-  elsewhere. Being filled in rather than guessed.
 
 **Unresolved**
 - Linking is character-level, because that is what can be derived honestly. A
   word does not yet reach a *grammar pattern* it demonstrates, and a passage
   does not reach the vocabulary entries for the words in it — both need
-  segmentation, which needs a tokenizer this app does not have.
+  segmentation, which needs a tokenizer this app does not have. Measured
+  rather than assumed: a longest-match sweep of the catalogue's own headwords
+  over the passages currently finds two words in six sentences, so the
+  shortcut is not one.
+- A kanji reaches its words, its lessons and its related characters, but not
+  the reading passages it appears in. That one is derivable today by the same
+  character-level rule everything else uses; it is simply not built.
 - Stroke order and stroke animation need per-character data the catalogue
-  doesn't have.
+  doesn't have. Writing takes a stylus's pressure because the device reports
+  it; nothing there is inferred, and nothing checks a stroke.
 
 **Not planned**
 - A daily assigned path, a "today's tasks" screen, or anything that decides on

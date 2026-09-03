@@ -20,6 +20,17 @@
   gap: var(--space-md);
 }
 
+/* The level chips and the "characters you have met" toggle on one row. They
+   are the same kind of thing — both narrow the pool, neither is a mode — so
+   they read as one set of switches rather than as a filter and a setting. */
+.kakitori__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2xs);
+}
+
 .kakitori__levels {
   display: flex;
   flex-wrap: wrap;
@@ -167,25 +178,69 @@
   outline-offset: 3px;
 }
 
-/* The two that end an attempt read a shade stronger than the two that edit it
-   — still ink, still no fill, still nothing the accent would point at. */
+/* The three that move the attempt on read a shade stronger than the two that
+   edit the sheet — still ink, still no fill, still nothing the accent would
+   point at. 「もう一度」 is one of them because pressing it is a decision about
+   the attempt, not an edit to a drawing. */
+.kakitori__control--again,
 .kakitori__control--reveal,
 .kakitori__control--next {
   color: var(--color-sumi-soft);
 }
 
 /* -- Phone ---------------------------------------------------------------------
-   The sheet takes what is left after the prompt and the controls. 52vh rather
-   than 60 because the bottom bar and the browser's own chrome are both in the
-   way on a phone, and a square that runs under either is a square with a
-   corner the reader cannot draw in.
+   The sheet takes what is left, and "what is left" is now subtracted rather
+   than guessed at. 52vh was the guess, and measured on three phones it was
+   wrong on two of them: on a 390x844 the control row ended 18px underneath the
+   thumb bar, and on a 320x568 the whole row sat below the fold — so on the
+   screen where a hand is resting on the paper, reaching "Дараагийнх" meant
+   scrolling the page out from under it.
+
+   Two changes, and the first is most of it. The view's own rhythm was
+   --space-md between all six of its parts, which on a phone is 120px of gap
+   around a drawing surface that has none to spare; at --space-2xs the parts
+   still read as separate and the sheet gets the difference. The second is the
+   height cap: dvh so a collapsing browser chrome cannot push the row under
+   itself, and a reserve rather than a fraction, because what has to fit is a
+   fixed stack of chrome — header, title, filters, count, prompt, controls,
+   bar — and not a proportion of anything.
+
+   26rem is that stack, measured on a 320x568 — the shortest phone still in
+   circulation and the only one the reserve actually binds on. Whichever of the
+   two runs out first still bounds the square, so a short phone is capped by
+   height and a tall one by width, exactly as before: at 390x844 and 430x932
+   the width is still what decides, and the sheet is the size it always was.
    ------------------------------------------------------------------------------ */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  /* The view's own gap too: the title sits above a stack that is now spaced at
+     --space-2xs, and a 24px step into an 8px rhythm reads as a seam. */
+  #kakitori {
+    gap: var(--space-2xs);
+  }
+
+  .kakitori {
+    gap: var(--space-2xs);
+  }
+
   .kakitori__pad {
-    width: min(100%, 52vh);
+    width: min(100%, calc(100dvh - 26rem));
+    /* A floor, so the sheet is still a sheet on the shortest phone in
+       circulation rather than collapsing to a strip. Below this the page
+       scrolls, which is the honest outcome — it is better to scroll a little
+       to a square you can draw in than to draw in one you cannot. */
+    min-width: 9rem;
   }
 
   .kakitori__controls {
-    gap: var(--space-sm) var(--space-md);
+    gap: var(--space-2xs) var(--space-md);
+  }
+}
+
+/* The question comes down one step with everything else. It still reads before
+   the paper does, which is what put it up a step in the first place — that
+   argument was about the order the eye takes them in, not about 25px. */
+@media (max-width: 480px) {
+  .kakitori__readings {
+    font-size: var(--text-md);
   }
 }
